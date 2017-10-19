@@ -1,0 +1,97 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "_id": "manlion__req_v1",
+    "additionalProperties": false,
+    "definitions": {
+        "headers": {
+            "items": {
+                "maxLength": 512,
+                "minLength": 1,
+                "pattern": "^[^:]+: [^\n]+$",
+                "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+        },
+        "nat": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "payload": {
+            "maxLength": 4096,
+            "minLength": 0,
+            "type": "string"
+        },
+        "uid": {
+            "additionalProperties": false,
+            "properties": {
+                "a": {
+                    "$ref": "#/definitions/nat"
+                },
+                "b": {
+                    "$ref": "#/definitions/nat"
+                }
+            },
+            "required": [
+                "a",
+                "b"
+            ],
+            "type": "object"
+        },
+        "v": {
+            "enum": [
+                1
+            ]
+        }
+    },
+    "properties": {
+        "cmd": {
+            "enum": [
+                "req"
+            ]
+        },
+        "headers": {
+            "$ref": "#/definitions/headers"
+        },
+        "method": {
+            "enum": [
+                "PUT",
+                "GET",
+                "POST",
+                "PATCH",
+                "DELETE"
+            ]
+        },
+        "payload": {
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "$ref": "#/definitions/payload"
+                }
+            ]
+        },
+        "uid": {
+            "$ref": "#/definitions/uid"
+        },
+        "url": {
+            "maxLength": 2048,
+            "minLength": 11,
+            "type": "string"
+        },
+        "v": {
+            "$ref": "#/definitions/v"
+        }
+    },
+    "required": [
+        "v",
+        "uid",
+        "cmd",
+        "method",
+        "url",
+        "headers",
+        "payload"
+    ],
+    "type": "object"
+}

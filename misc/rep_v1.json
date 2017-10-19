@@ -1,0 +1,120 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "_id": "manlion__rep_v1",
+    "definitions": {
+        "code": {
+            "maximum": 599,
+            "minimum": 100,
+            "type": "integer"
+        },
+        "headers": {
+            "items": {
+                "maxLength": 512,
+                "minLength": 1,
+                "pattern": "^[^:]+: [^\n]+$",
+                "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+        },
+        "ko": {
+            "additionalProperties": false,
+            "properties": {
+                "reason": {
+                    "$ref": "#/definitions/reason"
+                },
+                "uid": {
+                    "$ref": "#/definitions/uid"
+                },
+                "us": {
+                    "$ref": "#/definitions/nat"
+                },
+                "v": {
+                    "$ref": "#/definitions/v"
+                }
+            },
+            "required": [
+                "uid",
+                "us",
+                "v",
+                "reason"
+            ],
+            "type": "object"
+        },
+        "nat": {
+            "minimum": 0,
+            "type": "integer"
+        },
+        "ok": {
+            "additionalProperties": false,
+            "properties": {
+                "code": {
+                    "$ref": "#/definitions/code"
+                },
+                "headers": {
+                    "$ref": "#/definitions/headers"
+                },
+                "payload": {
+                    "$ref": "#/definitions/payload"
+                },
+                "uid": {
+                    "$ref": "#/definitions/uid"
+                },
+                "us": {
+                    "$ref": "#/definitions/nat"
+                },
+                "v": {
+                    "$ref": "#/definitions/v"
+                }
+            },
+            "required": [
+                "uid",
+                "us",
+                "v",
+                "code",
+                "headers",
+                "payload"
+            ],
+            "type": "object"
+        },
+        "payload": {
+            "maxLength": 4096,
+            "minLength": 0,
+            "type": "string"
+        },
+        "reason": {
+            "maxLength": 999,
+            "minLength": 1,
+            "type": "string"
+        },
+        "uid": {
+            "properties": {
+                "a": {
+                    "$ref": "#/definitions/nat"
+                },
+                "b": {
+                    "$ref": "#/definitions/nat"
+                }
+            },
+            "required": [
+                "a",
+                "b"
+            ],
+            "type": "object"
+        },
+        "v": {
+            "enum": [
+                1
+            ]
+        }
+    },
+    "oneOf": [
+        {
+            "$ref": "#/definitions/ko"
+        },
+        {
+            "$ref": "#/definitions/ok"
+        }
+    ],
+    "type": "object"
+}
