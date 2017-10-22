@@ -55,11 +55,7 @@
         },
         "method": {
             "enum": [
-                "PUT",
-                "GET",
-                "POST",
-                "PATCH",
-                "DELETE"
+                "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"
             ]
         },
         "payload": {

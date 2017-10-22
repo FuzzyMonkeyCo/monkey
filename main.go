@@ -16,7 +16,8 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	Version  = "manlion/0.1.0"
+	SemVer   = "0.1.0"
+	Version  = "manlion/" + SemVer
 	UPSTREAM = "http://localhost:8000/req2.json"
 )
 
@@ -24,7 +25,7 @@ func usage() (map[string]interface{}, error) {
 	usage := `manlion
 
 Usage:
-  manlion test <path> [--slow]
+  manlion test [--slow] .
   manlion -h | --help
   manlion --version
 
@@ -49,7 +50,7 @@ func rep(req *Req1) (*RepOK1, *RepKO1) {
 		log.Fatal("!NewRequest: ", err)
 	}
 	for _, header := range req.Headers {
-		if header == "User-Agent: manlion/1" {
+		if header == "User-Agent: CoveredCI-passthrough/1" {
 			r.Header.Set("User-Agent", Version)
 		} else {
 			pair := strings.SplitN(header, ": ", 2)
@@ -104,6 +105,9 @@ func main() {
 	}
 	//FIXME: use args
 	log.Println(args)
+
+	// latest := GetLatestRelease()
+	// log.Printf("%s >? %s: %v\n", latest, SemVer, IsOutOfDate(SemVer,latest))
 
 	var body []byte
 	{
