@@ -17,7 +17,7 @@ const (
 )
 
 func GetLatestRelease() string {
-	get, err := http.NewRequest("GET", latestReleaseURL, nil)
+	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
 	get.Header.Set("Accept", githubV3APIHeader)
 	client := &http.Client{}
 	resp, err := client.Do(get)

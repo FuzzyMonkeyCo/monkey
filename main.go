@@ -15,17 +15,20 @@ import (
 
 //go:generate go run misc/include_jsons.go
 
+func init() {
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
+}
+
 const (
 	SemVer   = "0.1.0"
 	Version  = "manlion/" + SemVer
-	UPSTREAM = "http://localhost:8000/req2.json"
 )
 
 func usage() (map[string]interface{}, error) {
 	usage := `manlion
 
 Usage:
-  manlion test [--slow] .
+  manlion test [--slow]
   manlion -h | --help
   manlion --version
 
@@ -108,6 +111,14 @@ func main() {
 
 	// latest := GetLatestRelease()
 	// log.Printf("%s >? %s: %v\n", latest, SemVer, IsOutOfDate(SemVer,latest))
+
+	cmdData := initDialogue()
+	log.Println("cmdData:", cmdData)
+
+	loop {
+		cmdData = next(cmdData)
+	}
+
 
 	var body []byte
 	{
