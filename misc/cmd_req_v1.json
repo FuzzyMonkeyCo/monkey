@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "_id": "passthrough__req_v1",
+    "additionalProperties": false,
+    "definitions": {
+        "cmd": {
+            "enum": [
+                "start",
+                "reset",
+                "stop"
+            ]
+        },
+        "v": {
+            "enum": [
+                1
+            ]
+        }
+    },
+    "properties": {
+        "cmd": {
+            "$ref": "#/definitions/cmd"
+        },
+        "v": {
+            "$ref": "#/definitions/v"
+        }
+    },
+    "required": [
+        "v",
+        "cmd"
+    ],
+    "type": "object"
+}
