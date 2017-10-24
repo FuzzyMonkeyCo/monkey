@@ -12,8 +12,8 @@ func init() {
 }
 
 const (
-	SemVer   = "0.1.0"
-	Version  = "manlion/" + SemVer
+	SemVer  = "0.1.0"
+	Version = "manlion/" + SemVer
 )
 
 func usage() (map[string]interface{}, error) {

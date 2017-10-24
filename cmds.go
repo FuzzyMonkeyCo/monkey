@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	"encoding/json"
 	"github.com/xeipuuv/gojsonschema"
+	"log"
 )
 
 ///go:generate stringer -type=base
@@ -17,15 +17,15 @@ const (
 	CmdReq1
 )
 
-type Start1 struct {}
-type Reset1 struct {}
-type Stop1 struct {}
+type Start1 struct{}
+type Reset1 struct{}
+type Stop1 struct{}
 
 type CmdRep1 struct {
-	Cmd string `json:"cmd"`
-	V      uint        `json:"v"`
-	Us     uint64      `json:"us"`
-	Error *string      `json:"error"`
+	Cmd   string  `json:"cmd"`
+	V     uint    `json:"v"`
+	Us    uint64  `json:"us"`
+	Error *string `json:"error"`
 }
 
 type Req1 struct {
@@ -37,7 +37,7 @@ type Req1 struct {
 }
 
 type RepOK1 struct {
-	Cmd string `json:"cmd"`
+	Cmd     string      `json:"cmd"`
 	V       uint        `json:"v"`
 	Us      uint64      `json:"us"`
 	UID     interface{} `json:"uid"`
@@ -47,7 +47,7 @@ type RepOK1 struct {
 }
 
 type RepKO1 struct {
-	Cmd string `json:"cmd"`
+	Cmd    string      `json:"cmd"`
 	V      uint        `json:"v"`
 	Us     uint64      `json:"us"`
 	UID    interface{} `json:"uid"`
@@ -56,10 +56,14 @@ type RepKO1 struct {
 
 func (cmd cmd) toString() string {
 	switch cmd {
-	case CmdStart1: return "start"
-	case CmdReset1: return "reset"
-	case CmdStop1: return "stop"
-	case CmdReq1: return "req"
+	case CmdStart1:
+		return "start"
+	case CmdReset1:
+		return "reset"
+	case CmdStop1:
+		return "stop"
+	case CmdReq1:
+		return "req"
 	}
 	return "unreachable"
 }
@@ -74,9 +78,12 @@ func pickCmd(cmdData []byte) cmd {
 		}
 
 		switch idCmd.Name {
-		case "start": return CmdStart1
-		case "reset": return CmdReset1
-		case "stop": return CmdStop1
+		case "start":
+			return CmdStart1
+		case "reset":
+			return CmdReset1
+		case "stop":
+			return CmdStop1
 		}
 	}
 

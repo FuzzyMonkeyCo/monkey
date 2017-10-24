@@ -1,16 +1,16 @@
 package main
 
 import (
-	"os"
 	"bytes"
-	"fmt"
-	"strings"
 	"encoding/json"
-	"net/http"
-	"time"
-	"log"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 	"strconv"
+	"strings"
+	"time"
 	// "archive/tar" FIXME: tar + gz then upload read only conf
 	"gopkg.in/yaml.v2"
 )
@@ -18,18 +18,18 @@ import (
 const (
 	//FIXME use HTTPS
 	UPSTREAM = "http://localhost:1042"
-	URLInit = UPSTREAM + "/1/init"
-	URLNext = UPSTREAM + "/1/next"
-	YML = ".coveredci.yml"
-	Up = "🡱"
-	Down = "🡳"
+	URLInit  = UPSTREAM + "/1/init"
+	URLNext  = UPSTREAM + "/1/next"
+	YML      = ".coveredci.yml"
+	Up       = "🡱"
+	Down     = "🡳"
 )
 
 type ymlConfig struct {
-	LaneId  uint64
-	Start []string `yaml:"start"`
-	Reset []string `yaml:"reset"`
-	Stop []string `yaml:"stop"`
+	LaneId uint64
+	Start  []string `yaml:"start"`
+	Reset  []string `yaml:"reset"`
+	Stop   []string `yaml:"stop"`
 }
 
 func readYAML(path string) []byte {
@@ -99,8 +99,8 @@ func initDialogue() (ymlConfig, []byte) {
 	cfg := ymlConf(yml)
 	log.Printf("cfg: %+v\n", cfg)
 
-    fixtures := map[string]string{YML: string(yml)}
-    payload, err := json.Marshal(fixtures)
+	fixtures := map[string]string{YML: string(yml)}
+	payload, err := json.Marshal(fixtures)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -203,12 +203,12 @@ func makeRequest(cmdData []byte) (*RepOK1, *RepKO1) {
 }
 
 func executeScript(cmd cmd, cfg ymlConfig) CmdRep1 {
-	log.Println(cfg)//FIXME
+	log.Println(cfg) //FIXME
 	// if len(cfg.) == 0 {
 	return CmdRep1{
-		Cmd: cmd.toString(),
-		V: 1,
-		Us: 0,
+		Cmd:   cmd.toString(),
+		V:     1,
+		Us:    0,
 		Error: nil,
 	}
 	// }

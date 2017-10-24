@@ -1,17 +1,17 @@
 package main
 
 import (
-	"log"
 	"io/ioutil"
+	"log"
 	"net/http"
 
-	"github.com/savaki/jq"
 	"github.com/blang/semver"
+	"github.com/savaki/jq"
 )
 
 const (
 	githubV3APIHeader = "application/vnd.github.v3+json"
-	latestReleaseURL = "https://api.github.com/repos/CoveredCI/manlion/releases/latest"
+	latestReleaseURL  = "https://api.github.com/repos/CoveredCI/manlion/releases/latest"
 	// jqQuery = "{tag:.tag_name, bins:.assets|map({(.name): .browser_download_url})|add}"
 	jqQuery = ".tag_name"
 )
@@ -55,7 +55,7 @@ func execJQ(body []byte) string {
 	}
 
 	res := string(ret)
-	return res[1:len(res)-1]
+	return res[1 : len(res)-1]
 }
 
 func IsOutOfDate(current, latest string) bool {
