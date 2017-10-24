@@ -8,7 +8,7 @@ import (
 
 ///go:generate stringer -type=base
 
-type cmd uint
+type cmd byte
 
 const (
 	CmdStart1 cmd = iota
@@ -16,10 +16,6 @@ const (
 	CmdStop1
 	CmdReq1
 )
-
-type Start1 struct{}
-type Reset1 struct{}
-type Stop1 struct{}
 
 type CmdRep1 struct {
 	Cmd   string  `json:"cmd"`
@@ -36,7 +32,7 @@ type Req1 struct {
 	Payload *string     `json:"payload"`
 }
 
-type RepOK1 struct {
+type repOK1 struct {
 	Cmd     string      `json:"cmd"`
 	V       uint        `json:"v"`
 	Us      uint64      `json:"us"`
@@ -46,7 +42,7 @@ type RepOK1 struct {
 	Payload string      `json:"payload"`
 }
 
-type RepKO1 struct {
+type repKO1 struct {
 	Cmd    string      `json:"cmd"`
 	V      uint        `json:"v"`
 	Us     uint64      `json:"us"`

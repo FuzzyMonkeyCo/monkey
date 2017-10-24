@@ -1,10 +1,10 @@
 .PHONY: debug
 
-EXE = ./manlion
+EXE = manlion
 
 all: $(filter-out schemas.go,$(wildcard *.go)) $(wildcard misc/*.json)
 	go generate
-	go build
+	go build -o $(EXE)
 
 debug: all
-	$(EXE) test --slow
+	./$(EXE) test --slow

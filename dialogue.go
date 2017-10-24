@@ -113,15 +113,15 @@ func initDialogue() (ymlConfig, []byte) {
 func next(cfg ymlConfig, cmdData []byte) ([]byte, bool) {
 	var rep []byte
 	var err error
-	cmd := pickCmd(cmdData)
-	if cmd == CmdReq1 {
+	switch cmd := pickCmd(cmdData); cmd {
+	case CmdReq1:
 		ok, ko := makeRequest(cmdData)
 		if ok != nil {
 			rep, err = json.Marshal(*ok)
 		} else {
 			rep, err = json.Marshal(*ko)
 		}
-	} else {
+	case CmdStart1, CmdReset1, CmdStop1:
 		cmdRet := executeScript(cmd, cfg)
 		rep, err = json.Marshal(cmdRet)
 	}
@@ -133,7 +133,7 @@ func next(cfg ymlConfig, cmdData []byte) ([]byte, bool) {
 	return nextPOST(cfg, rep), false
 }
 
-func makeRequest(cmdData []byte) (*RepOK1, *RepKO1) {
+func makeRequest(cmdData []byte) (*repOK1, *repKO1) {
 	var req Req1
 	if err := json.Unmarshal(cmdData, &req); err != nil {
 		log.Fatal("!decode req1: ", err)
@@ -165,7 +165,7 @@ func makeRequest(cmdData []byte) (*RepOK1, *RepKO1) {
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
 		log.Printf("%s %vμs %s %s\n\t%s\n", Down, us, req.Method, req.Url, reason)
-		rep := &RepKO1{
+		rep := &repKO1{
 			UID:    req.UID,
 			V:      1,
 			Us:     us,
@@ -190,7 +190,8 @@ func makeRequest(cmdData []byte) (*RepOK1, *RepKO1) {
 				headers = append(headers, fmt.Sprintf("%v: %v", name, value))
 			}
 		}
-		rep := &RepOK1{
+
+		rep := &repOK1{
 			UID:     req.UID,
 			V:       1,
 			Us:      us,
