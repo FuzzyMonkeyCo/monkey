@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/docopt/docopt-go"
+	"gopkg.in/docopt/docopt.go.v0"
 	"log"
 )
 
@@ -50,6 +50,7 @@ func main() {
 	for {
 		cmdData, done = next(cfg, cmdData)
 		if done {
+			log.Println("We're done!")
 			break
 		}
 	}

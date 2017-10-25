@@ -71,7 +71,6 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	start := time.Now()
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
-	log.Printf("%s %vμs PUT %s\n\t%s\n", Up, us, URLInit, JSON)
 	if err != nil {
 		log.Fatal("!PUT: ", err)
 	}
@@ -90,6 +89,7 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("%s %vμs PUT %s\n\t%s\n%v\n\t\t%s\n", Up, us, URLInit, JSON, laneId, body)
 
 	return body, laneId
 }
@@ -110,6 +110,11 @@ func initDialogue() (ymlConfig, []byte) {
 	return cfg, cmdData
 }
 
+// type reqer interface{
+// 	Cmd() cmd
+// }
+// func next(cfg ymlConfig, cmd reqer) (reper, bool) {
+
 func next(cfg ymlConfig, cmdData []byte) ([]byte, bool) {
 	var rep []byte
 	var err error
@@ -117,13 +122,17 @@ func next(cfg ymlConfig, cmdData []byte) ([]byte, bool) {
 	case CmdReq1:
 		ok, ko := makeRequest(cmdData)
 		if ok != nil {
+			ok.Cmd = CmdReq1.toString()
 			rep, err = json.Marshal(*ok)
 		} else {
+			ok.Cmd = CmdReq1.toString()
 			rep, err = json.Marshal(*ko)
 		}
 	case CmdStart1, CmdReset1, CmdStop1:
 		cmdRet := executeScript(cmd, cfg)
 		rep, err = json.Marshal(cmdRet)
+	case CmdDone1:
+		return nil, true
 	}
 
 	if err != nil {
@@ -210,7 +219,7 @@ func executeScript(cmd cmd, cfg ymlConfig) CmdRep1 {
 		Cmd:   cmd.toString(),
 		V:     1,
 		Us:    0,
-		Error: nil,
+		Error: nil, //FIXME
 	}
 	// }
 }
@@ -232,7 +241,6 @@ func nextPOST(cfg ymlConfig, payload []byte) []byte {
 	start := time.Now()
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
-	log.Printf("%s %vμs POST %s\n\t%s\n", Up, us, URL, payload)
 	if err != nil {
 		log.Fatal("!POST: ", err)
 	}
@@ -246,6 +254,7 @@ func nextPOST(cfg ymlConfig, payload []byte) []byte {
 	if err != nil {
 		log.Fatal("!read body: ", err)
 	}
+	log.Printf("%s %vμs POST %s\n\t%s\n\t\t%s\n", Up, us, URL, payload, body)
 
 	return body
 }

@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/blang/semver"
 	"github.com/savaki/jq"
+	"gopkg.in/blang/semver.v3"
 )
 
 const (

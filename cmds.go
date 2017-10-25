@@ -15,6 +15,7 @@ const (
 	CmdReset1
 	CmdStop1
 	CmdReq1
+	CmdDone1
 )
 
 type CmdRep1 struct {
@@ -46,8 +47,8 @@ type repKO1 struct {
 	Cmd    string      `json:"cmd"`
 	V      uint        `json:"v"`
 	Us     uint64      `json:"us"`
-	UID    interface{} `json:"uid"`
 	Reason string      `json:"reason"`
+	UID    interface{} `json:"uid"`
 }
 
 func (cmd cmd) toString() string {
@@ -58,10 +59,10 @@ func (cmd cmd) toString() string {
 		return "reset"
 	case CmdStop1:
 		return "stop"
-	case CmdReq1:
-		return "req"
+	case CmdDone1:
+		return "done"
 	}
-	return "unreachable"
+	return "req" // CmdReq1
 }
 
 func pickCmd(cmdData []byte) cmd {
@@ -73,6 +74,8 @@ func pickCmd(cmdData []byte) cmd {
 			log.Fatal("!decode req: ", err)
 		}
 
+		log.Printf("'%+v'\n", string(cmdData))
+		log.Printf("'%+v'\n", idCmd.Name)
 		switch idCmd.Name {
 		case "start":
 			return CmdStart1
@@ -80,6 +83,8 @@ func pickCmd(cmdData []byte) cmd {
 			return CmdReset1
 		case "stop":
 			return CmdStop1
+		case "done":
+			return CmdDone1
 		}
 	}
 
