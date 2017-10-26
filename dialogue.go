@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 	// "archive/tar" FIXME: tar + gz then upload read only conf
 	"gopkg.in/yaml.v2"
@@ -53,7 +52,6 @@ func ymlConf(yml []byte) ymlConfig {
 	if err != nil {
 		log.Fatal("!cfg: ", err)
 	}
-
 	return cfg
 }
 
@@ -94,7 +92,7 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	return body, laneId
 }
 
-func initDialogue() (ymlConfig, []byte) {
+func initDialogue() (ymlConfig, aCmd) {
 	yml := readYAML(YML)
 	cfg := ymlConf(yml)
 	log.Printf("cfg: %+v\n", cfg)
@@ -105,123 +103,19 @@ func initDialogue() (ymlConfig, []byte) {
 		log.Fatal(err)
 	}
 
-	cmdData, laneId := initPUT(payload)
+	cmdJSON, laneId := initPUT(payload)
+	cmd := unmarshalCmd(cmdJSON)
 	cfg.LaneId = laneId
-	return cfg, cmdData
+	return cfg, cmd
 }
 
-// type reqer interface{
-// 	Cmd() cmd
-// }
-// func next(cfg ymlConfig, cmd reqer) (reper, bool) {
-
-func next(cfg ymlConfig, cmdData []byte) ([]byte, bool) {
-	var rep []byte
-	var err error
-	switch cmd := pickCmd(cmdData); cmd {
-	case CmdReq1:
-		ok, ko := makeRequest(cmdData)
-		if ok != nil {
-			ok.Cmd = CmdReq1.toString()
-			rep, err = json.Marshal(*ok)
-		} else {
-			ok.Cmd = CmdReq1.toString()
-			rep, err = json.Marshal(*ko)
-		}
-	case CmdStart1, CmdReset1, CmdStop1:
-		cmdRet := executeScript(cmd, cfg)
-		rep, err = json.Marshal(cmdRet)
-	case CmdDone1:
-		return nil, true
+func next(cfg ymlConfig, cmd aCmd) aCmd {
+	rep := cmd.Exec(cfg)
+	if cmd.Kind() == "done" {
+		return nil
 	}
-
-	if err != nil {
-		log.Fatal("!encode: ", err)
-	}
-
-	return nextPOST(cfg, rep), false
-}
-
-func makeRequest(cmdData []byte) (*repOK1, *repKO1) {
-	var req Req1
-	if err := json.Unmarshal(cmdData, &req); err != nil {
-		log.Fatal("!decode req1: ", err)
-	}
-
-	var r *http.Request
-	var err error
-	if req.Payload != nil {
-		inPayload := bytes.NewBufferString(*req.Payload)
-		r, err = http.NewRequest(req.Method, req.Url, inPayload)
-	} else {
-		r, err = http.NewRequest(req.Method, req.Url, nil)
-	}
-	if err != nil {
-		log.Fatal("!NewRequest: ", err)
-	}
-	for _, header := range req.Headers {
-		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", Version)
-		} else {
-			pair := strings.SplitN(header, ": ", 2)
-			r.Header.Set(pair[0], pair[1])
-		}
-	}
-	client := &http.Client{}
-	start := time.Now()
-	resp, err := client.Do(r)
-	us := uint64(time.Since(start) / time.Microsecond)
-	if err != nil {
-		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("%s %vμs %s %s\n\t%s\n", Down, us, req.Method, req.Url, reason)
-		rep := &repKO1{
-			UID:    req.UID,
-			V:      1,
-			Us:     us,
-			Reason: reason,
-		}
-		return nil, rep
-	} else {
-
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal("!read body: ", err)
-		}
-		log.Printf("%s %vμs %s %s\n\t%s\n", Down, us, req.Method, req.Url, body)
-		var headers []string
-		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
-		// Loop through headers
-		//FIXME: preserve order github.com/golang/go/issues/21853
-		for name, values := range resp.Header {
-			name = strings.ToLower(name)
-			for _, value := range values {
-				headers = append(headers, fmt.Sprintf("%v: %v", name, value))
-			}
-		}
-
-		rep := &repOK1{
-			UID:     req.UID,
-			V:       1,
-			Us:      us,
-			Code:    resp.StatusCode,
-			Headers: headers,
-			Payload: string(body),
-		}
-		return rep, nil
-	}
-}
-
-func executeScript(cmd cmd, cfg ymlConfig) CmdRep1 {
-	log.Println(cfg) //FIXME
-	// if len(cfg.) == 0 {
-	return CmdRep1{
-		Cmd:   cmd.toString(),
-		V:     1,
-		Us:    0,
-		Error: nil, //FIXME
-	}
-	// }
+	nextCmdJSON := nextPOST(cfg, rep)
+	return unmarshalCmd(nextCmdJSON)
 }
 
 func nextPOST(cfg ymlConfig, payload []byte) []byte {

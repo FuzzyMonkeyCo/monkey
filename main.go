@@ -37,19 +37,16 @@ func main() {
 	if err != nil {
 		log.Fatal("!args: ", err)
 	}
-	//FIXME: use args
-	log.Println(args)
+	log.Println(args) //FIXME: use args
 
 	// latest := GetLatestRelease()
 	// log.Printf("%s >? %s: %v\n", latest, SemVer, IsOutOfDate(SemVer,latest))
 
-	cfg, cmdData := initDialogue()
-	log.Println("cmdData:", string(cmdData))
-
-	var done bool
+	cfg, cmd := initDialogue()
+	log.Printf("cmd: %+v\n", cmd)
 	for {
-		cmdData, done = next(cfg, cmdData)
-		if done {
+		cmd = next(cfg, cmd)
+		if cmd == nil {
 			log.Println("We're done!")
 			break
 		}
