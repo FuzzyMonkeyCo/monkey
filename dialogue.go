@@ -31,6 +31,32 @@ type ymlConfig struct {
 	Stop   []string `yaml:"stop"`
 }
 
+func initDialogue() (ymlConfig, aCmd) {
+	yml := readYAML(YML)
+	cfg := ymlConf(yml)
+	log.Printf("cfg: %+v\n", cfg)
+
+	fixtures := map[string]string{YML: string(yml)}
+	payload, err := json.Marshal(fixtures)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cmdJSON, laneId := initPUT(payload)
+	cmd := unmarshalCmd(cmdJSON)
+	cfg.LaneId = laneId
+	return cfg, cmd
+}
+
+func next(cfg ymlConfig, cmd aCmd) aCmd {
+	rep := cmd.Exec(cfg)
+	if cmd.Kind() == "done" {
+		return nil
+	}
+	nextCmdJSON := nextPOST(cfg, rep)
+	return unmarshalCmd(nextCmdJSON)
+}
+
 func readYAML(path string) []byte {
 	fd, err := os.Open(path)
 	if err != nil {
@@ -90,32 +116,6 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	log.Printf("%s %vμs PUT %s\n\t%s\n%v\n\t\t%s\n", Up, us, URLInit, JSON, laneId, body)
 
 	return body, laneId
-}
-
-func initDialogue() (ymlConfig, aCmd) {
-	yml := readYAML(YML)
-	cfg := ymlConf(yml)
-	log.Printf("cfg: %+v\n", cfg)
-
-	fixtures := map[string]string{YML: string(yml)}
-	payload, err := json.Marshal(fixtures)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	cmdJSON, laneId := initPUT(payload)
-	cmd := unmarshalCmd(cmdJSON)
-	cfg.LaneId = laneId
-	return cfg, cmd
-}
-
-func next(cfg ymlConfig, cmd aCmd) aCmd {
-	rep := cmd.Exec(cfg)
-	if cmd.Kind() == "done" {
-		return nil
-	}
-	nextCmdJSON := nextPOST(cfg, rep)
-	return unmarshalCmd(nextCmdJSON)
 }
 
 func nextPOST(cfg ymlConfig, payload []byte) []byte {

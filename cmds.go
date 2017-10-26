@@ -2,12 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/xeipuuv/gojsonschema"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -71,15 +74,41 @@ func (cmd simpleCmd) Exec(cfg ymlConfig) []byte {
 }
 
 func executeScript(cfg ymlConfig, cmd simpleCmd) *simpleCmdRep {
-	log.Println(cfg) //FIXME
-	// if len(cfg.) == 0 {
-	return &simpleCmdRep{
-		Cmd:   cmd.Kind(),
-		V:     1,
-		Us:    0,
-		Error: nil, //FIXME
+	kind := cmd.Kind()
+	cmds := scriptSetting(cfg, kind)
+	if len(cmds) == 0 {
+		return &simpleCmdRep{V: 1, Cmd: kind}
 	}
-	// }
+
+	script := strings.Join(cmds, " && ") //FIXME: escape newlines and that's it?
+	shell := os.Getenv("SHELL")
+	var stderr bytes.Buffer
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	log.Println("Executing:", script)
+	exe := exec.CommandContext(ctx, shell, "-e", "-o", "pipefail", "-c", script)
+	exe.Env = append(os.Environ(), "COVEREDCI=true")
+	exe.Stdout = os.Stdout
+	exe.Stderr = &stderr
+
+	err := exe.Run()
+	if err != nil {
+		error := string(stderr.Bytes()) + err.Error()
+		return &simpleCmdRep{V: 1, Cmd: kind, Error: &error}
+	} else {
+		return &simpleCmdRep{V: 1, Cmd: kind}
+	}
+}
+
+func scriptSetting(cfg ymlConfig, cmdKind string) []string {
+	switch cmdKind {
+	case "reset":
+		return cfg.Reset
+	case "start":
+		return cfg.Start
+	}
+	return cfg.Stop
 }
 
 func (cmd reqCmd) Kind() string {
