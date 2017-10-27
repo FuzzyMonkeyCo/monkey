@@ -3,6 +3,7 @@ package main
 import (
 	"gopkg.in/docopt/docopt.go.v0"
 	"log"
+	"os"
 )
 
 //go:generate go run misc/include_jsons.go
@@ -42,6 +43,10 @@ func main() {
 	// latest := GetLatestRelease()
 	// log.Printf("%s >? %s: %v\n", latest, SemVer, IsOutOfDate(SemVer,latest))
 
+	envSerializedPath := uniquePath()
+	ensureDeleted(envSerializedPath)
+	snapEnv(envSerializedPath)
+
 	cfg, cmd := initDialogue()
 	log.Printf("cmd: %+v\n", cmd)
 	for {
@@ -52,4 +57,11 @@ func main() {
 		}
 	}
 
+	ensureDeleted(envSerializedPath)
+}
+
+func ensureDeleted(path string) {
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		log.Fatal(err)
+	}
 }

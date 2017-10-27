@@ -16,14 +16,15 @@ import (
 
 const (
 	//FIXME use HTTPS
-	UPSTREAM = "http://localhost:1042"
-	URLInit  = UPSTREAM + "/1/init"
-	URLNext  = UPSTREAM + "/1/next"
-	YML      = ".coveredci.yml"
-	Up       = "🡱"
-	Down     = "🡳"
-	mimeJSON = "application/json"
-	mimeYAML = "application/x-yaml"
+	UPSTREAM  = "http://localhost:1042"
+	URLInit   = UPSTREAM + "/1/init"
+	URLNext   = UPSTREAM + "/1/next"
+	coveredci = ".coveredci"
+	YML       = coveredci + ".yml"
+	Up        = "🡱"
+	Down      = "🡳"
+	mimeJSON  = "application/json"
+	mimeYAML  = "application/x-yaml"
 )
 
 type ymlCfg struct {
@@ -34,6 +35,7 @@ type ymlCfg struct {
 func initDialogue() (*ymlCfg, aCmd) {
 	yml := readYAML(YML)
 
+	// Has to be a string cause []byte gets base64-encoded
 	fixtures := map[string]string{YML: string(yml)}
 	payload, err := json.Marshal(fixtures)
 	if err != nil {
@@ -43,9 +45,9 @@ func initDialogue() (*ymlCfg, aCmd) {
 	cmd := unmarshalCmd(cmdJSON)
 
 	var ymlConf struct {
-		Start  []string `yaml:"start"`
-		Reset  []string `yaml:"reset"`
-		Stop   []string `yaml:"stop"`
+		Start []string `yaml:"start"`
+		Reset []string `yaml:"reset"`
+		Stop  []string `yaml:"stop"`
 	}
 	if err := yaml.Unmarshal(yml, &ymlConf); err != nil {
 		log.Fatal(err)
@@ -56,7 +58,7 @@ func initDialogue() (*ymlCfg, aCmd) {
 		Script: map[string][]string{
 			"start": ymlConf.Start,
 			"reset": ymlConf.Reset,
-			"stop": ymlConf.Stop,
+			"stop":  ymlConf.Stop,
 		},
 	}
 	return cfg, cmd
@@ -146,15 +148,15 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		log.Fatal("!200: ", resp.Status)
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal("!read body: ", err)
 	}
 	log.Printf("%s %vμs POST %s\n\t%s\n\t\t%s\n", Up, us, URL, payload, body)
+
+	if resp.StatusCode != 200 {
+		log.Fatal("!200: ", resp.Status)
+	}
 
 	return body
 }
