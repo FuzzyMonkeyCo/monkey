@@ -22,37 +22,52 @@ const (
 	YML      = ".coveredci.yml"
 	Up       = "🡱"
 	Down     = "🡳"
+	mimeJSON = "application/json"
+	mimeYAML = "application/x-yaml"
 )
 
-type ymlConfig struct {
+type ymlCfg struct {
 	LaneId uint64
-	Start  []string `yaml:"start"`
-	Reset  []string `yaml:"reset"`
-	Stop   []string `yaml:"stop"`
+	Script map[string][]string
 }
 
-func initDialogue() (ymlConfig, aCmd) {
+func initDialogue() (*ymlCfg, aCmd) {
 	yml := readYAML(YML)
-	cfg := ymlConf(yml)
-	log.Printf("cfg: %+v\n", cfg)
 
 	fixtures := map[string]string{YML: string(yml)}
 	payload, err := json.Marshal(fixtures)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	cmdJSON, laneId := initPUT(payload)
 	cmd := unmarshalCmd(cmdJSON)
-	cfg.LaneId = laneId
+
+	var ymlConf struct {
+		Start  []string `yaml:"start"`
+		Reset  []string `yaml:"reset"`
+		Stop   []string `yaml:"stop"`
+	}
+	if err := yaml.Unmarshal(yml, &ymlConf); err != nil {
+		log.Fatal(err)
+	}
+
+	cfg := &ymlCfg{
+		LaneId: laneId,
+		Script: map[string][]string{
+			"start": ymlConf.Start,
+			"reset": ymlConf.Reset,
+			"stop": ymlConf.Stop,
+		},
+	}
 	return cfg, cmd
 }
 
-func next(cfg ymlConfig, cmd aCmd) aCmd {
-	rep := cmd.Exec(cfg)
+func next(cfg *ymlCfg, cmd aCmd) aCmd {
 	if cmd.Kind() == "done" {
 		return nil
 	}
+
+	rep := cmd.Exec(cfg)
 	nextCmdJSON := nextPOST(cfg, rep)
 	return unmarshalCmd(nextCmdJSON)
 }
@@ -72,15 +87,6 @@ func readYAML(path string) []byte {
 	return yml
 }
 
-func ymlConf(yml []byte) ymlConfig {
-	var cfg ymlConfig
-	err := yaml.Unmarshal(yml, &cfg)
-	if err != nil {
-		log.Fatal("!cfg: ", err)
-	}
-	return cfg
-}
-
 func initPUT(JSON []byte) ([]byte, uint64) {
 	var r *http.Request
 	r, err := http.NewRequest(http.MethodPut, URLInit, bytes.NewBuffer(JSON))
@@ -88,8 +94,8 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 		log.Fatal("!initPUT: ", err)
 	}
 
-	r.Header.Set("Content-Type", "application/x-yaml")
-	r.Header.Set("Accept", "application/json")
+	r.Header.Set("Content-Type", mimeYAML)
+	r.Header.Set("Accept", mimeJSON)
 	client := &http.Client{}
 
 	start := time.Now()
@@ -118,7 +124,7 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	return body, laneId
 }
 
-func nextPOST(cfg ymlConfig, payload []byte) []byte {
+func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	if cfg.LaneId == 0 {
 		log.Fatal("LaneId is unset")
 	}
@@ -129,8 +135,8 @@ func nextPOST(cfg ymlConfig, payload []byte) []byte {
 		log.Fatal("!nextPOST: ", err)
 	}
 
-	r.Header.Set("content-type", "application/json")
-	r.Header.Set("Accept", "application/json")
+	r.Header.Set("content-type", mimeJSON)
+	r.Header.Set("Accept", mimeJSON)
 	client := &http.Client{}
 	start := time.Now()
 	resp, err := client.Do(r)

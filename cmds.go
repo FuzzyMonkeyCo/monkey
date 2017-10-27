@@ -17,7 +17,7 @@ import (
 
 type aCmd interface {
 	Kind() string
-	Exec(cfg ymlConfig) []byte
+	Exec(cfg *ymlCfg) []byte
 }
 
 type simpleCmd struct {
@@ -64,7 +64,7 @@ func (cmd simpleCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd simpleCmd) Exec(cfg ymlConfig) []byte {
+func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
 	cmdRet := executeScript(cfg, cmd)
 	rep, err := json.Marshal(cmdRet)
 	if err != nil {
@@ -73,9 +73,9 @@ func (cmd simpleCmd) Exec(cfg ymlConfig) []byte {
 	return rep
 }
 
-func executeScript(cfg ymlConfig, cmd simpleCmd) *simpleCmdRep {
+func executeScript(cfg *ymlCfg, cmd simpleCmd) *simpleCmdRep {
 	kind := cmd.Kind()
-	cmds := scriptSetting(cfg, kind)
+	cmds := cfg.Script[kind]
 	if len(cmds) == 0 {
 		return &simpleCmdRep{V: 1, Cmd: kind}
 	}
@@ -101,21 +101,11 @@ func executeScript(cfg ymlConfig, cmd simpleCmd) *simpleCmdRep {
 	}
 }
 
-func scriptSetting(cfg ymlConfig, cmdKind string) []string {
-	switch cmdKind {
-	case "reset":
-		return cfg.Reset
-	case "start":
-		return cfg.Start
-	}
-	return cfg.Stop
-}
-
 func (cmd reqCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd reqCmd) Exec(_cfg ymlConfig) []byte {
+func (cmd reqCmd) Exec(_cfg *ymlCfg) []byte {
 	ok, ko := makeRequest(cmd)
 
 	var rep []byte
