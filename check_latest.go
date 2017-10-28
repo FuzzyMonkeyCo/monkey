@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/savaki/jq"
 	"gopkg.in/blang/semver.v3"
+	"gopkg.in/savaki/jq.v0"
 )
 
 const (
@@ -16,12 +16,11 @@ const (
 	jqQuery = ".tag_name"
 )
 
-func GetLatestRelease() string {
+func getLatestRelease() string {
 	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
 	get.Header.Set("Accept", githubV3APIHeader)
 	client := &http.Client{}
 	resp, err := client.Do(get)
-
 	if err != nil {
 		log.Fatal("!GET: ", err)
 	}
@@ -58,7 +57,7 @@ func execJQ(body []byte) string {
 	return res[1 : len(res)-1]
 }
 
-func IsOutOfDate(current, latest string) bool {
+func isOutOfDate(current, latest string) bool {
 	vCurrent, err := semver.Make(current)
 	if err != nil {
 		log.Fatal("!vCurrent: ", err)

@@ -72,9 +72,10 @@ func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	if err != nil {
 		log.Fatal("!NewRequest: ", err)
 	}
+
 	for _, header := range cmd.Headers {
 		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", Version)
+			r.Header.Set("User-Agent", pkgVersion)
 		} else {
 			pair := strings.SplitN(header, ": ", 2)
 			r.Header.Set(pair[0], pair[1])
@@ -84,10 +85,16 @@ func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	start := time.Now()
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
+	var _pld string
+	if nil == cmd.Payload {
+		_pld = ""
+	} else {
+		_pld = *cmd.Payload
+	}
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("%s %vμs %s %s\n\t%s\n", Down, us, cmd.Method, cmd.Url, reason)
+		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, cmd.Url, _pld, reason)
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
@@ -103,7 +110,7 @@ func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		if err != nil {
 			log.Fatal("!read body: ", err)
 		}
-		log.Printf("%s %vμs %s %s\n\t%s\n", Down, us, cmd.Method, cmd.Url, body)
+		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, cmd.Url, _pld, body)
 		var headers []string
 		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
 		// Loop through headers

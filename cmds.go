@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/xeipuuv/gojsonschema"
 	"log"
+
+	"gopkg.in/xeipuuv/gojsonschema.v0"
 )
 
 type aCmd interface {
@@ -12,7 +13,7 @@ type aCmd interface {
 }
 
 func unmarshalCmd(cmdJSON []byte) aCmd {
-	if isValid(CMDv1, cmdJSON) {
+	if isValid(schemaCMDv1, cmdJSON) {
 		var cmd simpleCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Fatal(err)
@@ -20,7 +21,7 @@ func unmarshalCmd(cmdJSON []byte) aCmd {
 		return cmd
 	}
 
-	if isValid(REQv1, cmdJSON) {
+	if isValid(schemaREQv1, cmdJSON) {
 		var cmd reqCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Fatal(err)
@@ -28,7 +29,7 @@ func unmarshalCmd(cmdJSON []byte) aCmd {
 		return cmd
 	}
 
-	return nil //unreachable
+	return nil // unreachable
 }
 
 func isValid(schema string, cmdData []byte) bool {

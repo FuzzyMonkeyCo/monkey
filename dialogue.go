@@ -11,18 +11,13 @@ import (
 	"strconv"
 	"time"
 	// "archive/tar" FIXME: tar + gz then upload read only conf
+
 	"gopkg.in/yaml.v2"
 )
 
 const (
-	//FIXME use HTTPS
-	UPSTREAM  = "http://localhost:1042"
-	URLInit   = UPSTREAM + "/1/init"
-	URLNext   = UPSTREAM + "/1/next"
 	coveredci = ".coveredci"
-	YML       = coveredci + ".yml"
-	Up        = "🡱"
-	Down      = "🡳"
+	localYML  = coveredci + ".yml"
 	mimeJSON  = "application/json"
 	mimeYAML  = "application/x-yaml"
 )
@@ -33,10 +28,10 @@ type ymlCfg struct {
 }
 
 func initDialogue() (*ymlCfg, aCmd) {
-	yml := readYAML(YML)
+	yml := readYAML(localYML)
 
 	// Has to be a string cause []byte gets base64-encoded
-	fixtures := map[string]string{YML: string(yml)}
+	fixtures := map[string]string{localYML: string(yml)}
 	payload, err := json.Marshal(fixtures)
 	if err != nil {
 		log.Fatal(err)
@@ -77,7 +72,7 @@ func next(cfg *ymlCfg, cmd aCmd) aCmd {
 func readYAML(path string) []byte {
 	fd, err := os.Open(path)
 	if err != nil {
-		log.Fatal("!fd: ", err)
+		log.Fatalf("You must provide a readable '.coveredci.yml' file in the current directory.\nError: %s\n", err)
 	}
 	defer fd.Close()
 
@@ -91,7 +86,7 @@ func readYAML(path string) []byte {
 
 func initPUT(JSON []byte) ([]byte, uint64) {
 	var r *http.Request
-	r, err := http.NewRequest(http.MethodPut, URLInit, bytes.NewBuffer(JSON))
+	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Fatal("!initPUT: ", err)
 	}
@@ -108,20 +103,20 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 201 {
-		log.Fatal("!201: ", resp.Status)
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Fatal("!read body: ", err)
+	}
+	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, body)
+
+	if resp.StatusCode != 201 {
+		log.Fatal("!201: ", resp.Status)
 	}
 
 	laneId, err := strconv.ParseUint(resp.Header.Get("X-Lane-Id"), 10, 64)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("%s %vμs PUT %s\n\t%s\n%v\n\t\t%s\n", Up, us, URLInit, JSON, laneId, body)
 
 	return body, laneId
 }
@@ -130,7 +125,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	if cfg.LaneId == 0 {
 		log.Fatal("LaneId is unset")
 	}
-	URL := URLNext + "/" + fmt.Sprintf("%d", cfg.LaneId)
+	URL := nextURL + "/" + fmt.Sprintf("%d", cfg.LaneId)
 
 	r, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(payload))
 	if err != nil {
@@ -152,7 +147,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	if err != nil {
 		log.Fatal("!read body: ", err)
 	}
-	log.Printf("%s %vμs POST %s\n\t%s\n\t\t%s\n", Up, us, URL, payload, body)
+	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, URL, payload, body)
 
 	if resp.StatusCode != 200 {
 		log.Fatal("!200: ", resp.Status)
