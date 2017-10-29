@@ -3,12 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 	// "archive/tar" FIXME: tar + gz then upload read only conf
 
@@ -16,18 +14,20 @@ import (
 )
 
 const (
-	coveredci = ".coveredci"
-	localYML  = coveredci + ".yml"
-	mimeJSON  = "application/json"
-	mimeYAML  = "application/x-yaml"
+	coveredci        = ".coveredci"
+	localYML         = coveredci + ".yml"
+	mimeJSON         = "application/json"
+	mimeYAML         = "application/x-yaml"
+	xAPIKeyHeader    = "X-Api-Key"
+	xAuthTokenHeader = "X-Auth-Token"
 )
 
 type ymlCfg struct {
-	LaneId uint64
-	Script map[string][]string
+	AuthToken string
+	Script    map[string][]string
 }
 
-func initDialogue() (*ymlCfg, aCmd) {
+func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 	yml := readYAML(localYML)
 
 	// Has to be a string cause []byte gets base64-encoded
@@ -36,7 +36,7 @@ func initDialogue() (*ymlCfg, aCmd) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmdJSON, laneId := initPUT(payload)
+	cmdJSON, authToken := initPUT(apiKey, payload)
 	cmd := unmarshalCmd(cmdJSON)
 
 	var ymlConf struct {
@@ -49,7 +49,7 @@ func initDialogue() (*ymlCfg, aCmd) {
 	}
 
 	cfg := &ymlCfg{
-		LaneId: laneId,
+		AuthToken: authToken,
 		Script: map[string][]string{
 			"start": ymlConf.Start,
 			"reset": ymlConf.Reset,
@@ -84,7 +84,7 @@ func readYAML(path string) []byte {
 	return yml
 }
 
-func initPUT(JSON []byte) ([]byte, uint64) {
+func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	var r *http.Request
 	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
 	if err != nil {
@@ -93,6 +93,7 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 
 	r.Header.Set("Content-Type", mimeYAML)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set(xAPIKeyHeader, apiKey)
 	client := &http.Client{}
 
 	start := time.Now()
@@ -113,27 +114,23 @@ func initPUT(JSON []byte) ([]byte, uint64) {
 		log.Fatal("!201: ", resp.Status)
 	}
 
-	laneId, err := strconv.ParseUint(resp.Header.Get("X-Lane-Id"), 10, 64)
-	if err != nil {
-		log.Fatal(err)
+	authToken := resp.Header.Get(xAuthTokenHeader)
+	if authToken == "" {
+		log.Fatal("Could not acquire an AuthToken")
 	}
 
-	return body, laneId
+	return body, authToken
 }
 
 func nextPOST(cfg *ymlCfg, payload []byte) []byte {
-	if cfg.LaneId == 0 {
-		log.Fatal("LaneId is unset")
-	}
-	URL := nextURL + "/" + fmt.Sprintf("%d", cfg.LaneId)
-
-	r, err := http.NewRequest(http.MethodPost, URL, bytes.NewBuffer(payload))
+	r, err := http.NewRequest(http.MethodPost, nextURL, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Fatal("!nextPOST: ", err)
 	}
 
 	r.Header.Set("content-type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
 	client := &http.Client{}
 	start := time.Now()
 	resp, err := client.Do(r)
@@ -147,7 +144,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	if err != nil {
 		log.Fatal("!read body: ", err)
 	}
-	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, URL, payload, body)
+	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, body)
 
 	if resp.StatusCode != 200 {
 		log.Fatal("!200: ", resp.Status)

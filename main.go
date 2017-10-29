@@ -62,12 +62,17 @@ func main() {
 		}
 	}
 
+	apiKey := os.Getenv("COVEREDCI_API_KEY")
+	if apiKey == "" {
+		log.Fatal("$COVEREDCI_API_KEY is unset")
+	}
+
 	envSerializedPath := uniquePath()
 	ensureDeleted(envSerializedPath)
 	snapEnv(envSerializedPath)
 	defer ensureDeleted(envSerializedPath)
 
-	cfg, cmd := initDialogue()
+	cfg, cmd := initDialogue(apiKey)
 	log.Printf("cmd: %+v\n", cmd)
 	for {
 		cmd = next(cfg, cmd)
