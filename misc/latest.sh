@@ -13,8 +13,10 @@ case :$PATH: in
         ;;
 esac
 
-latest_tag_url=$(curl -sLo /dev/null -w '%{url_effective}' https://github.com/$slug/releases/latest)
+echo Looking for latest tag of $slug
+latest_tag_url=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' https://github.com/$slug/releases/latest)
 latest_tag=$(basename $latest_tag_url)
+echo Latest tag: $latest_tag
 
 exe=''
 case $(uname) in
@@ -27,10 +29,11 @@ case $(uname) in
         ;;
 esac
 
+echo Downloading v$latest_tag of $exe
 tmp=/tmp/testman
-curl -sLo $tmp https://github.com/$slug/releases/download/$latest_tag/$exe
+curl --silent --location --output $tmp https://github.com/$slug/releases/download/$latest_tag/$exe
 chmod +x $tmp
-mv -v $tmp $target_path/testman
+mv --verbose $tmp $target_path/
 
 testman --version
 echo Successful installation!

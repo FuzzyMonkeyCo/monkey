@@ -4,9 +4,21 @@
 
 [testman](https://github.com/CoveredCI/testman) is the official open source client that executes the tests CoveredCI generates.
 
-Example `.coveredci.yml` file:
+### Quick install
 
-~~~yaml
+```shell
+sh <(curl -sL https://goo.gl/Wb1JeU)
+```
+
+or the equivalent:
+
+```shell
+sh <(curl -sL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/latest.sh)
+```
+
+### Example `.coveredci.yml` file:
+
+```yaml
 version: '0'
 
 documentation:
@@ -34,4 +46,4 @@ reset:
 
 stop:
   - docker stop $CONTAINER_ID
-~~~
+```
