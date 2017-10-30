@@ -10,9 +10,9 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.1.0"
+	pkgVersion = "0.1.1"
 	pkgTitle   = "testman/" + pkgVersion
-	isDebug    = true
+	isDebug    = false
 )
 
 var (
