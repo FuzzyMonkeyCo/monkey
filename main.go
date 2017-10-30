@@ -48,7 +48,7 @@ Options:
   -h --help     Show this screen
   --version     Show version`
 
-	return docopt.Parse(usage, nil, false, pkgTitle, false)
+	return docopt.Parse(usage, nil, true, pkgTitle, false)
 }
 
 func main() {
