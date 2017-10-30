@@ -1,0 +1,34 @@
+language: go
+sudo: false
+go: 1.x
+
+before_install:
+  - set -e
+  - set -o pipefail
+  - go get github.com/mitchellh/gox
+
+script:
+  - go generate
+  - go get -t -v ./...
+  - go fmt
+  - git --no-pager diff
+  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
+  - go vet $(go list ./... | grep -v /vendor/)
+  - go test -v -race .
+  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .
+  - ./testman-linux_amd64 -h | grep testman
+  - ./testman-linux_amd64 --version | grep testman
+  - ls -lha
+  - set +e
+
+deploy:
+  provider: releases
+  api_key:
+    secure: UdW+GxuqS1fYtFjtquBZOUw24wfhG0Cqq5IHTGcCzPZLYyxwTFpG0VZCa9y+ysLZ5a65NM/X7hvc2pF/sNx1ftmOKr1yZ87jqzwh1o83HRZWsvklM9PGjAa42HM4TypYo4FOT9LENN0+oKvGP+tHsFb9v4REyA20JtnHO+we5BN+sJena1fd0rIX9xy2PqpV3uPRqifKAHFwl8QLIg9K7pUGsRgdV+uvVpYvEDGONt8yMYA01pZJIIgqZWrRUecuyVfZnZDYr+Uh31KoXCqojqqgUX2nqoMUfnwBLTkSRtPnLMCI30B0bYSVEjBDbgMSdmVWb2435r1RqcceHL3+tf9zsEd4iZFNZR92DHeAffyP4xuiIcrLWVe/YHD42fUUCXepBUo0z2ZWsfwuHaIZVQC56ilV/uR9fhi/b630jMMMe2XwOBjPUovv/BArxqZ6MZcG2/cjKlP+rLVREogbtes1pAYElQnDr4weB4eLWWicb06yi+pI1O2nVcjKX/OtB316tdtVDugvXj/PMXPDBFpUdIM4RkgVMAh99gXVg0MXAODS5TbDUgSMFRgVeMAePu0PIlVo8vqHirHeHLa4ahkKrk1VowMMBxVZFreEzBtlwCsxRbKAa9RbL+pdMaBvSXQGkOizXysQuhUdWKQnkpiy+PiEuuQNfFGhweWYjsw=
+  skip_cleanup: true
+  overwrite: true
+  file_glob: true
+  file: testman-*
+  on:
+    repo: CoveredCI/testman
+    tags: true
