@@ -23,6 +23,7 @@ var (
 
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
+
 	if isDebug {
 		apiRoot = "http://localhost:1042" //FIXME use HTTPS
 	} else {
@@ -30,6 +31,8 @@ func init() {
 	}
 	initURL = apiRoot + "/1/init"
 	nextURL = apiRoot + "/1/next"
+
+	unstacheInit()
 }
 
 func usage() (map[string]interface{}, error) {

@@ -44,16 +44,12 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	}
 
 	cmdTimeout := 10 * time.Minute
-	shell := os.Getenv("SHELL")
-	if len(shell) == 0 {
-		log.Fatal("$SHELL is unset")
-	}
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
 	var script, stderr bytes.Buffer
 	envSerializedPath := uniquePath()
-	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null")
+	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
@@ -64,7 +60,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	}
 	fmt.Fprintln(&script, "declare -p >", envSerializedPath)
 
-	exe := exec.CommandContext(ctx, shell, "--", "/dev/stdin")
+	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout
 	exe.Stderr = &stderr
@@ -75,6 +71,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		error := string(stderr.Bytes()) + "\n" + err.Error()
+		log.Println(error)
 		return &simpleCmdRep{V: 1, Cmd: kind, Us: us, Error: &error}
 	}
 
@@ -93,16 +90,41 @@ func uniquePath() string {
 }
 
 func snapEnv(envSerializedPath string) {
-	cmdTimeout := 100 * time.Millisecond
-	shell := os.Getenv("SHELL")
+	cmdTimeout := 10 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
-	cmd := fmt.Sprintf("declare -p >%s", envSerializedPath)
-	exe := exec.CommandContext(ctx, shell, "-c", cmd)
+	cmd := "declare -p >" + envSerializedPath
+	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	log.Printf("$ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+//FIXME: make this faster! parse the .env file?
+func readEnv(envSerializedPath, envVar string) string {
+	cmdTimeout := 10 * time.Millisecond
+	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
+	defer cancel()
+
+	cmd := "source " + envSerializedPath + " >/dev/null 2>&1 && echo -n " + envVar
+	var stdout bytes.Buffer
+	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
+	exe.Stdout = &stdout
+	log.Printf("$ %s\n", cmd)
+
+	if err := exe.Run(); err != nil {
+		log.Fatal(err)
+	}
+	return string(stdout.Bytes())
+}
+
+func shell() string {
+	SHELL := os.Getenv("SHELL")
+	if "" == SHELL {
+		log.Fatal("$SHELL is unset")
+	}
+	return SHELL
 }

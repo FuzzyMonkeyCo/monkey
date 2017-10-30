@@ -7,8 +7,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
+
+	"gopkg.in/aymerick/raymond.v2"
 )
 
 type reqCmd struct {
@@ -43,8 +46,9 @@ func (cmd reqCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd reqCmd) Exec(_cfg *ymlCfg) []byte {
-	ok, ko := makeRequest(cmd)
+func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
+	cmdUrl := updateUrl(cfg, cmd.Url)
+	ok, ko := makeRequest(cmdUrl, cmd)
 
 	var rep []byte
 	var err error
@@ -60,14 +64,45 @@ func (cmd reqCmd) Exec(_cfg *ymlCfg) []byte {
 	return rep
 }
 
-func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
+func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
+	envVal := readEnv(uniquePath(), "$"+envVar)
+	return raymond.SafeString(envVal)
+}
+
+func unstacheInit() {
+	raymond.RegisterHelper("env", unstacheEnv)
+}
+
+func unstache(field string) string {
+	result, err := raymond.Render(field, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if "" == result {
+		log.Fatalf("Mustache field '%s' was resolved to the empty string\n", field)
+	}
+	return result
+}
+
+func updateUrl(cfg *ymlCfg, Url string) string {
+	u, err := url.Parse(Url)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Note: if host is an IPv6 then it has to be braced with []
+	u.Host = unstache(cfg.Host) + ":" + unstache(cfg.Port)
+	return u.String()
+}
+
+func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	var r *http.Request
 	var err error
 	if cmd.Payload != nil {
 		inPayload := bytes.NewBufferString(*cmd.Payload)
-		r, err = http.NewRequest(cmd.Method, cmd.Url, inPayload)
+		r, err = http.NewRequest(cmd.Method, url, inPayload)
 	} else {
-		r, err = http.NewRequest(cmd.Method, cmd.Url, nil)
+		r, err = http.NewRequest(cmd.Method, url, nil)
 	}
 	if err != nil {
 		log.Fatal("!NewRequest: ", err)
@@ -94,7 +129,7 @@ func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, cmd.Url, _pld, reason)
+		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
@@ -110,7 +145,7 @@ func makeRequest(cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		if err != nil {
 			log.Fatal("!read body: ", err)
 		}
-		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, cmd.Url, _pld, body)
+		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
 		var headers []string
 		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
 		// Loop through headers

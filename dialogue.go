@@ -24,6 +24,8 @@ const (
 
 type ymlCfg struct {
 	AuthToken string
+	Host      string
+	Port      string
 	Script    map[string][]string
 }
 
@@ -43,6 +45,10 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 		Start []string `yaml:"start"`
 		Reset []string `yaml:"reset"`
 		Stop  []string `yaml:"stop"`
+		Doc   struct {
+			Host string `yaml:"host"`
+			Port string `yaml:"port"`
+		} `yaml:"documentation"`
 	}
 	if err := yaml.Unmarshal(yml, &ymlConf); err != nil {
 		log.Fatal(err)
@@ -50,6 +56,8 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 
 	cfg := &ymlCfg{
 		AuthToken: authToken,
+		Host:      ymlConf.Doc.Host,
+		Port:      ymlConf.Doc.Port,
 		Script: map[string][]string{
 			"start": ymlConf.Start,
 			"reset": ymlConf.Reset,
