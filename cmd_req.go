@@ -10,8 +10,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"gopkg.in/aymerick/raymond.v2"
 )
 
 type reqCmd struct {
@@ -64,26 +62,6 @@ func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
 	return rep
 }
 
-func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
-	envVal := readEnv(uniquePath(), "$"+envVar)
-	return raymond.SafeString(envVal)
-}
-
-func unstacheInit() {
-	raymond.RegisterHelper("env", unstacheEnv)
-}
-
-func unstache(field string) string {
-	result, err := raymond.Render(field, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if "" == result {
-		log.Fatalf("Mustache field '%s' was resolved to the empty string\n", field)
-	}
-	return result
-}
-
 func updateUrl(cfg *ymlCfg, Url string) string {
 	u, err := url.Parse(Url)
 	if err != nil {
@@ -91,7 +69,7 @@ func updateUrl(cfg *ymlCfg, Url string) string {
 	}
 
 	// Note: if host is an IPv6 then it has to be braced with []
-	u.Host = unstache(cfg.Host) + ":" + unstache(cfg.Port)
+	u.Host = cfg.FinalHost + ":" + cfg.FinalPort
 	return u.String()
 }
 

@@ -27,6 +27,8 @@ type ymlCfg struct {
 	Host      string
 	Port      string
 	Script    map[string][]string
+	FinalHost string
+	FinalPort string
 }
 
 func initDialogue(apiKey string) (*ymlCfg, aCmd) {
@@ -72,7 +74,9 @@ func next(cfg *ymlCfg, cmd aCmd) aCmd {
 		return nil
 	}
 
+	// Sometimes sets cfg.Final* fields
 	rep := cmd.Exec(cfg)
+
 	nextCmdJSON := nextPOST(cfg, rep)
 	return unmarshalCmd(nextCmdJSON)
 }
