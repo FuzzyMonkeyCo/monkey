@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"time"
+
+	"gopkg.in/aymerick/raymond.v2"
 )
 
 type simpleCmd struct {
@@ -75,6 +77,8 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 		return &simpleCmdRep{V: 1, Cmd: kind, Us: us, Error: &error}
 	}
 
+	maybeF1inalizeConf(cfg, kind)
+
 	return &simpleCmdRep{V: 1, Cmd: kind, Us: us}
 }
 
@@ -105,7 +109,7 @@ func snapEnv(envSerializedPath string) {
 
 //FIXME: make this faster! parse the .env file?
 func readEnv(envSerializedPath, envVar string) string {
-	cmdTimeout := 10 * time.Millisecond
+	cmdTimeout := 100 * time.Millisecond // has to be >10ms...
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
@@ -127,4 +131,35 @@ func shell() string {
 		log.Fatal("$SHELL is unset")
 	}
 	return SHELL
+}
+
+func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
+	envVal := readEnv(uniquePath(), "$"+envVar)
+	return raymond.SafeString(envVal)
+}
+
+func unstacheInit() {
+	raymond.RegisterHelper("env", unstacheEnv)
+}
+
+func unstache(field string) string {
+	if field[:2] != "{{" {
+		return field
+	}
+
+	result, err := raymond.Render(field, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if "" == result {
+		log.Fatalf("Mustache field '%s' was resolved to the empty string\n", field)
+	}
+	return result
+}
+
+func maybeF1inalizeConf(cfg *ymlCfg, kind string) {
+	if kind == "start" || kind == "stop" {
+		cfg.FinalHost = unstache(cfg.Host)
+		cfg.FinalPort = unstache(cfg.Port)
+	}
 }

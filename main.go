@@ -10,7 +10,7 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.1.1"
+	pkgVersion = "0.2.0"
 	pkgTitle   = "testman/" + pkgVersion
 	isDebug    = false
 )
@@ -79,7 +79,7 @@ func main() {
 	log.Printf("cmd: %+v\n", cmd)
 	for {
 		cmd = next(cfg, cmd)
-		if cmd == nil {
+		if nil == cmd {
 			log.Println("We're done!")
 			break
 		}
