@@ -12,7 +12,7 @@ import (
 const (
 	pkgVersion = "0.1.0"
 	pkgTitle   = "testman/" + pkgVersion
-	isDebug    = true
+	isDebug    = false
 )
 
 var (
