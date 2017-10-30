@@ -12,7 +12,7 @@ script:
   - go get -t -v ./...
   - go fmt
   - git --no-pager diff
-  - [[ 0 = $(git --no-pager diff --name-only | wc -l) ]]
+  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
   - go test -v -race .
   - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .

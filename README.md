@@ -1,4 +1,4 @@
-# testman ~ CoveredCI's minion
+# [testman](https://github.com/CoveredCI/testman) ~ CoveredCI's minion [![TravisCI build status](https://travis-ci.org/CoveredCI/testman.svg?branch=master)](https://travis-ci.org/CoveredCI/testman/builds)
 
 [CoveredCI](https://coveredci.com) is an automated JSON API testing service based on QuickCheck.
 
