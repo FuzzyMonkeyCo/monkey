@@ -11,7 +11,7 @@ import (
 
 const (
 	pkgVersion = "0.1.0"
-	pkgTitle   = "manlion/" + pkgVersion
+	pkgTitle   = "testman/" + pkgVersion
 	isDebug    = true
 )
 
@@ -36,12 +36,12 @@ func init() {
 }
 
 func usage() (map[string]interface{}, error) {
-	usage := `manlion
+	usage := `testman
 
 Usage:
-  manlion test [--slow]
-  manlion -h | --help
-  manlion --version
+  testman test [--slow]
+  testman -h | --help
+  testman --version
 
 Options:
   --slow        Don't phone home using Websockets

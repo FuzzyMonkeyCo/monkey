@@ -1,6 +1,6 @@
 .PHONY: debug
 
-EXE = manlion
+EXE = testman
 
 all: $(filter-out schemas.go,$(wildcard *.go)) $(wildcard misc/*.json)
 	go generate

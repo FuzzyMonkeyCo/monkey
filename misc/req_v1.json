@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "manlion__req_v1",
+    "_id": "req_v1",
     "additionalProperties": false,
     "definitions": {
         "headers": {
