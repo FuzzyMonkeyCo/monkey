@@ -12,10 +12,10 @@ import (
 const (
 	pkgVersion = "0.2.1"
 	pkgTitle   = "testman/" + pkgVersion
-	isDebug    = true
 )
 
 var (
+	isDebug bool
 	apiRoot string
 	initURL string
 	nextURL string
@@ -24,8 +24,10 @@ var (
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
+	isDebug = "1" == os.Getenv("DEBUG")
+
 	if isDebug {
-		apiRoot = "http://localhost:1042" //FIXME use HTTPS
+		apiRoot = "http://localhost:1042"
 	} else {
 		apiRoot = "https://testman.coveredci.com"
 	}
@@ -66,6 +68,9 @@ func main() {
 	}
 
 	apiKey := os.Getenv("COVEREDCI_API_KEY")
+	if isDebug {
+		apiKey = "42"
+	}
 	if apiKey == "" {
 		log.Fatal("$COVEREDCI_API_KEY is unset")
 	}
