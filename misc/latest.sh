@@ -8,15 +8,15 @@ target_path=/usr/local/bin
 case :$PATH: in
     *:$target_path:*) ;;
     *)
-        echo $target_path' is not in your $PATH'
+        echo $target_path' is not in your PATH'
         exit 2
         ;;
 esac
 
 echo Looking for latest tag of $slug
 latest_tag_url=$(curl --silent --location --output /dev/null --write-out '%{url_effective}' https://github.com/$slug/releases/latest)
-latest_tag=$(basename $latest_tag_url)
-echo Latest tag: $latest_tag
+latest_tag=$(basename "$latest_tag_url")
+echo "Latest tag: $latest_tag"
 
 exe=''
 case $(uname) in
@@ -29,9 +29,9 @@ case $(uname) in
         ;;
 esac
 
-echo Downloading v$latest_tag of $exe
+echo "Downloading v$latest_tag of $exe"
 tmp=/tmp/testman
-curl --silent --location --output $tmp https://github.com/$slug/releases/download/$latest_tag/$exe
+curl --silent --location --output $tmp "https://github.com/$slug/releases/download/$latest_tag/$exe"
 chmod +x $tmp
 mv --verbose $tmp $target_path/
 

@@ -7,6 +7,13 @@ before_install:
   - set -o pipefail
   - go get github.com/mitchellh/gox
 
+addons:
+  apt:
+    sources:
+      - debian-sid    # Grab ShellCheck from the Debian repo
+    packages:
+      - shellcheck
+
 script:
   - go generate
   - go get -t -v ./...
@@ -19,6 +26,9 @@ script:
   - ./testman-linux_amd64 -h | grep testman
   - ./testman-linux_amd64 --version | grep testman
   - ls -lha
+
+after_script:
+  - shellcheck misc/latest.sh
   - set +e
 
 deploy:
