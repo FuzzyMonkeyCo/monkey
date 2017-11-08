@@ -31,8 +31,8 @@ func init() {
 		apiRoot = "http://localhost:1042"
 		docsURL = "http://localhost:2042/blob"
 	} else {
-		apiRoot = "https://testman.coveredci.com:1042"
-		docsURL = "https://vortx.coveredci.com:2042/blob"
+		apiRoot = "https://test.coveredci.com"
+		docsURL = "https://lint.coveredci.com/blob"
 	}
 	initURL = apiRoot + "/1/init"
 	nextURL = apiRoot + "/1/next"
