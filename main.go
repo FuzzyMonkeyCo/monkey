@@ -19,6 +19,7 @@ var (
 	apiRoot string
 	initURL string
 	nextURL string
+	docsURL string
 )
 
 func init() {
@@ -28,8 +29,10 @@ func init() {
 
 	if isDebug {
 		apiRoot = "http://localhost:1042"
+		docsURL = "http://localhost:2042/blob"
 	} else {
-		apiRoot = "https://testman.coveredci.com"
+		apiRoot = "https://testman.coveredci.com:1042"
+		docsURL = "https://vortx.coveredci.com:2042/blob"
 	}
 	initURL = apiRoot + "/1/init"
 	nextURL = apiRoot + "/1/next"

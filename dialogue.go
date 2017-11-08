@@ -2,13 +2,11 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"time"
-	// "archive/tar" FIXME: tar + gz then upload read only conf
 
 	"gopkg.in/yaml.v2"
 )
@@ -34,8 +32,8 @@ type ymlCfg struct {
 func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 	yml := readYAML(localYML)
 
-	validationId := validateDocs(apiKey, yml)
-	cmdJSON, authToken := initPUT(apiKey, validationId)
+	validationJSON := validateDocs(apiKey, yml)
+	cmdJSON, authToken := initPUT(apiKey, validationJSON)
 	cmd := unmarshalCmd(cmdJSON)
 
 	var ymlConf struct {
@@ -91,20 +89,7 @@ func readYAML(path string) []byte {
 	return yml
 }
 
-func validateDocs(apiKey string, yml []byte) string {
-	// Has to be a string cause []byte gets base64-encoded
-	blobs := map[string]string{localYML: string(yml)}
-	docs := map[string]interface{}{"v": 1, "blobs": blobs}
-	payload, err := json.Marshal(docs)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return validationPOST(apiKey, payload)
-}
-
 func initPUT(apiKey string, JSON []byte) ([]byte, string) {
-	var r *http.Request
 	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Fatal("!initPUT: ", err)
