@@ -10,7 +10,7 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.2.1"
+	pkgVersion = "0.3.0"
 	pkgTitle   = "testman/" + pkgVersion
 )
 
@@ -70,6 +70,10 @@ func main() {
 		}
 	}
 
+	if _, err := os.Stat(shell()); os.IsNotExist(err) {
+		log.Fatal(shell() + " is required")
+	}
+
 	apiKey := os.Getenv("COVEREDCI_API_KEY")
 	if isDebug {
 		apiKey = "42"
@@ -95,7 +99,7 @@ func main() {
 }
 
 func ensureDeleted(path string) {
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(path); err != nil && os.IsExist(err) {
 		log.Fatal(err)
 	}
 }

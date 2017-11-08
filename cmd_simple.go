@@ -51,7 +51,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 
 	var script, stderr bytes.Buffer
 	envSerializedPath := uniquePath()
-	fmt.Fprintln(&script, ".", envSerializedPath, ">/dev/null 2>&1")
+	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
@@ -113,7 +113,7 @@ func readEnv(envSerializedPath, envVar string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
-	cmd := ". " + envSerializedPath + " >/dev/null 2>&1 && echo -n " + envVar
+	cmd := "source " + envSerializedPath + " >/dev/null 2>&1 && echo -n " + envVar
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
@@ -126,14 +126,7 @@ func readEnv(envSerializedPath, envVar string) string {
 }
 
 func shell() string {
-	SHELL := os.Getenv("SHELL")
-	if "" == SHELL {
-		log.Fatal("$SHELL is unset")
-	}
-	if "/bin/bash" != SHELL {
-		log.Fatal("bash is required")
-	}
-	return SHELL
+	return "/bin/bash"
 }
 
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
