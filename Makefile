@@ -8,4 +8,4 @@ all: $(filter-out schemas.go,$(wildcard *.go)) $(wildcard misc/*.json)
 	go build -o $(EXE)
 
 debug: all
-	./$(EXE) test --slow
+	DEBUG=1 ./$(EXE) test --slow
