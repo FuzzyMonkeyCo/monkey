@@ -3,22 +3,21 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 
 	"gopkg.in/yaml.v2"
 )
 
-
 func validateDocs(apiKey string, yml []byte) []byte {
 	docs := struct {
-		V uint `json:"v"`
+		V     uint              `json:"v"`
 		Blobs map[string]string `json:"blobs"`
 	}{
-		V: 1,
+		V:     1,
 		Blobs: blobs(yml),
 	}
 
@@ -66,7 +65,7 @@ func validationPOST(apiKey string, JSON []byte) []byte {
 	}
 
 	var validated struct {
-		V uint `json:"v"`
+		V     uint   `json:"v"`
 		Token string `json:"token"`
 	}
 	if err := json.Unmarshal(body, &validated); err != nil {
@@ -83,12 +82,12 @@ func reportValidationErrors(errors []byte) {
 	fmt.Println("Validation errors:")
 
 	var out bytes.Buffer
-    err := json.Indent(&out, errors, "", "  ")
-    if err != nil {
+	err := json.Indent(&out, errors, "", "  ")
+	if err != nil {
 		fmt.Println(string(errors))
-    }
+	}
 
-    fmt.Println(out.String())
+	fmt.Println(out.String())
 }
 
 func blobs(yml []byte) map[string]string {
