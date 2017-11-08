@@ -10,24 +10,29 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.2.0"
+	pkgVersion = "0.3.0"
 	pkgTitle   = "testman/" + pkgVersion
-	isDebug    = false
 )
 
 var (
+	isDebug bool
 	apiRoot string
 	initURL string
 	nextURL string
+	docsURL string
 )
 
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
+	isDebug = "1" == os.Getenv("DEBUG")
+
 	if isDebug {
-		apiRoot = "http://localhost:1042" //FIXME use HTTPS
+		apiRoot = "http://localhost:1042"
+		docsURL = "http://localhost:2042/blob"
 	} else {
-		apiRoot = "https://testman.coveredci.com"
+		apiRoot = "https://test.coveredci.com"
+		docsURL = "https://lint.coveredci.com/blob"
 	}
 	initURL = apiRoot + "/1/init"
 	nextURL = apiRoot + "/1/next"
@@ -65,7 +70,14 @@ func main() {
 		}
 	}
 
+	if _, err := os.Stat(shell()); os.IsNotExist(err) {
+		log.Fatal(shell() + " is required")
+	}
+
 	apiKey := os.Getenv("COVEREDCI_API_KEY")
+	if isDebug {
+		apiKey = "42"
+	}
 	if apiKey == "" {
 		log.Fatal("$COVEREDCI_API_KEY is unset")
 	}
@@ -87,7 +99,7 @@ func main() {
 }
 
 func ensureDeleted(path string) {
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(path); err != nil && os.IsExist(err) {
 		log.Fatal(err)
 	}
 }

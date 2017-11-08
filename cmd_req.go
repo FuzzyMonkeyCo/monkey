@@ -55,10 +55,10 @@ func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
 	} else {
 		rep, err = json.Marshal(ko)
 	}
-
 	if err != nil {
 		log.Fatal("!encode: ", err)
 	}
+
 	return rep
 }
 

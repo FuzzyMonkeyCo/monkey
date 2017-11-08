@@ -94,7 +94,7 @@ func uniquePath() string {
 }
 
 func snapEnv(envSerializedPath string) {
-	cmdTimeout := 10 * time.Millisecond
+	cmdTimeout := 200 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
@@ -109,7 +109,7 @@ func snapEnv(envSerializedPath string) {
 
 //FIXME: make this faster! parse the .env file?
 func readEnv(envSerializedPath, envVar string) string {
-	cmdTimeout := 100 * time.Millisecond // has to be >10ms...
+	cmdTimeout := 200 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
@@ -126,11 +126,7 @@ func readEnv(envSerializedPath, envVar string) string {
 }
 
 func shell() string {
-	SHELL := os.Getenv("SHELL")
-	if "" == SHELL {
-		log.Fatal("$SHELL is unset")
-	}
-	return SHELL
+	return "/bin/bash"
 }
 
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
