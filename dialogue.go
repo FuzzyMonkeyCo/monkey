@@ -32,7 +32,12 @@ type ymlCfg struct {
 func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 	yml := readYAML(localYML)
 
-	validationJSON := validateDocs(apiKey, yml)
+	validationJSON, errors := validateDocs(apiKey, yml)
+	if errors != nil {
+		reportValidationErrors(errors)
+		log.Fatal("Documentation validation failed")
+	}
+
 	cmdJSON, authToken := initPUT(apiKey, validationJSON)
 	cmd := unmarshalCmd(cmdJSON)
 
@@ -97,6 +102,7 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 
 	r.Header.Set("Content-Type", mimeYAML)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set("User-Agent", pkgVersion)
 	r.Header.Set(xAPIKeyHeader, apiKey)
 	client := &http.Client{}
 
@@ -134,6 +140,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 
 	r.Header.Set("content-type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set("User-Agent", pkgVersion)
 	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
 	client := &http.Client{}
 	start := time.Now()

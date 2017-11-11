@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func validateDocs(apiKey string, yml []byte) []byte {
+func validateDocs(apiKey string, yml []byte) ([]byte, []byte) {
 	docs := struct {
 		V     uint              `json:"v"`
 		Blobs map[string]string `json:"blobs"`
@@ -26,11 +26,11 @@ func validateDocs(apiKey string, yml []byte) []byte {
 		log.Fatal(err)
 	}
 
-	return validationPOST(apiKey, payload)
+	return validationReq(apiKey, payload)
 }
 
-func validationPOST(apiKey string, JSON []byte) []byte {
-	r, err := http.NewRequest(http.MethodPost, docsURL, bytes.NewBuffer(JSON))
+func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
+	r, err := http.NewRequest(http.MethodPut, docsURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,7 +38,10 @@ func validationPOST(apiKey string, JSON []byte) []byte {
 	r.Header.Set("Content-Type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	r.Header.Set(xAPIKeyHeader, apiKey)
+	r.Header.Set("User-Agent", pkgVersion)
+	if apiKey != "" {
+		r.Header.Set(xAPIKeyHeader, apiKey)
+	}
 	client := &http.Client{}
 
 	start := time.Now()
@@ -53,15 +56,14 @@ func validationPOST(apiKey string, JSON []byte) []byte {
 	if err != nil {
 		log.Fatal("!read body: ", err)
 	}
-	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
+	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
 
 	if resp.StatusCode == 400 {
-		reportValidationErrors(body)
-		log.Fatal("Documentation validation failed")
+		return nil, body
 	}
 
-	if resp.StatusCode != 200 {
-		log.Fatal("!200: ", resp.Status)
+	if resp.StatusCode != 201 {
+		log.Fatal("!201: ", resp.Status)
 	}
 
 	var validated struct {
@@ -75,7 +77,7 @@ func validationPOST(apiKey string, JSON []byte) []byte {
 		log.Fatal("Could not acquire a validation token")
 	}
 
-	return body
+	return body, nil
 }
 
 func reportValidationErrors(errors []byte) {
