@@ -97,6 +97,7 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 
 	r.Header.Set("Content-Type", mimeYAML)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set("User-Agent", pkgVersion)
 	r.Header.Set(xAPIKeyHeader, apiKey)
 	client := &http.Client{}
 
@@ -134,6 +135,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 
 	r.Header.Set("content-type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
+	r.Header.Set("User-Agent", pkgVersion)
 	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
 	client := &http.Client{}
 	start := time.Now()

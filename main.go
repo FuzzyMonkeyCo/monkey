@@ -28,14 +28,14 @@ func init() {
 	isDebug = "1" == os.Getenv("DEBUG")
 
 	if isDebug {
-		apiRoot = "http://localhost:1042"
-		docsURL = "http://localhost:2042/blob"
+		apiRoot = "http://localhost:1042/1"
+		docsURL = "http://localhost:2042/1/blob"
 	} else {
-		apiRoot = "https://test.coveredci.com"
-		docsURL = "https://lint.coveredci.com/blob"
+		apiRoot = "https://test.coveredci.com/1"
+		docsURL = "https://lint.coveredci.com/1/blob"
 	}
-	initURL = apiRoot + "/1/init"
-	nextURL = apiRoot + "/1/next"
+	initURL = apiRoot + "/init"
+	nextURL = apiRoot + "/next"
 
 	unstacheInit()
 }
