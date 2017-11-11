@@ -92,6 +92,7 @@ func actualMain() int {
 			return 2
 		} else {
 			fmt.Println("No validation errors found.")
+			//TODO: make it easy to use returned token
 			return 0
 		}
 	}
