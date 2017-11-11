@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func validateDocs(apiKey string, yml []byte) []byte {
+func validateDocs(apiKey string, yml []byte) ([]byte, []byte) {
 	docs := struct {
 		V     uint              `json:"v"`
 		Blobs map[string]string `json:"blobs"`
@@ -29,7 +29,7 @@ func validateDocs(apiKey string, yml []byte) []byte {
 	return validationReq(apiKey, payload)
 }
 
-func validationReq(apiKey string, JSON []byte) []byte {
+func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	r, err := http.NewRequest(http.MethodPut, docsURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Fatal(err)
@@ -39,7 +39,9 @@ func validationReq(apiKey string, JSON []byte) []byte {
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	r.Header.Set("User-Agent", pkgVersion)
-	r.Header.Set(xAPIKeyHeader, apiKey)
+	if apiKey != "" {
+		r.Header.Set(xAPIKeyHeader, apiKey)
+	}
 	client := &http.Client{}
 
 	start := time.Now()
@@ -57,8 +59,7 @@ func validationReq(apiKey string, JSON []byte) []byte {
 	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
 
 	if resp.StatusCode == 400 {
-		reportValidationErrors(body)
-		log.Fatal("Documentation validation failed")
+		return nil, body
 	}
 
 	if resp.StatusCode != 201 {
@@ -76,7 +77,7 @@ func validationReq(apiKey string, JSON []byte) []byte {
 		log.Fatal("Could not acquire a validation token")
 	}
 
-	return body
+	return body, nil
 }
 
 func reportValidationErrors(errors []byte) {

@@ -32,7 +32,12 @@ type ymlCfg struct {
 func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 	yml := readYAML(localYML)
 
-	validationJSON := validateDocs(apiKey, yml)
+	validationJSON, errors := validateDocs(apiKey, yml)
+	if errors != nil {
+		reportValidationErrors(errors)
+		log.Fatal("Documentation validation failed")
+	}
+
 	cmdJSON, authToken := initPUT(apiKey, validationJSON)
 	cmd := unmarshalCmd(cmdJSON)
 

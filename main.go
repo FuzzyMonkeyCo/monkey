@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -12,6 +13,7 @@ import (
 const (
 	pkgVersion = "0.3.0"
 	pkgTitle   = "testman/" + pkgVersion
+	envAPIKey  = "COVEREDCI_API_KEY"
 )
 
 var (
@@ -40,46 +42,63 @@ func init() {
 	unstacheInit()
 }
 
+func main() {
+	os.Exit(actualMain())
+}
+
 func usage() (map[string]interface{}, error) {
 	usage := `testman
 
 Usage:
-  testman test [--slow]
+  testman test
+  testman validate
   testman -h | --help
-  testman --version
+  testman -V | --version
 
 Options:
-  --slow        Don't phone home using Websockets
-  -h --help     Show this screen
-  --version     Show version`
+  -h, --help     Show this screen
+  -V, --version  Show version`
 
 	return docopt.Parse(usage, nil, true, pkgTitle, false)
 }
 
-func main() {
+func actualMain() int {
 	args, err := usage()
 	if err != nil {
-		log.Fatal("!args: ", err)
+		log.Println("!args: ", err)
+		return 1
 	}
-	log.Println(args) //FIXME: use args
+	log.Println(args)
 
 	if !isDebug {
 		latest := getLatestRelease()
 		if isOutOfDate(pkgVersion, latest) {
-			log.Fatalf("A newer version of %s is available: %s\n", pkgTitle, latest)
+			log.Printf("A newer version of %s is available: %s\n", pkgTitle, latest)
+			return 3
 		}
 	}
 
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Fatal(shell() + " is required")
+		log.Println(shell() + " is required")
+		return 5
 	}
 
-	apiKey := os.Getenv("COVEREDCI_API_KEY")
-	if isDebug {
-		apiKey = "42"
+	apiKey := getAPIKey()
+	if args["validate"].(bool) {
+		yml := readYAML(localYML)
+		_, errors := validateDocs(apiKey, yml)
+		if errors != nil {
+			reportValidationErrors(errors)
+			return 2
+		} else {
+			fmt.Println("No validation errors found.")
+			return 0
+		}
 	}
+
 	if apiKey == "" {
-		log.Fatal("$COVEREDCI_API_KEY is unset")
+		log.Println("$" + envAPIKey + " is unset")
+		return 4
 	}
 
 	envSerializedPath := uniquePath()
@@ -93,7 +112,7 @@ func main() {
 		cmd = next(cfg, cmd)
 		if nil == cmd {
 			log.Println("We're done!")
-			break
+			return 0
 		}
 	}
 }
@@ -102,4 +121,12 @@ func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
 		log.Fatal(err)
 	}
+}
+
+func getAPIKey() string {
+	apiKey := os.Getenv(envAPIKey)
+	if isDebug {
+		apiKey = "42"
+	}
+	return apiKey
 }
