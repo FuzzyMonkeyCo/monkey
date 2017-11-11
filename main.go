@@ -11,7 +11,7 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.4.0"
+	pkgVersion = "0.5.0"
 	pkgTitle   = "testman/" + pkgVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
