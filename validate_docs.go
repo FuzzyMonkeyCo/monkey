@@ -38,7 +38,7 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	r.Header.Set("Content-Type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	r.Header.Set("User-Agent", pkgVersion)
+	r.Header.Set("User-Agent", binVersion)
 	if apiKey != "" {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
@@ -110,7 +110,8 @@ func blobs(yml []byte) map[string]string {
 
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		log.Fatal("Could not read ", filePath)
 	}
 	blobs[filePath] = string(fileData)
 

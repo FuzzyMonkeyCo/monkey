@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"log"
-	"os"
 	"os/exec"
 	"time"
 
@@ -50,7 +48,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	defer cancel()
 
 	var script, stderr bytes.Buffer
-	envSerializedPath := uniquePath()
+	envSerializedPath := pwdId + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
@@ -64,7 +62,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = os.Stdout
+	exe.Stdout = &stderr
 	exe.Stderr = &stderr
 
 	log.Printf("[DBG] $ %s\n", script.Bytes())
@@ -80,17 +78,6 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	maybeF1inalizeConf(cfg, kind)
 
 	return &simpleCmdRep{V: 1, Cmd: kind, Us: us}
-}
-
-func uniquePath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal("[ERR] ", err)
-	}
-
-	h := fnv.New64a()
-	h.Write([]byte(cwd))
-	return "/tmp/" + coveredci + "_" + fmt.Sprintf("%d", h.Sum64()) + ".env"
 }
 
 func snapEnv(envSerializedPath string) {
@@ -130,7 +117,7 @@ func shell() string {
 }
 
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
-	envVal := readEnv(uniquePath(), "$"+envVar)
+	envVal := readEnv(pwdId+".env", "$"+envVar)
 	return raymond.SafeString(envVal)
 }
 

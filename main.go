@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"hash/fnv"
 	"io"
 	"log"
 	"os"
@@ -13,8 +14,9 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	pkgVersion = "0.5.0"
-	pkgTitle   = "testman/" + pkgVersion
+	binName    = "testman"
+	binVersion = "0.5.0"
+	binTitle   = binName + "/" + binVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
 
@@ -24,6 +26,7 @@ var (
 	initURL string
 	nextURL string
 	docsURL string
+	pwdId   string
 )
 
 func init() {
@@ -42,6 +45,14 @@ func init() {
 	nextURL = apiRoot + "/next"
 
 	unstacheInit()
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	h := fnv.New64a()
+	h.Write([]byte(cwd))
+	pwdId = "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
 }
 
 func main() {
@@ -62,7 +73,7 @@ Options:
   -h, --help     Show this screen
   -V, --version  Show version`
 
-	return docopt.Parse(usage, nil, true, pkgTitle, true)
+	return docopt.Parse(usage, nil, true, binTitle, true)
 }
 
 func actualMain() int {
@@ -72,7 +83,8 @@ func actualMain() int {
 		return 1
 	}
 
-	logCatchall, err := os.OpenFile("/tmp/testman.log", os.O_WRONLY|os.O_CREATE, 0640)
+	logFile := pwdId + ".log"
+	logCatchall, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println(err)
 		return 1
@@ -84,19 +96,14 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Println("[ERR]", pkgTitle, args)
+	log.Println("[ERR]", binTitle, logFile, args)
 
 	if !isDebug {
 		latest := getLatestRelease()
-		if isOutOfDate(pkgVersion, latest) {
-			log.Printf("A newer version of %s is available: %s\n", pkgTitle, latest)
+		if isOutOfDate(binVersion, latest) {
+			log.Printf("A newer version of %s is available: %s\n", binTitle, latest)
 			return 3
 		}
-	}
-
-	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Println(shell() + " is required")
-		return 5
 	}
 
 	apiKey := getAPIKey()
@@ -113,12 +120,17 @@ func actualMain() int {
 		}
 	}
 
+	if _, err := os.Stat(shell()); os.IsNotExist(err) {
+		log.Println(shell() + " is required")
+		return 5
+	}
+
 	if apiKey == "" {
 		log.Println("$" + envAPIKey + " is unset")
 		return 4
 	}
 
-	envSerializedPath := uniquePath()
+	envSerializedPath := pwdId + ".env"
 	ensureDeleted(envSerializedPath)
 	snapEnv(envSerializedPath)
 	defer ensureDeleted(envSerializedPath)
