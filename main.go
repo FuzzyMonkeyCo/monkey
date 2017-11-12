@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -71,12 +72,18 @@ func actualMain() int {
 		return 1
 	}
 
-	log.SetOutput(
-		&logutils.LevelFilter{
-			Levels:   []logutils.LogLevel{"DBG", "WRN", "ERR", "NOP"},
-			MinLevel: logLevel(args),
-			Writer:   os.Stderr,
-		})
+	logCatchall, err := os.OpenFile("/tmp/testman.log", os.O_WRONLY|os.O_CREATE, 0640)
+	if err != nil {
+		log.Println(err)
+		return 1
+	}
+	defer logCatchall.Close()
+	logFiltered := &logutils.LevelFilter{
+		Levels:   []logutils.LogLevel{"DBG", "WRN", "ERR", "NOP"},
+		MinLevel: logLevel(args),
+		Writer:   os.Stderr,
+	}
+	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Println("[ERR]", pkgTitle, args)
 
 	if !isDebug {

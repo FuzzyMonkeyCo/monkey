@@ -110,7 +110,7 @@ func blobs(yml []byte) map[string]string {
 
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatal("[ERR]", err)
+		log.Fatal("[ERR] ", err)
 	}
 	blobs[filePath] = string(fileData)
 
