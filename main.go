@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"gopkg.in/docopt/docopt.go.v0"
+	"gopkg.in/hashicorp/logutils.v0"
 )
 
 //go:generate go run misc/include_jsons.go
@@ -50,16 +51,17 @@ func usage() (map[string]interface{}, error) {
 	usage := `testman
 
 Usage:
-  testman test
-  testman validate
+  testman [-vvv] test
+  testman [-vvv] validate
   testman -h | --help
   testman -V | --version
 
 Options:
+  -v, -vv, -vvv  Log verbosity level
   -h, --help     Show this screen
   -V, --version  Show version`
 
-	return docopt.Parse(usage, nil, true, pkgTitle, false)
+	return docopt.Parse(usage, nil, true, pkgTitle, true)
 }
 
 func actualMain() int {
@@ -68,7 +70,14 @@ func actualMain() int {
 		log.Println("!args: ", err)
 		return 1
 	}
-	log.Println(args)
+
+	log.SetOutput(
+		&logutils.LevelFilter{
+			Levels:   []logutils.LogLevel{"DBG", "WRN", "ERR", "NOP"},
+			MinLevel: logLevel(args),
+			Writer:   os.Stderr,
+		})
+	log.Println("[WRN]", args)
 
 	if !isDebug {
 		latest := getLatestRelease()
@@ -130,4 +139,19 @@ func getAPIKey() string {
 		apiKey = "42"
 	}
 	return apiKey
+}
+
+func logLevel(args map[string]interface{}) logutils.LogLevel {
+	var lvl string
+	switch args["-v"].(int) {
+	case 1:
+		lvl = "ERR"
+	case 2:
+		lvl = "WRN"
+	case 3:
+		lvl = "DBG"
+	default:
+		lvl = "NOP"
+	}
+	return logutils.LogLevel(lvl)
 }
