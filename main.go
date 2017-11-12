@@ -77,8 +77,7 @@ func actualMain() int {
 			MinLevel: logLevel(args),
 			Writer:   os.Stderr,
 		})
-	log.Println("[ERR]", pkgTitle)
-	log.Println("[WRN]", args)
+	log.Println("[ERR]", pkgTitle, args)
 
 	if !isDebug {
 		latest := getLatestRelease()
@@ -118,7 +117,7 @@ func actualMain() int {
 	defer ensureDeleted(envSerializedPath)
 
 	cfg, cmd := initDialogue(apiKey)
-	log.Printf("cmd: %+v\n", cmd)
+	log.Printf("[DBG] init cmd: %+v\n", cmd)
 	for {
 		cmd = next(cfg, cmd)
 		if nil == cmd {

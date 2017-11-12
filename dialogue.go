@@ -119,7 +119,7 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	if err != nil {
 		log.Fatal("[ERR] !read body: ", err)
 	}
-	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, body)
+	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, body)
 
 	if resp.StatusCode != 201 {
 		log.Fatal("[ERR] !201: ", resp.Status)
@@ -156,7 +156,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	if err != nil {
 		log.Fatal("[ERR] !read body: ", err)
 	}
-	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, body)
+	log.Printf("[DBG] 🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, body)
 
 	if resp.StatusCode != 200 {
 		log.Fatal("[ERR] !200: ", resp.Status)

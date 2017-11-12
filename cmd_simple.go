@@ -67,7 +67,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	exe.Stdout = os.Stdout
 	exe.Stderr = &stderr
 
-	log.Printf("$ %s\n", script.Bytes())
+	log.Printf("[DBG] $ %s\n", script.Bytes())
 	start := time.Now()
 	err := exe.Run()
 	us := uint64(time.Since(start) / time.Microsecond)
@@ -100,7 +100,7 @@ func snapEnv(envSerializedPath string) {
 
 	cmd := "declare -p >" + envSerializedPath
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
-	log.Printf("$ %s\n", cmd)
+	log.Printf("[DBG] $ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
 		log.Fatal("[ERR] ", err)
@@ -117,7 +117,7 @@ func readEnv(envSerializedPath, envVar string) string {
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
-	log.Printf("$ %s\n", cmd)
+	log.Printf("[DBG] $ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
 		log.Fatal("[ERR] ", err)

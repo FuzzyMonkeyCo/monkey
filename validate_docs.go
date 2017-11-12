@@ -56,7 +56,7 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	if err != nil {
 		log.Fatal("[ERR] !read body: ", err)
 	}
-	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
+	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
 
 	if resp.StatusCode == 400 {
 		return nil, body
