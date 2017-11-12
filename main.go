@@ -57,7 +57,7 @@ Usage:
   testman -V | --version
 
 Options:
-  -v, -vv, -vvv  Log verbosity level
+  -v, -vv, -vvv  Verbosity level
   -h, --help     Show this screen
   -V, --version  Show version`
 
@@ -77,6 +77,7 @@ func actualMain() int {
 			MinLevel: logLevel(args),
 			Writer:   os.Stderr,
 		})
+	log.Println("[ERR]", pkgTitle)
 	log.Println("[WRN]", args)
 
 	if !isDebug {
@@ -129,7 +130,7 @@ func actualMain() int {
 
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 }
 

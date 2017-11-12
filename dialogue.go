@@ -51,7 +51,7 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 		} `yaml:"documentation"`
 	}
 	if err := yaml.Unmarshal(yml, &ymlConf); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	cfg := &ymlCfg{
@@ -82,13 +82,14 @@ func next(cfg *ymlCfg, cmd aCmd) aCmd {
 func readYAML(path string) []byte {
 	fd, err := os.Open(path)
 	if err != nil {
-		log.Fatalf("You must provide a readable '.coveredci.yml' file in the current directory.\nError: %s\n", err)
+		log.Println("You must provide a readable '.coveredci.yml' file in the current directory.")
+		log.Fatalf("Error: %s\n", err)
 	}
 	defer fd.Close()
 
 	yml, err := ioutil.ReadAll(fd)
 	if err != nil {
-		log.Fatal("!yml: ", err)
+		log.Fatal("[ERR] !yml: ", err)
 	}
 
 	return yml
@@ -97,7 +98,7 @@ func readYAML(path string) []byte {
 func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
 	if err != nil {
-		log.Fatal("!initPUT: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	r.Header.Set("Content-Type", mimeYAML)
@@ -110,18 +111,18 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		log.Fatal("!PUT: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("!read body: ", err)
+		log.Fatal("[ERR] !read body: ", err)
 	}
 	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, body)
 
 	if resp.StatusCode != 201 {
-		log.Fatal("!201: ", resp.Status)
+		log.Fatal("[ERR] !201: ", resp.Status)
 	}
 
 	authToken := resp.Header.Get(xAuthTokenHeader)
@@ -135,7 +136,7 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	r, err := http.NewRequest(http.MethodPost, nextURL, bytes.NewBuffer(payload))
 	if err != nil {
-		log.Fatal("!nextPOST: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	r.Header.Set("content-type", mimeJSON)
@@ -147,18 +148,18 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		log.Fatal("!POST: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("!read body: ", err)
+		log.Fatal("[ERR] !read body: ", err)
 	}
 	log.Printf("🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, body)
 
 	if resp.StatusCode != 200 {
-		log.Fatal("!200: ", resp.Status)
+		log.Fatal("[ERR] !200: ", resp.Status)
 	}
 
 	return body

@@ -34,7 +34,7 @@ func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
 	cmdRet := executeScript(cfg, cmd.Kind())
 	rep, err := json.Marshal(cmdRet)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	return rep
 }
@@ -85,7 +85,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 func uniquePath() string {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	h := fnv.New64a()
@@ -103,7 +103,7 @@ func snapEnv(envSerializedPath string) {
 	log.Printf("$ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 }
 
@@ -120,7 +120,7 @@ func readEnv(envSerializedPath, envVar string) string {
 	log.Printf("$ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	return string(stdout.Bytes())
 }
@@ -145,10 +145,10 @@ func unstache(field string) string {
 
 	result, err := raymond.Render(field, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	if "" == result {
-		log.Fatalf("Mustache field '%s' was resolved to the empty string\n", field)
+		log.Fatalf("[ERR] Mustache field '%s' was resolved to the empty string\n", field)
 	}
 	return result
 }
