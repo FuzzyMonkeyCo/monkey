@@ -88,7 +88,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 
 	for _, header := range cmd.Headers {
 		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", binVersion)
+			r.Header.Set("User-Agent", binTitle)
 		} else {
 			pair := strings.SplitN(header, ": ", 2)
 			r.Header.Set(pair[0], pair[1])

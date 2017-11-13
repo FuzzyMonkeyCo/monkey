@@ -38,7 +38,7 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	r.Header.Set("Content-Type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	r.Header.Set("User-Agent", binVersion)
+	r.Header.Set("User-Agent", binTitle)
 	if apiKey != "" {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
