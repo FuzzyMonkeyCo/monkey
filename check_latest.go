@@ -23,17 +23,17 @@ func getLatestRelease() string {
 	// Clients and Transports are safe for concurrent use by multiple goroutines and for efficiency should only be created once and re-used.
 	resp, err := client.Do(get)
 	if err != nil {
-		log.Fatal("!GET: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Fatal("!200: ", resp.Status)
+		log.Fatal("[ERR] !200: ", resp.Status)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("!read body: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	latest := execJQ(body)
@@ -46,12 +46,12 @@ func getLatestRelease() string {
 func execJQ(body []byte) string {
 	op, err := jq.Parse(jqQuery)
 	if err != nil {
-		log.Fatal("!jq: ", err)
+		log.Fatal("[ERR] !jq: ", err)
 	}
 
 	ret, err := op.Apply(body)
 	if err != nil {
-		log.Fatal("!exec jq: ", err)
+		log.Fatal("[ERR] !exec jq: ", err)
 	}
 
 	res := string(ret)
@@ -61,12 +61,12 @@ func execJQ(body []byte) string {
 func isOutOfDate(current, latest string) bool {
 	vCurrent, err := semver.Make(current)
 	if err != nil {
-		log.Fatal("!vCurrent: ", err)
+		log.Fatal("[ERR] !vCurrent: ", err)
 	}
 
 	vLatest, err := semver.Make(latest)
 	if err != nil {
-		log.Fatal("!vLatest: ", err)
+		log.Fatal("[ERR] !vLatest: ", err)
 	}
 
 	return vLatest.GT(vCurrent)

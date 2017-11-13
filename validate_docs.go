@@ -23,7 +23,7 @@ func validateDocs(apiKey string, yml []byte) ([]byte, []byte) {
 
 	payload, err := json.Marshal(docs)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	return validationReq(apiKey, payload)
@@ -32,13 +32,13 @@ func validateDocs(apiKey string, yml []byte) ([]byte, []byte) {
 func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	r, err := http.NewRequest(http.MethodPut, docsURL, bytes.NewBuffer(JSON))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	r.Header.Set("Content-Type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
-	r.Header.Set("User-Agent", pkgVersion)
+	r.Header.Set("User-Agent", binVersion)
 	if apiKey != "" {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
@@ -48,22 +48,22 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	resp, err := client.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("!read body: ", err)
+		log.Fatal("[ERR] !read body: ", err)
 	}
-	log.Printf("🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
+	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
 
 	if resp.StatusCode == 400 {
 		return nil, body
 	}
 
 	if resp.StatusCode != 201 {
-		log.Fatal("!201: ", resp.Status)
+		log.Fatal("[ERR] !201: ", resp.Status)
 	}
 
 	var validated struct {
@@ -71,7 +71,7 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 		Token string `json:"token"`
 	}
 	if err := json.Unmarshal(body, &validated); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	if validated.Token == "" {
 		log.Fatal("Could not acquire a validation token")
@@ -110,7 +110,8 @@ func blobs(yml []byte) map[string]string {
 
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("[ERR]", err)
+		log.Fatal("Could not read ", filePath)
 	}
 	blobs[filePath] = string(fileData)
 

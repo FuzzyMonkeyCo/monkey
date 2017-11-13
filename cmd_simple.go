@@ -5,9 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"hash/fnv"
 	"log"
-	"os"
 	"os/exec"
 	"time"
 
@@ -34,7 +32,7 @@ func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
 	cmdRet := executeScript(cfg, cmd.Kind())
 	rep, err := json.Marshal(cmdRet)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	return rep
 }
@@ -50,7 +48,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	defer cancel()
 
 	var script, stderr bytes.Buffer
-	envSerializedPath := uniquePath()
+	envSerializedPath := pwdId + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
@@ -64,10 +62,10 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = os.Stdout
+	exe.Stdout = &stderr
 	exe.Stderr = &stderr
 
-	log.Printf("$ %s\n", script.Bytes())
+	log.Printf("[DBG] $ %s\n", script.Bytes())
 	start := time.Now()
 	err := exe.Run()
 	us := uint64(time.Since(start) / time.Microsecond)
@@ -82,17 +80,6 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	return &simpleCmdRep{V: 1, Cmd: kind, Us: us}
 }
 
-func uniquePath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	h := fnv.New64a()
-	h.Write([]byte(cwd))
-	return "/tmp/" + coveredci + "_" + fmt.Sprintf("%d", h.Sum64()) + ".env"
-}
-
 func snapEnv(envSerializedPath string) {
 	cmdTimeout := 200 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
@@ -100,10 +87,10 @@ func snapEnv(envSerializedPath string) {
 
 	cmd := "declare -p >" + envSerializedPath
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
-	log.Printf("$ %s\n", cmd)
+	log.Printf("[DBG] $ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 }
 
@@ -117,10 +104,10 @@ func readEnv(envSerializedPath, envVar string) string {
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
-	log.Printf("$ %s\n", cmd)
+	log.Printf("[DBG] $ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	return string(stdout.Bytes())
 }
@@ -130,7 +117,7 @@ func shell() string {
 }
 
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
-	envVal := readEnv(uniquePath(), "$"+envVar)
+	envVal := readEnv(pwdId+".env", "$"+envVar)
 	return raymond.SafeString(envVal)
 }
 
@@ -145,10 +132,10 @@ func unstache(field string) string {
 
 	result, err := raymond.Render(field, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 	if "" == result {
-		log.Fatalf("Mustache field '%s' was resolved to the empty string\n", field)
+		log.Fatalf("[ERR] Mustache field '%s' was resolved to the empty string\n", field)
 	}
 	return result
 }

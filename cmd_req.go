@@ -56,7 +56,7 @@ func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
 		rep, err = json.Marshal(ko)
 	}
 	if err != nil {
-		log.Fatal("!encode: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	return rep
@@ -65,7 +65,7 @@ func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
 func updateUrl(cfg *ymlCfg, Url string) string {
 	u, err := url.Parse(Url)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	// Note: if host is an IPv6 then it has to be braced with []
@@ -83,12 +83,12 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		r, err = http.NewRequest(cmd.Method, url, nil)
 	}
 	if err != nil {
-		log.Fatal("!NewRequest: ", err)
+		log.Fatal("[ERR] ", err)
 	}
 
 	for _, header := range cmd.Headers {
 		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", pkgVersion)
+			r.Header.Set("User-Agent", binVersion)
 		} else {
 			pair := strings.SplitN(header, ": ", 2)
 			r.Header.Set(pair[0], pair[1])
@@ -107,7 +107,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
+		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
@@ -121,9 +121,9 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatal("!read body: ", err)
+			log.Fatal("[ERR] !read body: ", err)
 		}
-		log.Printf("🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
+		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
 		var headers []string
 		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
 		// Loop through headers

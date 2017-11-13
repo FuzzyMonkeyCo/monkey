@@ -9,4 +9,4 @@ all: $(filter-out schemas.go,$(wildcard *.go)) $(wildcard misc/*.json)
 
 debug: all
 	DEBUG=1 ./$(EXE) validate
-	DEBUG=1 ./$(EXE) test
+	DEBUG=1 ./$(EXE) -vvv test
