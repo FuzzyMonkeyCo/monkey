@@ -138,11 +138,13 @@ func actualMain() int {
 	cfg, cmd := initDialogue(apiKey)
 	log.Printf("[DBG] init cmd: %+v\n", cmd)
 	for {
-		cmd = next(cfg, cmd)
-		if nil == cmd {
+		if cmd.Kind() == "done" {
+			return testOutcome(cmd.(doneCmd))
 			log.Println("We're done!")
 			return 0
 		}
+
+		cmd = next(cfg, cmd)
 	}
 }
 

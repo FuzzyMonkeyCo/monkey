@@ -13,6 +13,14 @@ type aCmd interface {
 }
 
 func unmarshalCmd(cmdJSON []byte) aCmd {
+	if isValid(schemaREQv1, cmdJSON) {
+		var cmd reqCmd
+		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
+			log.Fatal("[ERR] ", err)
+		}
+		return cmd
+	}
+
 	if isValid(schemaCMDv1, cmdJSON) {
 		var cmd simpleCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
@@ -21,8 +29,8 @@ func unmarshalCmd(cmdJSON []byte) aCmd {
 		return cmd
 	}
 
-	if isValid(schemaREQv1, cmdJSON) {
-		var cmd reqCmd
+	if isValid(schemaCMDDonev1, cmdJSON) {
+		var cmd doneCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Fatal("[ERR] ", err)
 		}

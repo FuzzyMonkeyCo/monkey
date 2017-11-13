@@ -9,6 +9,7 @@ func main() {
 	schemas := map[string]string{
 		"schemaREQv1": "misc/req_v1.json",
 		"schemaCMDv1": "misc/cmd_req_v1.json",
+		"schemaCMDDonev1": "misc/cmd_rep_done_v1.json",
 	}
 
 	out, _ := os.Create("schemas.go")
