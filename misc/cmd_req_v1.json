@@ -1,14 +1,13 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "passthrough__req_v1",
+    "_id": "cmd_req_v1",
     "additionalProperties": false,
     "definitions": {
         "cmd": {
             "enum": [
                 "start",
                 "reset",
-                "stop",
-                "done"
+                "stop"
             ]
         },
         "v": {

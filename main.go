@@ -15,7 +15,7 @@ import (
 
 const (
 	binName    = "testman"
-	binVersion = "0.5.0"
+	binVersion = "0.6.0"
 	binTitle   = binName + "/" + binVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
@@ -138,11 +138,11 @@ func actualMain() int {
 	cfg, cmd := initDialogue(apiKey)
 	log.Printf("[DBG] init cmd: %+v\n", cmd)
 	for {
-		cmd = next(cfg, cmd)
-		if nil == cmd {
-			log.Println("We're done!")
-			return 0
+		if cmd.Kind() == "done" {
+			return testOutcome(cmd.(doneCmd))
 		}
+
+		cmd = next(cfg, cmd)
 	}
 }
 

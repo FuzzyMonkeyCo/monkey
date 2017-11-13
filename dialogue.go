@@ -67,10 +67,6 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 }
 
 func next(cfg *ymlCfg, cmd aCmd) aCmd {
-	if cmd.Kind() == "done" {
-		return nil
-	}
-
 	// Sometimes sets cfg.Final* fields
 	rep := cmd.Exec(cfg)
 
