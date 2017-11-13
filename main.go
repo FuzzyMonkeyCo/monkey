@@ -140,8 +140,6 @@ func actualMain() int {
 	for {
 		if cmd.Kind() == "done" {
 			return testOutcome(cmd.(doneCmd))
-			log.Println("We're done!")
-			return 0
 		}
 
 		cmd = next(cfg, cmd)
