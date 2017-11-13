@@ -15,7 +15,7 @@ import (
 
 const (
 	binName    = "testman"
-	binVersion = "0.5.0"
+	binVersion = "0.6.0"
 	binTitle   = binName + "/" + binVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
