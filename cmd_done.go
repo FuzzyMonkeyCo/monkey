@@ -3,9 +3,9 @@ package main
 import "fmt"
 
 type doneCmd struct {
-	V   uint   `json:"v"`
-	Cmd string `json:"cmd"`
-	Failure bool `json:"failure"`
+	V       uint   `json:"v"`
+	Cmd     string `json:"cmd"`
+	Failure bool   `json:"failure"`
 }
 
 func (cmd doneCmd) Kind() string {
