@@ -94,7 +94,7 @@ func snapEnv(envSerializedPath string) {
 	}
 }
 
-//FIXME: make this faster! parse the .env file?
+//TODO: make this faster! parse the .env file?
 func readEnv(envSerializedPath, envVar string) string {
 	cmdTimeout := 200 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)

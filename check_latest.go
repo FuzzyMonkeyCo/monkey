@@ -19,9 +19,7 @@ const (
 func getLatestRelease() string {
 	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
 	get.Header.Set("Accept", githubV3APIHeader)
-	client := &http.Client{} //FIXME: from the docs:
-	// Clients and Transports are safe for concurrent use by multiple goroutines and for efficiency should only be created once and re-used.
-	resp, err := client.Do(get)
+	resp, err := clientUtils.Do(get)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
 	}

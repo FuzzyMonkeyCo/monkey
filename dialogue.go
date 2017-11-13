@@ -100,10 +100,9 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("User-Agent", binVersion)
 	r.Header.Set(xAPIKeyHeader, apiKey)
-	client := &http.Client{}
 
 	start := time.Now()
-	resp, err := client.Do(r)
+	resp, err := clientUtils.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
@@ -138,9 +137,9 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("User-Agent", binVersion)
 	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
-	client := &http.Client{}
+
 	start := time.Now()
-	resp, err := client.Do(r)
+	resp, err := clientUtils.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Fatal("[ERR] ", err)

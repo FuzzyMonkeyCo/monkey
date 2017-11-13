@@ -15,7 +15,7 @@ import (
 
 const (
 	binName    = "testman"
-	binVersion = "0.6.0"
+	binVersion = "0.7.0"
 	binTitle   = binName + "/" + binVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
@@ -27,6 +27,8 @@ var (
 	nextURL string
 	docsURL string
 	pwdId   string
+	clientUtils = 	client := &http.Client{}
+	clientReq = 	client := &http.Client{}
 )
 
 func init() {

@@ -94,9 +94,8 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 			r.Header.Set(pair[0], pair[1])
 		}
 	}
-	client := &http.Client{}
 	start := time.Now()
-	resp, err := client.Do(r)
+	resp, err := clientReq.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	var _pld string
 	if nil == cmd.Payload {

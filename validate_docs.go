@@ -42,10 +42,9 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	if apiKey != "" {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
-	client := &http.Client{}
 
 	start := time.Now()
-	resp, err := client.Do(r)
+	resp, err := clientUtils.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
