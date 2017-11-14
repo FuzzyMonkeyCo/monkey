@@ -15,7 +15,7 @@ import (
 type reqCmd struct {
 	V       uint        `json:"v"`
 	Cmd     string      `json:"cmd"`
-	UID     interface{} `json:"uid"`
+	Lane    interface{} `json:"lane"`
 	Method  string      `json:"method"`
 	Url     string      `json:"url"`
 	Headers []string    `json:"headers"`
@@ -26,7 +26,7 @@ type reqCmdRepOK struct {
 	Cmd     string      `json:"cmd"`
 	V       uint        `json:"v"`
 	Us      uint64      `json:"us"`
-	UID     interface{} `json:"uid"`
+	Lane    interface{} `json:"lane"`
 	Code    int         `json:"code"`
 	Headers []string    `json:"headers"`
 	Payload string      `json:"payload"`
@@ -36,7 +36,7 @@ type reqCmdRepKO struct {
 	Cmd    string      `json:"cmd"`
 	V      uint        `json:"v"`
 	Us     uint64      `json:"us"`
-	UID    interface{} `json:"uid"`
+	Lane   interface{} `json:"lane"`
 	Reason string      `json:"reason"`
 }
 
@@ -110,7 +110,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
-			UID:    cmd.UID,
+			Lane:   cmd.Lane,
 			Us:     us,
 			Reason: reason,
 		}
@@ -137,7 +137,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		ok := &reqCmdRepOK{
 			V:       1,
 			Cmd:     cmd.Cmd,
-			UID:     cmd.UID,
+			Lane:    cmd.Lane,
 			Us:      us,
 			Code:    resp.StatusCode,
 			Headers: headers,
