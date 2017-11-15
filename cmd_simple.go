@@ -6,10 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"time"
 
 	"gopkg.in/aymerick/raymond.v2"
+)
+
+const (
+	timeoutShort = 200 * time.Millisecond
+	timeoutLong  = 10 * time.Minute
 )
 
 type simpleCmd struct {
@@ -43,8 +49,9 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 		return &simpleCmdRep{V: 1, Cmd: kind}
 	}
 
-	cmdTimeout := 10 * time.Minute
-	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
+	// Note: exec.Cmd fails to cancel with non-*os.File outputs on linux
+	//   https://github.com/golang/go/issues/18874
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
 	var script, stderr bytes.Buffer
@@ -62,10 +69,10 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = &stderr
+	exe.Stdout = os.Stdout
 	exe.Stderr = &stderr
-
 	log.Printf("[DBG] $ %s\n", script.Bytes())
+
 	start := time.Now()
 	err := exe.Run()
 	us := uint64(time.Since(start) / time.Microsecond)
@@ -80,23 +87,33 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	return &simpleCmdRep{V: 1, Cmd: kind, Us: us}
 }
 
-func snapEnv(envSerializedPath string) {
-	cmdTimeout := 200 * time.Millisecond
-	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
+func snapEnv(envSerializedPath string) (err error) {
+	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	defer envFile.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
-	cmd := "declare -p >" + envSerializedPath
-	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
-	log.Printf("[DBG] $ %s\n", cmd)
+	var script bytes.Buffer
+	fmt.Fprintln(&script, "declare -p")
+	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
+	exe.Stdin = &script
+	exe.Stdout = envFile
+	log.Printf("[DBG] $ %s\n", script.Bytes())
 
 	if err := exe.Run(); err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return err
 	}
+	return nil
 }
 
 func readEnv(envVar string) string {
-	cmdTimeout := 200 * time.Millisecond
-	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
 	cmd := "source " + pwdId + ".env >/dev/null 2>&1 " +

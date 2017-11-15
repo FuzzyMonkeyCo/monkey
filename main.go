@@ -136,7 +136,9 @@ func actualMain() int {
 
 	envSerializedPath := pwdId + ".env"
 	ensureDeleted(envSerializedPath)
-	snapEnv(envSerializedPath)
+	if err := snapEnv(envSerializedPath); err != nil {
+		return 1
+	}
 	defer ensureDeleted(envSerializedPath)
 
 	recorder := harhar.NewRecorder()
