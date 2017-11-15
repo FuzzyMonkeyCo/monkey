@@ -94,20 +94,22 @@ func snapEnv(envSerializedPath string) {
 	}
 }
 
-//TODO: make this faster! parse the .env file?
-func readEnv(envSerializedPath, envVar string) string {
+func readEnv(envVar string) string {
 	cmdTimeout := 200 * time.Millisecond
 	ctx, cancel := context.WithTimeout(context.Background(), cmdTimeout)
 	defer cancel()
 
-	cmd := "source " + envSerializedPath + " >/dev/null 2>&1 && echo -n " + envVar
+	cmd := "source " + pwdId + ".env >/dev/null 2>&1 " +
+		"&& set -o nounset " +
+		"&& echo -n $" + envVar
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
 	log.Printf("[DBG] $ %s\n", cmd)
 
 	if err := exe.Run(); err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return ""
 	}
 	return string(stdout.Bytes())
 }
@@ -117,7 +119,11 @@ func shell() string {
 }
 
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
-	envVal := readEnv(pwdId+".env", "$"+envVar)
+	envVal := readEnv(envVar)
+	if envVal == "" {
+		fmt.Printf("Environment variable $%s is unset or empty\n", envVar)
+		log.Fatal("[ERR] unset or empty env ", envVar)
+	}
 	return raymond.SafeString(envVal)
 }
 
