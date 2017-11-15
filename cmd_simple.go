@@ -141,8 +141,11 @@ func unstache(field string) string {
 }
 
 func maybeF1inalizeConf(cfg *ymlCfg, kind string) {
-	if kind == "start" || kind == "stop" {
+	if cfg.FinalHost == "" || kind != "reset" {
 		cfg.FinalHost = unstache(cfg.Host)
+	}
+
+	if cfg.FinalPort == "" || kind != "reset" {
 		cfg.FinalPort = unstache(cfg.Port)
 	}
 }
