@@ -106,7 +106,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
+		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
@@ -122,7 +122,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		if err != nil {
 			log.Fatal("[ERR] !read body: ", err)
 		}
-		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
+		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
 		var headers []string
 		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
 		// Loop through headers

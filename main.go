@@ -95,7 +95,7 @@ func actualMain() int {
 	}
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DBG", "WRN", "ERR", "NOP"},
+		Levels:   []logutils.LogLevel{"DBG", "NFO", "ERR", "NOP"},
 		MinLevel: logLevel(args),
 		Writer:   os.Stderr,
 	}
@@ -174,7 +174,7 @@ func logLevel(args map[string]interface{}) logutils.LogLevel {
 	case 1:
 		lvl = "ERR"
 	case 2:
-		lvl = "WRN"
+		lvl = "NFO"
 	case 3:
 		lvl = "DBG"
 	default:
