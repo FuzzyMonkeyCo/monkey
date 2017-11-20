@@ -20,13 +20,11 @@ sh <(curl -sL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/la
 
 ```yaml
 version: 0
-
 documentation:
   kind: openapi_v2
   file: priv/openapi2v1.yaml
   host: localhost
   port: 6773
-
 reset:
   - curl --fail -X DELETE http://localhost:6773/api/1/items
 ```
@@ -60,3 +58,7 @@ reset:
 stop:
   - docker stop $CONTAINER_ID
 ```
+
+### Issues?
+
+Report bugs [on the project page](https://github.com/coveredCI/testman/issues) or [contact us](mailto:hi@coveredci.co).

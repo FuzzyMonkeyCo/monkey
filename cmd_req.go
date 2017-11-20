@@ -76,14 +76,24 @@ func updateUrl(cfg *ymlCfg, Url string) string {
 func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	var r *http.Request
 	var err error
+	var _pld string
 	if cmd.Payload != nil {
+		_pld = *cmd.Payload
 		inPayload := bytes.NewBufferString(*cmd.Payload)
 		r, err = http.NewRequest(cmd.Method, url, inPayload)
+		if err != nil {
+			log.Fatal("[ERR] ", err)
+		}
 	} else {
+		_pld = ""
 		r, err = http.NewRequest(cmd.Method, url, nil)
+		if err != nil {
+			log.Fatal("[ERR] ", err)
+		}
 	}
-	if err != nil {
-		log.Fatal("[ERR] ", err)
+
+	if !isHARReady() {
+		newHARTransport()
 	}
 
 	for _, header := range cmd.Headers {
@@ -97,12 +107,6 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	start := time.Now()
 	resp, err := clientReq.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
-	var _pld string
-	if nil == cmd.Payload {
-		_pld = ""
-	} else {
-		_pld = *cmd.Payload
-	}
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())

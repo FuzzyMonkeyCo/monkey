@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 
-	"gopkg.in/cardigann/harhar.v0"
 	"gopkg.in/docopt/docopt.go.v0"
 	"gopkg.in/hashicorp/logutils.v0"
 )
@@ -30,7 +29,6 @@ var (
 	docsURL     string
 	pwdId       string
 	clientUtils = &http.Client{}
-	clientReq   *http.Client
 )
 
 func init() {
@@ -141,14 +139,10 @@ func actualMain() int {
 	}
 	defer ensureDeleted(envSerializedPath)
 
-	recorder := harhar.NewRecorder()
-	clientReq = &http.Client{Transport: recorder}
-
 	cfg, cmd := initDialogue(apiKey)
 	log.Printf("[DBG] init cmd: %+v\n", cmd)
 	for {
 		if cmd.Kind() == "done" {
-			recorder.WriteFile("output.har")
 			return testOutcome(cmd.(doneCmd))
 		}
 

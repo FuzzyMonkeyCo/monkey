@@ -27,6 +27,7 @@ type simpleCmdRep struct {
 	Cmd   string  `json:"cmd"`
 	V     uint    `json:"v"`
 	Us    uint64  `json:"us"`
+	HAR   har     `json:"har"`
 	Error *string `json:"error"`
 }
 
@@ -36,10 +37,15 @@ func (cmd simpleCmd) Kind() string {
 
 func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
 	cmdRet := executeScript(cfg, cmd.Kind())
+	if isHARReady() {
+		cmdRet.HAR = readHAR()
+	}
 	rep, err := json.Marshal(cmdRet)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
 	}
+	clearHAR()
+
 	return rep
 }
 
