@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"gopkg.in/docopt/docopt.go.v0"
@@ -15,18 +16,19 @@ import (
 
 const (
 	binName    = "testman"
-	binVersion = "0.6.0"
+	binVersion = "0.7.0"
 	binTitle   = binName + "/" + binVersion
 	envAPIKey  = "COVEREDCI_API_KEY"
 )
 
 var (
-	isDebug bool
-	apiRoot string
-	initURL string
-	nextURL string
-	docsURL string
-	pwdId   string
+	isDebug     bool
+	apiRoot     string
+	initURL     string
+	nextURL     string
+	docsURL     string
+	pwdId       string
+	clientUtils = &http.Client{}
 )
 
 func init() {
@@ -91,7 +93,7 @@ func actualMain() int {
 	}
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DBG", "WRN", "ERR", "NOP"},
+		Levels:   []logutils.LogLevel{"DBG", "NFO", "ERR", "NOP"},
 		MinLevel: logLevel(args),
 		Writer:   os.Stderr,
 	}
@@ -132,7 +134,9 @@ func actualMain() int {
 
 	envSerializedPath := pwdId + ".env"
 	ensureDeleted(envSerializedPath)
-	snapEnv(envSerializedPath)
+	if err := snapEnv(envSerializedPath); err != nil {
+		return 1
+	}
 	defer ensureDeleted(envSerializedPath)
 
 	cfg, cmd := initDialogue(apiKey)
@@ -166,7 +170,7 @@ func logLevel(args map[string]interface{}) logutils.LogLevel {
 	case 1:
 		lvl = "ERR"
 	case 2:
-		lvl = "WRN"
+		lvl = "NFO"
 	case 3:
 		lvl = "DBG"
 	default:

@@ -19,14 +19,26 @@ sh <(curl -sL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/la
 ### Example `.coveredci.yml` file:
 
 ```yaml
-version: '0'
+version: 0
+documentation:
+  kind: openapi_v2
+  file: priv/openapi2v1.yaml
+  host: localhost
+  port: 6773
+reset:
+  - curl --fail -X DELETE http://localhost:6773/api/1/items
+```
+
+### A more involved `.coveredci.yml`
+
+```yaml
+version: 0
 
 documentation:
   kind: openapi_v2
   file: priv/openapi2v1.json
   host: localhost
   port: '{{ env "CONTAINER_PORT" }}'
-  # port: 6773
 
 
 start:
@@ -41,9 +53,12 @@ start:
     done
 
 reset:
-  # - curl --fail -X DELETE http://localhost:$CONTAINER_PORT/api/1/items
   - "[[ 204 = $(curl --silent --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]"
 
 stop:
   - docker stop $CONTAINER_ID
 ```
+
+### Issues?
+
+Report bugs [on the project page](https://github.com/coveredCI/testman/issues) or [contact us](mailto:hi@coveredci.co).

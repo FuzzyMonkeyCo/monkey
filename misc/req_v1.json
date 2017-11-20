@@ -22,19 +22,19 @@
             "minLength": 0,
             "type": "string"
         },
-        "uid": {
+        "lane": {
             "additionalProperties": false,
             "properties": {
-                "a": {
+                "t": {
                     "$ref": "#/definitions/nat"
                 },
-                "b": {
+                "r": {
                     "$ref": "#/definitions/nat"
                 }
             },
             "required": [
-                "a",
-                "b"
+                "t",
+                "r"
             ],
             "type": "object"
         },
@@ -68,8 +68,8 @@
                 }
             ]
         },
-        "uid": {
-            "$ref": "#/definitions/uid"
+        "lane": {
+            "$ref": "#/definitions/lane"
         },
         "url": {
             "maxLength": 2048,
@@ -82,7 +82,7 @@
     },
     "required": [
         "v",
-        "uid",
+        "lane",
         "cmd",
         "method",
         "url",

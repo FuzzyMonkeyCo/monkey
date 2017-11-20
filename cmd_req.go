@@ -15,7 +15,7 @@ import (
 type reqCmd struct {
 	V       uint        `json:"v"`
 	Cmd     string      `json:"cmd"`
-	UID     interface{} `json:"uid"`
+	Lane    interface{} `json:"lane"`
 	Method  string      `json:"method"`
 	Url     string      `json:"url"`
 	Headers []string    `json:"headers"`
@@ -26,7 +26,7 @@ type reqCmdRepOK struct {
 	Cmd     string      `json:"cmd"`
 	V       uint        `json:"v"`
 	Us      uint64      `json:"us"`
-	UID     interface{} `json:"uid"`
+	Lane    interface{} `json:"lane"`
 	Code    int         `json:"code"`
 	Headers []string    `json:"headers"`
 	Payload string      `json:"payload"`
@@ -36,7 +36,7 @@ type reqCmdRepKO struct {
 	Cmd    string      `json:"cmd"`
 	V      uint        `json:"v"`
 	Us     uint64      `json:"us"`
-	UID    interface{} `json:"uid"`
+	Lane   interface{} `json:"lane"`
 	Reason string      `json:"reason"`
 }
 
@@ -76,42 +76,45 @@ func updateUrl(cfg *ymlCfg, Url string) string {
 func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	var r *http.Request
 	var err error
+	var _pld string
 	if cmd.Payload != nil {
+		_pld = *cmd.Payload
 		inPayload := bytes.NewBufferString(*cmd.Payload)
 		r, err = http.NewRequest(cmd.Method, url, inPayload)
+		if err != nil {
+			log.Fatal("[ERR] ", err)
+		}
 	} else {
+		_pld = ""
 		r, err = http.NewRequest(cmd.Method, url, nil)
+		if err != nil {
+			log.Fatal("[ERR] ", err)
+		}
 	}
-	if err != nil {
-		log.Fatal("[ERR] ", err)
+
+	if !isHARReady() {
+		newHARTransport()
 	}
 
 	for _, header := range cmd.Headers {
 		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", binVersion)
+			r.Header.Set("User-Agent", binTitle)
 		} else {
 			pair := strings.SplitN(header, ": ", 2)
 			r.Header.Set(pair[0], pair[1])
 		}
 	}
-	client := &http.Client{}
 	start := time.Now()
-	resp, err := client.Do(r)
+	resp, err := clientReq.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
-	var _pld string
-	if nil == cmd.Payload {
-		_pld = ""
-	} else {
-		_pld = *cmd.Payload
-	}
 
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
+		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
 		ko := &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
-			UID:    cmd.UID,
+			Lane:   cmd.Lane,
 			Us:     us,
 			Reason: reason,
 		}
@@ -123,7 +126,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		if err != nil {
 			log.Fatal("[ERR] !read body: ", err)
 		}
-		log.Printf("[DBG] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
+		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
 		var headers []string
 		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
 		// Loop through headers
@@ -138,7 +141,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		ok := &reqCmdRepOK{
 			V:       1,
 			Cmd:     cmd.Cmd,
-			UID:     cmd.UID,
+			Lane:    cmd.Lane,
 			Us:      us,
 			Code:    resp.StatusCode,
 			Headers: headers,

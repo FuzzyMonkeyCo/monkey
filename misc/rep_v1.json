@@ -23,8 +23,8 @@
                 "reason": {
                     "$ref": "#/definitions/reason"
                 },
-                "uid": {
-                    "$ref": "#/definitions/uid"
+                "lane": {
+                    "$ref": "#/definitions/lane"
                 },
                 "us": {
                     "$ref": "#/definitions/nat"
@@ -34,7 +34,7 @@
                 }
             },
             "required": [
-                "uid",
+                "lane",
                 "us",
                 "v",
                 "reason"
@@ -57,8 +57,8 @@
                 "payload": {
                     "$ref": "#/definitions/payload"
                 },
-                "uid": {
-                    "$ref": "#/definitions/uid"
+                "lane": {
+                    "$ref": "#/definitions/lane"
                 },
                 "us": {
                     "$ref": "#/definitions/nat"
@@ -68,7 +68,7 @@
                 }
             },
             "required": [
-                "uid",
+                "lane",
                 "us",
                 "v",
                 "code",
@@ -87,18 +87,18 @@
             "minLength": 1,
             "type": "string"
         },
-        "uid": {
+        "lane": {
             "properties": {
-                "a": {
+                "t": {
                     "$ref": "#/definitions/nat"
                 },
-                "b": {
+                "r": {
                     "$ref": "#/definitions/nat"
                 }
             },
             "required": [
-                "a",
-                "b"
+                "t",
+                "r"
             ],
             "type": "object"
         },
