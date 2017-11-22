@@ -17,7 +17,7 @@ type reqCmd struct {
 	Cmd     string      `json:"cmd"`
 	Lane    interface{} `json:"lane"`
 	Method  string      `json:"method"`
-	Url     string      `json:"url"`
+	URL     string      `json:"url"`
 	Headers []string    `json:"headers"`
 	Payload *string     `json:"payload"`
 }
@@ -45,25 +45,26 @@ func (cmd reqCmd) Kind() string {
 }
 
 func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
-	cmdUrl := updateUrl(cfg, cmd.Url)
-	ok, ko := makeRequest(cmdUrl, cmd)
+	cmdURL := updateURL(cfg, cmd.URL)
+	ok, ko := makeRequest(cmdURL, cmd)
 
-	var rep []byte
-	var err error
 	if ok != nil {
-		rep, err = json.Marshal(ok)
-	} else {
-		rep, err = json.Marshal(ko)
+		rep, err := json.Marshal(ok)
+		if err != nil {
+			log.Fatal("[ERR] ", err)
+		}
+		return rep
 	}
+
+	rep, err := json.Marshal(ko)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
 	}
-
 	return rep
 }
 
-func updateUrl(cfg *ymlCfg, Url string) string {
-	u, err := url.Parse(Url)
+func updateURL(cfg *ymlCfg, URL string) string {
+	u, err := url.Parse(URL)
 	if err != nil {
 		log.Fatal("[ERR] ", err)
 	}
@@ -120,33 +121,33 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		}
 		return nil, ko
 
-	} else {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal("[ERR] !read body: ", err)
-		}
-		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
-		var headers []string
-		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
-		// Loop through headers
-		//FIXME: preserve order github.com/golang/go/issues/21853
-		for name, values := range resp.Header {
-			name = strings.ToLower(name)
-			for _, value := range values {
-				headers = append(headers, fmt.Sprintf("%v: %v", name, value))
-			}
-		}
-
-		ok := &reqCmdRepOK{
-			V:       1,
-			Cmd:     cmd.Cmd,
-			Lane:    cmd.Lane,
-			Us:      us,
-			Code:    resp.StatusCode,
-			Headers: headers,
-			Payload: string(body),
-		}
-		return ok, nil
 	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("[ERR] !read body: ", err)
+	}
+	log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
+	var headers []string
+	//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
+	// Loop through headers
+	//FIXME: preserve order github.com/golang/go/issues/21853
+	for name, values := range resp.Header {
+		name = strings.ToLower(name)
+		for _, value := range values {
+			headers = append(headers, fmt.Sprintf("%v: %v", name, value))
+		}
+	}
+
+	ok := &reqCmdRepOK{
+		V:       1,
+		Cmd:     cmd.Cmd,
+		Lane:    cmd.Lane,
+		Us:      us,
+		Code:    resp.StatusCode,
+		Headers: headers,
+		Payload: string(body),
+	}
+	return ok, nil
 }

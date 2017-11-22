@@ -26,7 +26,7 @@ var (
 	initURL     string
 	nextURL     string
 	docsURL     string
-	pwdId       string
+	pwdID       string
 	clientUtils = &http.Client{}
 )
 
@@ -53,7 +53,7 @@ func init() {
 	}
 	h := fnv.New64a()
 	h.Write([]byte(cwd))
-	pwdId = "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
+	pwdID = "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64()) //FIXME: allow concurent runs from same PWD
 }
 
 func main() {
@@ -84,7 +84,7 @@ func actualMain() int {
 		return 1
 	}
 
-	logFile := pwdId + ".log"
+	logFile := pwdID + ".log"
 	logCatchall, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println(err)
@@ -114,11 +114,10 @@ func actualMain() int {
 		if errors != nil {
 			reportValidationErrors(errors)
 			return 2
-		} else {
-			fmt.Println("No validation errors found.")
-			//TODO: make it easy to use returned token
-			return 0
 		}
+		fmt.Println("No validation errors found.")
+		//TODO: make it easy to use returned token
+		return 0
 	}
 
 	// args["validate"].(bool) = true
@@ -132,7 +131,7 @@ func actualMain() int {
 		return 4
 	}
 
-	envSerializedPath := pwdId + ".env"
+	envSerializedPath := pwdID + ".env"
 	ensureDeleted(envSerializedPath)
 	if err := snapEnv(envSerializedPath); err != nil {
 		return 1

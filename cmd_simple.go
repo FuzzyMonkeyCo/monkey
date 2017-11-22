@@ -61,7 +61,7 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	defer cancel()
 
 	var script, stderr bytes.Buffer
-	envSerializedPath := pwdId + ".env"
+	envSerializedPath := pwdID + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
@@ -122,7 +122,7 @@ func readEnv(envVar string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
-	cmd := "source " + pwdId + ".env >/dev/null 2>&1 " +
+	cmd := "source " + pwdID + ".env >/dev/null 2>&1 " +
 		"&& set -o nounset " +
 		"&& echo -n $" + envVar
 	var stdout bytes.Buffer

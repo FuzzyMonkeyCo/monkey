@@ -7,7 +7,8 @@ before_install:
   - set -o errtrace
   # - set -o nounset # TravisCI is unclean
   - set -o pipefail
-  - go get github.com/mitchellh/gox
+  - go get -u github.com/mitchellh/gox
+  - go get -u github.com/golang/lint/golint
 
 addons:
   apt:
@@ -21,6 +22,7 @@ script:
     if [[ $TRAVIS_TAG != "$TRAVIS_BRANCH" ]]; then
       echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
     fi
+  - golint -set_exit_status
   - go generate
   - go get -t -v ./...
   - go fmt
