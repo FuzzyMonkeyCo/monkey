@@ -1,11 +1,11 @@
 language: go
 sudo: false
-go: 1.x
+go: 1.9.2
 
 before_install:
   - set -o errexit
   - set -o errtrace
-  # - set -o nounset
+  # - set -o nounset # TravisCI is unclean
   - set -o pipefail
   - go get github.com/mitchellh/gox
 
@@ -17,11 +17,15 @@ addons:
       - shellcheck
 
 script:
+  - |
+    if [[ $TRAVIS_TAG != "$TRAVIS_BRANCH" ]]; then
+      echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
+    fi
   - go generate
   - go get -t -v ./...
   - go fmt
   - git --no-pager diff
-  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
+  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
   - go test -v -race .
   - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .

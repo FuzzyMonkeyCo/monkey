@@ -2,11 +2,11 @@
 
 EXE = testman
 
-all: $(filter-out schemas.go,$(wildcard *.go)) $(wildcard misc/*.json)
+all:
 	go generate
 	go get .
 	go build -o $(EXE)
 
 debug: all
-	DEBUG=1 ./$(EXE) validate
-	DEBUG=1 ./$(EXE) -vvv test
+	./$(EXE) validate
+	./$(EXE) -vvv test

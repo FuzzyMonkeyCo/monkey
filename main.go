@@ -15,10 +15,9 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	binName    = "testman"
-	binVersion = "0.7.0"
-	binTitle   = binName + "/" + binVersion
-	envAPIKey  = "COVEREDCI_API_KEY"
+	binName   = "testman"
+	binTitle  = binName + "/" + binVersion
+	envAPIKey = "COVEREDCI_API_KEY"
 )
 
 var (
@@ -34,7 +33,7 @@ var (
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
-	isDebug = "1" == os.Getenv("DEBUG")
+	isDebug = "0.0.0" == binVersion
 
 	if isDebug {
 		apiRoot = "http://localhost:1042/1"
@@ -122,6 +121,7 @@ func actualMain() int {
 		}
 	}
 
+	// args["validate"].(bool) = true
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Println(shell() + " is required")
 		return 5
