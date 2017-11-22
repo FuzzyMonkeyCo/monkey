@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"hash/fnv"
 	"io"
 	"log"
 	"net/http"
@@ -26,7 +25,6 @@ var (
 	initURL     string
 	nextURL     string
 	docsURL     string
-	pwdID       string
 	clientUtils = &http.Client{}
 )
 
@@ -47,13 +45,7 @@ func init() {
 
 	unstacheInit()
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	h := fnv.New64a()
-	h.Write([]byte(cwd))
-	pwdID = "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64()) //FIXME: allow concurent runs from same PWD
+	makePwdID()
 }
 
 func main() {
@@ -80,7 +72,7 @@ Options:
 func actualMain() int {
 	args, err := usage()
 	if err != nil {
-		log.Println("!args: ", err)
+		log.Println("[ERR] !args: ", err)
 		return 1
 	}
 
