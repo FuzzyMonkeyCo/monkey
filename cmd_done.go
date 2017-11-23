@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
 type doneCmd struct {
 	V       uint   `json:"v"`
@@ -18,7 +21,8 @@ func (cmd doneCmd) Exec(cfg *ymlCfg) []byte {
 
 func testOutcome(cmd doneCmd) int {
 	if cmd.Failure {
-		fmt.Println("A bug was detected and minified!")
+		os.Stdout.Write([]byte{'\n'})
+		fmt.Println("A bug was detected and minified!\n")
 		return 6
 	}
 	return 0

@@ -79,16 +79,39 @@ func validationReq(apiKey string, JSON []byte) ([]byte, []byte) {
 	return body, nil
 }
 
-func reportValidationErrors(errors []byte) {
-	fmt.Println("Validation errors:")
+func maybeReportValidationErrors(errors []byte) error {
+	if errors != nil {
+		err := newDocsInvalidError(errors)
+		log.Println("[ERR]", err)
+		fmt.Println(err)
+		return err
+	}
 
+	log.Println("[NFO] No validation errors found.")
+	fmt.Println("No validation errors found.")
+	//TODO: make it easy to use returned token
+	return nil
+}
+
+type docsInvalidError struct {
+	Errors string
+}
+
+func (e *docsInvalidError) Error() string {
+	return e.Errors
+}
+
+func newDocsInvalidError(errors []byte) *docsInvalidError {
+	start, end := "Validation errors:", "Documentation validation failed."
+	var theErrors string
 	var out bytes.Buffer
 	err := json.Indent(&out, errors, "", "  ")
 	if err != nil {
-		fmt.Println(string(errors))
+		theErrors = string(errors)
 	}
+	theErrors = out.String()
 
-	fmt.Println(out.String())
+	return &docsInvalidError{start + "\n" + theErrors + "\n" + end}
 }
 
 func blobs(yml []byte) map[string]string {

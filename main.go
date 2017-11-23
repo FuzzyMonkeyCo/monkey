@@ -94,7 +94,8 @@ func actualMain() int {
 	if !isDebug {
 		latest := getLatestRelease()
 		if isOutOfDate(binVersion, latest) {
-			log.Printf("A newer version of %s is available: %s\n", binTitle, latest)
+			log.Printf("[ERR] A newer version of %s is available: %s\n", binTitle, latest)
+			fmt.Printf("A newer version of %s is available: %s\n", binTitle, latest)
 			return 3
 		}
 	}
@@ -103,12 +104,10 @@ func actualMain() int {
 	if args["validate"].(bool) {
 		yml := readYAML(localYML)
 		_, errors := validateDocs(apiKey, yml)
-		if errors != nil {
-			reportValidationErrors(errors)
+		err := maybeReportValidationErrors(errors)
+		if err != nil {
 			return 2
 		}
-		fmt.Println("No validation errors found.")
-		//TODO: make it easy to use returned token
 		return 0
 	}
 
@@ -130,8 +129,14 @@ func actualMain() int {
 	}
 	defer ensureDeleted(envSerializedPath)
 
-	cfg, cmd := initDialogue(apiKey)
-	log.Printf("[DBG] init cmd: %+v\n", cmd)
+	cfg, cmd, err := initDialogue(apiKey)
+	if err != nil {
+		if _, ok := err.(*docsInvalidError); ok {
+			return 2
+		}
+		return 1
+	}
+
 	for {
 		if cmd.Kind() == "done" {
 			return testOutcome(cmd.(doneCmd))

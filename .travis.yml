@@ -52,3 +52,7 @@ deploy:
   on:
     repo: CoveredCI/testman
     tags: true
+
+notifications:
+  email:
+    on_success: never

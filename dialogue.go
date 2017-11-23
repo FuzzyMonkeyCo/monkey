@@ -28,13 +28,13 @@ type ymlCfg struct {
 	FinalPort string
 }
 
-func initDialogue(apiKey string) (*ymlCfg, aCmd) {
+func initDialogue(apiKey string) (*ymlCfg, aCmd, error) {
 	yml := readYAML(localYML)
 
 	validationJSON, errors := validateDocs(apiKey, yml)
-	if errors != nil {
-		reportValidationErrors(errors)
-		log.Fatal("Documentation validation failed")
+	err := maybeReportValidationErrors(errors)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	cmdJSON, authToken := initPUT(apiKey, validationJSON)
@@ -63,7 +63,7 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 			"stop":  ymlConf.Stop,
 		},
 	}
-	return cfg, cmd
+	return cfg, cmd, nil
 }
 
 func next(cfg *ymlCfg, cmd aCmd) aCmd {

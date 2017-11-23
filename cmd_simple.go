@@ -38,6 +38,7 @@ func (cmd simpleCmd) Kind() string {
 func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
 	cmdRet := executeScript(cfg, cmd.Kind())
 	if isHARReady() {
+		fmt.Printf(".")
 		cmdRet.HAR = readHAR()
 	}
 	rep, err := json.Marshal(cmdRet)
