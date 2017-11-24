@@ -19,7 +19,7 @@ addons:
 
 script:
   - |
-    if [[ $TRAVIS_TAG != "$TRAVIS_BRANCH" ]]; then
+    if [[ "$TRAVIS_TAG" != '' ]]; then
       echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
     fi
   - golint -set_exit_status
