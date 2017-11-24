@@ -16,23 +16,24 @@ addons:
       - debian-sid    # Grab ShellCheck from the Debian repo
     packages:
       - shellcheck
-      - silversearcher-ag
+      # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
+      # - silversearcher-ag
 
 before_script:
   - go version
   - shellcheck --version
-  - ag --version
+  # - ag --version
 
 script:
   - shellcheck misc/latest.sh
+  # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
+  # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
+  - ! git grep -InE 'log.Println\("\[...\] ",'  # lint: log.Println does not need the space before log level
+  - golint -set_exit_status
   - |
     if [[ "$TRAVIS_TAG" != '' ]]; then
       echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
     fi
-  - golint -set_exit_status
-  - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
-  - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
-  - ! git grep -InE 'log.Println\("\[...\] ",'  # lint: log.Println does not need the space before log level
   - go generate
   - go get -t -v ./...
   - go fmt
