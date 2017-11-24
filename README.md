@@ -56,7 +56,7 @@ reset:
   - "[[ 204 = $(curl --silent --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]"
 
 stop:
-  - docker stop $CONTAINER_ID
+  - docker stop --time 5 $CONTAINER_ID
 ```
 
 ### Issues?

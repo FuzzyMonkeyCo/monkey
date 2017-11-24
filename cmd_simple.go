@@ -35,24 +35,31 @@ func (cmd simpleCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd simpleCmd) Exec(cfg *ymlCfg) []byte {
-	cmdRet := executeScript(cfg, cmd.Kind())
-	if isHARReady() {
-		cmdRet.HAR = readHAR()
-	}
-	rep, err := json.Marshal(cmdRet)
+func (cmd simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+	cmdRep, err := executeScript(cfg, cmd.Kind())
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		return
+	}
+
+	if isHARReady() {
+		fmt.Printf(".")
+		cmdRep.HAR = readHAR()
+	}
+	rep, err = json.Marshal(cmdRep)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
 	}
 	clearHAR()
 
-	return rep
+	return
 }
 
-func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
-	cmds := cfg.Script[kind]
-	if len(cmds) == 0 {
-		return &simpleCmdRep{V: 1, Cmd: kind}
+func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
+	cmdRep = &simpleCmdRep{V: 1, Cmd: kind}
+	shellCmds := cfg.Script[kind]
+	if len(shellCmds) == 0 {
+		return
 	}
 
 	// Note: exec.Cmd fails to cancel with non-*os.File outputs on linux
@@ -61,15 +68,15 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	defer cancel()
 
 	var script, stderr bytes.Buffer
-	envSerializedPath := pwdId + ".env"
+	envSerializedPath := pwdID + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
 	fmt.Fprintln(&script, "set -o nounset")
 	fmt.Fprintln(&script, "set -o pipefail")
-	for _, cmd := range cmds {
-		fmt.Fprintln(&script, cmd)
+	for _, shellCmd := range shellCmds {
+		fmt.Fprintln(&script, shellCmd)
 	}
 	fmt.Fprintln(&script, "declare -p >", envSerializedPath)
 
@@ -80,17 +87,17 @@ func executeScript(cfg *ymlCfg, kind string) *simpleCmdRep {
 	log.Printf("[DBG] $ %s\n", script.Bytes())
 
 	start := time.Now()
-	err := exe.Run()
-	us := uint64(time.Since(start) / time.Microsecond)
+	err = exe.Run()
+	cmdRep.Us = uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		error := string(stderr.Bytes()) + "\n" + err.Error()
 		log.Println(error)
-		return &simpleCmdRep{V: 1, Cmd: kind, Us: us, Error: &error}
+		cmdRep.Error = &error
+		return
 	}
 
-	maybeF1inalizeConf(cfg, kind)
-
-	return &simpleCmdRep{V: 1, Cmd: kind, Us: us}
+	err = maybeF1inalizeConf(cfg, kind)
+	return
 }
 
 func snapEnv(envSerializedPath string) (err error) {
@@ -111,18 +118,17 @@ func snapEnv(envSerializedPath string) (err error) {
 	exe.Stdout = envFile
 	log.Printf("[DBG] $ %s\n", script.Bytes())
 
-	if err := exe.Run(); err != nil {
+	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
-		return err
 	}
-	return nil
+	return
 }
 
 func readEnv(envVar string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
-	cmd := "source " + pwdId + ".env >/dev/null 2>&1 " +
+	cmd := "source " + pwdID + ".env >/dev/null 2>&1 " +
 		"&& set -o nounset " +
 		"&& echo -n $" + envVar
 	var stdout bytes.Buffer
@@ -144,8 +150,9 @@ func shell() string {
 func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
 	envVal := readEnv(envVar)
 	if envVal == "" {
-		fmt.Printf("Environment variable $%s is unset or empty\n", envVar)
-		log.Fatal("[ERR] unset or empty env ", envVar)
+		err := fmt.Errorf("Environment variable $%s is unset or empty", envVar)
+		fmt.Println(err)
+		log.Panic("[ERR] ", err)
 	}
 	return raymond.SafeString(envVal)
 }
@@ -154,27 +161,43 @@ func unstacheInit() {
 	raymond.RegisterHelper("env", unstacheEnv)
 }
 
-func unstache(field string) string {
+func unstache(field string) (str string, err error) {
 	if field[:2] != "{{" {
-		return field
+		return field, nil
 	}
 
-	result, err := raymond.Render(field, nil)
+	str, err = raymond.Render(field, nil)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
-	if "" == result {
-		log.Fatalf("[ERR] Mustache field '%s' was resolved to the empty string\n", field)
+
+	if "" == str {
+		err = fmt.Errorf("Mustache field '%s' was resolved to the empty string", field)
+		log.Println("[ERR]", err)
+		fmt.Println(err)
 	}
-	return result
+	return
 }
 
-func maybeF1inalizeConf(cfg *ymlCfg, kind string) {
+func maybeF1inalizeConf(cfg *ymlCfg, kind string) (err error) {
+	var host, port string
+
 	if cfg.FinalHost == "" || kind != "reset" {
-		cfg.FinalHost = unstache(cfg.Host)
+		host, err = unstache(cfg.Host)
+		if err != nil {
+			return
+		}
+		cfg.FinalHost = host
 	}
 
 	if cfg.FinalPort == "" || kind != "reset" {
-		cfg.FinalPort = unstache(cfg.Port)
+		port, err = unstache(cfg.Port)
+		if err != nil {
+			return
+		}
+		cfg.FinalPort = port
 	}
+
+	return
 }

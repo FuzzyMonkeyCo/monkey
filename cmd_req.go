@@ -17,7 +17,7 @@ type reqCmd struct {
 	Cmd     string      `json:"cmd"`
 	Lane    interface{} `json:"lane"`
 	Method  string      `json:"method"`
-	Url     string      `json:"url"`
+	URL     string      `json:"url"`
 	Headers []string    `json:"headers"`
 	Payload *string     `json:"payload"`
 }
@@ -44,51 +44,61 @@ func (cmd reqCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
-	cmdUrl := updateUrl(cfg, cmd.Url)
-	ok, ko := makeRequest(cmdUrl, cmd)
+func (cmd reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+	cmdURL, err := updateURL(cfg, cmd.URL)
+	if err != nil {
+		return
+	}
+	ok, ko, err := makeRequest(cmdURL, cmd)
+	if err != nil {
+		return
+	}
 
-	var rep []byte
-	var err error
 	if ok != nil {
 		rep, err = json.Marshal(ok)
-	} else {
-		rep, err = json.Marshal(ko)
-	}
-	if err != nil {
-		log.Fatal("[ERR] ", err)
+		if err != nil {
+			log.Println("[ERR]", err)
+		}
+		return
 	}
 
-	return rep
+	rep, err = json.Marshal(ko)
+	if err != nil {
+		log.Println("[ERR]", err)
+	}
+	return
 }
 
-func updateUrl(cfg *ymlCfg, Url string) string {
-	u, err := url.Parse(Url)
+func updateURL(cfg *ymlCfg, URL string) (updatedURL string, err error) {
+	u, err := url.Parse(URL)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	// Note: if host is an IPv6 then it has to be braced with []
 	u.Host = cfg.FinalHost + ":" + cfg.FinalPort
-	return u.String()
+	updatedURL = u.String()
+	return
 }
 
-func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
+func makeRequest(url string, cmd reqCmd) (ok *reqCmdRepOK, ko *reqCmdRepKO, err error) {
 	var r *http.Request
-	var err error
 	var _pld string
 	if cmd.Payload != nil {
 		_pld = *cmd.Payload
 		inPayload := bytes.NewBufferString(*cmd.Payload)
 		r, err = http.NewRequest(cmd.Method, url, inPayload)
 		if err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return
 		}
 	} else {
 		_pld = ""
 		r, err = http.NewRequest(cmd.Method, url, nil)
 		if err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return
 		}
 	}
 
@@ -111,42 +121,43 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
 		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
-		ko := &reqCmdRepKO{
+		ko = &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
 			Lane:   cmd.Lane,
 			Us:     us,
 			Reason: reason,
 		}
-		return nil, ko
+		return
 
-	} else {
-		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal("[ERR] !read body: ", err)
-		}
-		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
-		var headers []string
-		//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
-		// Loop through headers
-		//FIXME: preserve order github.com/golang/go/issues/21853
-		for name, values := range resp.Header {
-			name = strings.ToLower(name)
-			for _, value := range values {
-				headers = append(headers, fmt.Sprintf("%v: %v", name, value))
-			}
-		}
-
-		ok := &reqCmdRepOK{
-			V:       1,
-			Cmd:     cmd.Cmd,
-			Lane:    cmd.Lane,
-			Us:      us,
-			Code:    resp.StatusCode,
-			Headers: headers,
-			Payload: string(body),
-		}
-		return ok, nil
 	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
+	var headers []string
+	//// headers = append(headers, fmt.Sprintf("Host: %v", resp.Host))
+	// Loop through headers
+	//FIXME: preserve order github.com/golang/go/issues/21853
+	for name, values := range resp.Header {
+		name = strings.ToLower(name)
+		for _, value := range values {
+			headers = append(headers, fmt.Sprintf("%v: %v", name, value))
+		}
+	}
+
+	ok = &reqCmdRepOK{
+		V:       1,
+		Cmd:     cmd.Cmd,
+		Lane:    cmd.Lane,
+		Us:      us,
+		Code:    resp.StatusCode,
+		Headers: headers,
+		Payload: string(body),
+	}
+	return
 }

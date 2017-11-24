@@ -16,56 +16,75 @@ const (
 	jqQuery = ".tag_name"
 )
 
-func getLatestRelease() string {
+func getLatestRelease() (latest string, err error) {
 	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
 	get.Header.Set("Accept", githubV3APIHeader)
 	resp, err := clientUtils.Do(get)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Fatal("[ERR] !200: ", resp.Status)
+		err = newStatusError(200, resp.Status)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	latest := execJQ(body)
-	if latest[0] == 'v' {
-		return latest[1:]
+	latest, err = execJQ(body)
+	if err != nil {
+		return
 	}
-	return latest
+
+	if latest[0] == 'v' {
+		latest = latest[1:]
+	}
+	return
 }
 
-func execJQ(body []byte) string {
+func execJQ(body []byte) (res string, err error) {
 	op, err := jq.Parse(jqQuery)
 	if err != nil {
-		log.Fatal("[ERR] !jq: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	ret, err := op.Apply(body)
 	if err != nil {
-		log.Fatal("[ERR] !exec jq: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	res := string(ret)
-	return res[1 : len(res)-1]
+	res = string(ret)
+	res = res[1 : len(res)-1]
+	return
 }
 
-func isOutOfDate(current, latest string) bool {
+func isOutOfDate(current, latest string) (ko bool, err error) {
 	vCurrent, err := semver.Make(current)
 	if err != nil {
-		log.Fatal("[ERR] !vCurrent: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	vLatest, err := semver.Make(latest)
 	if err != nil {
-		log.Fatal("[ERR] !vLatest: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	return vLatest.GT(vCurrent)
+	ko = vLatest.GT(vCurrent)
+	return
 }

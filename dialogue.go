@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 )
 
 const (
-	localYML         = ".coveredci.yml"
 	mimeJSON         = "application/json"
 	mimeYAML         = "application/x-yaml"
 	xAPIKeyHeader    = "X-Api-Key"
@@ -28,17 +28,25 @@ type ymlCfg struct {
 	FinalPort string
 }
 
-func initDialogue(apiKey string) (*ymlCfg, aCmd) {
-	yml := readYAML(localYML)
-
-	validationJSON, errors := validateDocs(apiKey, yml)
-	if errors != nil {
-		reportValidationErrors(errors)
-		log.Fatal("Documentation validation failed")
+func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
+	yml, err := readYML()
+	if err != nil {
+		return
 	}
 
-	cmdJSON, authToken := initPUT(apiKey, validationJSON)
-	cmd := unmarshalCmd(cmdJSON)
+	validationJSON, err := validateDocs(apiKey, yml)
+	if err != nil {
+		return
+	}
+
+	cmdJSON, authToken, err := initPUT(apiKey, validationJSON)
+	if err != nil {
+		return
+	}
+	cmd, err = unmarshalCmd(cmdJSON)
+	if err != nil {
+		return
+	}
 
 	var ymlConf struct {
 		Start []string `yaml:"start"`
@@ -49,11 +57,12 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 			Port string `yaml:"port"`
 		} `yaml:"documentation"`
 	}
-	if err := yaml.Unmarshal(yml, &ymlConf); err != nil {
-		log.Fatal("[ERR] ", err)
+	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
+		log.Println("[ERR]", err)
+		return
 	}
 
-	cfg := &ymlCfg{
+	cfg = &ymlCfg{
 		AuthToken: authToken,
 		Host:      ymlConf.Doc.Host,
 		Port:      ymlConf.Doc.Port,
@@ -63,37 +72,46 @@ func initDialogue(apiKey string) (*ymlCfg, aCmd) {
 			"stop":  ymlConf.Stop,
 		},
 	}
-	return cfg, cmd
+	return
 }
 
-func next(cfg *ymlCfg, cmd aCmd) aCmd {
+func next(cfg *ymlCfg, cmd aCmd) (someCmd aCmd, err error) {
 	// Sometimes sets cfg.Final* fields
-	rep := cmd.Exec(cfg)
+	rep, err := cmd.Exec(cfg)
+	if err != nil {
+		return
+	}
 
-	nextCmdJSON := nextPOST(cfg, rep)
-	return unmarshalCmd(nextCmdJSON)
+	nextCmdJSON, err := nextPOST(cfg, rep)
+	if err != nil {
+		return
+	}
+
+	someCmd, err = unmarshalCmd(nextCmdJSON)
+	return
 }
 
-func readYAML(path string) []byte {
-	fd, err := os.Open(path)
+func readYML() (yml []byte, err error) {
+	fd, err := os.Open(localYML)
 	if err != nil {
-		log.Println("You must provide a readable '.coveredci.yml' file in the current directory.")
-		log.Fatalf("Error: %s\n", err)
+		log.Println("[ERR]", err)
+		fmt.Printf("You must provide a readable %s file in the current directory.\n", localYML)
+		return
 	}
 	defer fd.Close()
 
-	yml, err := ioutil.ReadAll(fd)
+	yml, err = ioutil.ReadAll(fd)
 	if err != nil {
-		log.Fatal("[ERR] !yml: ", err)
+		log.Println("[ERR]", err)
 	}
-
-	return yml
+	return
 }
 
-func initPUT(apiKey string, JSON []byte) ([]byte, string) {
+func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {
 	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	r.Header.Set("Content-Type", mimeYAML)
@@ -105,32 +123,38 @@ func initPUT(apiKey string, JSON []byte) ([]byte, string) {
 	resp, err := clientUtils.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	rep, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("[ERR] !read body: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
-	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, body)
+	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, rep)
 
 	if resp.StatusCode != 201 {
-		log.Fatal("[ERR] !201: ", resp.Status)
+		err = newStatusError(201, resp.Status)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	authToken := resp.Header.Get(xAuthTokenHeader)
+	authToken = resp.Header.Get(xAuthTokenHeader)
 	if authToken == "" {
-		log.Fatal("Could not acquire an AuthToken")
+		err = fmt.Errorf("Could not acquire an AuthToken")
+		log.Println("[ERR]", err)
+		fmt.Println(err)
 	}
-
-	return body, authToken
+	return
 }
 
-func nextPOST(cfg *ymlCfg, payload []byte) []byte {
+func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPost, nextURL, bytes.NewBuffer(payload))
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	r.Header.Set("content-type", mimeJSON)
@@ -142,19 +166,21 @@ func nextPOST(cfg *ymlCfg, payload []byte) []byte {
 	resp, err := clientUtils.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	rep, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("[ERR] !read body: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
-	log.Printf("[DBG] 🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, body)
+	log.Printf("[DBG] 🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, rep)
 
 	if resp.StatusCode != 200 {
-		log.Fatal("[ERR] !200: ", resp.Status)
+		err = newStatusError(200, resp.Status)
+		log.Println("[ERR]", err)
 	}
-
-	return body
+	return
 }
