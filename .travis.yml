@@ -17,7 +17,7 @@ addons:
     packages:
       - shellcheck
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
-      # - silversearcher-ag
+      # - silversearcher-ag FIXME
 
 before_script:
   - go version
@@ -28,7 +28,7 @@ script:
   - shellcheck misc/latest.sh
   # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
   # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
-  - ! git grep -InE 'log.Println\("\[...\] ",'  # lint: log.Println does not need the space before log level
+  - ! git --no-pager grep -InE 'log.Println\("\[...\] ",'  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
   - |
     if [[ "$TRAVIS_TAG" != '' ]]; then
