@@ -23,6 +23,7 @@ script:
       echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
     fi
   - golint -set_exit_status
+  - ! ag 'return\s+}\s+return' # Missing / weak golint: first return can be dropped
   - go generate
   - go get -t -v ./...
   - go fmt
