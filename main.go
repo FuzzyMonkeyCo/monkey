@@ -45,6 +45,8 @@ func init() {
 
 	unstacheInit()
 
+	loadSchemas()
+
 	makePwdID()
 }
 
@@ -73,14 +75,14 @@ func actualMain() int {
 	args, err := usage()
 	if err != nil {
 		log.Println("[ERR] !args: ", err)
-		return 1
+		return retryOrReport()
 	}
 
 	logFile := pwdID + ".log"
 	logCatchall, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println(err)
-		return 1
+		return retryOrReport()
 	}
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
@@ -92,63 +94,29 @@ func actualMain() int {
 	log.Println("[ERR]", binTitle, logFile, args)
 
 	if !isDebug {
-		latest := getLatestRelease()
-		if isOutOfDate(binVersion, latest) {
-			log.Printf("[ERR] A newer version of %s is available: %s\n", binTitle, latest)
-			fmt.Printf("A newer version of %s is available: %s\n", binTitle, latest)
-			return 3
+		if code := isRunningLatest(); code != 0 {
+			return code
 		}
 	}
 
 	apiKey := getAPIKey()
 	if args["validate"].(bool) {
-		yml := readYAML(localYML)
-		_, errors := validateDocs(apiKey, yml)
-		err := maybeReportValidationErrors(errors)
-		if err != nil {
-			return 2
+		if yml, err := readYAML(localYML); err == nil {
+			if _, err := validateDocs(apiKey, yml); err != nil {
+				return 2
+			}
+			return 0
 		}
-		return 0
+		return retryOrReport()
 	}
 
-	// args["validate"].(bool) = true
-	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Println(shell() + " is required")
-		return 5
-	}
-
-	if apiKey == "" {
-		log.Println("$" + envAPIKey + " is unset")
-		return 4
-	}
-
-	envSerializedPath := pwdID + ".env"
-	ensureDeleted(envSerializedPath)
-	if err := snapEnv(envSerializedPath); err != nil {
-		return 1
-	}
-	defer ensureDeleted(envSerializedPath)
-
-	cfg, cmd, err := initDialogue(apiKey)
-	if err != nil {
-		if _, ok := err.(*docsInvalidError); ok {
-			return 2
-		}
-		return 1
-	}
-
-	for {
-		if cmd.Kind() == "done" {
-			return testOutcome(cmd.(doneCmd))
-		}
-
-		cmd = next(cfg, cmd)
-	}
+	// args["test"].(bool) = true
+	return doTest(apiKey)
 }
 
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		log.Fatal("[ERR] ", err)
+		log.Panic("[ERR]", err)
 	}
 }
 
@@ -173,4 +141,72 @@ func logLevel(args map[string]interface{}) logutils.LogLevel {
 		lvl = "NOP"
 	}
 	return logutils.LogLevel(lvl)
+}
+
+func isRunningLatest() int {
+	latest, err := getLatestRelease()
+	if err != nil {
+		return retryOrReport()
+	}
+
+	ko, err := isOutOfDate(binVersion, latest)
+	if err != nil {
+		return retryOrReport()
+	}
+	if ko {
+		err := fmt.Errorf("A newer version of %s is out: %s (you have %s)", binName, latest, binVersion)
+		log.Println("[ERR]", err)
+		fmt.Println(err)
+		return 3
+	}
+
+	return 0
+}
+
+func doTest(apiKey string) int {
+	if _, err := os.Stat(shell()); os.IsNotExist(err) {
+		log.Println(shell() + " is required")
+		return 5
+	}
+
+	if apiKey == "" {
+		log.Println("$" + envAPIKey + " is unset")
+		return 4
+	}
+
+	envSerializedPath := pwdID + ".env"
+	ensureDeleted(envSerializedPath)
+	if err := snapEnv(envSerializedPath); err != nil {
+		return retryOrReport()
+	}
+	defer ensureDeleted(envSerializedPath)
+
+	cfg, cmd, err := initDialogue(apiKey)
+	if err != nil {
+		if _, ok := err.(*docsInvalidError); ok {
+			return 2
+		}
+		return retryOrReport()
+	}
+
+	for {
+		if cmd.Kind() == "done" {
+			return testOutcome(cmd.(doneCmd))
+		}
+
+		if cmd, err = next(cfg, cmd); err != nil {
+			return retryOrReport()
+		}
+	}
+}
+
+func retryOrReport() int {
+	issues := "https://github.com/CoveredCI/testman/issues"
+	email := "hi@coveredci.co"
+	fmt.Println("Looks like something went wrong... Maybe try again?")
+	fmt.Printf("\tYou may want to take a look at %s\n", pwdID+".log")
+	fmt.Printf("\tor come by %s\n", issues)
+	fmt.Printf("\tor drop us a line at %s\n", email)
+	fmt.Println("Thanks & sorry about this :)")
+	return 1
 }

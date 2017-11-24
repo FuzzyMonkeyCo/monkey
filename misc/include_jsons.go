@@ -3,6 +3,9 @@ package main
 import (
 	"io"
 	"os"
+	"fmt"
+	"bytes"
+	"strings"
 )
 
 func main() {
@@ -12,18 +15,46 @@ func main() {
 		"schemaCMDDonev1": "misc/cmd_rep_done_v1.json",
 	}
 
-	out, _ := os.Create("schemas.go")
-	out.Write([]byte("package main \n\nconst (\n"))
+	out, err := os.Create("schemas.go")
+	if err != nil {
+		panic(err)
+	}
+	defer out.Close()
+
+	if _, err := fmt.Fprintln(out, "package main"); err != nil {
+		panic(err)
+	}
+	fmt.Fprintln(out, "import \"log\"")
+	fmt.Fprintln(out, "import \"gopkg.in/xeipuuv/gojsonschema.v0\"")
+
+	var initFunc bytes.Buffer
+	fmt.Fprintln(&initFunc, "func loadSchemas() {")
+
 	for name, path := range schemas {
-		out.Write([]byte(name + " = `"))
+		fmt.Fprintf(out, "var %s gojsonschema.JSONLoader\n", name)
+		Name := strings.Title(name)
+		fmt.Fprintf(out, "func isValidFor%s(data []byte) (bool, error) {\n", Name)
+		fmt.Fprintln(out, "    loader := gojsonschema.NewStringLoader(string(data))")
+		fmt.Fprintf(out, "    is, err := gojsonschema.Validate(%s, loader)\n", name)
+		fmt.Fprintln(out, "    if err != nil {")
+		fmt.Fprintln(out, "        log.Println(\"[ERR]\", err)")
+		fmt.Fprintln(out, "        return false, err")
+		fmt.Fprintln(out, "    }")
+		fmt.Fprintln(out, "    return is.Valid(), nil")
+		fmt.Fprintln(out, "}")
+
 		fd, err := os.Open(path)
 		if err != nil {
 			panic(err)
 		}
 		defer fd.Close()
 
-		io.Copy(out, fd)
-		out.Write([]byte("`\n"))
+		fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
+		io.Copy(&initFunc, fd)
+		fmt.Fprintln(&initFunc, "`)")
+
 	}
-	out.Write([]byte(")\n"))
+
+	fmt.Fprintln(&initFunc, "}")
+	io.Copy(out, &initFunc)
 }

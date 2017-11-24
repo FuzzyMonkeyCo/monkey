@@ -2,9 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
-
-	"gopkg.in/xeipuuv/gojsonschema.v0"
 )
 
 type aCmd interface {
@@ -12,41 +11,47 @@ type aCmd interface {
 	Exec(cfg *ymlCfg) []byte
 }
 
-func unmarshalCmd(cmdJSON []byte) aCmd {
-	if isValid(schemaREQv1, cmdJSON) {
+func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
+	ok, err := isValidForSchemaREQv1(cmdJSON)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
 		var cmd reqCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return nil, err
 		}
-		return cmd
+		return cmd, nil
 	}
 
-	if isValid(schemaCMDv1, cmdJSON) {
+	ok, err = isValidForSchemaCMDv1(cmdJSON)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
 		var cmd simpleCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return nil, err
 		}
-		return cmd
+		return cmd, nil
 	}
 
-	if isValid(schemaCMDDonev1, cmdJSON) {
+	ok, err = isValidForSchemaCMDDonev1(cmdJSON)
+	if err != nil {
+		return nil, err
+	}
+	if ok {
 		var cmd doneCmd
 		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return nil, err
 		}
-		return cmd
+		return cmd, nil
 	}
 
-	return nil // unreachable
-}
-
-func isValid(schema string, cmdData []byte) bool {
-	schemaLoader := gojsonschema.NewStringLoader(schema)
-	documentLoader := gojsonschema.NewStringLoader(string(cmdData))
-	validation, err := gojsonschema.Validate(schemaLoader, documentLoader)
-	if err != nil {
-		log.Fatal("[ERR] ", err)
-		return false
-	}
-	return validation.Valid()
+	err = fmt.Errorf("invalid JSON data received")
+	log.Println("[ERR]", err)
+	return nil, err
 }

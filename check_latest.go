@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,56 +17,73 @@ const (
 	jqQuery = ".tag_name"
 )
 
-func getLatestRelease() string {
+func getLatestRelease() (string, error) {
 	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
+	if err != nil {
+		log.Println("[ERR] ", err)
+		return "", err
+	}
+
 	get.Header.Set("Accept", githubV3APIHeader)
 	resp, err := clientUtils.Do(get)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		log.Fatal("[ERR] !200: ", resp.Status)
+		err := fmt.Errorf("not 200: %v", resp.Status)
+		log.Println("[ERR]", err)
+		return "", err
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return "", err
 	}
 
-	latest := execJQ(body)
-	if latest[0] == 'v' {
-		return latest[1:]
+	latest, err := execJQ(body)
+	if err != nil {
+		return "", err
 	}
-	return latest
+
+	if latest[0] == 'v' {
+		return latest[1:], nil
+	}
+	return latest, nil
 }
 
-func execJQ(body []byte) string {
+func execJQ(body []byte) (string, error) {
 	op, err := jq.Parse(jqQuery)
 	if err != nil {
-		log.Fatal("[ERR] !jq: ", err)
+		log.Println("[ERR]", err)
+		return "", err
 	}
 
 	ret, err := op.Apply(body)
 	if err != nil {
-		log.Fatal("[ERR] !exec jq: ", err)
+		log.Println("[ERR]", err)
+		return "", err
 	}
 
 	res := string(ret)
-	return res[1 : len(res)-1]
+	return res[1 : len(res)-1], nil
 }
 
-func isOutOfDate(current, latest string) bool {
+func isOutOfDate(current, latest string) (bool, error) {
 	vCurrent, err := semver.Make(current)
 	if err != nil {
-		log.Fatal("[ERR] !vCurrent: ", err)
+		log.Println("[ERR]", err)
+		return false, err
 	}
 
 	vLatest, err := semver.Make(latest)
 	if err != nil {
-		log.Fatal("[ERR] !vLatest: ", err)
+		log.Println("[ERR]", err)
+		return false, err
 	}
 
-	return vLatest.GT(vCurrent)
+	return vLatest.GT(vCurrent), nil
 }

@@ -20,9 +20,9 @@ func (cmd doneCmd) Exec(cfg *ymlCfg) []byte {
 }
 
 func testOutcome(cmd doneCmd) int {
+	os.Stdout.Write([]byte{'\n'})
 	if cmd.Failure {
-		os.Stdout.Write([]byte{'\n'})
-		fmt.Println("A bug was detected and minified!\n")
+		fmt.Println("A bug was detected and minified!")
 		return 6
 	}
 	return 0
