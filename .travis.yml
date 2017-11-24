@@ -45,8 +45,14 @@ script:
   - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .
   - ./testman-linux_amd64 -h | grep testman
   - ./testman-linux_amd64 --help | grep testman
-  - ./testman-linux_amd64 -V | grep testman/
-  - ./testman-linux_amd64 --version | grep testman/
+  - |
+    if [[ "$TRAVIS_TAG" != '' ]]; then
+      ./testman-linux_amd64 -V | grep "testman/$TRAVIS_TAG"
+      ./testman-linux_amd64 --version | grep "testman/$TRAVIS_TAG"
+    else
+      ./testman-linux_amd64 -V | grep testman/0.0.0
+      ./testman-linux_amd64 --version | grep testman/0.0.0
+    fi
   - ls -lha
 
 after_script:
