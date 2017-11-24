@@ -22,13 +22,14 @@ addons:
 before_script:
   - go version
   - shellcheck --version
+  - git --version
   # - ag --version
 
 script:
   - shellcheck misc/latest.sh
   # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
   # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
-  - ! git --no-pager grep -InE 'log.Println\("\[...\] ",'  # lint: log.Println does not need the space before log level
+  - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
   - |
     if [[ "$TRAVIS_TAG" != '' ]]; then

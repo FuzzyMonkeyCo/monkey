@@ -74,7 +74,7 @@ Options:
 func actualMain() int {
 	args, err := usage()
 	if err != nil {
-		log.Println("[ERR] !args: ", err)
+		log.Println("!args: ", err)
 		return retryOrReport()
 	}
 
@@ -101,13 +101,7 @@ func actualMain() int {
 
 	apiKey := getAPIKey()
 	if args["validate"].(bool) {
-		if yml, err := readYML(); err == nil {
-			if _, err := validateDocs(apiKey, yml); err != nil {
-				return 2
-			}
-			return 0
-		}
-		return retryOrReport()
+		return doValidate(apiKey)
 	}
 
 	// args["test"].(bool) = true
@@ -162,6 +156,16 @@ func isRunningLatest() int {
 	}
 
 	return 0
+}
+
+func doValidate(apiKey string) int {
+	if yml, err := readYML(); err == nil {
+		if _, err := validateDocs(apiKey, yml); err != nil {
+			return 2
+		}
+		return 0
+	}
+	return retryOrReport()
 }
 
 func doTest(apiKey string) int {
