@@ -12,10 +12,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func validateDocs(apiKey string, yml []byte) ([]byte, error) {
+const localYML = ".coveredci.yml"
+
+func validateDocs(apiKey string, yml []byte) (rep []byte, err error) {
 	blobs, err := makeBlobs(yml)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	docs := struct {
@@ -29,17 +31,18 @@ func validateDocs(apiKey string, yml []byte) ([]byte, error) {
 	payload, err := json.Marshal(docs)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
 
-	return validationReq(apiKey, payload)
+	rep, err = validationReq(apiKey, payload)
+	return
 }
 
-func validationReq(apiKey string, JSON []byte) ([]byte, error) {
+func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPut, docsURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
 
 	r.Header.Set("Content-Type", mimeJSON)
@@ -55,97 +58,76 @@ func validationReq(apiKey string, JSON []byte) ([]byte, error) {
 	us := uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	rep, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
-	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, body)
+	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
 
 	if resp.StatusCode == 400 {
-		err := newDocsInvalidError(body)
+		err = newDocsInvalidError(rep)
 		log.Println("[ERR]", err)
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
 	if resp.StatusCode != 201 {
-		err := fmt.Errorf("not 201: %v", resp.Status)
+		err = newStatusError(201, resp.Status)
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
 
 	var validated struct {
 		V     uint   `json:"v"`
 		Token string `json:"token"`
 	}
-	if err := json.Unmarshal(body, &validated); err != nil {
+	if err = json.Unmarshal(rep, &validated); err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
+		return
 	}
 
 	if validated.Token == "" {
-		err := fmt.Errorf("Could not acquire a validation token")
+		err = fmt.Errorf("Could not acquire a validation token")
 		log.Println("[ERR]", err)
 		fmt.Println(err)
-		return nil, err
+		return
 	}
 
 	log.Println("[NFO] No validation errors found.")
 	fmt.Println("No validation errors found.")
 	//TODO: make it easy to use returned token
-	return body, nil
+	return
 }
 
-type docsInvalidError struct {
-	Errors string
-}
-
-func (e *docsInvalidError) Error() string {
-	return e.Errors
-}
-
-func newDocsInvalidError(errors []byte) *docsInvalidError {
-	start, end := "Validation errors:", "Documentation validation failed."
-	var theErrors string
-	var out bytes.Buffer
-	err := json.Indent(&out, errors, "", "  ")
-	if err != nil {
-		theErrors = string(errors)
-	}
-	theErrors = out.String()
-
-	return &docsInvalidError{start + "\n" + theErrors + "\n" + end}
-}
-
-func makeBlobs(yml []byte) (map[string]string, error) {
-	blobs := map[string]string{localYML: string(yml)}
+func makeBlobs(yml []byte) (blobs map[string]string, err error) {
+	blobs = map[string]string{localYML: string(yml)}
 
 	var ymlConfPartial struct {
 		Doc struct {
 			File string `yaml:"file"`
 		} `yaml:"documentation"`
 	}
-	if err := yaml.Unmarshal(yml, &ymlConfPartial); err != nil {
-		return blobs, nil
+	if err = yaml.Unmarshal(yml, &ymlConfPartial); err != nil {
+		return
 	}
 
 	filePath := ymlConfPartial.Doc.File
 	if "" == filePath {
-		return blobs, nil
+		return
 	}
 
 	fileData, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		log.Println("[ERR]", err)
 		fmt.Printf("Could not read '%s'\n", filePath)
-		return nil, err
+		return
 	}
 	blobs[filePath] = string(fileData)
 
-	return blobs, nil
+	return
 }

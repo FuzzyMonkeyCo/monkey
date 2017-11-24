@@ -44,52 +44,61 @@ func (cmd reqCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd reqCmd) Exec(cfg *ymlCfg) []byte {
-	cmdURL := updateURL(cfg, cmd.URL)
-	ok, ko := makeRequest(cmdURL, cmd)
+func (cmd reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+	cmdURL, err := updateURL(cfg, cmd.URL)
+	if err != nil {
+		return
+	}
+	ok, ko, err := makeRequest(cmdURL, cmd)
+	if err != nil {
+		return
+	}
 
 	if ok != nil {
-		rep, err := json.Marshal(ok)
+		rep, err = json.Marshal(ok)
 		if err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
 		}
-		return rep
+		return
 	}
 
-	rep, err := json.Marshal(ko)
+	rep, err = json.Marshal(ko)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
 	}
-	return rep
+	return
 }
 
-func updateURL(cfg *ymlCfg, URL string) string {
+func updateURL(cfg *ymlCfg, URL string) (updatedURL string, err error) {
 	u, err := url.Parse(URL)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	// Note: if host is an IPv6 then it has to be braced with []
 	u.Host = cfg.FinalHost + ":" + cfg.FinalPort
-	return u.String()
+	updatedURL = u.String()
+	return
 }
 
-func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
+func makeRequest(url string, cmd reqCmd) (ok *reqCmdRepOK, ko *reqCmdRepKO, err error) {
 	var r *http.Request
-	var err error
 	var _pld string
 	if cmd.Payload != nil {
 		_pld = *cmd.Payload
 		inPayload := bytes.NewBufferString(*cmd.Payload)
 		r, err = http.NewRequest(cmd.Method, url, inPayload)
 		if err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return
 		}
 	} else {
 		_pld = ""
 		r, err = http.NewRequest(cmd.Method, url, nil)
 		if err != nil {
-			log.Fatal("[ERR] ", err)
+			log.Println("[ERR]", err)
+			return
 		}
 	}
 
@@ -112,21 +121,22 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 	if err != nil {
 		reason := fmt.Sprintf("%+v", err.Error())
 		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
-		ko := &reqCmdRepKO{
+		ko = &reqCmdRepKO{
 			V:      1,
 			Cmd:    cmd.Cmd,
 			Lane:   cmd.Lane,
 			Us:     us,
 			Reason: reason,
 		}
-		return nil, ko
+		return
 
 	}
 
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("[ERR] !read body: ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 	log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, body)
 	var headers []string
@@ -140,7 +150,7 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		}
 	}
 
-	ok := &reqCmdRepOK{
+	ok = &reqCmdRepOK{
 		V:       1,
 		Cmd:     cmd.Cmd,
 		Lane:    cmd.Lane,
@@ -149,5 +159,5 @@ func makeRequest(url string, cmd reqCmd) (*reqCmdRepOK, *reqCmdRepKO) {
 		Headers: headers,
 		Payload: string(body),
 	}
-	return ok, nil
+	return
 }

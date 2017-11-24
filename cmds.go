@@ -8,17 +8,17 @@ import (
 
 type aCmd interface {
 	Kind() string
-	Exec(cfg *ymlCfg) []byte
+	Exec(cfg *ymlCfg) ([]byte, error)
 }
 
 func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 	ok, err := isValidForSchemaREQv1(cmdJSON)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if ok {
 		var cmd reqCmd
-		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
+		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
@@ -27,11 +27,11 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 
 	ok, err = isValidForSchemaCMDv1(cmdJSON)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if ok {
 		var cmd simpleCmd
-		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
+		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
@@ -40,11 +40,11 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 
 	ok, err = isValidForSchemaCMDDonev1(cmdJSON)
 	if err != nil {
-		return nil, err
+		return
 	}
 	if ok {
 		var cmd doneCmd
-		if err := json.Unmarshal(cmdJSON, &cmd); err != nil {
+		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
@@ -53,5 +53,5 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 
 	err = fmt.Errorf("invalid JSON data received")
 	log.Println("[ERR]", err)
-	return nil, err
+	return
 }

@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
-	"gopkg.in/cardigann/harhar.v0"
+	"gopkg.in/CoveredCI/harhar.v0"
 )
 
 var (
@@ -24,11 +23,7 @@ func isHARReady() bool {
 }
 
 func readHAR() har {
-	harData := harCollector.HAR
-	if harData == nil {
-		log.Fatal("[ERR] HAR is nil!")
-	}
-	return harData
+	return harCollector.HAR
 }
 
 func clearHAR() {

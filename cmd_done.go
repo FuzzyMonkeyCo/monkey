@@ -15,8 +15,8 @@ func (cmd doneCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd doneCmd) Exec(cfg *ymlCfg) []byte {
-	return nil
+func (cmd doneCmd) Exec(cfg *ymlCfg) ([]byte, error) {
+	return nil, nil
 }
 
 func testOutcome(cmd doneCmd) int {
@@ -25,5 +25,6 @@ func testOutcome(cmd doneCmd) int {
 		fmt.Println("A bug was detected and minified!")
 		return 6
 	}
+	fmt.Println("No bugs found yet!")
 	return 0
 }

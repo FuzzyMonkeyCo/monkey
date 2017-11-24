@@ -11,31 +11,33 @@ import (
 	"strings"
 )
 
-const pwdIDtmpRoot = "/tmp/"
-
 var pwdID string
 
 func makePwdID() {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Panic("[ERR] ", err)
 	}
 
 	h := fnv.New64a()
 	h.Write([]byte(cwd))
-	id := pwdIDtmpRoot + "." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
+	id := "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
 
-	num := findNewIDSlot(id)
+	slot, err := findNewIDSlot(id)
+	if err != nil {
+		log.Panic("[ERR] ", err)
+	}
 
-	pwdID = id + "_" + num
+	pwdID = id + "_" + slot
 }
 
-func findNewIDSlot(prefix string) string {
+func findNewIDSlot(prefix string) (slot string, err error) {
 	prefixPattern := prefix + "_"
 	pattern := prefixPattern + strings.Repeat("?", 6) + ".*"
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	padder := func(n uint64) string { return fmt.Sprintf("%06d", n) }
@@ -50,8 +52,10 @@ func findNewIDSlot(prefix string) string {
 	biggest := nums[len(nums)-1]
 	big, err := strconv.ParseUint(biggest, 10, 32)
 	if err != nil {
-		log.Fatal("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	return padder(big + 1)
+	slot = padder(big + 1)
+	return
 }

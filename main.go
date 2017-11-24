@@ -101,7 +101,7 @@ func actualMain() int {
 
 	apiKey := getAPIKey()
 	if args["validate"].(bool) {
-		if yml, err := readYAML(localYML); err == nil {
+		if yml, err := readYML(); err == nil {
 			if _, err := validateDocs(apiKey, yml); err != nil {
 				return 2
 			}
@@ -116,7 +116,8 @@ func actualMain() int {
 
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		log.Panic("[ERR]", err)
+		fmt.Println(err)
+		log.Panic("[ERR] ", err)
 	}
 }
 
@@ -204,7 +205,7 @@ func retryOrReport() int {
 	issues := "https://github.com/CoveredCI/testman/issues"
 	email := "hi@coveredci.co"
 	fmt.Println("Looks like something went wrong... Maybe try again?")
-	fmt.Printf("\tYou may want to take a look at %s\n", pwdID+".log")
+	fmt.Printf("\tYou may want to take a look at %s.log\n", pwdID)
 	fmt.Printf("\tor come by %s\n", issues)
 	fmt.Printf("\tor drop us a line at %s\n", email)
 	fmt.Println("Thanks & sorry about this :)")

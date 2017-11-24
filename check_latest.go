@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,73 +16,75 @@ const (
 	jqQuery = ".tag_name"
 )
 
-func getLatestRelease() (string, error) {
+func getLatestRelease() (latest string, err error) {
 	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
 	if err != nil {
-		log.Println("[ERR] ", err)
-		return "", err
+		log.Println("[ERR]", err)
+		return
 	}
 
 	get.Header.Set("Accept", githubV3APIHeader)
 	resp, err := clientUtils.Do(get)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return "", err
+		return
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		err := fmt.Errorf("not 200: %v", resp.Status)
+		err = newStatusError(200, resp.Status)
 		log.Println("[ERR]", err)
-		return "", err
+		return
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return "", err
+		return
 	}
 
-	latest, err := execJQ(body)
+	latest, err = execJQ(body)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	if latest[0] == 'v' {
-		return latest[1:], nil
+		latest = latest[1:]
 	}
-	return latest, nil
+	return
 }
 
-func execJQ(body []byte) (string, error) {
+func execJQ(body []byte) (res string, err error) {
 	op, err := jq.Parse(jqQuery)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return "", err
+		return
 	}
 
 	ret, err := op.Apply(body)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return "", err
+		return
 	}
 
-	res := string(ret)
-	return res[1 : len(res)-1], nil
+	res = string(ret)
+	res = res[1 : len(res)-1]
+	return
 }
 
-func isOutOfDate(current, latest string) (bool, error) {
+func isOutOfDate(current, latest string) (ko bool, err error) {
 	vCurrent, err := semver.Make(current)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return false, err
+		return
 	}
 
 	vLatest, err := semver.Make(latest)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return false, err
+		return
 	}
 
-	return vLatest.GT(vCurrent), nil
+	ko = vLatest.GT(vCurrent)
+	return
 }
