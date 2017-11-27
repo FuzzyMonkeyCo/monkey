@@ -6,9 +6,16 @@ import (
 	"log"
 )
 
+var lastLane lane
+
+type lane struct {
+	Test    uint `json:"t"`
+	Request uint `json:"r"`
+}
+
 type aCmd interface {
 	Kind() string
-	Exec(cfg *ymlCfg) ([]byte, error)
+	Exec(cfg *ymlCfg) (rep []byte, err error)
 }
 
 func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
@@ -22,7 +29,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
-		return cmd, nil
+		return &cmd, nil
 	}
 
 	ok, err = isValidForSchemaCMDv1(cmdJSON)
@@ -35,7 +42,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
-		return cmd, nil
+		return &cmd, nil
 	}
 
 	ok, err = isValidForSchemaCMDDonev1(cmdJSON)
@@ -48,7 +55,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 			log.Println("[ERR]", err)
 			return nil, err
 		}
-		return cmd, nil
+		return &cmd, nil
 	}
 
 	err = fmt.Errorf("invalid JSON data received")

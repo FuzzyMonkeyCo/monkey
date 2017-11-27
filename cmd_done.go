@@ -11,15 +11,15 @@ type doneCmd struct {
 	Failure bool   `json:"failure"`
 }
 
-func (cmd doneCmd) Kind() string {
+func (cmd *doneCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd doneCmd) Exec(cfg *ymlCfg) ([]byte, error) {
+func (cmd *doneCmd) Exec(cfg *ymlCfg) ([]byte, error) {
 	return nil, nil
 }
 
-func testOutcome(cmd doneCmd) int {
+func testOutcome(cmd *doneCmd) int {
 	os.Stdout.Write([]byte{'\n'})
 	if cmd.Failure {
 		fmt.Println("A bug was detected and minified!")

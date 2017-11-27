@@ -10,6 +10,12 @@
                 "stop"
             ]
         },
+        "passed": {
+            "type": [
+                "null",
+                "boolean"
+            ]
+        },
         "v": {
             "enum": [
                 1
@@ -20,12 +26,44 @@
         "cmd": {
             "$ref": "#/definitions/cmd"
         },
+        "passed": {
+            "$ref": "#/definitions/passed"
+        },
+        "shrinking_from": {
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "r": {
+                            "format": "uint32",
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "t": {
+                            "format": "uint32",
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "t",
+                        "r"
+                    ],
+                    "type": "object"
+                }
+            ]
+        },
         "v": {
             "$ref": "#/definitions/v"
         }
     },
     "required": [
         "v",
+        "passed",
+        "shrinking_from",
         "cmd"
     ],
     "type": "object"

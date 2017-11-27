@@ -13,13 +13,13 @@ import (
 )
 
 type reqCmd struct {
-	V       uint        `json:"v"`
-	Cmd     string      `json:"cmd"`
-	Lane    interface{} `json:"lane"`
-	Method  string      `json:"method"`
-	URL     string      `json:"url"`
-	Headers []string    `json:"headers"`
-	Payload *string     `json:"payload"`
+	V       uint     `json:"v"`
+	Cmd     string   `json:"cmd"`
+	Lane    lane     `json:"lane"`
+	Method  string   `json:"method"`
+	URL     string   `json:"url"`
+	Headers []string `json:"headers"`
+	Payload *string  `json:"payload"`
 }
 
 type reqCmdRepOK struct {
@@ -40,16 +40,18 @@ type reqCmdRepKO struct {
 	Reason string      `json:"reason"`
 }
 
-func (cmd reqCmd) Kind() string {
+func (cmd *reqCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+	lastLane = cmd.Lane
+
 	cmdURL, err := updateURL(cfg, cmd.URL)
 	if err != nil {
 		return
 	}
-	ok, ko, err := makeRequest(cmdURL, cmd)
+	ok, ko, err := cmd.makeRequest(cmdURL)
 	if err != nil {
 		return
 	}
@@ -82,7 +84,7 @@ func updateURL(cfg *ymlCfg, URL string) (updatedURL string, err error) {
 	return
 }
 
-func makeRequest(url string, cmd reqCmd) (ok *reqCmdRepOK, ko *reqCmdRepKO, err error) {
+func (cmd *reqCmd) makeRequest(url string) (ok *reqCmdRepOK, ko *reqCmdRepKO, err error) {
 	var r *http.Request
 	var _pld string
 	if cmd.Payload != nil {
