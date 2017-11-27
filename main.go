@@ -37,7 +37,7 @@ func init() {
 		apiRoot = "http://localhost:1042/1"
 		docsURL = "http://localhost:2042/1/blob"
 	} else {
-		apiRoot = "http://test.dev.coveredci.com:1042/1" //FIXME
+		apiRoot = "http://test.dev.coveredci.com:1042/1"      //FIXME
 		docsURL = "http://lint.dev.coveredci.com:2042/1/blob" //FIXME
 	}
 	initURL = apiRoot + "/init"
