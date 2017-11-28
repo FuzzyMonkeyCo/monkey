@@ -11,7 +11,7 @@ var (
 	harCollector *harhar.Recorder
 )
 
-type har *harhar.HAR
+type har *harhar.Log
 
 func newHARTransport() {
 	harCollector = harhar.NewRecorder()
@@ -22,8 +22,12 @@ func isHARReady() bool {
 	return clientReq != nil
 }
 
-func readHAR() har {
-	return harCollector.HAR
+func lastHAR() har {
+	last := harhar.NewHAR()
+	all := harCollector.HAR.Log.Entries
+	lastEntry := all[len(all)-1]
+	last.Log.Entries = []harhar.Entry{lastEntry}
+	return &last.Log
 }
 
 func clearHAR() {
