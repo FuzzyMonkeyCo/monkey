@@ -21,10 +21,13 @@ func (cmd *doneCmd) Exec(cfg *ymlCfg) ([]byte, error) {
 
 func testOutcome(cmd *doneCmd) int {
 	os.Stdout.Write([]byte{'\n'})
+	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
+
 	if cmd.Failure {
-		fmt.Println("A bug was detected and minified!")
+		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
+		fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
 		return 6
 	}
-	fmt.Println("No bugs found yet!")
+	fmt.Println("No bugs found... yet.")
 	return 0
 }

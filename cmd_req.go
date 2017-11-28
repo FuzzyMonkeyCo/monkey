@@ -36,7 +36,6 @@ func (cmd *reqCmd) Kind() string {
 
 func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	lastLane = cmd.Lane
-
 	cmdURL, err := updateURL(cfg, cmd.URL)
 	if err != nil {
 		return
@@ -45,6 +44,7 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	if err != nil {
 		return
 	}
+	totalR++
 
 	rep, err = json.Marshal(cmdRep)
 	if err != nil {

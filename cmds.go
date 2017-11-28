@@ -6,11 +6,15 @@ import (
 	"log"
 )
 
-var lastLane lane
+var (
+	lastLane      lane
+	shrinkingFrom lane
+	totalR        uint
+)
 
 type lane struct {
-	Test    uint `json:"t"`
-	Request uint `json:"r"`
+	T uint `json:"t"`
+	R uint `json:"r"`
 }
 
 type aCmd interface {

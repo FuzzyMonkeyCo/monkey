@@ -66,8 +66,9 @@ func progress(cmd *simpleCmd) {
 		}
 	}
 
-	if lastLane.Test != 0 && cmd.ShrinkingFrom != nil {
-		if lastLane.Test == cmd.ShrinkingFrom.Test {
+	if cmd.ShrinkingFrom != nil {
+		shrinkingFrom = *cmd.ShrinkingFrom
+		if lastLane.T == cmd.ShrinkingFrom.T {
 			str += "\n"
 		}
 	}
