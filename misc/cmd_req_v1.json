@@ -1,6 +1,6 @@
 {
+    "$id": "cmd_req_v1",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "cmd_req_v1",
     "additionalProperties": false,
     "definitions": {
         "cmd": {
@@ -8,6 +8,12 @@
                 "start",
                 "reset",
                 "stop"
+            ]
+        },
+        "passed": {
+            "type": [
+                "null",
+                "boolean"
             ]
         },
         "v": {
@@ -20,12 +26,42 @@
         "cmd": {
             "$ref": "#/definitions/cmd"
         },
+        "passed": {
+            "$ref": "#/definitions/passed"
+        },
+        "shrinking_from": {
+            "oneOf": [
+                {
+                    "type": "null"
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "r": {
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "t": {
+                            "minimum": 1,
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "t",
+                        "r"
+                    ],
+                    "type": "object"
+                }
+            ]
+        },
         "v": {
             "$ref": "#/definitions/v"
         }
     },
     "required": [
         "v",
+        "passed",
+        "shrinking_from",
         "cmd"
     ],
     "type": "object"

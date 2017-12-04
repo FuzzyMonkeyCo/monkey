@@ -47,7 +47,6 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 
 	r.Header.Set("Content-Type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
-	r.Header.Set("Accept-Encoding", "gzip, deflate, br")
 	r.Header.Set("User-Agent", binTitle)
 	if apiKey != "" {
 		r.Header.Set(xAPIKeyHeader, apiKey)
@@ -67,7 +66,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
+	log.Printf("[DBG] 🡱  %dμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
 
 	if resp.StatusCode == 400 {
 		err = newDocsInvalidError(rep)
@@ -100,7 +99,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 
 	log.Println("[NFO] No validation errors found.")
 	fmt.Println("No validation errors found.")
-	//TODO: make it easy to use returned token
+	//FIXME: auto-reuse returned token
 	return
 }
 
@@ -116,6 +115,7 @@ func makeBlobs(yml []byte) (blobs map[string]string, err error) {
 		return
 	}
 
+	//FIXME: force relative paths & nested under workdir. Watch out for links
 	filePath := ymlConfPartial.Doc.File
 	if "" == filePath {
 		return

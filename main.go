@@ -196,7 +196,7 @@ func doTest(apiKey string) int {
 
 	for {
 		if cmd.Kind() == "done" {
-			return testOutcome(cmd.(doneCmd))
+			return testOutcome(cmd.(*doneCmd))
 		}
 
 		if cmd, err = next(cfg, cmd); err != nil {
@@ -208,10 +208,10 @@ func doTest(apiKey string) int {
 func retryOrReport() int {
 	issues := "https://github.com/CoveredCI/testman/issues"
 	email := "hi@coveredci.co"
-	fmt.Println("Looks like something went wrong... Maybe try again?")
-	fmt.Printf("\tYou may want to take a look at %s.log\n", pwdID)
-	fmt.Printf("\tor come by %s\n", issues)
-	fmt.Printf("\tor drop us a line at %s\n", email)
-	fmt.Println("Thanks & sorry about this :)")
+	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
+	fmt.Printf("\nYou may want to take a look at %s.log\n", pwdID)
+	fmt.Printf("or come by %s\n", issues)
+	fmt.Printf("or drop us a line at %s\n", email)
+	fmt.Println("\nThank you for your patience & sorry about this :)")
 	return 1
 }

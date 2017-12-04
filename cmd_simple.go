@@ -19,40 +19,58 @@ const (
 )
 
 type simpleCmd struct {
-	V   uint   `json:"v"`
-	Cmd string `json:"cmd"`
+	V             uint   `json:"v"`
+	Cmd           string `json:"cmd"`
+	Passed        *bool  `json:"passed"`
+	ShrinkingFrom *lane  `json:"shrinking_from"`
 }
 
 type simpleCmdRep struct {
 	Cmd   string  `json:"cmd"`
 	V     uint    `json:"v"`
 	Us    uint64  `json:"us"`
-	HAR   har     `json:"har"`
 	Error *string `json:"error"`
 }
 
-func (cmd simpleCmd) Kind() string {
+func (cmd *simpleCmd) Kind() string {
 	return cmd.Cmd
 }
 
-func (cmd simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+	if isHARReady() {
+		progress(cmd)
+		clearHAR()
+	}
+
 	cmdRep, err := executeScript(cfg, cmd.Kind())
 	if err != nil {
 		return
 	}
 
-	if isHARReady() {
-		fmt.Printf(".")
-		cmdRep.HAR = readHAR()
-	}
 	rep, err = json.Marshal(cmdRep)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
 	}
-	clearHAR()
-
 	return
+}
+
+func progress(cmd *simpleCmd) {
+	var str string
+	if *cmd.Passed {
+		str = "."
+	} else {
+		if !*cmd.Passed {
+			str = "x"
+		}
+	}
+
+	if cmd.ShrinkingFrom != nil {
+		shrinkingFrom = *cmd.ShrinkingFrom
+		if lastLane.T == cmd.ShrinkingFrom.T {
+			str += "\n"
+		}
+	}
+	fmt.Printf(str)
 }
 
 func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {

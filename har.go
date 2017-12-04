@@ -11,7 +11,7 @@ var (
 	harCollector *harhar.Recorder
 )
 
-type har *harhar.HAR
+type harEntry *harhar.Entry
 
 func newHARTransport() {
 	harCollector = harhar.NewRecorder()
@@ -22,8 +22,10 @@ func isHARReady() bool {
 	return clientReq != nil
 }
 
-func readHAR() har {
-	return harCollector.HAR
+func lastHAR() harEntry {
+	all := harCollector.HAR.Log.Entries
+	//FIXME: even less data actually needs to be sent
+	return &all[len(all)-1]
 }
 
 func clearHAR() {

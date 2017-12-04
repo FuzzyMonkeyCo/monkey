@@ -133,7 +133,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, rep)
+	log.Printf("[DBG] 🡱  %dμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, rep)
 
 	if resp.StatusCode != 201 {
 		err = newStatusError(201, resp.Status)
@@ -176,7 +176,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %vμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, rep)
+	log.Printf("[DBG] 🡱  %dμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, rep)
 
 	if resp.StatusCode != 200 {
 		err = newStatusError(200, resp.Status)
