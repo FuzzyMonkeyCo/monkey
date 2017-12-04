@@ -25,7 +25,11 @@ func testOutcome(cmd *doneCmd) int {
 
 	if cmd.Failure {
 		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
-		fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
+		if m != 1 {
+			fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
+		} else {
+			fmt.Printf("A bug was detected after %d tests then shrunk once!\n", d)
+		}
 		return 6
 	}
 	fmt.Println("No bugs found... yet.")

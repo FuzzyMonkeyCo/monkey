@@ -1,6 +1,6 @@
 {
+    "$id": "cmd_rep_done_v1",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "cmd_rep_done_v1",
     "additionalProperties": false,
     "properties": {
         "cmd": {"enum": ["done"]},

@@ -50,9 +50,7 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	rep, err = json.Marshal(cmdRep)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
 	}
-
 	return
 }
 

@@ -1,33 +1,31 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
-	"strings"
 	"time"
+
+	"github.com/sebcat/har"
 )
 
+type harRequest *har.Request
+
 type reqCmd struct {
-	V       uint     `json:"v"`
-	Cmd     string   `json:"cmd"`
-	Lane    lane     `json:"lane"`
-	Method  string   `json:"method"`
-	URL     string   `json:"url"`
-	Headers []string `json:"headers"`
-	Payload *string  `json:"payload"`
+	V          uint       `json:"v"`
+	Cmd        string     `json:"cmd"`
+	Lane       lane       `json:"lane"`
+	HARRequest harRequest `json:"har_req"`
 }
 
 type reqCmdRep struct {
-	V      uint   `json:"v"`
-	Cmd    string `json:"cmd"`
-	Lane   lane   `json:"lane"`
-	Us     uint64 `json:"us"`
-	HAR    har    `json:"har,omitempty"`
-	Reason string `json:"reason,omitempty"`
+	V        uint     `json:"v"`
+	Cmd      string   `json:"cmd"`
+	Lane     lane     `json:"lane"`
+	Us       uint64   `json:"us"`
+	HAREntry harEntry `json:"har_rep,omitempty"`
+	Reason   string   `json:"reason,omitempty"`
 }
 
 func (cmd *reqCmd) Kind() string {
@@ -36,11 +34,16 @@ func (cmd *reqCmd) Kind() string {
 
 func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	lastLane = cmd.Lane
-	cmdURL, err := updateURL(cfg, cmd.URL)
+	if !isHARReady() {
+		newHARTransport()
+	}
+
+	cmd.updateUserAgent()
+	err = cmd.updateURL(cfg)
 	if err != nil {
 		return
 	}
-	cmdRep, err := cmd.makeRequest(cmdURL)
+	cmdRep, err := cmd.makeRequest()
 	if err != nil {
 		return
 	}
@@ -53,50 +56,11 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	return
 }
 
-func updateURL(cfg *ymlCfg, URL string) (updatedURL string, err error) {
-	u, err := url.Parse(URL)
+func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
+	r, err := (*cmd.HARRequest).Request()
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
-	}
-
-	// Note: if host is an IPv6 then it has to be braced with []
-	u.Host = cfg.FinalHost + ":" + cfg.FinalPort
-	updatedURL = u.String()
-	return
-}
-
-func (cmd *reqCmd) makeRequest(url string) (rep *reqCmdRep, err error) {
-	var r *http.Request
-	var _pld string
-	if cmd.Payload != nil {
-		_pld = *cmd.Payload
-		inPayload := bytes.NewBufferString(*cmd.Payload)
-		r, err = http.NewRequest(cmd.Method, url, inPayload)
-		if err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-	} else {
-		_pld = ""
-		r, err = http.NewRequest(cmd.Method, url, nil)
-		if err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-	}
-
-	if !isHARReady() {
-		newHARTransport()
-	}
-
-	for _, header := range cmd.Headers {
-		if header == "User-Agent: CoveredCI-passthrough/1" {
-			r.Header.Set("User-Agent", binTitle)
-		} else {
-			pair := strings.SplitN(header, ": ", 2)
-			r.Header.Set(pair[0], pair[1])
-		}
 	}
 
 	start := time.Now()
@@ -106,19 +70,44 @@ func (cmd *reqCmd) makeRequest(url string) (rep *reqCmdRep, err error) {
 	rep = &reqCmdRep{
 		V:    1,
 		Cmd:  cmd.Cmd,
-		Lane: cmd.Lane,
 		Us:   us,
+		Lane: cmd.Lane,
 	}
 
 	if err != nil {
-		reason := fmt.Sprintf("%+v", err.Error())
-		log.Printf("[NFO] 🡳  %vμs %s %s\n  ▲  %s\n  ▼  %s\n", us, cmd.Method, url, _pld, reason)
-		rep.Reason = reason
+		//FIXME: is there a way to describe these failures in HAR 1.2?
+		rep.Reason = fmt.Sprintf("%+v", err.Error())
+		log.Printf("[NFO] 🡳  %dμs\n  ▲  %+v\n  ▼  %s\n", us, cmd.HARRequest, rep.Reason)
 		return
 	}
 
 	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
 	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
-	rep.HAR = lastHAR()
+	rep.HAREntry = lastHAR()
+	log.Printf("[NFO] 🡳  %dμs\n  ▲  %+v\n  ▼  %+v\n", us, cmd.HARRequest, rep.HAREntry)
 	return
+}
+
+func (cmd *reqCmd) updateURL(cfg *ymlCfg) (err error) {
+	URL, err := url.Parse(cmd.HARRequest.URL)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	// TODO: if host is an IPv6 then it has to be braced with []
+	URL.Host = cfg.FinalHost + ":" + cfg.FinalPort
+	cmd.HARRequest.URL = URL.String()
+	return
+}
+
+func (cmd *reqCmd) updateUserAgent() {
+	for i := range cmd.HARRequest.Headers {
+		if cmd.HARRequest.Headers[i].Name == "User-Agent" {
+			if cmd.HARRequest.Headers[i].Value == "CoveredCI-passthrough/1" {
+				cmd.HARRequest.Headers[i].Value = binTitle
+				break
+			}
+		}
+	}
 }

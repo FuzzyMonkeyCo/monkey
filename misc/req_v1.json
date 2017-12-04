@@ -1,93 +1,24 @@
 {
+    "$id": "req_v1",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "req_v1",
-    "additionalProperties": false,
     "definitions": {
-        "headers": {
-            "items": {
-                "maxLength": 512,
-                "minLength": 1,
-                "pattern": "^[^:]+: [^\n]+$",
-                "type": "string"
-            },
-            "minItems": 1,
-            "type": "array"
-        },
-        "nat": {
-            "minimum": 0,
-            "type": "integer"
-        },
-        "payload": {
-            "maxLength": 4096,
-            "minLength": 0,
-            "type": "string"
-        },
         "lane": {
+            "type": "object",
             "additionalProperties": false,
+            "required": ["t","r"],
             "properties": {
-                "t": {
-                    "$ref": "#/definitions/nat"
-                },
-                "r": {
-                    "$ref": "#/definitions/nat"
-                }
-            },
-            "required": [
-                "t",
-                "r"
-            ],
-            "type": "object"
-        },
-        "v": {
-            "enum": [
-                1
-            ]
+                "t": {"type":"integer", "minimum":1},
+                "r": {"type":"integer", "minimum":1}
+            }
         }
     },
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["v","cmd","lane","har_req"],
     "properties": {
-        "cmd": {
-            "enum": [
-                "req"
-            ]
-        },
-        "headers": {
-            "$ref": "#/definitions/headers"
-        },
-        "method": {
-            "enum": [
-                "GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "CONNECT", "OPTIONS", "TRACE"
-            ]
-        },
-        "payload": {
-            "oneOf": [
-                {
-                    "type": "null"
-                },
-                {
-                    "$ref": "#/definitions/payload"
-                }
-            ]
-        },
-        "lane": {
-            "$ref": "#/definitions/lane"
-        },
-        "url": {
-            "maxLength": 2048,
-            "minLength": 11,
-            "type": "string"
-        },
-        "v": {
-            "$ref": "#/definitions/v"
-        }
-    },
-    "required": [
-        "v",
-        "lane",
-        "cmd",
-        "method",
-        "url",
-        "headers",
-        "payload"
-    ],
-    "type": "object"
+        "v": {"enum": [1]},
+        "cmd": {"enum": ["req"]},
+        "lane": {"$ref": "#/definitions/lane"},
+        "har_req": {"$ref": "#/definitions/request"}
+    }
 }

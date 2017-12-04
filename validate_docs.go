@@ -66,7 +66,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %vμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
+	log.Printf("[DBG] 🡱  %dμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
 
 	if resp.StatusCode == 400 {
 		err = newDocsInvalidError(rep)

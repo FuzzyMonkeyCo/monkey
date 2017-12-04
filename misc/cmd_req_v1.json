@@ -1,6 +1,6 @@
 {
+    "$id": "cmd_req_v1",
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "_id": "cmd_req_v1",
     "additionalProperties": false,
     "definitions": {
         "cmd": {
@@ -38,12 +38,10 @@
                     "additionalProperties": false,
                     "properties": {
                         "r": {
-                            "format": "uint32",
                             "minimum": 1,
                             "type": "integer"
                         },
                         "t": {
-                            "format": "uint32",
                             "minimum": 1,
                             "type": "integer"
                         }

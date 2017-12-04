@@ -1,17 +1,19 @@
 package main
 
 import (
-	"io"
-	"os"
-	"fmt"
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 )
 
 func main() {
 	schemas := map[string]string{
-		"schemaREQv1": "misc/req_v1.json",
-		"schemaCMDv1": "misc/cmd_req_v1.json",
+		"schemaREQv1":     "misc/req_v1.json",
+		"schemaCMDv1":     "misc/cmd_req_v1.json",
 		"schemaCMDDonev1": "misc/cmd_rep_done_v1.json",
 	}
 
@@ -43,18 +45,58 @@ func main() {
 		fmt.Fprintln(out, "    return is.Valid(), nil")
 		fmt.Fprintln(out, "}")
 
-		fd, err := os.Open(path)
-		if err != nil {
-			panic(err)
+		if name != "schemaREQv1" {
+			fd, err := os.Open(path)
+			if err != nil {
+				panic(err)
+			}
+			defer fd.Close()
+
+			fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
+			io.Copy(&initFunc, fd)
+			fmt.Fprintln(&initFunc, "`)")
+		} else {
+			fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
+			if err := writeReqSchema(&initFunc); err != nil {
+				panic(err)
+			}
+			fmt.Fprintln(&initFunc, "`)")
 		}
-		defer fd.Close()
-
-		fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
-		io.Copy(&initFunc, fd)
-		fmt.Fprintln(&initFunc, "`)")
-
 	}
 
 	fmt.Fprintln(&initFunc, "}")
 	io.Copy(out, &initFunc)
+}
+
+func writeReqSchema(fd *bytes.Buffer) (err error) {
+	harStr, err := ioutil.ReadFile("misc/har_1.2.json")
+	if err != nil {
+		return
+	}
+
+	var harDefs struct {
+		Defs map[string]interface{} `json:"definitions"`
+	}
+	if err = json.Unmarshal(harStr, &harDefs); err != nil {
+		return
+	}
+
+	reqStr, err := ioutil.ReadFile("misc/req_v1.json")
+	if err != nil {
+		return
+	}
+
+	var reqJSON map[string]interface{}
+	if err = json.Unmarshal(reqStr, &reqJSON); err != nil {
+		return
+	}
+
+	defs := reqJSON["definitions"].(map[string]interface{})
+	for key, def := range harDefs.Defs {
+		defs[key] = def
+	}
+
+	writer := json.NewEncoder(fd)
+	err = writer.Encode(reqJSON)
+	return
 }
