@@ -31,6 +31,12 @@ func getLatestRelease() (latest string, err error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 403 {
+		log.Println("[ERR] hit GitHub.com's rate limit, bypassing check")
+		latest = binVersion
+		return
+	}
+
 	if resp.StatusCode != 200 {
 		err = newStatusError(200, resp.Status)
 		log.Println("[ERR]", err)
