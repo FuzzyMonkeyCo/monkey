@@ -29,7 +29,7 @@ type simpleCmdRep struct {
 	Cmd   string  `json:"cmd"`
 	V     uint    `json:"v"`
 	Us    uint64  `json:"us"`
-	Error *string `json:"error"`
+	Reason *string `json:"error"`
 }
 
 func (cmd *simpleCmd) Kind() string {
@@ -91,6 +91,7 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
+	// fmt.Fprintln(&script, "set -o execfail")
 	fmt.Fprintln(&script, "set -o nounset")
 	fmt.Fprintln(&script, "set -o pipefail")
 	for _, shellCmd := range shellCmds {
@@ -108,11 +109,12 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	err = exe.Run()
 	cmdRep.Us = uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		error := string(stderr.Bytes()) + "\n" + err.Error()
-		log.Println(error)
-		cmdRep.Error = &error
+		reason := string(stderr.Bytes()) + "\n" + err.Error()
+		log.Println("[ERR]", reason)
+		cmdRep.Reason = &reason
 		return
 	}
+	log.Println("[NFO]", string(stderr.Bytes()))
 
 	err = maybeF1inalizeConf(cfg, kind)
 	return
@@ -138,7 +140,10 @@ func snapEnv(envSerializedPath string) (err error) {
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
+
+	log.Println("[NFO] snapped env at ", envSerializedPath)
 	return
 }
 

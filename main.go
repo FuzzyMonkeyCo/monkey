@@ -170,12 +170,12 @@ func doValidate(apiKey string) int {
 
 func doTest(apiKey string) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Println(shell() + " is required")
+		log.Printf("%s is required\n", shell())
 		return 5
 	}
 
 	if apiKey == "" {
-		log.Println("$" + envAPIKey + " is unset")
+		log.Printf("$%s is unset\n", envAPIKey)
 		return 4
 	}
 
