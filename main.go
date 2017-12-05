@@ -170,25 +170,24 @@ func doValidate(apiKey string) int {
 
 func doTest(apiKey string) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Println(shell() + " is required")
+		log.Printf("%s is required\n", shell())
 		return 5
 	}
 
 	if apiKey == "" {
-		log.Println("$" + envAPIKey + " is unset")
+		log.Printf("$%s is unset\n", envAPIKey)
 		return 4
 	}
 
 	envSerializedPath := pwdID + ".env"
-	ensureDeleted(envSerializedPath)
 	if err := snapEnv(envSerializedPath); err != nil {
 		return retryOrReport()
 	}
-	defer ensureDeleted(envSerializedPath)
 
 	cfg, cmd, err := initDialogue(apiKey)
 	if err != nil {
 		if _, ok := err.(*docsInvalidError); ok {
+			ensureDeleted(envSerializedPath)
 			return 2
 		}
 		return retryOrReport()
@@ -196,6 +195,7 @@ func doTest(apiKey string) int {
 
 	for {
 		if cmd.Kind() == "done" {
+			ensureDeleted(envSerializedPath)
 			return testOutcome(cmd.(*doneCmd))
 		}
 

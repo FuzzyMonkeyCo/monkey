@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"gopkg.in/aymerick/raymond.v2"
@@ -15,7 +16,7 @@ import (
 
 const (
 	timeoutShort = 200 * time.Millisecond
-	timeoutLong  = 10 * time.Minute
+	timeoutLong  = 2 * time.Minute
 )
 
 type simpleCmd struct {
@@ -26,10 +27,10 @@ type simpleCmd struct {
 }
 
 type simpleCmdRep struct {
-	Cmd   string  `json:"cmd"`
-	V     uint    `json:"v"`
-	Us    uint64  `json:"us"`
-	Error *string `json:"error"`
+	Cmd    string  `json:"cmd"`
+	V      uint    `json:"v"`
+	Us     uint64  `json:"us"`
+	Reason *string `json:"error"`
 }
 
 func (cmd *simpleCmd) Kind() string {
@@ -80,41 +81,51 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 		return
 	}
 
+	var stderr bytes.Buffer
+	for _, shellCmd := range shellCmds {
+		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
+			return
+		}
+	}
+
+	maybeFinalizeConf(cfg, kind)
+	return
+}
+
+func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
 	// Note: exec.Cmd fails to cancel with non-*os.File outputs on linux
 	//   https://github.com/golang/go/issues/18874
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
-	var script, stderr bytes.Buffer
+	var script bytes.Buffer
 	envSerializedPath := pwdID + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
+	// fmt.Fprintln(&script, "set -o execfail")
 	fmt.Fprintln(&script, "set -o nounset")
 	fmt.Fprintln(&script, "set -o pipefail")
-	for _, shellCmd := range shellCmds {
-		fmt.Fprintln(&script, shellCmd)
-	}
+	fmt.Fprintln(&script, shellCmd)
 	fmt.Fprintln(&script, "declare -p >", envSerializedPath)
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout
-	exe.Stderr = &stderr
-	log.Printf("[DBG] $ %s\n", script.Bytes())
+	exe.Stderr = stderr
+	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
 
 	start := time.Now()
 	err = exe.Run()
-	cmdRep.Us = uint64(time.Since(start) / time.Microsecond)
+	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
-		error := string(stderr.Bytes()) + "\n" + err.Error()
-		log.Println(error)
-		cmdRep.Error = &error
+		reason := string(stderr.Bytes()) + "\n" + err.Error()
+		log.Println("[ERR]", reason)
+		cmdRep.Reason = &reason
 		return
 	}
-
-	err = maybeF1inalizeConf(cfg, kind)
+	log.Println("[NFO]", string(stderr.Bytes()))
 	return
 }
 
@@ -134,11 +145,14 @@ func snapEnv(envSerializedPath string) (err error) {
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] $ %s\n", script.Bytes())
+	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
+
+	log.Println("[NFO] snapped env at ", envSerializedPath)
 	return
 }
 
@@ -152,7 +166,7 @@ func readEnv(envVar string) string {
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
-	log.Printf("[DBG] $ %s\n", cmd)
+	log.Printf("[DBG] whithin %s $ %s\n", timeoutShort, cmd)
 
 	if err := exe.Run(); err != nil {
 		log.Println("[ERR]", err)
@@ -170,7 +184,7 @@ func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
 	if envVal == "" {
 		err := fmt.Errorf("Environment variable $%s is unset or empty", envVar)
 		fmt.Println(err)
-		log.Panic("[ERR] ", err)
+		log.Fatal("[ERR] ", err)
 	}
 	return raymond.SafeString(envVal)
 }
@@ -179,43 +193,36 @@ func unstacheInit() {
 	raymond.RegisterHelper("env", unstacheEnv)
 }
 
-func unstache(field string) (str string, err error) {
+func unstache(field string) string {
 	if field[:2] != "{{" {
-		return field, nil
+		return field
 	}
 
-	str, err = raymond.Render(field, nil)
+	str, err := raymond.Render(field, nil)
 	if err != nil {
-		log.Println("[ERR]", err)
-		return
+		log.Panic("[ERR] ", err)
 	}
-
-	if "" == str {
-		err = fmt.Errorf("Mustache field '%s' was resolved to the empty string", field)
-		log.Println("[ERR]", err)
-		fmt.Println(err)
-	}
-	return
+	return str
 }
 
-func maybeF1inalizeConf(cfg *ymlCfg, kind string) (err error) {
-	var host, port string
+func maybeFinalizeConf(cfg *ymlCfg, kind string) {
+	var wg sync.WaitGroup
 
 	if cfg.FinalHost == "" || kind != "reset" {
-		host, err = unstache(cfg.Host)
-		if err != nil {
-			return
-		}
-		cfg.FinalHost = host
+		wg.Add(1)
+		go func() {
+			cfg.FinalHost = unstache(cfg.Host)
+			wg.Done()
+		}()
 	}
 
 	if cfg.FinalPort == "" || kind != "reset" {
-		port, err = unstache(cfg.Port)
-		if err != nil {
-			return
-		}
-		cfg.FinalPort = port
+		wg.Add(1)
+		go func() {
+			cfg.FinalPort = unstache(cfg.Port)
+			wg.Done()
+		}()
 	}
 
-	return
+	wg.Wait()
 }

@@ -112,6 +112,8 @@ func makeBlobs(yml []byte) (blobs map[string]string, err error) {
 		} `yaml:"documentation"`
 	}
 	if err = yaml.Unmarshal(yml, &ymlConfPartial); err != nil {
+		log.Println("[ERR]", err)
+		fmt.Printf("Failed to parse %s: %+v\n", localYML, err)
 		return
 	}
 
