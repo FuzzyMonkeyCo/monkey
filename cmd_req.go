@@ -47,6 +47,9 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	if err != nil {
 		return
 	}
+	if len(cmdRep.Reason) == 0 {
+		cmdFailed = true
+	}
 	totalR++
 
 	if rep, err = json.Marshal(cmdRep); err != nil {
@@ -77,6 +80,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
 		rep.Reason = fmt.Sprintf("%+v", err.Error())
 		log.Printf("[NFO] 🡳  %dμs\n  ▲  %+v\n  ▼  %s\n", us, cmd.HARRequest, rep.Reason)
+		err = nil
 		return
 	}
 

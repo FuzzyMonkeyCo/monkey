@@ -52,6 +52,10 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	if err != nil {
 		return
 	}
+	if cmdRep.Reason != nil {
+		log.Println("cmdFailed = true")
+		cmdFailed = true
+	}
 
 	if rep, err = json.Marshal(cmdRep); err != nil {
 		log.Println("[ERR]", err)
@@ -160,6 +164,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	if err != nil {
 		reason := string(stderr.Bytes()) + "\n" + err.Error()
 		log.Println("[ERR]", reason)
+		err = nil
 		cmdRep.Reason = &reason
 		return
 	}

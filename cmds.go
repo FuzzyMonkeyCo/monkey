@@ -10,6 +10,7 @@ var (
 	lastLane      lane
 	shrinkingFrom lane
 	totalR        uint
+	cmdFailed bool
 )
 
 type lane struct {
