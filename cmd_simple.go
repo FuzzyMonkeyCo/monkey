@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"gopkg.in/aymerick/raymond.v2"
@@ -26,9 +27,9 @@ type simpleCmd struct {
 }
 
 type simpleCmdRep struct {
-	Cmd   string  `json:"cmd"`
-	V     uint    `json:"v"`
-	Us    uint64  `json:"us"`
+	Cmd    string  `json:"cmd"`
+	V      uint    `json:"v"`
+	Us     uint64  `json:"us"`
 	Reason *string `json:"error"`
 }
 
@@ -197,13 +198,23 @@ func unstache(field string) string {
 }
 
 func maybeFinalizeConf(cfg *ymlCfg, kind string) {
+	var wg sync.WaitGroup
+
 	if cfg.FinalHost == "" || kind != "reset" {
-		host := unstache(cfg.Host)
-		cfg.FinalHost = host
+		wg.Add(1)
+		go func() {
+			cfg.FinalHost = unstache(cfg.Host)
+			wg.Done()
+		}()
 	}
 
 	if cfg.FinalPort == "" || kind != "reset" {
-		port := unstache(cfg.Port)
-		cfg.FinalPort = port
+		wg.Add(1)
+		go func() {
+			cfg.FinalPort = unstache(cfg.Port)
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 }
