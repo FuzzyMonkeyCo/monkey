@@ -81,12 +81,24 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 		return
 	}
 
+	var stderr bytes.Buffer
+	for _, shellCmd := range shellCmds {
+		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
+			return
+		}
+	}
+
+	maybeFinalizeConf(cfg, kind)
+	return
+}
+
+func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
 	// Note: exec.Cmd fails to cancel with non-*os.File outputs on linux
 	//   https://github.com/golang/go/issues/18874
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
-	var script, stderr bytes.Buffer
+	var script bytes.Buffer
 	envSerializedPath := pwdID + ".env"
 	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -x")
@@ -95,20 +107,18 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	// fmt.Fprintln(&script, "set -o execfail")
 	fmt.Fprintln(&script, "set -o nounset")
 	fmt.Fprintln(&script, "set -o pipefail")
-	for _, shellCmd := range shellCmds {
-		fmt.Fprintln(&script, shellCmd)
-	}
+	fmt.Fprintln(&script, shellCmd)
 	fmt.Fprintln(&script, "declare -p >", envSerializedPath)
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout
-	exe.Stderr = &stderr
+	exe.Stderr = stderr
 	log.Printf("[DBG] $ %s\n", script.Bytes())
 
 	start := time.Now()
 	err = exe.Run()
-	cmdRep.Us = uint64(time.Since(start) / time.Microsecond)
+	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
 	if err != nil {
 		reason := string(stderr.Bytes()) + "\n" + err.Error()
 		log.Println("[ERR]", reason)
@@ -116,8 +126,6 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 		return
 	}
 	log.Println("[NFO]", string(stderr.Bytes()))
-
-	maybeFinalizeConf(cfg, kind)
 	return
 }
 
