@@ -16,7 +16,7 @@ import (
 
 const (
 	timeoutShort = 200 * time.Millisecond
-	timeoutLong  = 10 * time.Minute
+	timeoutLong  = 2 * time.Minute
 )
 
 type simpleCmd struct {
@@ -114,7 +114,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout
 	exe.Stderr = stderr
-	log.Printf("[DBG] $ %s\n", script.Bytes())
+	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
 
 	start := time.Now()
 	err = exe.Run()
@@ -145,7 +145,7 @@ func snapEnv(envSerializedPath string) (err error) {
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] $ %s\n", script.Bytes())
+	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
@@ -166,7 +166,7 @@ func readEnv(envVar string) string {
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
-	log.Printf("[DBG] $ %s\n", cmd)
+	log.Printf("[DBG] whithin %s $ %s\n", timeoutShort, cmd)
 
 	if err := exe.Run(); err != nil {
 		log.Println("[ERR]", err)
