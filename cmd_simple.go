@@ -116,7 +116,7 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	}
 	log.Println("[NFO]", string(stderr.Bytes()))
 
-	err = maybeF1inalizeConf(cfg, kind)
+	maybeFinalizeConf(cfg, kind)
 	return
 }
 
@@ -175,7 +175,7 @@ func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
 	if envVal == "" {
 		err := fmt.Errorf("Environment variable $%s is unset or empty", envVar)
 		fmt.Println(err)
-		log.Panic("[ERR] ", err)
+		log.Fatal("[ERR] ", err)
 	}
 	return raymond.SafeString(envVal)
 }
@@ -184,43 +184,26 @@ func unstacheInit() {
 	raymond.RegisterHelper("env", unstacheEnv)
 }
 
-func unstache(field string) (str string, err error) {
+func unstache(field string) string {
 	if field[:2] != "{{" {
-		return field, nil
+		return field
 	}
 
-	str, err = raymond.Render(field, nil)
+	str, err := raymond.Render(field, nil)
 	if err != nil {
-		log.Println("[ERR]", err)
-		return
+		log.Panic("[ERR] ", err)
 	}
-
-	if "" == str {
-		err = fmt.Errorf("Mustache field '%s' was resolved to the empty string", field)
-		log.Println("[ERR]", err)
-		fmt.Println(err)
-	}
-	return
+	return str
 }
 
-func maybeF1inalizeConf(cfg *ymlCfg, kind string) (err error) {
-	var host, port string
-
+func maybeFinalizeConf(cfg *ymlCfg, kind string) {
 	if cfg.FinalHost == "" || kind != "reset" {
-		host, err = unstache(cfg.Host)
-		if err != nil {
-			return
-		}
+		host := unstache(cfg.Host)
 		cfg.FinalHost = host
 	}
 
 	if cfg.FinalPort == "" || kind != "reset" {
-		port, err = unstache(cfg.Port)
-		if err != nil {
-			return
-		}
+		port := unstache(cfg.Port)
 		cfg.FinalPort = port
 	}
-
-	return
 }
