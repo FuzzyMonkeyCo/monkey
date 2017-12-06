@@ -7,13 +7,13 @@
 ### Quick install
 
 ```shell
-sh <(curl -sL https://goo.gl/Wb1JeU)
+sh <(curl -sfSL https://goo.gl/Wb1JeU)
 ```
 
 or the equivalent:
 
 ```shell
-sh <(curl -sL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/latest.sh)
+sh <(curl -sfSL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/latest.sh)
 ```
 
 ### Example `.coveredci.yml` file:
