@@ -29,6 +29,7 @@ script:
   - shellcheck misc/latest.sh
   # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
   # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
+  # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
   - |

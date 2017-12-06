@@ -45,7 +45,6 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 		return
 	}
 
-	//FIXME: execute 'start' now if exists, before dialogue
 	if err = maybePreStart(cfg); err != nil {
 		return
 	}
@@ -85,34 +84,8 @@ func readYML() (yml []byte, err error) {
 	}
 	defer fd.Close()
 
-	yml, err = ioutil.ReadAll(fd)
-	if err != nil {
+	if yml, err = ioutil.ReadAll(fd); err != nil {
 		log.Println("[ERR]", err)
-	}
-	return
-}
-
-func newCfg(yml []byte) (cfg *ymlCfg, err error) {
-	var ymlConf struct {
-		Start []string `yaml:"start"`
-		Reset []string `yaml:"reset"`
-		Stop  []string `yaml:"stop"`
-		Doc   struct {
-			Host string `yaml:"host"`
-			Port string `yaml:"port"`
-		} `yaml:"documentation"`
-	}
-	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	cfg = &ymlCfg{
-		Host:      ymlConf.Doc.Host,
-		Port:      ymlConf.Doc.Port,
-		Start: ymlConf.Start,
-		Reset: ymlConf.Reset,
-		Stop:  ymlConf.Stop,
 	}
 	return
 }
@@ -177,8 +150,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	}
 	defer resp.Body.Close()
 
-	rep, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if rep, err = ioutil.ReadAll(resp.Body); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -220,8 +192,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	}
 	defer resp.Body.Close()
 
-	rep, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if rep, err = ioutil.ReadAll(resp.Body); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}

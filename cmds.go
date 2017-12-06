@@ -23,8 +23,9 @@ type aCmd interface {
 }
 
 func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
-	ok, err := isValidForSchemaREQv1(cmdJSON)
-	if err != nil {
+	var ok bool
+
+	if ok, err = isValidForSchemaREQv1(cmdJSON); err != nil {
 		return
 	}
 	if ok {
@@ -36,8 +37,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 		return &cmd, nil
 	}
 
-	ok, err = isValidForSchemaCMDv1(cmdJSON)
-	if err != nil {
+	if ok, err = isValidForSchemaCMDv1(cmdJSON); err != nil {
 		return
 	}
 	if ok {
@@ -49,8 +49,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
 		return &cmd, nil
 	}
 
-	ok, err = isValidForSchemaCMDDonev1(cmdJSON)
-	if err != nil {
+	if ok, err = isValidForSchemaCMDDonev1(cmdJSON); err != nil {
 		return
 	}
 	if ok {
