@@ -23,9 +23,11 @@ type ymlCfg struct {
 	AuthToken string
 	Host      string
 	Port      string
-	Script    map[string][]string
 	FinalHost string
 	FinalPort string
+	Start     []string
+	Reset     []string
+	Stop      []string
 }
 
 func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
@@ -39,39 +41,22 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 		return
 	}
 
+	if cfg, err = newCfg(yml); err != nil {
+		return
+	}
+
+	//FIXME: execute 'start' now if exists, before dialogue
+	if err = maybePreStart(cfg); err != nil {
+		return
+	}
+
 	cmdJSON, authToken, err := initPUT(apiKey, validationJSON)
 	if err != nil {
 		return
 	}
+
+	cfg.AuthToken = authToken
 	cmd, err = unmarshalCmd(cmdJSON)
-	if err != nil {
-		return
-	}
-
-	var ymlConf struct {
-		Start []string `yaml:"start"`
-		Reset []string `yaml:"reset"`
-		Stop  []string `yaml:"stop"`
-		Doc   struct {
-			Host string `yaml:"host"`
-			Port string `yaml:"port"`
-		} `yaml:"documentation"`
-	}
-	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	cfg = &ymlCfg{
-		AuthToken: authToken,
-		Host:      ymlConf.Doc.Host,
-		Port:      ymlConf.Doc.Port,
-		Script: map[string][]string{
-			"start": ymlConf.Start,
-			"reset": ymlConf.Reset,
-			"stop":  ymlConf.Stop,
-		},
-	}
 	return
 }
 
@@ -105,6 +90,70 @@ func readYML() (yml []byte, err error) {
 		log.Println("[ERR]", err)
 	}
 	return
+}
+
+func newCfg(yml []byte) (cfg *ymlCfg, err error) {
+	var ymlConf struct {
+		Start []string `yaml:"start"`
+		Reset []string `yaml:"reset"`
+		Stop  []string `yaml:"stop"`
+		Doc   struct {
+			Host string `yaml:"host"`
+			Port string `yaml:"port"`
+		} `yaml:"documentation"`
+	}
+	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	cfg = &ymlCfg{
+		Host:      ymlConf.Doc.Host,
+		Port:      ymlConf.Doc.Port,
+		Start: ymlConf.Start,
+		Reset: ymlConf.Reset,
+		Stop:  ymlConf.Stop,
+	}
+	return
+}
+
+func newCfg(yml []byte) (cfg *ymlCfg, err error) {
+	var ymlConf struct {
+		Start []string `yaml:"start"`
+		Reset []string `yaml:"reset"`
+		Stop  []string `yaml:"stop"`
+		Doc   struct {
+			Host string `yaml:"host"`
+			Port string `yaml:"port"`
+		} `yaml:"documentation"`
+	}
+	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	cfg = &ymlCfg{
+		Host:  ymlConf.Doc.Host,
+		Port:  ymlConf.Doc.Port,
+		Start: ymlConf.Start,
+		Reset: ymlConf.Reset,
+		Stop:  ymlConf.Stop,
+	}
+	return
+}
+
+func (cfg *ymlCfg) script(kind string) []string {
+	switch kind {
+	case "start":
+		return cfg.Start
+	case "reset":
+		return cfg.Reset
+	case "stop":
+		return cfg.Stop
+	default:
+		log.Panicf("[ERR] unexpected kind '%s'\n", kind)
+		return []string{"unreachable"}
+	}
 }
 
 func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {
