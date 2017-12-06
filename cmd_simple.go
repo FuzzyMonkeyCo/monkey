@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -84,6 +85,9 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	var stderr bytes.Buffer
 	for _, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
+			fmt.Printf("A command failed during '%s':\n", kind)
+			fmtIndented("Command:", shellCmd)
+			fmtIndented("Reason:", err.Error())
 			return
 		}
 	}
@@ -92,9 +96,14 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	return
 }
 
+func fmtIndented(headline, toIndent string) {
+	fmt.Println(headline)
+	for _, txt := range strings.Split(toIndent, "\n") {
+		fmt.Printf("\t%s\n", txt)
+	}
+}
+
 func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
-	// Note: exec.Cmd fails to cancel with non-*os.File outputs on linux
-	//   https://github.com/golang/go/issues/18874
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
@@ -116,9 +125,25 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	exe.Stderr = stderr
 	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
 
+	ch := make(chan error)
 	start := time.Now()
-	err = exe.Run()
+	// https://github.com/golang/go/issues/18874
+	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
+	// Racing for ctx.Done() is a workaround to ^
+	go func() {
+		<-ctx.Done()
+		error := fmt.Errorf("Timed out after %s", time.Since(start))
+		ch <- error
+		log.Println("[DBG]", error)
+	}()
+	go func() {
+		error := exe.Run()
+		ch <- error
+		log.Println("[DBG]", error)
+	}()
+	err = <-ch
 	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
+
 	if err != nil {
 		reason := string(stderr.Bytes()) + "\n" + err.Error()
 		log.Println("[ERR]", reason)
