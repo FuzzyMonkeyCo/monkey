@@ -49,8 +49,7 @@ func getLatestRelease() (latest string, err error) {
 		return
 	}
 
-	latest, err = execJQ(body)
-	if err != nil {
+	if latest, err = execJQ(body); err != nil {
 		return
 	}
 

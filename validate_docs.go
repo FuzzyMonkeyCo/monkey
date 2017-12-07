@@ -61,8 +61,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 	}
 	defer resp.Body.Close()
 
-	rep, err = ioutil.ReadAll(resp.Body)
-	if err != nil {
+	if rep, err = ioutil.ReadAll(resp.Body); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}

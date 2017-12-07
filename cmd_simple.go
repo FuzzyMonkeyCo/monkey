@@ -20,6 +20,10 @@ const (
 	timeoutLong  = 2 * time.Minute
 )
 
+var (
+	wasPreStarted = false
+)
+
 type simpleCmd struct {
 	V             uint   `json:"v"`
 	Cmd           string `json:"cmd"`
@@ -49,10 +53,19 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 		return
 	}
 
-	rep, err = json.Marshal(cmdRep)
-	if err != nil {
+	if rep, err = json.Marshal(cmdRep); err != nil {
 		log.Println("[ERR]", err)
 	}
+	return
+}
+
+func maybePreStart(cfg *ymlCfg) (err error) {
+	if len(cfg.Reset) == 0 {
+		return
+	}
+
+	_, err = executeScript(cfg, "start")
+	wasPreStarted = true
 	return
 }
 
@@ -77,8 +90,8 @@ func progress(cmd *simpleCmd) {
 
 func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
 	cmdRep = &simpleCmdRep{V: 1, Cmd: kind}
-	shellCmds := cfg.Script[kind]
-	if len(shellCmds) == 0 {
+	shellCmds := cfg.script(kind)
+	if wasPreStarted || len(shellCmds) == 0 {
 		return
 	}
 
