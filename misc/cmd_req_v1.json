@@ -16,19 +16,6 @@
                 "boolean"
             ]
         },
-        "v": {
-            "enum": [
-                1
-            ]
-        }
-    },
-    "properties": {
-        "cmd": {
-            "$ref": "#/definitions/cmd"
-        },
-        "passed": {
-            "$ref": "#/definitions/passed"
-        },
         "shrinking_from": {
             "oneOf": [
                 {
@@ -53,6 +40,22 @@
                     "type": "object"
                 }
             ]
+        },
+        "v": {
+            "enum": [
+                1
+            ]
+        }
+    },
+    "properties": {
+        "cmd": {
+            "$ref": "#/definitions/cmd"
+        },
+        "passed": {
+            "$ref": "#/definitions/passed"
+        },
+        "shrinking_from": {
+            "$ref": "#/definitions/shrinking_from"
         },
         "v": {
             "$ref": "#/definitions/v"
