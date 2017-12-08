@@ -31,20 +31,22 @@ func main() {
 
 	var initFunc bytes.Buffer
 	fmt.Fprintln(&initFunc, "func loadSchemas() {")
+	fmt.Fprintln(&initFunc, "\tvar err error")
 
 	for name, path := range schemas {
-		fmt.Fprintf(out, "var %s gojsonschema.JSONLoader\n", name)
+		fmt.Fprintf(out, "var %s *gojsonschema.Schema\n", name)
 		Name := strings.Title(name)
 		fmt.Fprintf(out, "func isValidFor%s(data []byte) (bool, error) {\n", Name)
-		fmt.Fprintln(out, "    loader := gojsonschema.NewStringLoader(string(data))")
-		fmt.Fprintf(out, "    is, err := gojsonschema.Validate(%s, loader)\n", name)
-		fmt.Fprintln(out, "    if err != nil {")
-		fmt.Fprintln(out, "        log.Println(\"[ERR]\", err)")
-		fmt.Fprintln(out, "        return false, err")
-		fmt.Fprintln(out, "    }")
-		fmt.Fprintln(out, "    return is.Valid(), nil")
+		fmt.Fprintln(out, "\tloader := gojsonschema.NewStringLoader(string(data))")
+		fmt.Fprintf(out, "\tis, err := %s.Validate(loader)\n", name)
+		fmt.Fprintln(out, "\tif err != nil {")
+		fmt.Fprintln(out, "\t\tlog.Println(\"[ERR]\", err)")
+		fmt.Fprintln(out, "\t\treturn false, err")
+		fmt.Fprintln(out, "\t}")
+		fmt.Fprintln(out, "\treturn is.Valid(), nil")
 		fmt.Fprintln(out, "}")
 
+		loader := name + "Loader"
 		if name != "schemaREQv1" {
 			fd, err := os.Open(path)
 			if err != nil {
@@ -52,15 +54,17 @@ func main() {
 			}
 			defer fd.Close()
 
-			fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
+			fmt.Fprintf(&initFunc, "\t%s := gojsonschema.NewStringLoader(`", loader)
 			io.Copy(&initFunc, fd)
 			fmt.Fprintln(&initFunc, "`)")
+			fmt.Fprintf(&initFunc, "\tif %s, err = gojsonschema.NewSchema(%s); err != nil { panic(err) }\n", name, loader)
 		} else {
-			fmt.Fprintf(&initFunc, "\t%s = gojsonschema.NewStringLoader(`", name)
+			fmt.Fprintf(&initFunc, "\t%s := gojsonschema.NewStringLoader(`", loader)
 			if err := writeReqSchema(&initFunc); err != nil {
 				panic(err)
 			}
 			fmt.Fprintln(&initFunc, "`)")
+			fmt.Fprintf(&initFunc, "\tif %s, err = gojsonschema.NewSchema(%s); err != nil { panic(err) }\n", name, loader)
 		}
 	}
 
