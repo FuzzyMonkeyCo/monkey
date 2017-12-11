@@ -95,10 +95,10 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
 
 	var stderr bytes.Buffer
 	var err error
-	for _, shellCmd := range shellCmds {
+	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
 			fmt.Printf("A command failed during '%s':\n", kind)
-			fmtIndented("Command:", shellCmd)
+			fmtIndented(fmt.Sprintf("Command #%d:", i+1), shellCmd)
 			fmtIndented("Reason:", err.Error())
 			cmdRep.Failed = true
 			return
