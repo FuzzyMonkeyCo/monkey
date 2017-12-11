@@ -89,7 +89,7 @@ func progress(cmd *simpleCmd) {
 func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
 	cmdRep = &simpleCmdRep{V: 1, Cmd: kind, Failed: false}
 	shellCmds := cfg.script(kind)
-	if wasPreStarted || len(shellCmds) == 0 {
+	if len(shellCmds) == 0 || (wasPreStarted && kind == "start") {
 		return
 	}
 
