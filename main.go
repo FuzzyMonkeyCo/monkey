@@ -199,7 +199,7 @@ func doTest(apiKey string) int {
 			return testOutcome(cmd.(*doneCmd))
 		}
 
-		if cmd, err = next(cfg, cmd); err != nil || cmdFailed {
+		if cmd, err = next(cfg, cmd); err != nil {
 			return retryOrReport()
 		}
 	}

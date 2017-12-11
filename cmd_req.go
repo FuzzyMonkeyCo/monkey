@@ -47,9 +47,6 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	if err != nil {
 		return
 	}
-	if len(cmdRep.Reason) == 0 {
-		cmdFailed = true
-	}
 	totalR++
 
 	if rep, err = json.Marshal(cmdRep); err != nil {

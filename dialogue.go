@@ -60,11 +60,6 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 }
 
 func next(cfg *ymlCfg, cmd aCmd) (someCmd aCmd, err error) {
-	if cmdFailed {
-		err = fmt.Errorf("fatal")
-		return
-	}
-
 	// Sometimes sets cfg.Final* fields
 	rep, err := cmd.Exec(cfg)
 	if err != nil {
