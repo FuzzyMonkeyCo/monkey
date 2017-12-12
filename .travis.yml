@@ -42,7 +42,7 @@ script:
   # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
-  - echo -e 'package main\nconst binVersion = "'$CURRENT_TAG'"\n' | gofmt > version.go
+  - echo -e 'package main\nconst binVersion = "'$CURRENT_TAG'"' | gofmt > version.go
   - go generate
   - dep ensure -v
   - go fmt
