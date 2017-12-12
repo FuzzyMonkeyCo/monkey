@@ -1,0 +1,36 @@
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/sebcat/har"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/CoveredCI/harhar.v0"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/aymerick/raymond.v2"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/blang/semver.v3"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/docopt/docopt.go.v0"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/hashicorp/logutils.v0"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/savaki/jq.v0"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/xeipuuv/gojsonschema.v0"
+
+[[constraint]]
+  branch = "v2"
+  name = "gopkg.in/yaml.v2"
