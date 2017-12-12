@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"time"
 
@@ -97,9 +96,8 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
 	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("A command failed during '%s':\n", kind)
-			fmtIndented(fmt.Sprintf("Command #%d:", i+1), shellCmd)
-			fmtIndented("Reason:", err.Error())
+			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind)
+			fmt.Println(err.Error())
 			cmdRep.Failed = true
 			return
 		}
@@ -107,13 +105,6 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
 
 	maybeFinalizeConf(cfg, kind)
 	return
-}
-
-func fmtIndented(headline, toIndent string) {
-	fmt.Println(headline)
-	for _, txt := range strings.Split(toIndent, "\n") {
-		fmt.Printf("\t%s\n", txt)
-	}
 }
 
 func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
