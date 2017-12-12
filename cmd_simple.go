@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"time"
 
@@ -32,10 +31,10 @@ type simpleCmd struct {
 }
 
 type simpleCmdRep struct {
-	Cmd    string  `json:"cmd"`
-	V      uint    `json:"v"`
-	Us     uint64  `json:"us"`
-	Reason *string `json:"error"`
+	Cmd    string `json:"cmd"`
+	V      uint   `json:"v"`
+	Us     uint64 `json:"us"`
+	Failed bool   `json:"failed"`
 }
 
 func (cmd *simpleCmd) Kind() string {
@@ -48,11 +47,7 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 		clearHAR()
 	}
 
-	cmdRep, err := executeScript(cfg, cmd.Kind())
-	if err != nil {
-		return
-	}
-
+	cmdRep := executeScript(cfg, cmd.Kind())
 	if rep, err = json.Marshal(cmdRep); err != nil {
 		log.Println("[ERR]", err)
 	}
@@ -63,9 +58,16 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 	if len(cfg.Reset) == 0 {
 		return
 	}
-
-	_, err = executeScript(cfg, "start")
+	cmdRep := executeScript(cfg, "start")
 	wasPreStarted = true
+	if cmdRep.Failed {
+		err = fmt.Errorf("failed during maybePreStart")
+	}
+	return
+}
+
+func maybePostStop(cfg *ymlCfg) {
+	executeScript(cfg, "stop")
 	return
 }
 
@@ -88,32 +90,26 @@ func progress(cmd *simpleCmd) {
 	fmt.Printf(str)
 }
 
-func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep, err error) {
-	cmdRep = &simpleCmdRep{V: 1, Cmd: kind}
+func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
+	cmdRep = &simpleCmdRep{V: 1, Cmd: kind, Failed: false}
 	shellCmds := cfg.script(kind)
-	if wasPreStarted || len(shellCmds) == 0 {
+	if len(shellCmds) == 0 || (wasPreStarted && kind == "start") {
 		return
 	}
 
 	var stderr bytes.Buffer
-	for _, shellCmd := range shellCmds {
+	var err error
+	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("A command failed during '%s':\n", kind)
-			fmtIndented("Command:", shellCmd)
-			fmtIndented("Reason:", err.Error())
+			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind)
+			fmt.Println(err.Error())
+			cmdRep.Failed = true
 			return
 		}
 	}
 
 	maybeFinalizeConf(cfg, kind)
 	return
-}
-
-func fmtIndented(headline, toIndent string) {
-	fmt.Println(headline)
-	for _, txt := range strings.Split(toIndent, "\n") {
-		fmt.Printf("\t%s\n", txt)
-	}
 }
 
 func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
@@ -158,9 +154,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
 
 	if err != nil {
-		reason := string(stderr.Bytes()) + "\n" + err.Error()
-		log.Println("[ERR]", reason)
-		cmdRep.Reason = &reason
+		log.Println("[ERR]", string(stderr.Bytes())+"\n"+err.Error())
 		return
 	}
 	log.Println("[NFO]", string(stderr.Bytes()))
