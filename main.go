@@ -190,7 +190,7 @@ func doTest(apiKey string) int {
 			ensureDeleted(envSerializedPath)
 			return 2
 		}
-		return retryOrReport()
+		return retryOrReportThenCleanup(cfg)
 	}
 
 	for {
@@ -200,9 +200,15 @@ func doTest(apiKey string) int {
 		}
 
 		if cmd, err = next(cfg, cmd); err != nil {
-			return retryOrReport()
+			return retryOrReportThenCleanup(cfg)
 		}
 	}
+}
+
+func retryOrReportThenCleanup(cfg *ymlCfg) int {
+	exitCode := retryOrReport()
+	maybePostStop(cfg)
+	return exitCode
 }
 
 func retryOrReport() int {
