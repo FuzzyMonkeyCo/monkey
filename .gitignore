@@ -28,3 +28,4 @@ vendor/
 /schemas.go
 /*.cov
 /cov.out
+/repro/

@@ -16,14 +16,17 @@ all: lint vendor
 	go build -o $(EXE)
 
 x: vendor
-	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
+	$(if $(wildcard $(DST)/$(EXE)-*-*.$(SHA)),rm $(DST)/$(EXE)-*-*.$(SHA))
 	go generate
 	CGO_ENABLED=0 gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
-	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
+	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *.$(SHA))
 
 image:
 	tar c $(LNX) | docker import --change 'ENTRYPOINT ["/$(LNX)"]' --change 'WORKDIR /app' - $(EXE)
+
+reproduce:
+	./misc/reproduce_build.sh
 
 update: SHELL := /bin/bash
 update:
@@ -47,7 +50,7 @@ deps:
 	mkdir -p release
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP) -o release/$(DEP)
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP).sha256 -o release/$(DEP).sha256
-	sha256sum --check --strict release/$(DEP).sha256
+	sha256sum -cw release/$(DEP).sha256
 	chmod +x release/$(DEP)
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
@@ -71,6 +74,7 @@ clean:
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)
 	$(if $(wildcard *.cov),rm *.cov)
 	$(if $(wildcard cov.out),rm cov.out)
+	$(if $(wildcard repro/),rm -r repro/)
 
 test: $(EXE).test
 	./ape.sh --version

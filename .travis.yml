@@ -44,7 +44,7 @@ script:
   - go vet $(go list ./... | grep -v /vendor/)
   - megacheck -show-ignored -unused.exported
  #- go test -v -race .
-  - make x
+  - GOVSN=$TRAVIS_GO_VERSION make reproduce
   - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
