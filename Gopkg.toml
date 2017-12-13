@@ -33,4 +33,4 @@
 
 [[constraint]]
   branch = "master"
-  name = "gopkg.in/xeipuuv/gojsonschema.v0"
+  name = "github.com/xeipuuv/gojsonschema"
