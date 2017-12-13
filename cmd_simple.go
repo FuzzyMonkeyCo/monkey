@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/aymerick/raymond.v2"
+	"github.com/aymerick/raymond"
 )
 
 const (

@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"gopkg.in/CoveredCI/harhar.v0"
+	"github.com/cardigann/harhar"
 )
 
 var (

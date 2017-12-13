@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/aymerick/raymond"
   packages = ["ast","lexer","parser"]
-  revision = "72acac2207479d21dd45898c2a4264246c818148"
+  revision = "a2232af10b53ef1ae5a767f5178db3a6c1dab655"
 
 [[projects]]
   branch = "master"
@@ -33,49 +33,37 @@
 
 [[projects]]
   branch = "master"
-  name = "gopkg.in/CoveredCI/harhar.v0"
+  name = "github.com/cardigann/harhar"
   packages = ["."]
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
   branch = "master"
-  name = "gopkg.in/aymerick/raymond.v2"
-  packages = ["."]
-  revision = "a2232af10b53ef1ae5a767f5178db3a6c1dab655"
-
-[[projects]]
-  branch = "master"
-  name = "gopkg.in/blang/semver.v3"
+  name = "github.com/blang/semver"
   packages = ["."]
   revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
 
 [[projects]]
   branch = "master"
-  name = "gopkg.in/docopt/docopt.go.v0"
+  name = "github.com/docopt/docopt.go"
   packages = ["."]
   revision = "784ddc588536785e7299f7272f39101f7faccc3f"
 
 [[projects]]
   branch = "master"
-  name = "gopkg.in/hashicorp/logutils.v0"
+  name = "github.com/hashicorp/logutils"
   packages = ["."]
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
   branch = "master"
-  name = "gopkg.in/savaki/jq.v0"
-  packages = ["."]
-  revision = "0e6baecebbf8a24a6590d3fc8232165008d6e5d8"
-
-[[projects]]
-  branch = "master"
-  name = "gopkg.in/xeipuuv/gojsonschema.v0"
+  name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   revision = "212d8a0df7acfab8bdd190a7a69f0ab7376edcc8"
 
 [[projects]]
   branch = "v2"
-  name = "gopkg.in/yaml.v2"
+  name = "github.com/go-yaml/yaml"
   packages = ["."]
   revision = "eb3733d160e74a9c7e442f435eb3bea458e1d19f"
 

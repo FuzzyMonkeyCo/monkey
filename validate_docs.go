@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"github.com/go-yaml/yaml"
 )
 
 const localYML = ".coveredci.yml"
