@@ -1,0 +1,36 @@
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/aymerick/raymond"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/blang/semver"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/cardigann/harhar"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/docopt/docopt.go"
+
+[[constraint]]
+  branch = "v2"
+  name = "github.com/go-yaml/yaml"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/hashicorp/logutils"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/savaki/jq"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/sebcat/har"
+
+[[constraint]]
+  branch = "master"
+  name = "gopkg.in/xeipuuv/gojsonschema.v0"
