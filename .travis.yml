@@ -2,13 +2,16 @@ language: go
 sudo: false
 go: 1.9.2
 
+env:
+  global:
+    - GODEP=0.3.2
+    - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
+
 before_install:
   - set -o errexit
   - set -o errtrace
   # - set -o nounset # TravisCI is unclean
   - set -o pipefail
-  - go get -u github.com/mitchellh/gox
-  - go get -u github.com/golang/lint/golint
 
 addons:
   apt:
@@ -19,11 +22,18 @@ addons:
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
       # - silversearcher-ag FIXME
 
+install:
+  - go get -u github.com/mitchellh/gox
+  - go get -u github.com/golang/lint/golint
+  - curl -sfSL https://github.com/golang/dep/releases/download/v$GODEP/dep-linux-amd64 -o $GOPATH/bin/dep
+  - chmod +x $GOPATH/bin/dep
+
 before_script:
   - go version
   - shellcheck --version
   - git --version
   # - ag --version
+  - dep version
 
 script:
   - shellcheck misc/latest.sh
@@ -32,12 +42,9 @@ script:
   # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
-  - |
-    if [[ "$TRAVIS_TAG" != '' ]]; then
-      echo -e "package main\n\n// Version of testman\nconst binVersion = \"$TRAVIS_TAG\"\n" | gofmt > version.go
-    fi
+  - echo -e 'package main\nconst binVersion = "'$CURRENT_TAG'"' | gofmt > version.go
   - go generate
-  - go get -t -v ./...
+  - dep ensure -v
   - go fmt
   - git --no-pager diff
   - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
@@ -46,14 +53,8 @@ script:
   - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .
   - ./testman-linux_amd64 -h | grep testman
   - ./testman-linux_amd64 --help | grep testman
-  - |
-    if [[ "$TRAVIS_TAG" != '' ]]; then
-      ./testman-linux_amd64 -V | grep "testman/$TRAVIS_TAG"
-      ./testman-linux_amd64 --version | grep "testman/$TRAVIS_TAG"
-    else
-      ./testman-linux_amd64 -V | grep testman/0.0.0
-      ./testman-linux_amd64 --version | grep testman/0.0.0
-    fi
+  - ./testman-linux_amd64 -V | grep testman/$CURRENT_TAG
+  - ./testman-linux_amd64 --version | grep testman/$CURRENT_TAG
   - ls -lha
 
 after_script:

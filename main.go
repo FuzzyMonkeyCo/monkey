@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"gopkg.in/docopt/docopt.go.v0"
-	"gopkg.in/hashicorp/logutils.v0"
+	"github.com/docopt/docopt.go"
+	"github.com/hashicorp/logutils"
 )
 
 //go:generate go run misc/include_jsons.go

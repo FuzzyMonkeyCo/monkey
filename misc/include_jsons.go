@@ -27,7 +27,7 @@ func main() {
 		panic(err)
 	}
 	fmt.Fprintln(out, "import \"log\"")
-	fmt.Fprintln(out, "import \"gopkg.in/xeipuuv/gojsonschema.v0\"")
+	fmt.Fprintln(out, "import \"github.com/xeipuuv/gojsonschema\"")
 
 	var initFunc bytes.Buffer
 	fmt.Fprintln(&initFunc, "func loadSchemas() {")
