@@ -74,10 +74,10 @@ func maybePostStop(cfg *ymlCfg) {
 func progress(cmd *simpleCmd) {
 	var str string
 	if *cmd.Passed {
-		str = "."
+		str = "✓"
 	} else {
 		if !*cmd.Passed {
-			str = "x"
+			str = "✗"
 		}
 	}
 
