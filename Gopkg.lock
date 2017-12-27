@@ -8,10 +8,10 @@
   revision = "72acac2207479d21dd45898c2a4264246c818148"
 
 [[projects]]
-  branch = "master"
   name = "github.com/blang/semver"
   packages = ["."]
   revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
+  version = "v3.5.1"
 
 [[projects]]
   branch = "master"
@@ -20,10 +20,10 @@
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
-  branch = "master"
   name = "github.com/docopt/docopt.go"
   packages = ["."]
   revision = "784ddc588536785e7299f7272f39101f7faccc3f"
+  version = "0.6.2"
 
 [[projects]]
   branch = "v2"
