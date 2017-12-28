@@ -74,6 +74,7 @@ deploy:
   on:
     repo: CoveredCI/testman
     tags: true
+    on: $(go version | grep -v devel)
 
 notifications:
   email:
