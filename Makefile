@@ -1,12 +1,17 @@
-.PHONY: debug
+.PHONY: debug lint
 
 EXE = testman
 
-all:
-	golint -set_exit_status
+all: lint vendor/
 	go generate
-	# go get .
 	go build -o $(EXE)
+
+vendor/:
+	go generate
+	dep ensure -v
+
+lint:
+	golint -set_exit_status
 
 debug: all
 	./$(EXE) validate

@@ -2,16 +2,10 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/aymerick/raymond"
-  packages = [".","ast","lexer","parser"]
-  revision = "72acac2207479d21dd45898c2a4264246c818148"
-
-[[projects]]
-  branch = "master"
   name = "github.com/blang/semver"
   packages = ["."]
   revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
+  version = "v3.5.1"
 
 [[projects]]
   branch = "master"
@@ -20,10 +14,10 @@
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
-  branch = "master"
   name = "github.com/docopt/docopt.go"
   packages = ["."]
   revision = "784ddc588536785e7299f7272f39101f7faccc3f"
+  version = "0.6.2"
 
 [[projects]]
   branch = "v2"
@@ -70,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "028eabce58ccdf987076549b5cd689a17690017b069bee212abbda4569e02c6e"
+  inputs-digest = "d4c2edbad2a8c91b7db606b4d932afd9f9d8e244d49512ac6f62382b1cf8aea3"
   solver-name = "gps-cdcl"
   solver-version = 1

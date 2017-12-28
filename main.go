@@ -43,8 +43,6 @@ func init() {
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"
 
-	unstacheInit()
-
 	loadSchemas()
 
 	makePwdID()
