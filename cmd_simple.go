@@ -9,9 +9,8 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"text/template"
 	"time"
-
-	"github.com/aymerick/raymond"
 )
 
 const (
@@ -211,18 +210,12 @@ func shell() string {
 	return "/bin/bash"
 }
 
-func unstacheEnv(envVar string, options *raymond.Options) raymond.SafeString {
-	envVal := readEnv(envVar)
+func unstacheEnv(envVar string) (envVal string, err error) {
+	envVal = readEnv(envVar)
 	if envVal == "" {
-		err := fmt.Errorf("Environment variable $%s is unset or empty", envVar)
-		fmt.Println(err)
-		log.Fatal("[ERR] ", err)
+		err = fmt.Errorf("Environment variable $%s is unset or empty", envVar)
 	}
-	return raymond.SafeString(envVal)
-}
-
-func unstacheInit() {
-	raymond.RegisterHelper("env", unstacheEnv)
+	return
 }
 
 func unstache(field string) string {
@@ -230,11 +223,20 @@ func unstache(field string) string {
 		return field
 	}
 
-	str, err := raymond.Render(field, nil)
-	if err != nil {
+	funcMap := template.FuncMap{
+		"env": unstacheEnv,
+	}
+	tmpl := template.New("unstache").Funcs(funcMap)
+
+	var err error
+	if tmpl, err = tmpl.Parse(field); err != nil {
 		log.Panic("[ERR] ", err)
 	}
-	return str
+	var buffer bytes.Buffer
+	if err := tmpl.Execute(&buffer, ""); err != nil {
+		log.Panic("[ERR] ", err)
+	}
+	return buffer.String()
 }
 
 func maybeFinalizeConf(cfg *ymlCfg, kind string) {
