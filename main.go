@@ -189,6 +189,9 @@ func doTest(apiKey string) int {
 			ensureDeleted(envSerializedPath)
 			return 2
 		}
+		if cfg == nil {
+			return retryOrReport()
+		}
 		return retryOrReportThenCleanup(cfg)
 	}
 

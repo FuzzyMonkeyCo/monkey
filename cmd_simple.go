@@ -67,7 +67,6 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 
 func maybePostStop(cfg *ymlCfg) {
 	executeScript(cfg, "stop")
-	return
 }
 
 func progress(cmd *simpleCmd) {
