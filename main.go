@@ -34,11 +34,12 @@ func init() {
 	isDebug = "0.0.0" == binVersion
 
 	if isDebug {
-		apiRoot = "http://localhost:1042/1"
-		docsURL = "http://localhost:2042/1/blob"
+		apiRoot = "http://test.dev.coveredci.com/1"
+		docsURL = "http://lint.dev.coveredci.com/1/blob"
 	} else {
-		apiRoot = "http://test.dev.coveredci.com:1042/1"      //FIXME
-		docsURL = "http://lint.dev.coveredci.com:2042/1/blob" //FIXME
+		//FIXME: use HTTPS
+		apiRoot = "http://test.coveredci.com/1"
+		docsURL = "http://lint.coveredci.com/1/blob"
 	}
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"
