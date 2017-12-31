@@ -55,6 +55,8 @@ script:
   - ./testman-linux_amd64 --help | grep testman
   - ./testman-linux_amd64 -V | grep testman/$CURRENT_TAG
   - ./testman-linux_amd64 --version | grep testman/$CURRENT_TAG
+  - for bin in testman-*; do sha256sum $bin | tee $bin.sha256; done
+  - sha256sum -c *.sha256
   - ls -lha
 
 after_script:
