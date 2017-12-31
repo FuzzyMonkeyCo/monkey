@@ -50,7 +50,7 @@ script:
   - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
-  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "-X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .
+  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OS}}_{{.Arch}}' -ldflags "--strip-all -X main.Rev=$(git describe --abbrev --dirty --always --tags)" -verbose .
   - ./testman-linux_amd64 -h | grep testman
   - ./testman-linux_amd64 --help | grep testman
   - ./testman-linux_amd64 -V | grep testman/$CURRENT_TAG
