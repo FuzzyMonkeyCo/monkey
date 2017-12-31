@@ -16,3 +16,8 @@ lint:
 debug: all
 	./$(EXE) validate
 	./$(EXE) -vvv test
+
+clean:
+	$(if $(wildcard vendor/),rm -r vendor/)
+	$(if $(wildcard schemas.go),rm schemas.go)
+	$(if $(wildcard $(EXE)),rm $(EXE))
