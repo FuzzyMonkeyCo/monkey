@@ -36,12 +36,9 @@ latest_tag_url=$(curl --silent --location --output /dev/null --write-out '%{url_
 latest_tag=$(basename "$latest_tag_url")
 echo "Latest tag: $latest_tag"
 
-exe=
-case "$(uname -s)" in  # https://stackoverflow.com/a/27776822/1418165
-    Linux)  exe=testman-linux_amd64 ;;
-    Darwin) exe=testman-darwin_amd64 ;;
-    CYGWIN*|MINGW32*|MSYS*) exe=testman-windows_amd64.exe ;;
-    *) fatal "Unsupported architecture '$(uname -s)': $(uname -a)" ;;
+exe="testman-$(uname -s)-$(uname -m)"
+case "$exe" in
+    CYGWIN*|MINGW32*|MSYS*) exe="$exe".exe ;;
 esac
 
 echo "Downloading $exe v$latest_tag"
