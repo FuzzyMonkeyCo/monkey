@@ -51,7 +51,7 @@ script:
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
   - GIT_DESCRIBE=$(git describe --abbrev --dirty --always --tags)
-  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OSUname}}-{{.ArchUname}}' -ldflags '--strip-all -X main.Rev='$GIT_DESCRIBE -verbose .
+  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OSUname}}-{{.ArchUname}}' -ldflags '-s -w -X main.Rev='$GIT_DESCRIBE -verbose .
   - ./testman-Linux-x86_64 -h | grep testman
   - ./testman-Linux-x86_64 --help | grep testman
   - ./testman-Linux-x86_64 -V | grep testman/$CURRENT_TAG
