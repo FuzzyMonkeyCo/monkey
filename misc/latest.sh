@@ -14,18 +14,19 @@ fatal() {
 }
 
 # Note: ~/.local/bin is for TravisCI.com
+# Note: C:\Program Files\Git\usr\bin is for appveyor.com
 target_path=
-for path in /usr/local/bin /usr/bin ~/.local/bin nil; do
-    case :$PATH: in
+for path in /usr/local/bin /usr/bin ~/.local/bin 'C:\Program Files\Git\usr\bin' nil; do
+    case :"$path": in
         :nil:) fatal "Could not find a suitable target path among $PATH" ;;
-        *:$path:*)
-            mkdir -p $path >/dev/null 2>&1 || true
-            if touch $path/testman >/dev/null 2>&1; then
-                target_path=$path
+        *:"$path":*)
+            mkdir -p "$path" >/dev/null 2>&1 || true
+            if touch "$path"/testman >/dev/null 2>&1; then
+                target_path="$path"
                 echo "Selected target path: $target_path"
                 break
             else
-                rm $path/testman >/dev/null 2>&1 || true
+                rm "$path"/testman >/dev/null 2>&1 || true
             fi;;
         *) ;;
     esac
@@ -38,14 +39,14 @@ echo "Latest tag: $latest_tag"
 
 exe="testman-$(uname -s)-$(uname -m)"
 case "$exe" in
-    CYGWIN*|MINGW32*|MSYS*) exe="$exe".exe ;;
+    CYGWIN*|MINGW32*|MSYS*) exe=$exe.exe ;;
 esac
 
 echo "Downloading $exe v$latest_tag"
 tmp="$(mktemp)"
 curl -# --location --output "$tmp" "https://github.com/$slug/releases/download/$latest_tag/$exe"
 chmod +x "$tmp"
-mv "$tmp" $target_path/testman
+mv "$tmp" "$target_path"/testman
 
 if ! which testman >/dev/null 2>&1; then
     fatal "$exe does not appear to be in $target_path"
