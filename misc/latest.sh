@@ -44,7 +44,9 @@ esac
 
 echo "Downloading $exe v$latest_tag"
 tmp="$(mktemp)"
+curl -# --location --output "$tmp" "https://github.com/$slug/releases/download/$latest_tag/$exe.sha256"
 curl -# --location --output "$tmp" "https://github.com/$slug/releases/download/$latest_tag/$exe"
+cd "$tmp" && sha256sum -c $exe.sha256 && cd -
 chmod +x "$tmp"
 mv "$tmp" "$target_path"/testman
 
