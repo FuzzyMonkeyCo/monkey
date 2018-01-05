@@ -24,3 +24,4 @@ vendor/
 testman
 testman-*
 schemas.go
+sha256s.txt

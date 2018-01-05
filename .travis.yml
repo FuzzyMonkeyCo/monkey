@@ -56,8 +56,8 @@ script:
   - ./testman-Linux-x86_64 --help | grep testman
   - ./testman-Linux-x86_64 -V | grep testman/$CURRENT_TAG
   - ./testman-Linux-x86_64 --version | grep testman/$CURRENT_TAG
-  - for bin in testman-*; do sha256sum $bin | tee $bin.sha256; done
-  - sha256sum -c *.sha256
+  - for bin in testman-*; do sha256sum $bin; done | tee sha256s.txt
+  - sha256sum --check --strict sha256s.txt
   - ls -lha
 
 after_script:
@@ -70,7 +70,9 @@ deploy:
   skip_cleanup: true
   overwrite: true
   file_glob: true
-  file: testman-*
+  file:
+    - testman-*
+    - sha256s.txt
   on:
     repo: CoveredCI/testman
     tags: true
