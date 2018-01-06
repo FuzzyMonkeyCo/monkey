@@ -12,7 +12,7 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
-const localYML = ".coveredci.yml"
+const localYML = ".fuzzymonkey.yml"
 
 func validateDocs(apiKey string, yml []byte) (rep []byte, err error) {
 	blobs, err := makeBlobs(yml)

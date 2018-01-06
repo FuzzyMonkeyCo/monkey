@@ -42,7 +42,8 @@ script:
   # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
-  - printf 'package main\nconst binVersion = "%s"' $CURRENT_TAG | gofmt >version.go
+  - GIT_DESCRIBE=$(git describe --abbrev --dirty --always --tags)
+  - printf 'package main\nconst binVersion = "%s"\nconst binVSN = "%s"' $CURRENT_TAG $GIT_DESCRIBE | gofmt >version.go
   - go generate
   - dep ensure -v
   - go fmt
@@ -50,13 +51,12 @@ script:
   - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
-  - GIT_DESCRIBE=$(git describe --abbrev --dirty --always --tags)
-  - gox -os 'linux darwin windows' -arch 'amd64' -output 'testman-{{.OSUname}}-{{.ArchUname}}' -ldflags '-s -w -X main.Rev='$GIT_DESCRIBE -verbose .
-  - ./testman-Linux-x86_64 -h | grep testman
-  - ./testman-Linux-x86_64 --help | grep testman
-  - ./testman-Linux-x86_64 -V | grep testman/$CURRENT_TAG
-  - ./testman-Linux-x86_64 --version | grep testman/$CURRENT_TAG
-  - for bin in testman-*; do sha256sum $bin; done | tee sha256s.txt
+  - gox -os 'linux darwin windows' -arch 'amd64' -output 'monkey-{{.OSUname}}-{{.ArchUname}}' -ldflags '-s -w -X main.Rev='$GIT_DESCRIBE -verbose .
+  - ./monkey-Linux-x86_64 -h | grep monkey
+  - ./monkey-Linux-x86_64 --help | grep monkey
+  - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
+  - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
+  - for bin in monkey-*; do sha256sum $bin; done | tee sha256s.txt
   - sha256sum --check --strict sha256s.txt
   - ls -lha
 
@@ -71,10 +71,10 @@ deploy:
   overwrite: true
   file_glob: true
   file:
-    - testman-*
+    - monkey-*
     - sha256s.txt
   on:
-    repo: CoveredCI/testman
+    repo: FuzzyMonkeyCo/monkey
     tags: true
 
 notifications:

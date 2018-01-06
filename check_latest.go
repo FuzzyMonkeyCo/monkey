@@ -11,7 +11,7 @@ import (
 
 const (
 	githubV3APIHeader = "application/vnd.github.v3+json"
-	latestReleaseURL  = "https://api.github.com/repos/CoveredCI/testman/releases/latest"
+	latestReleaseURL  = "https://api.github.com/repos/FuzzyMonkeyCo/monkey/releases/latest"
 	// jqQuery = "{tag:.tag_name, bins:.assets|map({(.name): .browser_download_url})|add}"
 	jqQuery = ".tag_name"
 )

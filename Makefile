@@ -1,6 +1,6 @@
 .PHONY: debug lint
 
-EXE = testman
+EXE = monkey
 
 all: lint vendor/
 	go generate
@@ -15,7 +15,7 @@ lint:
 
 debug: all
 	./$(EXE) validate
-	./$(EXE) -vvv test
+	./$(EXE) -vvv fuzz
 
 clean:
 	$(if $(wildcard vendor/),rm -r vendor/)
