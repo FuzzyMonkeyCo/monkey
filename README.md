@@ -1,22 +1,35 @@
-# [testman](https://github.com/CoveredCI/testman) ~ CoveredCI's minion [![TravisCI build status](https://travis-ci.org/CoveredCI/testman.svg?branch=master)](https://travis-ci.org/CoveredCI/testman/builds) [![Goreport card](https://goreportcard.com/badge/github.com/CoveredCI/testman)](https://goreportcard.com/report/github.com/CoveredCI/testman)
+# [monkey](https://github.com/FuzzyMonkeyCo/monkey) ~ FuzzyMonkeyCo's minion [![TravisCI build status](https://travis-ci.org/FuzzyMonkeyCo/monkey.svg?branch=master)](https://travis-ci.org/FuzzyMonkeyCo/monkey/builds) [![Goreport card](https://goreportcard.com/badge/github.com/FuzzyMonkeyCo/monkey)](https://goreportcard.com/report/github.com/FuzzyMonkeyCo/monkey)
 
-[CoveredCI](https://coveredci.com) is an automated JSON API testing service based on QuickCheck.
+[FuzzyMonkey](https://fuzzymonkey.co) is an automated JSON API testing service based on QuickCheck.
 
-[testman](https://github.com/CoveredCI/testman) is the official open source client that executes the tests CoveredCI generates.
+[monkey](https://github.com/FuzzyMonkeyCo/monkey) is the official open source client that executes the tests FuzzyMonkey generates.
 
-### Quick install
+### Getting started
+
+Quick install:
 
 ```shell
-sh <(curl -sfSL https://goo.gl/Wb1JeU)
+sh <(curl -fsSL http://goo.gl/3d7tPe)
 ```
 
 or the equivalent:
 
 ```shell
-sh <(curl -sfSL https://raw.githubusercontent.com/CoveredCI/testman/master/misc/latest.sh)
+sh <(curl -fsSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
 ```
 
-### Example `.coveredci.yml` file:
+Then run:
+
+```shell
+$ monkey fuzz
+No validation errors found.
+✓✓✓✓✓✓✓✓✓✓✗
+✗✗✓✓✓✓✓✓✓
+Ran 20 tests totalling 47 requests
+A bug was detected after 11 tests then shrunk 9 times!
+```
+
+### Example `.fuzzymonkey.yml` file:
 
 ```yaml
 version: 0
@@ -29,7 +42,7 @@ reset:
   - curl --fail -X DELETE http://localhost:6773/api/1/items
 ```
 
-### A more involved `.coveredci.yml`
+### A more involved `.fuzzymonkey.yml`
 
 ```yaml
 version: 0
@@ -61,4 +74,4 @@ stop:
 
 ### Issues?
 
-Report bugs [on the project page](https://github.com/coveredCI/testman/issues) or [contact us](mailto:hi@coveredci.co).
+Report bugs [on the project page](https://github.com/FuzzyMonkeyCo/monkey/issues) or [contact us](mailto:ook@fuzzymonkey.co).

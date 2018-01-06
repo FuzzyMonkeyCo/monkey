@@ -14,9 +14,9 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	binName   = "testman"
+	binName   = "monkey"
 	binTitle  = binName + "/" + binVersion
-	envAPIKey = "COVEREDCI_API_KEY"
+	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
 var (
@@ -34,12 +34,12 @@ func init() {
 	isDebug = "0.0.0" == binVersion
 
 	if isDebug {
-		apiRoot = "http://test.dev.coveredci.com/1"
-		docsURL = "http://lint.dev.coveredci.com/1/blob"
+		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
+		docsURL = "http://lint.dev.fuzzymonkey.co/1/blob"
 	} else {
 		//FIXME: use HTTPS
-		apiRoot = "http://test.coveredci.com/1"
-		docsURL = "http://lint.coveredci.com/1/blob"
+		apiRoot = "http://fuzz.fuzzymonkey.co/1"
+		docsURL = "http://lint.fuzzymonkey.co/1/blob"
 	}
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"
@@ -54,13 +54,13 @@ func main() {
 }
 
 func usage() (map[string]interface{}, error) {
-	usage := `testman
+	usage := binName + " v" + binVersion + " " + binVSN + `
 
 Usage:
-  testman [-vvv] test
-  testman [-vvv] validate
-  testman -h | --help
-  testman -V | --version
+  ` + binName + ` [-vvv] fuzz
+  ` + binName + ` [-vvv] validate
+  ` + binName + ` -h | --help
+  ` + binName + ` -V | --version
 
 Options:
   -v, -vv, -vvv  Verbosity level
@@ -103,8 +103,8 @@ func actualMain() int {
 		return doValidate(apiKey)
 	}
 
-	// args["test"].(bool) = true
-	return doTest(apiKey)
+	// args["fuzz"].(bool) = true
+	return doFuzz(apiKey)
 }
 
 func ensureDeleted(path string) {
@@ -167,7 +167,7 @@ func doValidate(apiKey string) int {
 	return retryOrReport()
 }
 
-func doTest(apiKey string) int {
+func doFuzz(apiKey string) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -198,7 +198,7 @@ func doTest(apiKey string) int {
 	for {
 		if cmd.Kind() == "done" {
 			ensureDeleted(envSerializedPath)
-			return testOutcome(cmd.(*doneCmd))
+			return fuzzOutcome(cmd.(*doneCmd))
 		}
 
 		if cmd, err = next(cfg, cmd); err != nil {
@@ -214,8 +214,8 @@ func retryOrReportThenCleanup(cfg *ymlCfg) int {
 }
 
 func retryOrReport() int {
-	issues := "https://github.com/CoveredCI/testman/issues"
-	email := "hi@coveredci.co"
+	issues := "https://github.com/FuzzyMonkeyCo/" + binName + "/issues"
+	email := "ook@fuzzymonkey.co"
 	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
 	fmt.Printf("\nYou may want to take a look at %s.log\n", pwdID)
 	fmt.Printf("or come by %s\n", issues)

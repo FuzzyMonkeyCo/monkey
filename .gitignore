@@ -21,7 +21,7 @@ vendor/
 
 # End of https://www.gitignore.io/api/go
 
-testman
-testman-*
+monkey
+monkey-*
 schemas.go
 sha256s.txt

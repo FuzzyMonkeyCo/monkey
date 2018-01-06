@@ -3,13 +3,13 @@
 set -o errexit
 set -o nounset
 
-# Installs the latest version of https://github.com/CoveredCI/testman for your system
+# Installs the latest version of https://github.com/FuzzyMonkeyCo/monkey for your system
 
-slug=CoveredCI/testman
+slug=FuzzyMonkeyCo/monkey
 
 fatal() {
     echo "$@"
-    echo "Please report this at https://github.com/$slug/issues or hi@coveredci.co"
+    echo "Please report this at https://github.com/$slug/issues or ook@fuzzymonkey.co"
     exit 2
 }
 
@@ -21,12 +21,12 @@ for path in /usr/local/bin /usr/bin ~/.local/bin 'C:\Program Files\Git\usr\bin' 
         :nil:) fatal "Could not find a suitable target path among $PATH" ;;
         *:"$path":*)
             mkdir -p "$path" >/dev/null 2>&1 || true
-            if touch "$path"/testman >/dev/null 2>&1; then
+            if touch "$path"/monkey >/dev/null 2>&1; then
                 target_path="$path"
                 echo "Selected target path: $target_path"
                 break
             else
-                rm "$path"/testman >/dev/null 2>&1 || true
+                rm "$path"/monkey >/dev/null 2>&1 || true
             fi;;
         *) ;;
     esac
@@ -37,7 +37,7 @@ latest_tag_url=$(curl --silent --location --output /dev/null --write-out '%{url_
 latest_tag=$(basename "$latest_tag_url")
 echo "Latest tag: $latest_tag"
 
-exe="testman-$(uname -s)-$(uname -m)"
+exe="monkey-$(uname -s)-$(uname -m)"
 case "$exe" in
     CYGWIN*|MINGW32*|MSYS*) exe=$exe.exe ;;
 esac
@@ -48,12 +48,12 @@ curl -# --location --output "$tmp".sha256s.txt "https://github.com/$slug/release
 curl -# --location --output "$tmp" "https://github.com/$slug/releases/download/$latest_tag/$exe"
 cd "$tmp" && sha256sum --check --strict --ignore-missing "$tmp".sha256s.txt && cd -
 chmod +x "$tmp"
-mv "$tmp" "$target_path"/testman
+mv "$tmp" "$target_path"/monkey
 
-if ! which testman >/dev/null 2>&1; then
+if ! which monkey >/dev/null 2>&1; then
     fatal "$exe does not appear to be in $target_path"
 fi
-if ! testman --version | grep "$latest_tag" >/dev/null 2>&1; then
-    fatal "This is not the expected version: $(testman --version || true)"
+if ! monkey --version | grep "$latest_tag" >/dev/null 2>&1; then
+    fatal "This is not the expected version: $(monkey --version || true)"
 fi
 echo Successful installation!

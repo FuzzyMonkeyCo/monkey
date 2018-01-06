@@ -19,7 +19,7 @@ func (cmd *doneCmd) Exec(cfg *ymlCfg) ([]byte, error) {
 	return nil, nil
 }
 
-func testOutcome(cmd *doneCmd) int {
+func fuzzOutcome(cmd *doneCmd) int {
 	os.Stdout.Write([]byte{'\n'})
 	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
 
