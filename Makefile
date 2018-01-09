@@ -6,6 +6,9 @@ all: lint vendor/
 	go generate
 	go build -o $(EXE)
 
+update:
+	dep ensure -v -update
+
 vendor/:
 	go generate
 	dep ensure -v

@@ -14,16 +14,16 @@
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
+  branch = "master"
   name = "github.com/docopt/docopt.go"
   packages = ["."]
-  revision = "784ddc588536785e7299f7272f39101f7faccc3f"
-  version = "0.6.2"
+  revision = "5184234a3802b2da9da316d84f1bfdfec29c3df9"
 
 [[projects]]
   branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
-  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 
 [[projects]]
   branch = "master"
@@ -59,7 +59,7 @@
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
-  revision = "212d8a0df7acfab8bdd190a7a69f0ab7376edcc8"
+  revision = "511d08a359d14c0dd9c4302af52ee9abb6f93c2a"
 
 [solve-meta]
   analyzer-name = "dep"
