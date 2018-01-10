@@ -52,9 +52,10 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
 
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", docsURL, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	us := uint64(time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙  %dμs\n", time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -65,7 +66,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %dμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, docsURL, JSON, rep)
+	log.Printf("[DBG]\n  🡳  %s\n", rep)
 
 	if resp.StatusCode == 400 {
 		err = newDocsInvalidError(rep)
