@@ -55,7 +55,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", docsURL, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	log.Printf("[DBG] ❙  %dμs\n", time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙ %dμs\n", time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return

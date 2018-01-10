@@ -144,7 +144,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", initURL, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	log.Printf("[DBG] ❙  %dμs\n", time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙ %dμs\n", time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -187,7 +187,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", nextURL, payload)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	log.Printf("[DBG] ❙  %dμs\n", time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙ %dμs\n", time.Since(start) / time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
