@@ -150,7 +150,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	go func() {
 		error := exe.Run()
 		ch <- error
-		log.Println("[DBG]", error)
+		log.Println("[DBG] execution error:", error)
 	}()
 	err = <-ch
 	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
