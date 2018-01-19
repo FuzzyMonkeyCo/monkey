@@ -53,8 +53,9 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 	if err != nil {
 		return
 	}
-
+	log.Printf("[NFO] got auth token: %s\n", authToken)
 	cfg.AuthToken = authToken
+
 	cmd, err = unmarshalCmd(cmdJSON)
 	return
 }
