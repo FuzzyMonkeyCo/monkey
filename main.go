@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/docopt/docopt.go"
+	"github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 )
 
@@ -53,28 +53,42 @@ func main() {
 	os.Exit(actualMain())
 }
 
-func usage() (map[string]interface{}, error) {
+func usage() (docopt.Opts, error) {
 	usage := binName + " v" + binVersion + " " + binVSN + `
 
 Usage:
   ` + binName + ` [-vvv] fuzz
   ` + binName + ` [-vvv] validate
   ` + binName + ` -h | --help
+  ` + binName + ` -U | --update
   ` + binName + ` -V | --version
 
 Options:
   -v, -vv, -vvv  Verbosity level
   -h, --help     Show this screen
-  -V, --version  Show version`
+  -U, --update   Ensures ` + binName + ` is latest
+  -V, --version  Show version
 
-	return docopt.Parse(usage, nil, true, binTitle, true)
+Try:
+                         ` + binName + ` --update
+  FUZZYMONKEY_API_KEY=42 ` + binName + ` -v fuzz`
+
+	parser := &docopt.Parser{
+		HelpHandler:  docopt.PrintHelpOnly,
+		OptionsFirst: true,
+	}
+	return parser.ParseArgs(usage, os.Args[1:], binTitle)
 }
 
 func actualMain() int {
 	args, err := usage()
 	if err != nil {
-		log.Println("!args: ", err)
-		return retryOrReport()
+		// Usage shown: bad args
+		return 1
+	}
+	if len(args) == 0 {
+		// Help or version shown
+		return 0
 	}
 
 	logFile := pwdID + ".log"
@@ -86,16 +100,14 @@ func actualMain() int {
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DBG", "NFO", "ERR", "NOP"},
-		MinLevel: logLevel(args),
+		MinLevel: logLevel(args["-v"].(int)),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Println("[ERR]", binTitle, logFile, args)
 
-	if !isDebug {
-		if code := isRunningLatest(); code != 0 {
-			return code
-		}
+	if args["--update"].(bool) {
+		return doUpdate()
 	}
 
 	apiKey := getAPIKey()
@@ -103,7 +115,7 @@ func actualMain() int {
 		return doValidate(apiKey)
 	}
 
-	// args["fuzz"].(bool) = true
+	// if args["fuzz"].(bool)
 	return doFuzz(apiKey)
 }
 
@@ -122,9 +134,9 @@ func getAPIKey() string {
 	return apiKey
 }
 
-func logLevel(args map[string]interface{}) logutils.LogLevel {
+func logLevel(verbosity int) logutils.LogLevel {
 	var lvl string
-	switch args["-v"].(int) {
+	switch verbosity {
 	case 1:
 		lvl = "ERR"
 	case 2:
@@ -137,7 +149,7 @@ func logLevel(args map[string]interface{}) logutils.LogLevel {
 	return logutils.LogLevel(lvl)
 }
 
-func isRunningLatest() int {
+func doUpdate() int {
 	latest, err := getLatestRelease()
 	if err != nil {
 		return retryOrReport()
