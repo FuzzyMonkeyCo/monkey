@@ -10,7 +10,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/docopt/docopt.go"
+  name = "github.com/docopt/docopt-go"
 
 [[constraint]]
   branch = "v2"

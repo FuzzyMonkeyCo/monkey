@@ -15,9 +15,9 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/docopt/docopt.go"
+  name = "github.com/docopt/docopt-go"
   packages = ["."]
-  revision = "5184234a3802b2da9da316d84f1bfdfec29c3df9"
+  revision = "ee0de3bc6815ee19d4a46c7eb90f829db0e014b1"
 
 [[projects]]
   branch = "v2"
