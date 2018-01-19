@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/sebcat/har"
@@ -105,7 +106,7 @@ func (cmd *reqCmd) updateURL(cfg *ymlCfg) (err error) {
 func (cmd *reqCmd) updateUserAgent() {
 	for i := range cmd.HARRequest.Headers {
 		if cmd.HARRequest.Headers[i].Name == "User-Agent" {
-			if cmd.HARRequest.Headers[i].Value == "FuzzyMonkey-passthrough/1" {
+			if strings.HasPrefix("FuzzyMonkey.co/", cmd.HARRequest.Headers[i].Value) {
 				cmd.HARRequest.Headers[i].Value = binTitle
 				break
 			}
