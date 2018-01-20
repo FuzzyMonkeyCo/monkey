@@ -7,4 +7,13 @@ if ls *.cov >/dev/null 2>&1; then
     ((i+=1))
 fi
 
-MONKEY_ARGS="$@" ./monkey.test -test.coverprofile=$i.cov -test.run=^TestCov$
+dir="$(dirname "$0")"
+err=/tmp/.monkey_$RANDOM.code
+
+MONKEY_CODEFILE=$err MONKEY_ARGS="$@" "$dir"/monkey.test \
+           -test.coverprofile="$dir"/$i.cov \
+           -test.run=^TestCov$
+
+code=$(cat $err)
+rm $err
+exit $code

@@ -46,5 +46,5 @@ $(EXE).test: lint vendor/
 
 test-cleanup:
 	gocovmerge *.cov >cov.out
-	go tool cover -func cov.out
+	go tool cover -html cov.out
 	$(if $(wildcard *.cov),rm *.cov)

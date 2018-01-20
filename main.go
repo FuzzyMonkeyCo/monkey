@@ -20,7 +20,6 @@ const (
 )
 
 var (
-	isDebug     bool
 	apiRoot     string
 	initURL     string
 	nextURL     string
@@ -31,9 +30,7 @@ var (
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
-	isDebug = "0.0.0" == binVersion
-
-	if isDebug {
+	if binVersion == "0.0.0" {
 		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
 		docsURL = "http://lint.dev.fuzzymonkey.co/1/blob"
 	} else {
@@ -110,7 +107,7 @@ func actualMain() int {
 		return doUpdate()
 	}
 
-	apiKey := getAPIKey()
+	apiKey := os.Getenv(envAPIKey)
 	if args["validate"].(bool) {
 		return doValidate(apiKey)
 	}
@@ -124,14 +121,6 @@ func ensureDeleted(path string) {
 		fmt.Println(err)
 		log.Panic("[ERR] ", err)
 	}
-}
-
-func getAPIKey() string {
-	apiKey := os.Getenv(envAPIKey)
-	if isDebug {
-		apiKey = "42"
-	}
-	return apiKey
 }
 
 func logLevel(verbosity int) logutils.LogLevel {
