@@ -17,7 +17,7 @@ fatal() {
 # Note: ~/.local/bin is for TravisCI.com
 # Note: C:\Program Files\Git\usr\bin is for appveyor.com
 target_path=
-for path in /usr/local/bin /usr/bin ~/.local/bin 'C:\Program Files\Git\usr\bin'; do
+for path in "$@" /usr/local/bin /usr/bin ~/.local/bin 'C:\Program Files\Git\usr\bin'; do
     case :"$path": in
         *:"$path":*)
             mkdir -p "$path" >/dev/null 2>&1 || true
@@ -53,22 +53,19 @@ echo "Downloading $exe v$latest_tag"
 tmp="$(mktemp)"
 curl -# --location --output "$tmp".sha256s.txt "$page/releases/download/$latest_tag/sha256s.txt"
 curl -# --location --output "$tmp"             "$page/releases/download/$latest_tag/$exe"
-( cd "$(dirname "$tmp")"
+tmpdir="$(dirname "$tmp")"
+( cd "$tmpdir"
   mv "$tmp" "$exe"
   sha256sum --check --strict --ignore-missing "$tmp".sha256s.txt
   rm "$tmp".sha256s.txt
   chmod +x "$exe"
-  mv -v "$exe" "$target_path"/monkey
 )
+mv -v "$tmpdir/$exe" "$target_path"/monkey
 
-if ! which monkey >/dev/null 2>&1; then
-    fatal "$exe does not appear to be installed!"
-else
-    if [ "$(which monkey)" != "$target_path"/monkey ]; then
-        fatal "$exe does not appear to be in $target_path"
-    fi
+installed_version=$("$target_path"/monkey --version)
+if [ "$installed_version" != "$latest_version" ]; then
+    fatal "This is not the expected version: $installed_version"
 fi
-if [ "$(monkey --version)" != "$latest_version" ]; then
-    fatal "This is not the expected version: $(monkey --version || true)"
-fi
+
 echo Successful installation!
+echo Note: make sure "$target_path" is in your PATH
