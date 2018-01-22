@@ -26,6 +26,7 @@ debug: all
 distclean: clean
 	$(if $(wildcard vendor/),rm -r vendor/)
 clean:
+	$(if $(wildcard meta.go),rm meta.go)
 	$(if $(wildcard schemas.go),rm schemas.go)
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)

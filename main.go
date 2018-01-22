@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/logutils"
 )
 
-//go:generate go run misc/include_jsons.go
+//go:generate echo Let's go bananas!
+//go:generate go run misc/gen_schemas.go
+//go:generate ./misc/gen_meta.sh
 
 const (
 	binName    = "monkey"
@@ -52,7 +54,7 @@ func main() {
 }
 
 func usage() (docopt.Opts, error) {
-	usage := binName + " v" + binVersion + " " + binVSN + `
+	usage := binName + " v" + binVersion + " " + binDescribe + `
 
 Usage:
   ` + binName + ` [-vvv] fuzz
