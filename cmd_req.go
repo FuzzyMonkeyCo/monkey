@@ -40,8 +40,7 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	}
 
 	cmd.updateUserAgent()
-	err = cmd.updateURL(cfg)
-	if err != nil {
+	if err = cmd.updateURL(cfg); err != nil {
 		return
 	}
 	cmdRep, err := cmd.makeRequest()
