@@ -16,7 +16,7 @@ before_install:
 addons:
   apt:
     sources:
-      - debian-sid    # Grab ShellCheck from the Debian repo
+      - debian-sid # shellcheck
     packages:
       - shellcheck
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
@@ -36,7 +36,7 @@ before_script:
   - dep version
 
 script:
-  - shellcheck misc/latest.sh
+  - shellcheck $(find . -name '*.sh')
   # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
   # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
   # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
