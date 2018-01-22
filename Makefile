@@ -18,6 +18,7 @@ vendor/:
 
 lint:
 	golint -set_exit_status
+	./misc/goolint.sh
 
 debug: all
 	./$(EXE) validate
