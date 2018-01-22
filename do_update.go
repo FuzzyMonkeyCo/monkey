@@ -1,9 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
+	"encoding/json"
 
 	"github.com/blang/semver"
 	"github.com/savaki/jq"
@@ -12,7 +12,7 @@ import (
 const (
 	githubV3APIHeader = "application/vnd.github.v3+json"
 	latestReleaseURL  = "https://api.github.com/repos/FuzzyMonkeyCo/monkey/releases/latest"
-	// jqQuery = "{tag:.tag_name, bins:.assets|map({(.name): .browser_download_url})|add}"
+	// "{tag:.tag_name, bins:.assets|map({(.name): .browser_download_url})|add}"
 	jqQuery = ".tag_name"
 )
 
@@ -31,31 +31,21 @@ func getLatestRelease() (latest string, err error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == 403 {
-		log.Println("[ERR] hit GitHub.com's rate limit, bypassing check")
-		latest = binVersion
-		return
-	}
-
 	if resp.StatusCode != 200 {
 		err = newStatusError(200, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
+	var data struct {
+		Version string `json:"tag_name"`
+	}
+	if err = json.NewDecoder(resp.Body).Decode(data); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	if latest, err = execJQ(body); err != nil {
-		return
-	}
-
-	if latest[0] == 'v' {
-		latest = latest[1:]
-	}
+	latest = data.Version
 	return
 }
 
