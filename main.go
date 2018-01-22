@@ -14,9 +14,9 @@ import (
 //go:generate go run misc/include_jsons.go
 
 const (
-	binName   = "monkey"
-	binTitle  = binName + "/" + binVersion
-	envAPIKey = "FUZZYMONKEY_API_KEY"
+	binName    = "monkey"
+	binTitle   = binName + "/" + binVersion
+	envAPIKey  = "FUZZYMONKEY_API_KEY"
 	githubSlug = "FuzzyMonkeyCo/" + binName
 )
 

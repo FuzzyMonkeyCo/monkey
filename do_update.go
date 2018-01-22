@@ -1,15 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"encoding/json"
 )
 
 const (
-	githubV3APIHeader = "application/vnd.github.v3+json"
-	latestReleaseURL  = "https://api.github.com/repos/"+githubSlug+"/releases/latest"
-	releaseDownloadURL = "https://github.com/"+githubSlug+"/releases/download/"
+	githubV3APIHeader  = "application/vnd.github.v3+json"
+	latestReleaseURL   = "https://api.github.com/repos/" + githubSlug + "/releases/latest"
+	releaseDownloadURL = "https://github.com/" + githubSlug + "/releases/download/"
 )
 
 func getLatestRelease() (latest string, err error) {
@@ -47,6 +47,6 @@ func getLatestRelease() (latest string, err error) {
 
 func replaceCurrentRelease(latest string) (err error) {
 	// sumsURL := releaseDownloadURL + latest +"/sha256s.txt"
-	// sums := 
+	// sums :=
 	return
 }
