@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/blang/semver"
-  packages = ["."]
-  revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
-  version = "v3.5.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/cardigann/harhar"
   packages = ["."]
@@ -30,12 +24,6 @@
   name = "github.com/hashicorp/logutils"
   packages = ["."]
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/savaki/jq"
-  packages = [".","scanner"]
-  revision = "0e6baecebbf8a24a6590d3fc8232165008d6e5d8"
 
 [[projects]]
   branch = "master"
@@ -64,6 +52,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "343cad7ba727471b391172103a688614c61cf87bb439ec21883cbd075a453fd8"
+  inputs-digest = "83d455ad8e399f097f4b06aa5a024581a8bf78e508205b8ed0c422aea2071742"
   solver-name = "gps-cdcl"
   solver-version = 1

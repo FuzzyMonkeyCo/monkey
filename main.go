@@ -17,6 +17,7 @@ const (
 	binName   = "monkey"
 	binTitle  = binName + "/" + binVersion
 	envAPIKey = "FUZZYMONKEY_API_KEY"
+	githubSlug = "FuzzyMonkeyCo/" + binName
 )
 
 var (
@@ -144,11 +145,9 @@ func doUpdate() int {
 		return retryOrReport()
 	}
 
-	ko, err := isOutOfDate(binVersion, latest)
-	if err != nil {
-		return retryOrReport()
-	}
-	if ko {
+	// assumes not v-prefixed
+	// assumes new releases are only for newer software
+	if latest != binVersion {
 		err := fmt.Errorf("A newer version of %s is out: %s (you have %s)", binName, latest, binVersion)
 		log.Println("[ERR]", err)
 		fmt.Println(err)
@@ -215,7 +214,7 @@ func retryOrReportThenCleanup(cfg *ymlCfg) int {
 }
 
 func retryOrReport() int {
-	issues := "https://github.com/FuzzyMonkeyCo/" + binName + "/issues"
+	issues := "https://github.com/" + githubSlug + "/issues"
 	email := "ook@fuzzymonkey.co"
 	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
 	fmt.Printf("\nYou may want to take a look at %s.log\n", pwdID)

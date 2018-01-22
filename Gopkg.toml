@@ -2,10 +2,6 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/blang/semver"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/cardigann/harhar"
 
 [[constraint]]
@@ -19,10 +15,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/logutils"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/savaki/jq"
 
 [[constraint]]
   branch = "master"

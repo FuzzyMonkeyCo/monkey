@@ -6,7 +6,10 @@ all: lint vendor/
 	go generate
 	go build -o $(EXE)
 
+update: SHELL := /bin/bash
 update:
+	[[ "$$(git grep GODEP= -- .travis.yml | cut -d= -f2)" = "$$(basename $$(curl -sLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest) | tr -d v)" ]]
+	go generate
 	dep ensure -v -update
 
 vendor/:

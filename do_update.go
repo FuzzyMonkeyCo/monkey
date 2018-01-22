@@ -4,16 +4,12 @@ import (
 	"log"
 	"net/http"
 	"encoding/json"
-
-	"github.com/blang/semver"
-	"github.com/savaki/jq"
 )
 
 const (
 	githubV3APIHeader = "application/vnd.github.v3+json"
-	latestReleaseURL  = "https://api.github.com/repos/FuzzyMonkeyCo/monkey/releases/latest"
-	// "{tag:.tag_name, bins:.assets|map({(.name): .browser_download_url})|add}"
-	jqQuery = ".tag_name"
+	latestReleaseURL  = "https://api.github.com/repos/"+githubSlug+"/releases/latest"
+//https://github.com/FuzzyMonkeyCo/monkey/releases/download/0.15.0/sha256s.txt
 )
 
 func getLatestRelease() (latest string, err error) {
@@ -40,46 +36,11 @@ func getLatestRelease() (latest string, err error) {
 	var data struct {
 		Version string `json:"tag_name"`
 	}
-	if err = json.NewDecoder(resp.Body).Decode(data); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
 	latest = data.Version
-	return
-}
-
-func execJQ(body []byte) (res string, err error) {
-	op, err := jq.Parse(jqQuery)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	ret, err := op.Apply(body)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	res = string(ret)
-	res = res[1 : len(res)-1]
-	return
-}
-
-func isOutOfDate(current, latest string) (ko bool, err error) {
-	vCurrent, err := semver.Make(current)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	vLatest, err := semver.Make(latest)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	ko = vLatest.GT(vCurrent)
 	return
 }
