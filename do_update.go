@@ -9,7 +9,7 @@ import (
 const (
 	githubV3APIHeader = "application/vnd.github.v3+json"
 	latestReleaseURL  = "https://api.github.com/repos/"+githubSlug+"/releases/latest"
-//https://github.com/FuzzyMonkeyCo/monkey/releases/download/0.15.0/sha256s.txt
+	releaseDownloadURL = "https://github.com/"+githubSlug+"/releases/download/"
 )
 
 func getLatestRelease() (latest string, err error) {
@@ -42,5 +42,11 @@ func getLatestRelease() (latest string, err error) {
 	}
 
 	latest = data.Version
+	return
+}
+
+func replaceCurrentRelease(latest string) (err error) {
+	// sumsURL := releaseDownloadURL + latest +"/sha256s.txt"
+	// sums := 
 	return
 }

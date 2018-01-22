@@ -148,12 +148,11 @@ func doUpdate() int {
 	// assumes not v-prefixed
 	// assumes new releases are only for newer software
 	if latest != binVersion {
-		err := fmt.Errorf("A newer version of %s is out: %s (you have %s)", binName, latest, binVersion)
-		log.Println("[ERR]", err)
-		fmt.Println(err)
-		return 3
+		fmt.Printf("A newer version of %s is out: %s (you have %s)\n", binName, latest, binVersion)
+		if err := replaceCurrentRelease(latest); err != nil {
+			return 3
+		}
 	}
-
 	return 0
 }
 
