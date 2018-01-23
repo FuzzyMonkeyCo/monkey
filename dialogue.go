@@ -53,8 +53,9 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 	if err != nil {
 		return
 	}
-
+	log.Printf("[NFO] got auth token: %s\n", authToken)
 	cfg.AuthToken = authToken
+
 	cmd, err = unmarshalCmd(cmdJSON)
 	return
 }
@@ -141,9 +142,10 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	r.Header.Set("User-Agent", binTitle)
 	r.Header.Set(xAPIKeyHeader, apiKey)
 
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", initURL, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	us := uint64(time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -154,7 +156,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %dμs PUT %s\n  🡱  %s\n  🡳  %s\n", us, initURL, JSON, rep)
+	log.Printf("[DBG]\n  🡳  %s\n", rep)
 
 	if resp.StatusCode != 201 {
 		err = newStatusError(201, resp.Status)
@@ -183,9 +185,10 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	r.Header.Set("User-Agent", binTitle)
 	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
 
+	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", nextURL, payload)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
-	us := uint64(time.Since(start) / time.Microsecond)
+	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -196,7 +199,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] 🡱  %dμs POST %s\n  🡱  %s\n  🡳  %s\n", us, nextURL, payload, rep)
+	log.Printf("[DBG]\n  🡳  %s\n", rep)
 
 	if resp.StatusCode != 200 {
 		err = newStatusError(200, resp.Status)

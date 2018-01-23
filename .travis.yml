@@ -16,7 +16,7 @@ before_install:
 addons:
   apt:
     sources:
-      - debian-sid    # Grab ShellCheck from the Debian repo
+      - debian-sid # shellcheck
     packages:
       - shellcheck
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
@@ -36,28 +36,21 @@ before_script:
   - dep version
 
 script:
-  - shellcheck misc/latest.sh
-  # - ! ag 'return\s+}\s+return'  # Missing / weak golint: first return can be dropped
-  # - ! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'  # lint: log first then fmt
-  # - ! ag ', err = [^;\n]+$\n\s+if err != nil'  # lint: if can be inlined
+  - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
+  - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
   - golint -set_exit_status
-  - GIT_DESCRIBE=$(git describe --abbrev --dirty --always --tags)
-  - printf 'package main\nconst binVersion = "%s"\nconst binVSN = "%s"' $CURRENT_TAG $GIT_DESCRIBE | gofmt >version.go
-  - go generate
-  - dep ensure -v
   - go fmt
   - git --no-pager diff
   - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
-  - gox -os 'linux darwin windows' -arch 'amd64' -output 'monkey-{{.OSUname}}-{{.ArchUname}}' -ldflags '-s -w -X main.Rev='$GIT_DESCRIBE -verbose .
+  - make x
+  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
-  - for bin in monkey-*; do sha256sum $bin; done | tee sha256s.txt
-  - sha256sum --check --strict sha256s.txt
   - ls -lha
 
 after_script:

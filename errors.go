@@ -18,8 +18,7 @@ func newDocsInvalidError(errors []byte) *docsInvalidError {
 	start, end := "Validation errors:", "Documentation validation failed."
 	var theErrors string
 	var out bytes.Buffer
-	err := json.Indent(&out, errors, "", "  ")
-	if err != nil {
+	if err := json.Indent(&out, errors, "", "  "); err != nil {
 		theErrors = string(errors)
 	}
 	theErrors = out.String()

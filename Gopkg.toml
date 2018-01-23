@@ -2,15 +2,11 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/blang/semver"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/cardigann/harhar"
 
 [[constraint]]
   branch = "master"
-  name = "github.com/docopt/docopt.go"
+  name = "github.com/docopt/docopt-go"
 
 [[constraint]]
   branch = "v2"
@@ -19,10 +15,6 @@
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/logutils"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/savaki/jq"
 
 [[constraint]]
   branch = "master"

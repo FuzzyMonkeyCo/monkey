@@ -2,40 +2,28 @@
 
 
 [[projects]]
-  name = "github.com/blang/semver"
-  packages = ["."]
-  revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
-  version = "v3.5.1"
-
-[[projects]]
   branch = "master"
   name = "github.com/cardigann/harhar"
   packages = ["."]
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
-  name = "github.com/docopt/docopt.go"
+  branch = "master"
+  name = "github.com/docopt/docopt-go"
   packages = ["."]
-  revision = "784ddc588536785e7299f7272f39101f7faccc3f"
-  version = "0.6.2"
+  revision = "ee0de3bc6815ee19d4a46c7eb90f829db0e014b1"
 
 [[projects]]
   branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
-  revision = "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 
 [[projects]]
   branch = "master"
   name = "github.com/hashicorp/logutils"
   packages = ["."]
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/savaki/jq"
-  packages = [".","scanner"]
-  revision = "0e6baecebbf8a24a6590d3fc8232165008d6e5d8"
 
 [[projects]]
   branch = "master"
@@ -59,11 +47,11 @@
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
-  revision = "212d8a0df7acfab8bdd190a7a69f0ab7376edcc8"
+  revision = "511d08a359d14c0dd9c4302af52ee9abb6f93c2a"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d4c2edbad2a8c91b7db606b4d932afd9f9d8e244d49512ac6f62382b1cf8aea3"
+  inputs-digest = "83d455ad8e399f097f4b06aa5a024581a8bf78e508205b8ed0c422aea2071742"
   solver-name = "gps-cdcl"
   solver-version = 1
