@@ -13,6 +13,18 @@ import (
 
 var pwdID string
 
+func envID() string {
+	return pwdID + ".env"
+}
+
+func logID() string {
+	return pwdID + ".log"
+}
+
+func updateID() string {
+	return pwdID + "_update.bin"
+}
+
 func makePwdID() {
 	cwd, err := os.Getwd()
 	if err != nil {

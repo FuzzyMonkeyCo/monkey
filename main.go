@@ -91,8 +91,7 @@ func actualMain() int {
 		return 0
 	}
 
-	logFile := pwdID + ".log"
-	logCatchall, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE, 0640)
+	logCatchall, err := os.OpenFile(logID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println(err)
 		return retryOrReport()
@@ -104,7 +103,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Println("[ERR]", binTitle, logFile, args)
+	log.Println("[ERR]", binTitle, logID(), args)
 
 	if args["--update"].(bool) {
 		return doUpdate()
@@ -179,15 +178,14 @@ func doFuzz(apiKey string) int {
 		return 4
 	}
 
-	envSerializedPath := pwdID + ".env"
-	if err := snapEnv(envSerializedPath); err != nil {
+	if err := snapEnv(envID()); err != nil {
 		return retryOrReport()
 	}
 
 	cfg, cmd, err := initDialogue(apiKey)
 	if err != nil {
 		if _, ok := err.(*docsInvalidError); ok {
-			ensureDeleted(envSerializedPath)
+			ensureDeleted(envID())
 			return 2
 		}
 		if cfg == nil {
@@ -198,7 +196,7 @@ func doFuzz(apiKey string) int {
 
 	for {
 		if cmd.Kind() == "done" {
-			ensureDeleted(envSerializedPath)
+			ensureDeleted(envID())
 			return fuzzOutcome(cmd.(*doneCmd))
 		}
 
@@ -218,7 +216,7 @@ func retryOrReport() int {
 	issues := "https://github.com/" + githubSlug + "/issues"
 	email := "ook@fuzzymonkey.co"
 	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Printf("\nYou may want to take a look at %s.log\n", pwdID)
+	fmt.Printf("\nYou may want to take a look at %s\n", logID())
 	fmt.Printf("or come by %s\n", issues)
 	fmt.Printf("or drop us a line at %s\n", email)
 	fmt.Println("\nThank you for your patience & sorry about this :)")

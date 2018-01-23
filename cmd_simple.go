@@ -115,8 +115,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	defer cancel()
 
 	var script bytes.Buffer
-	envSerializedPath := pwdID + ".env"
-	fmt.Fprintln(&script, "source", envSerializedPath, ">/dev/null 2>&1")
+	fmt.Fprintln(&script, "source", envID(), ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
 	fmt.Fprintln(&script, "set -o nounset")
@@ -128,7 +127,7 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	fmt.Fprintln(&script, "set +o nounset")
 	fmt.Fprintln(&script, "set +o errtrace")
 	fmt.Fprintln(&script, "set +o errexit")
-	fmt.Fprintln(&script, "declare -p >", envSerializedPath)
+	fmt.Fprintln(&script, "declare -p >", envID())
 
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
@@ -194,7 +193,7 @@ func readEnv(envVar string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
-	cmd := "source " + pwdID + ".env >/dev/null 2>&1 " +
+	cmd := "source " + envID() + " >/dev/null 2>&1 " +
 		"&& set -o nounset " +
 		"&& echo -n $" + envVar
 	var stdout bytes.Buffer

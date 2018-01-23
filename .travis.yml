@@ -38,6 +38,7 @@ before_script:
 script:
   - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
+  - [[ $(git grep -l pwdID | wc -l) = '1' ]]  # lint: pwdID fiddling happens only in one place
   - golint -set_exit_status
   - go fmt
   - git --no-pager diff
