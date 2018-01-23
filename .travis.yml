@@ -39,20 +39,16 @@ script:
   - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - golint -set_exit_status
-  - go generate
-  - dep ensure -v
   - go fmt
   - git --no-pager diff
   - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
-  - gox -os 'linux darwin windows' -arch 'amd64' -output 'monkey-{{.OSUname}}-{{.ArchUname}}' -ldflags '-s -w' -verbose .
+  - make x
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
-  - for bin in monkey-*; do sha256sum $bin; done | tee sha256s.txt
-  - sha256sum --check --strict sha256s.txt
   - ls -lha
 
 after_script:
