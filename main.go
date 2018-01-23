@@ -59,9 +59,9 @@ func usage() (docopt.Opts, error) {
 Usage:
   ` + binName + ` [-vvv] fuzz
   ` + binName + ` [-vvv] validate
-  ` + binName + ` -h | --help
-  ` + binName + ` -U | --update
-  ` + binName + ` -V | --version
+  ` + binName + ` [-vvv] -h | --help
+  ` + binName + ` [-vvv] -U | --update
+  ` + binName + ` [-vvv] -V | --version
 
 Options:
   -v, -vv, -vvv  Verbosity level
@@ -70,8 +70,8 @@ Options:
   -V, --version  Show version
 
 Try:
-                         ` + binName + ` --update
-  FUZZYMONKEY_API_KEY=42 ` + binName + ` -v fuzz`
+                         ` + binName + ` --update -v
+  FUZZYMONKEY_API_KEY=42 ` + binName + ` fuzz`
 
 	parser := &docopt.Parser{
 		HelpHandler:  docopt.PrintHelpOnly,
@@ -141,16 +141,18 @@ func logLevel(verbosity int) logutils.LogLevel {
 }
 
 func doUpdate() int {
-	latest, err := getLatestRelease()
+	latest, err := peekLatestRelease()
 	if err != nil {
 		return retryOrReport()
 	}
 
 	// assumes not v-prefixed
-	// assumes new releases are only for newer software
+	// assumes never patching old-minor releases
 	if latest != binVersion {
-		fmt.Printf("A newer version of %s is out: %s (you have %s)\n", binName, latest, binVersion)
+		fmt.Printf("A newer version of %s is out: %s (you have %s)\n",
+			binName, latest, binVersion)
 		if err := replaceCurrentRelease(latest); err != nil {
+			fmt.Println("The update failed 🙈 please try again")
 			return 3
 		}
 	}
