@@ -46,6 +46,7 @@ script:
   - go vet $(go list ./... | grep -v /vendor/)
  #- go test -v -race .
   - make x
+  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
