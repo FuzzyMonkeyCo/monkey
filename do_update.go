@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"runtime"
 )
 
@@ -111,14 +110,6 @@ func nameExe() (exe string) {
 	exe = binName + "-" + unameS(runtime.GOOS) + "-" + unameM(runtime.GOARCH)
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
-	}
-	return
-}
-
-func replacementDst() (binary string) {
-	binary, err := exec.LookPath(binName)
-	if err != nil {
-		binary = os.Args[0]
 	}
 	return
 }

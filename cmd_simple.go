@@ -85,7 +85,7 @@ func progress(cmd *simpleCmd) {
 			str += "\n"
 		}
 	}
-	fmt.Printf(str)
+	fmt.Print(str)
 }
 
 func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
@@ -155,10 +155,10 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
 
 	if err != nil {
-		log.Println("[ERR]", string(stderr.Bytes())+"\n"+err.Error())
+		log.Println("[ERR]", stderr.String()+"\n"+err.Error())
 		return
 	}
-	log.Println("[NFO]", string(stderr.Bytes()))
+	log.Println("[NFO]", stderr.String())
 	return
 }
 
@@ -205,7 +205,7 @@ func readEnv(envVar string) string {
 		log.Println("[ERR]", err)
 		return ""
 	}
-	return string(stdout.Bytes())
+	return stdout.String()
 }
 
 func shell() string {

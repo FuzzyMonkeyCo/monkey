@@ -26,7 +26,7 @@ var (
 	apiRoot     string
 	initURL     string
 	nextURL     string
-	docsURL     string
+	lintURL     string
 	clientUtils = &http.Client{}
 )
 
@@ -35,11 +35,11 @@ func init() {
 
 	if binVersion == "0.0.0" {
 		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
-		docsURL = "http://lint.dev.fuzzymonkey.co/1/blob"
+		lintURL = "http://lint.dev.fuzzymonkey.co/1/blob"
 	} else {
 		//FIXME: use HTTPS
 		apiRoot = "http://fuzz.fuzzymonkey.co/1"
-		docsURL = "http://lint.fuzzymonkey.co/1/blob"
+		lintURL = "http://lint.fuzzymonkey.co/1/blob"
 	}
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"

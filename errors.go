@@ -20,8 +20,9 @@ func newDocsInvalidError(errors []byte) *docsInvalidError {
 	var out bytes.Buffer
 	if err := json.Indent(&out, errors, "", "  "); err != nil {
 		theErrors = string(errors)
+	} else {
+		theErrors = out.String()
 	}
-	theErrors = out.String()
 
 	return &docsInvalidError{start + "\n" + theErrors + "\n" + end}
 }

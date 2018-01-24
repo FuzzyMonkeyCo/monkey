@@ -39,7 +39,7 @@ func validateDocs(apiKey string, yml []byte) (rep []byte, err error) {
 }
 
 func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
-	r, err := http.NewRequest(http.MethodPut, docsURL, bytes.NewBuffer(JSON))
+	r, err := http.NewRequest(http.MethodPut, lintURL, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -52,7 +52,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		r.Header.Set(xAPIKeyHeader, apiKey)
 	}
 
-	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", docsURL, JSON)
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", lintURL, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
@@ -90,7 +90,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		return
 	}
 
-	if validated.Token == "" {
+	if validated.V != 1 || validated.Token == "" {
 		err = fmt.Errorf("Could not acquire a validation token")
 		log.Println("[ERR]", err)
 		fmt.Println(err)

@@ -75,7 +75,6 @@ test: $(EXE).test
 	rm 0.cov cov.out
 
 # Thanks https://blog.cloudflare.com/go-coverage-with-external-tests
-test-setup: $(EXE).test
 $(EXE).test: lint vendor
 	$(if $(wildcard *.cov),rm *.cov)
 	go generate
