@@ -68,7 +68,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 	us := uint64(time.Since(start) / time.Microsecond)
 	log.Printf("[NFO] ❙ %dμs\n", us)
 	rep = &reqCmdRep{
-		V:    1,
+		V:    v,
 		Cmd:  cmd.Cmd,
 		Us:   us,
 		Lane: cmd.Lane,

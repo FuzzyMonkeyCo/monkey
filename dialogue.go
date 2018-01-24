@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	v                = 1
 	mimeJSON         = "application/json"
 	mimeYAML         = "application/x-yaml"
 	xAPIKeyHeader    = "X-Api-Key"

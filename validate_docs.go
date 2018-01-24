@@ -24,7 +24,7 @@ func validateDocs(apiKey string, yml []byte) (rep []byte, err error) {
 		V     uint              `json:"v"`
 		Blobs map[string]string `json:"blobs"`
 	}{
-		V:     1,
+		V:     v,
 		Blobs: blobs,
 	}
 
@@ -90,7 +90,7 @@ func validationReq(apiKey string, JSON []byte) (rep []byte, err error) {
 		return
 	}
 
-	if validated.V != 1 || validated.Token == "" {
+	if validated.V != v || validated.Token == "" {
 		err = fmt.Errorf("Could not acquire a validation token")
 		log.Println("[ERR]", err)
 		fmt.Println(err)
