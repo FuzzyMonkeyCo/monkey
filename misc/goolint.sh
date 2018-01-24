@@ -1,6 +1,7 @@
 #!/bin/bash -u
 
 # goolint: farther than golint
+# go fmt first
 
 print() {
     printf '\e[1;1m%s\e[0m\n' "$*"
@@ -21,13 +22,13 @@ errors=0
 ! ag 'return\s+}\s+return'
 nfo first return can be dropped
 
-! ag '^\s+fmt\.[^\n]+\n\s+log\.Print'
+! ag '^\s+fmt\.[^\n]+\s+log\.Print'
 nfo 'log first then fmt'
 
-! ag ', err = [^;\n]+$\n\s+if err != nil'
+! ag ', err = [^;\n]+\s+if err '
 nfo if can be inlined
 
-! ag '^\s+err\s*=[^\n]+\s+if err '
+! ag '^\s+err :?= [^;\n]+\s+if err '
 nfo if can be inlined
 
 exit $errors

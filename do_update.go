@@ -86,7 +86,6 @@ func replaceCurrentRelease(latest string) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	fmt.Println(updateID())
 
 	sum := hex.EncodeToString(hash.Sum(nil))
 	log.Printf("[NFO] checksumed: %s", sum)
@@ -102,7 +101,9 @@ func replaceCurrentRelease(latest string) (err error) {
 		return
 	}
 
-	err = os.Rename(updateID(), replacementDst())
+	dst := os.Args[0]
+	fmt.Println("Replacing", dst)
+	err = os.Rename(updateID(), dst)
 	return
 }
 
