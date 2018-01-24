@@ -40,6 +40,7 @@ deps:
 	chmod +x release/$(DEP)
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
+#FIXME: lock these with dep if possible
 	go get -u -v github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
 	go get -u -v github.com/golang/lint/golint
 	go get -u -v honnef.co/go/tools/cmd/megacheck

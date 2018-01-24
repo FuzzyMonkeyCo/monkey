@@ -30,8 +30,6 @@ cache:
 
 install:
   - make deps
-
-before_script:
   - go version
   - shellcheck --version
   - git --version
@@ -42,7 +40,7 @@ script:
   - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-  - go generate
+  - make vendor/
   - go fmt && git --no-pager diff
   - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - make lint
