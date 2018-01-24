@@ -59,14 +59,15 @@ esac
 
 echo "Downloading v$latest_tag of $exe"
 tmp="$(mktemp)"
-curl -# --fail --location --output "$tmp"             "$page/releases/download/$latest_tag/$exe"
+url="$page/releases/download/$latest_tag/$exe"
+curl -# --fail --location --output "$tmp" "$url"
 echo Verifying checksum...
-curl -# --fail --location --output "$tmp".sha256s.txt "$page/releases/download/$latest_tag/sha256s.txt"
+curl -# --fail --location --output "$tmp".sha256.txt "$url.sha256.txt"
 tmpdir="$(dirname "$tmp")"
 ( cd "$tmpdir"
   mv "$tmp" "$exe"
-  sha256sum --check --strict --ignore-missing "$tmp".sha256s.txt
-  rm "$tmp".sha256s.txt
+  sha256sum --check --strict "$tmp".sha256.txt
+  rm "$tmp".sha256.txt
   chmod +x "$exe"
 )
 mv -v "$tmpdir/$exe" "$target"

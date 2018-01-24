@@ -56,7 +56,7 @@ func peekLatestRelease() (latest string, err error) {
 func replaceCurrentRelease(latest string) (err error) {
 	exe := nameExe()
 	relURL := releaseDownloadURL + latest + "/" + exe
-	sumsURL := releaseDownloadURL + latest + "/sha256s.txt"
+	sumsURL := relURL + ".sha256.txt"
 
 	bin, err := os.OpenFile(updateID(), os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
@@ -156,19 +156,17 @@ func fetchLatestSum(URL, exe string) (sum string, err error) {
 		return
 	}
 
-	sums, err := ioutil.ReadAll(resp.Body)
+	line, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
 	suffix := []byte("  " + exe)
-	for _, line := range bytes.Split(sums, []byte{'\n'}) {
-		if bytes.HasSuffix(line, suffix) {
-			sum = string(bytes.TrimSuffix(line, suffix))
-			log.Printf("[NFO] got checksum: %s\n", sum)
-			return
-		}
+	if bytes.HasSuffix(line, suffix) {
+		sum = string(bytes.TrimSuffix(line, suffix))
+		log.Printf("[NFO] got checksum: %s\n", sum)
+		return
 	}
 	err = fmt.Errorf("%s not found in body", suffix)
 	log.Println("[ERR]", err)

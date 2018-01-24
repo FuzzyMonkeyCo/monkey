@@ -3,7 +3,7 @@
 EXE = monkey
 OS ?= linux darwin windows
 ARCH ?= amd64
-SHAS = sha256s.txt
+SHA = sha256.txt
 FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 DST ?= .
 
@@ -15,10 +15,11 @@ all: lint vendor
 	go build -o $(EXE)
 
 x: vendor
+	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	go generate
 	gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
-	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin; done | tee $(SHAS)
-	$(if $(filter-out .,$(DST)),,sha256sum --check --strict $(SHAS))
+	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
+	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
 
 update: SHELL := /bin/bash
 update:
@@ -58,8 +59,8 @@ debug: all
 
 distclean: clean
 	$(if $(wildcard vendor/),rm -r vendor/)
+	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
-	$(if $(wildcard $(SHAS)),rm $(SHAS))
 clean:
 	$(if $(wildcard meta.go),rm meta.go)
 	$(if $(wildcard schemas.go),rm schemas.go)
