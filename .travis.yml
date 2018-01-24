@@ -25,6 +25,7 @@ addons:
 install:
   - go get -u github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
   - go get -u github.com/golang/lint/golint
+  - go get -u honnef.co/go/tools/cmd/megacheck
   - curl -sfSL https://github.com/golang/dep/releases/download/v$GODEP/dep-linux-amd64 -o $GOPATH/bin/dep
   - chmod +x $GOPATH/bin/dep
 
@@ -37,21 +38,21 @@ before_script:
 
 script:
   - shellcheck $(find . -name '*.sh')
-  - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
+  - "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-  - golint -set_exit_status
-  - go fmt
-  - git --no-pager diff
-  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
+  - go generate
+  - go fmt && git --no-pager diff
+  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
+  - make lint
   - go vet $(go list ./... | grep -v /vendor/)
+  - megacheck -show-ignored -unused.exported
  #- go test -v -race .
   - make x
-  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
+  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
-  - ls -lha
 
 after_script:
   - set +e
