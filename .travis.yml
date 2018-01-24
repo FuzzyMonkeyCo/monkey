@@ -22,10 +22,18 @@ addons:
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
       # - silversearcher-ag FIXME
 
+before_cache:
+  - rm -rf $GOPATH/src/github.com/$TRAVIS_REPO_SLUG/*
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
+
 install:
-  - go get -u github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
-  - go get -u github.com/golang/lint/golint
-  - go get -u honnef.co/go/tools/cmd/megacheck
+  - go get -u -v github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
+  - go get -u -v github.com/golang/lint/golint
+  - go get -u -v honnef.co/go/tools/cmd/megacheck
+  - go get -u -v github.com/idubinskiy/schematyper
   - curl -sfSL https://github.com/golang/dep/releases/download/v$GODEP/dep-linux-amd64 -o $GOPATH/bin/dep
   - chmod +x $GOPATH/bin/dep
 
@@ -38,7 +46,7 @@ before_script:
 
 script:
   - shellcheck $(find . -name '*.sh')
-  - "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
+  - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
   - go generate
   - go fmt && git --no-pager diff
