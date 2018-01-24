@@ -22,7 +22,7 @@ addons:
       # - silversearcher-ag FIXME
 
 before_cache:
-  - rm -rf $GOPATH/src/github.com/FuzzyMonkeyCo/
+  - rm -rf $TRAVIS_BUILD_DIR
 cache:
   directories:
     - $GOPATH/src

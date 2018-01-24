@@ -120,7 +120,7 @@ func (cfg *ymlCfg) script(kind string) []string {
 	return map[string][]string{
 		"start": cfg.Start,
 		"reset": cfg.Reset,
-		"stop": cfg.Stop,
+		"stop":  cfg.Stop,
 	}[kind]
 }
 
