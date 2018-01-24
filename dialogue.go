@@ -117,17 +117,11 @@ func newCfg(yml []byte) (cfg *ymlCfg, err error) {
 }
 
 func (cfg *ymlCfg) script(kind string) []string {
-	switch kind {
-	case "start":
-		return cfg.Start
-	case "reset":
-		return cfg.Reset
-	case "stop":
-		return cfg.Stop
-	default:
-		log.Panicf("[ERR] unexpected kind '%s'\n", kind)
-		return []string{"unreachable"}
-	}
+	return map[string][]string{
+		"start": cfg.Start,
+		"reset": cfg.Reset,
+		"stop": cfg.Stop,
+	}[kind]
 }
 
 func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {

@@ -126,17 +126,12 @@ func ensureDeleted(path string) {
 }
 
 func logLevel(verbosity int) logutils.LogLevel {
-	var lvl string
-	switch verbosity {
-	case 1:
-		lvl = "ERR"
-	case 2:
-		lvl = "NFO"
-	case 3:
-		lvl = "DBG"
-	default:
-		lvl = "NOP"
-	}
+	lvl := map[int]string{
+		0: "NOP",
+		1: "ERR",
+		2: "NFO",
+		3: "DBG",
+	}[verbosity]
 	return logutils.LogLevel(lvl)
 }
 
