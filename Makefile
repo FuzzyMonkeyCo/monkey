@@ -6,6 +6,9 @@ ARCH ?= amd64
 SHATX = sha256s.txt
 FORMAT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 
+DEP ?= dep-linux-amd64
+GODEP = v0.3.2
+
 all: lint vendor/
 	go generate
 	go build -o $(EXE)
@@ -18,13 +21,30 @@ x: vendor/
 
 update: SHELL := /bin/bash
 update:
-	[[ "$$(git grep GODEP= -- .travis.yml | cut -d= -f2)" = "$$(basename $$(curl -sLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest) | tr -d v)" ]]
+	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
 	go generate
 	dep ensure -v -update
+
+latest:
+	sh -eux <misc/latest.sh
 
 vendor/:
 	go generate
 	dep ensure -v
+
+deps:
+	mkdir -p release
+	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP) -o release/$(DEP)
+	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP).sha256 -o release/$(DEP).sha256
+	sha256sum --check --strict release/$(DEP).sha256
+	chmod +x release/$(DEP)
+	mv -v release/$(DEP) $$GOPATH/bin/dep
+	rm -r release
+	go get -u -v github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
+	go get -u -v github.com/golang/lint/golint
+	go get -u -v honnef.co/go/tools/cmd/megacheck
+	go get -u -v github.com/idubinskiy/schematyper
+	go get -u -v github.com/wadey/gocovmerge
 
 lint:
 	golint -set_exit_status
@@ -53,8 +73,6 @@ test: $(EXE).test
 	rm 0.cov cov.out
 
 # Thanks https://blog.cloudflare.com/go-coverage-with-external-tests
-# go get -u github.com/wadey/gocovmerge
-
 test-setup: $(EXE).test
 $(EXE).test: lint vendor/
 	$(if $(wildcard *.cov),rm *.cov)

@@ -9,13 +9,13 @@
 Quick install:
 
 ```shell
-sh <(curl -fsSL http://goo.gl/3d7tPe)
+sh <(curl -#fSL http://goo.gl/3d7tPe)
 ```
 
 or the equivalent:
 
 ```shell
-sh <(curl -fsSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
+sh <(curl -#fSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
 ```
 
 Then run:
@@ -60,13 +60,13 @@ start:
   - CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")
   - host=localhost
   - |
-    until $(curl --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
+    until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
         printf .
         sleep 5
     done
 
 reset:
-  - "[[ 204 = $(curl --silent --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]"
+  - "[[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]"
 
 stop:
   - docker stop --time 5 $CONTAINER_ID
