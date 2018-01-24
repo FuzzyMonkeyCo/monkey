@@ -10,11 +10,11 @@ DST ?= .
 DEP ?= dep-linux-amd64
 GODEP = v0.3.2
 
-all: lint vendor/
+all: lint vendor
 	go generate
 	go build -o $(EXE)
 
-x: vendor/
+x: vendor
 	go generate
 	gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin; done | tee $(SHAS)
@@ -29,7 +29,7 @@ update:
 latest:
 	sh -eux <misc/latest.sh
 
-vendor/:
+vendor:
 	go generate
 	dep ensure -v
 
@@ -76,7 +76,7 @@ test: $(EXE).test
 
 # Thanks https://blog.cloudflare.com/go-coverage-with-external-tests
 test-setup: $(EXE).test
-$(EXE).test: lint vendor/
+$(EXE).test: lint vendor
 	$(if $(wildcard *.cov),rm *.cov)
 	go generate
 	go test -covermode=count -c
