@@ -1,10 +1,11 @@
 .PHONY: all update debug lint x test
 
-OS ?= linux darwin windows
 EXE = monkey
+OS ?= linux darwin windows
 ARCH ?= amd64
-SHATX = sha256s.txt
-FORMAT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
+SHAS = sha256s.txt
+FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
+DST ?= .
 
 DEP ?= dep-linux-amd64
 GODEP = v0.3.2
@@ -15,9 +16,9 @@ all: lint vendor/
 
 x: vendor/
 	go generate
-	gox -os '$(OS)' -arch '$(ARCH)' -output '$(FORMAT)' -ldflags '-s -w' -verbose .
-	for bin in $(EXE)-*; do sha256sum $$bin; done | tee $(SHATX)
-	sha256sum --check --strict $(SHATX)
+	gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
+	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin; done | tee $(SHAS)
+	$(if $(filter-out .,$(DST)),,sha256sum --check --strict $(SHAS))
 
 update: SHELL := /bin/bash
 update:
@@ -57,13 +58,13 @@ debug: all
 
 distclean: clean
 	$(if $(wildcard vendor/),rm -r vendor/)
+	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
+	$(if $(wildcard $(SHAS)),rm $(SHAS))
 clean:
 	$(if $(wildcard meta.go),rm meta.go)
 	$(if $(wildcard schemas.go),rm schemas.go)
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)
-	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
-	$(if $(wildcard $(SHATX)),rm $(SHATX))
 	$(if $(wildcard *.cov),rm *.cov)
 	$(if $(wildcard cov.out),rm cov.out)
 
