@@ -41,8 +41,9 @@ script:
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
   - make vendor
-  - go fmt
-  - git --no-pager diff
+  - pwd
+  - echo $GOPATH
+  - go fmt && git --no-pager diff
   - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - make lint
   - go vet $(go list ./... | grep -v /vendor/)
