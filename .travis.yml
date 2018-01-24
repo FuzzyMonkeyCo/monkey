@@ -22,7 +22,7 @@ addons:
       # - silversearcher-ag FIXME
 
 before_cache:
-  - rm -rf $GOPATH/src/github.com/$TRAVIS_REPO_SLUG/*
+  - rm -rf $GOPATH/src/github.com/FuzzyMonkeyCo/
 cache:
   directories:
     - $GOPATH/src
@@ -41,8 +41,6 @@ script:
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
   - make vendor
-  - pwd
-  - echo $GOPATH
   - go fmt && git --no-pager diff
   - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - make lint
