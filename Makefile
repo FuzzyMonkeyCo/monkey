@@ -8,7 +8,7 @@ FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 DST ?= .
 
 DEP ?= dep-linux-amd64
-GODEP = v0.3.2
+GODEP = v0.4.1
 
 all: lint vendor
 	go generate
