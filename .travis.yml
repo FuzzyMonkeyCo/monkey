@@ -21,12 +21,12 @@ addons:
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
       # - silversearcher-ag FIXME
 
-before_cache:
-  - rm -rf $TRAVIS_BUILD_DIR
-cache:
-  directories:
-    - $GOPATH/src
-    - $GOPATH/pkg
+# before_cache:
+#   - rm -rf $TRAVIS_BUILD_DIR
+# cache:
+#   directories:
+#     - $GOPATH/src
+#     - $GOPATH/pkg
 
 install:
   - make deps
