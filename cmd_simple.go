@@ -103,7 +103,7 @@ func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind)
+			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind.String())
 			fmt.Println(err.Error())
 			cmdRep.Failed = true
 			return
