@@ -192,7 +192,7 @@ func doFuzz(apiKey string) int {
 	}
 
 	for {
-		if cmd.Kind() == "done" {
+		if cmd.Kind() == kindDone {
 			ensureDeleted(envID())
 			return fuzzOutcome(cmd.(*doneCmd))
 		}

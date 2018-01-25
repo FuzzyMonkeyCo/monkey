@@ -6,12 +6,12 @@ import (
 )
 
 type doneCmd struct {
-	V       uint   `json:"v"`
-	Cmd     string `json:"cmd"`
-	Failure bool   `json:"failure"`
+	V       uint    `json:"v"`
+	Cmd     cmdKind `json:"cmd"`
+	Failure bool    `json:"failure"`
 }
 
-func (cmd *doneCmd) Kind() string {
+func (cmd *doneCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 

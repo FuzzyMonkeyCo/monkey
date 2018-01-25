@@ -15,21 +15,21 @@ type harRequest *har.Request
 
 type reqCmd struct {
 	V          uint       `json:"v"`
-	Cmd        string     `json:"cmd"`
+	Cmd        cmdKind    `json:"cmd"`
 	Lane       lane       `json:"lane"`
 	HARRequest harRequest `json:"har_req"`
 }
 
 type reqCmdRep struct {
 	V        uint     `json:"v"`
-	Cmd      string   `json:"cmd"`
+	Cmd      cmdKind  `json:"cmd"`
 	Lane     lane     `json:"lane"`
 	Us       uint64   `json:"us"`
 	HAREntry harEntry `json:"har_rep,omitempty"`
 	Reason   string   `json:"reason,omitempty"`
 }
 
-func (cmd *reqCmd) Kind() string {
+func (cmd *reqCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 

@@ -117,11 +117,11 @@ func newCfg(yml []byte) (cfg *ymlCfg, err error) {
 	return
 }
 
-func (cfg *ymlCfg) script(kind string) []string {
-	return map[string][]string{
-		"start": cfg.Start,
-		"reset": cfg.Reset,
-		"stop":  cfg.Stop,
+func (cfg *ymlCfg) script(kind cmdKind) []string {
+	return map[cmdKind][]string{
+		kindStart: cfg.Start,
+		kindReset: cfg.Reset,
+		kindStop:  cfg.Stop,
 	}[kind]
 }
 

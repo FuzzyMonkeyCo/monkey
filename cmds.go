@@ -17,8 +17,53 @@ type lane struct {
 	R uint `json:"r"`
 }
 
+type cmdKind int
+
+const (
+	kindStart cmdKind = iota
+	kindReq
+	kindReset
+	kindStop
+	kindDone
+)
+
+func (k *cmdKind) UnmarshalJSON(data []byte) (err error) {
+	var cmd string
+	if err = json.Unmarshal(data, &cmd); err != nil {
+		return
+	}
+
+	if kind, ok := map[string]cmdKind{
+		"req":   kindReq,
+		"reset": kindReset,
+		"start": kindStart,
+		"stop":  kindStop,
+		"done":  kindDone,
+	}[cmd]; ok {
+		*k = kind
+		return
+	}
+	err = fmt.Errorf("expected one of req reset start stop done, not %s", cmd)
+	return
+}
+
+func (k cmdKind) MarshalJSON() (data []byte, err error) {
+	var ok bool
+	if data, ok = map[cmdKind][]byte{
+		kindReq:   []byte("req"),
+		kindReset: []byte("reset"),
+		kindStart: []byte("start"),
+		kindStop:  []byte("stop"),
+		kindDone:  []byte("done"),
+	}[k]; ok {
+		return
+	}
+	err = fmt.Errorf("impossibru %v", k)
+	return
+}
+
 type aCmd interface {
-	Kind() string
+	Kind() cmdKind
 	Exec(cfg *ymlCfg) (rep []byte, err error)
 }
 
