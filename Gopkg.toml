@@ -1,5 +1,12 @@
 # File for use by https://github.com/golang/dep
 
+required = [
+  "github.com/fenollp/gox",
+  "github.com/golang/lint/golint",
+  "honnef.co/go/tools/cmd/megacheck",
+  "github.com/wadey/gocovmerge",
+]
+
 [prune]
   non-go = true
   go-tests = true
@@ -27,3 +34,19 @@
 [[constraint]]
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/wadey/gocovmerge"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/fenollp/gox"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/golang/lint"
+
+[[constraint]]
+  branch = "master"
+  name = "honnef.co/go/tools"
