@@ -103,7 +103,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Println("[ERR]", binTitle, logID(), args)
+	log.Println("[ERR] (not an error)", binTitle, logID(), args)
 
 	if args["--update"].(bool) {
 		return doUpdate()

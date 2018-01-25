@@ -1,5 +1,9 @@
 # File for use by https://github.com/golang/dep
 
+[prune]
+  non-go = true
+  go-tests = true
+
 [[constraint]]
   branch = "master"
   name = "github.com/cardigann/harhar"
