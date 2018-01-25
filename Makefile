@@ -36,7 +36,8 @@ vendor:
 #	Note: workaround to https://github.com/golang/dep/issues/1554
 #	Writes to $GOPATH/bin so keep that in mind...
 	for pkg in $$(grep -Eo '"[^"]+",' Gopkg.toml | tr -d '",'); do \
-	  cd vendor/$$pkg && go install . && cd - ; done
+	  cd vendor/$$pkg && go install . && cd - ; \
+	done
 
 deps:
 	mkdir -p release
