@@ -248,7 +248,7 @@ func unstache(field string) string {
 func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
 	var wg sync.WaitGroup
 
-	if kind != kindReset || cfg.FinalHost == "" {
+	if cfg.FinalHost == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
 			cfg.FinalHost = unstache(cfg.Host)
@@ -256,7 +256,7 @@ func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
 		}()
 	}
 
-	if kind != kindReset || cfg.FinalPort == "" {
+	if cfg.FinalPort == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
 			cfg.FinalPort = unstache(cfg.Port)
