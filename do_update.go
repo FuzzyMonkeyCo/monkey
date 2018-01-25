@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -28,6 +27,7 @@ func peekLatestRelease() (latest string, err error) {
 	}
 
 	get.Header.Set("Accept", githubV3APIHeader)
+	log.Printf("[NFO] fetching latest version from %s\n", latestReleaseURL)
 	resp, err := clientUtils.Do(get)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -54,8 +54,7 @@ func peekLatestRelease() (latest string, err error) {
 }
 
 func replaceCurrentRelease(latest string) (err error) {
-	exe := nameExe()
-	relURL := releaseDownloadURL + latest + "/" + exe
+	relURL := releaseDownloadURL + latest + "/" + nameExe()
 	sumsURL := relURL + ".sha256.txt"
 
 	bin, err := os.OpenFile(updateID(), os.O_WRONLY|os.O_CREATE, 0744)
@@ -89,7 +88,7 @@ func replaceCurrentRelease(latest string) (err error) {
 	sum := hex.EncodeToString(hash.Sum(nil))
 	log.Printf("[NFO] checksumed: %s", sum)
 	fmt.Println("Fetching checksum...")
-	latestSum, err := fetchLatestSum(sumsURL, exe)
+	latestSum, err := fetchLatestSum(sumsURL)
 	if err != nil {
 		return
 	}
@@ -141,7 +140,7 @@ func unameM(arch string) string {
 	}[arch]
 }
 
-func fetchLatestSum(URL, exe string) (sum string, err error) {
+func fetchLatestSum(URL string) (sum string, err error) {
 	log.Printf("[NFO] fetching checksum from %s\n", URL)
 	resp, err := clientUtils.Get(URL)
 	if err != nil {
@@ -162,13 +161,12 @@ func fetchLatestSum(URL, exe string) (sum string, err error) {
 		return
 	}
 
-	suffix := []byte("  " + exe)
-	if bytes.HasSuffix(line, suffix) {
-		sum = string(bytes.TrimSuffix(line, suffix))
+	if len(line) > 64 {
+		sum = string(line[:64])
 		log.Printf("[NFO] got checksum: %s\n", sum)
 		return
 	}
-	err = fmt.Errorf("%s not found in body", suffix)
+	err = fmt.Errorf("no checksum in %s", line)
 	log.Println("[ERR]", err)
 	return
 }
