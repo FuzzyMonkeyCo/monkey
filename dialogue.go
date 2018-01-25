@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	v                = 1
 	mimeJSON         = "application/json"
 	mimeYAML         = "application/x-yaml"
 	xAPIKeyHeader    = "X-Api-Key"
@@ -116,18 +117,12 @@ func newCfg(yml []byte) (cfg *ymlCfg, err error) {
 	return
 }
 
-func (cfg *ymlCfg) script(kind string) []string {
-	switch kind {
-	case "start":
-		return cfg.Start
-	case "reset":
-		return cfg.Reset
-	case "stop":
-		return cfg.Stop
-	default:
-		log.Panicf("[ERR] unexpected kind '%s'\n", kind)
-		return []string{"unreachable"}
-	}
+func (cfg *ymlCfg) script(kind cmdKind) []string {
+	return map[cmdKind][]string{
+		kindStart: cfg.Start,
+		kindReset: cfg.Reset,
+		kindStop:  cfg.Stop,
+	}[kind]
 }
 
 func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {

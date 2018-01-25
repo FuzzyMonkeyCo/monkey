@@ -26,6 +26,5 @@ vendor/
 /monkey-*
 /meta.go
 /schemas.go
-/sha256s.txt
 /*.cov
 /cov.out

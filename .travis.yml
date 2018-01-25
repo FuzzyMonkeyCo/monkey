@@ -1,10 +1,9 @@
-language: go
 sudo: false
+language: go
 go: 1.9.2
 
 env:
   global:
-    - GODEP=0.3.2
     - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
 
 before_install:
@@ -22,13 +21,15 @@ addons:
       # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
       # - silversearcher-ag FIXME
 
-install:
-  - go get -u github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
-  - go get -u github.com/golang/lint/golint
-  - curl -sfSL https://github.com/golang/dep/releases/download/v$GODEP/dep-linux-amd64 -o $GOPATH/bin/dep
-  - chmod +x $GOPATH/bin/dep
+before_cache:
+  - rm -rf $TRAVIS_BUILD_DIR
+cache:
+  directories:
+    - $GOPATH/src
+    - $GOPATH/pkg
 
-before_script:
+install:
+  - make deps
   - go version
   - shellcheck --version
   - git --version
@@ -39,19 +40,19 @@ script:
   - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-  - golint -set_exit_status
-  - go fmt
-  - git --no-pager diff
-  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
+  - make vendor
+  - go fmt && git --no-pager diff
+  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
+  - make lint
   - go vet $(go list ./... | grep -v /vendor/)
+  - megacheck -show-ignored -unused.exported
  #- go test -v -race .
   - make x
-  - bash -c '[[ 0 -eq $(git --no-pager diff --name-only | grep -v version.go | wc -l) ]]'
+  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
-  - ls -lha
 
 after_script:
   - set +e
@@ -65,7 +66,6 @@ deploy:
   file_glob: true
   file:
     - monkey-*
-    - sha256s.txt
   on:
     repo: FuzzyMonkeyCo/monkey
     tags: true

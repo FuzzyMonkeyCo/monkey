@@ -26,7 +26,7 @@ var (
 	apiRoot     string
 	initURL     string
 	nextURL     string
-	docsURL     string
+	lintURL     string
 	clientUtils = &http.Client{}
 )
 
@@ -35,11 +35,11 @@ func init() {
 
 	if binVersion == "0.0.0" {
 		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
-		docsURL = "http://lint.dev.fuzzymonkey.co/1/blob"
+		lintURL = "http://lint.dev.fuzzymonkey.co/1/blob"
 	} else {
 		//FIXME: use HTTPS
 		apiRoot = "http://fuzz.fuzzymonkey.co/1"
-		docsURL = "http://lint.fuzzymonkey.co/1/blob"
+		lintURL = "http://lint.fuzzymonkey.co/1/blob"
 	}
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"
@@ -126,17 +126,12 @@ func ensureDeleted(path string) {
 }
 
 func logLevel(verbosity int) logutils.LogLevel {
-	var lvl string
-	switch verbosity {
-	case 1:
-		lvl = "ERR"
-	case 2:
-		lvl = "NFO"
-	case 3:
-		lvl = "DBG"
-	default:
-		lvl = "NOP"
-	}
+	lvl := map[int]string{
+		0: "NOP",
+		1: "ERR",
+		2: "NFO",
+		3: "DBG",
+	}[verbosity]
 	return logutils.LogLevel(lvl)
 }
 
@@ -197,7 +192,7 @@ func doFuzz(apiKey string) int {
 	}
 
 	for {
-		if cmd.Kind() == "done" {
+		if cmd.Kind() == kindDone {
 			ensureDeleted(envID())
 			return fuzzOutcome(cmd.(*doneCmd))
 		}
@@ -209,9 +204,8 @@ func doFuzz(apiKey string) int {
 }
 
 func retryOrReportThenCleanup(cfg *ymlCfg) int {
-	exitCode := retryOrReport()
-	maybePostStop(cfg)
-	return exitCode
+	defer maybePostStop(cfg)
+	return retryOrReport()
 }
 
 func retryOrReport() int {

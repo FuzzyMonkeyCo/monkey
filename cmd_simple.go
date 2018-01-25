@@ -23,20 +23,20 @@ var (
 )
 
 type simpleCmd struct {
-	V             uint   `json:"v"`
-	Cmd           string `json:"cmd"`
-	Passed        *bool  `json:"passed"`
-	ShrinkingFrom *lane  `json:"shrinking_from"`
+	V             uint    `json:"v"`
+	Cmd           cmdKind `json:"cmd"`
+	Passed        *bool   `json:"passed"`
+	ShrinkingFrom *lane   `json:"shrinking_from"`
 }
 
 type simpleCmdRep struct {
-	Cmd    string `json:"cmd"`
-	V      uint   `json:"v"`
-	Us     uint64 `json:"us"`
-	Failed bool   `json:"failed"`
+	Cmd    cmdKind `json:"cmd"`
+	V      uint    `json:"v"`
+	Us     uint64  `json:"us"`
+	Failed bool    `json:"failed"`
 }
 
-func (cmd *simpleCmd) Kind() string {
+func (cmd *simpleCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
@@ -57,7 +57,7 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 	if len(cfg.Reset) == 0 {
 		return
 	}
-	cmdRep := executeScript(cfg, "start")
+	cmdRep := executeScript(cfg, kindStart)
 	wasPreStarted = true
 	if cmdRep.Failed {
 		err = fmt.Errorf("failed during maybePreStart")
@@ -66,7 +66,7 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 }
 
 func maybePostStop(cfg *ymlCfg) {
-	executeScript(cfg, "stop")
+	executeScript(cfg, kindStop)
 }
 
 func progress(cmd *simpleCmd) {
@@ -85,13 +85,17 @@ func progress(cmd *simpleCmd) {
 			str += "\n"
 		}
 	}
-	fmt.Printf(str)
+	fmt.Print(str)
 }
 
-func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
-	cmdRep = &simpleCmdRep{V: 1, Cmd: kind, Failed: false}
+func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
+	cmdRep = &simpleCmdRep{V: v, Cmd: kind, Failed: false}
+	if wasPreStarted && kind == kindStart {
+		return
+	}
+
 	shellCmds := cfg.script(kind)
-	if len(shellCmds) == 0 || (wasPreStarted && kind == "start") {
+	if len(shellCmds) == 0 {
 		return
 	}
 
@@ -99,7 +103,7 @@ func executeScript(cfg *ymlCfg, kind string) (cmdRep *simpleCmdRep) {
 	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind)
+			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind.String())
 			fmt.Println(err.Error())
 			cmdRep.Failed = true
 			return
@@ -155,10 +159,10 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
 
 	if err != nil {
-		log.Println("[ERR]", string(stderr.Bytes())+"\n"+err.Error())
+		log.Println("[ERR]", stderr.String()+"\n"+err.Error())
 		return
 	}
-	log.Println("[NFO]", string(stderr.Bytes()))
+	log.Println("[NFO]", stderr.String())
 	return
 }
 
@@ -205,7 +209,7 @@ func readEnv(envVar string) string {
 		log.Println("[ERR]", err)
 		return ""
 	}
-	return string(stdout.Bytes())
+	return stdout.String()
 }
 
 func shell() string {
@@ -241,10 +245,10 @@ func unstache(field string) string {
 	return buffer.String()
 }
 
-func maybeFinalizeConf(cfg *ymlCfg, kind string) {
+func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
 	var wg sync.WaitGroup
 
-	if cfg.FinalHost == "" || kind != "reset" {
+	if kind != kindReset || cfg.FinalHost == "" {
 		wg.Add(1)
 		go func() {
 			cfg.FinalHost = unstache(cfg.Host)
@@ -252,7 +256,7 @@ func maybeFinalizeConf(cfg *ymlCfg, kind string) {
 		}()
 	}
 
-	if cfg.FinalPort == "" || kind != "reset" {
+	if kind != kindReset || cfg.FinalPort == "" {
 		wg.Add(1)
 		go func() {
 			cfg.FinalPort = unstache(cfg.Port)
