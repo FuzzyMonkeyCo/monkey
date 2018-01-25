@@ -204,9 +204,8 @@ func doFuzz(apiKey string) int {
 }
 
 func retryOrReportThenCleanup(cfg *ymlCfg) int {
-	exitCode := retryOrReport()
-	maybePostStop(cfg)
-	return exitCode
+	defer maybePostStop(cfg)
+	return retryOrReport()
 }
 
 func retryOrReport() int {
