@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
@@ -54,7 +55,7 @@ func main() {
 }
 
 func usage() (docopt.Opts, error) {
-	usage := binName + " v" + binVersion + " " + binDescribe + `
+	usage := binName + "\tv" + binVersion + "\t" + binDescribe + "\t" + runtime.Version() + `
 
 Usage:
   ` + binName + ` [-vvv] fuzz
@@ -64,14 +65,15 @@ Usage:
   ` + binName + ` [-vvv] -V | --version
 
 Options:
-  -v, -vv, -vvv  Verbosity level
+  -v, -vv, -vvv  Debug verbosity level
   -h, --help     Show this screen
   -U, --update   Ensures ` + binName + ` is latest
   -V, --version  Show version
 
 Try:
-                         ` + binName + ` --update -v
-  FUZZYMONKEY_API_KEY=42 ` + binName + ` fuzz`
+     export FUZZYMONKEY_API_KEY=42
+  ` + binName + ` --update -v
+  ` + binName + ` fuzz`
 
 	parser := &docopt.Parser{
 		HelpHandler:  docopt.PrintHelpOnly,
