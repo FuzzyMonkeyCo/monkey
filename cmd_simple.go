@@ -19,7 +19,12 @@ const (
 )
 
 var (
+	// To not pre-start more than once
 	wasPreStarted = false
+	// To exit with 7
+	hadExecError = false
+	// To not post-stop after stop
+	wasStopped = false
 )
 
 type simpleCmd struct {
@@ -66,7 +71,9 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 }
 
 func maybePostStop(cfg *ymlCfg) {
-	executeScript(cfg, kindStop)
+	if !wasStopped {
+		executeScript(cfg, kindStop)
+	}
 }
 
 func progress(cmd *simpleCmd) {
@@ -90,12 +97,14 @@ func progress(cmd *simpleCmd) {
 
 func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	cmdRep = &simpleCmdRep{V: v, Cmd: kind, Failed: false}
-	if wasPreStarted && kind == kindStart {
+	shellCmds := cfg.script(kind)
+	if len(shellCmds) == 0 {
 		return
 	}
 
-	shellCmds := cfg.script(kind)
-	if len(shellCmds) == 0 {
+	wasStopped = kind == kindStop
+	if kind == kindStart && wasPreStarted {
+		wasPreStarted = false
 		return
 	}
 
@@ -103,8 +112,8 @@ func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind.String())
-			fmt.Println(err.Error())
+			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
+			hadExecError = true
 			cmdRep.Failed = true
 			return
 		}
@@ -166,6 +175,16 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	return
 }
 
+func fmtExecError(k cmdKind, i int, c, e, s string) {
+	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, k.String(), e)
+	fmt.Printf("Command:\n%s\n", c)
+	fmt.Printf("Stderr:\n%s\n", s)
+	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
+	fmt.Println(" along with some shell flags.")
+	fmt.Printf("If you're curious, have a look at %s\n", logID())
+	fmt.Printf("And the dumped environment %s\n", envID())
+}
+
 func snapEnv(envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
@@ -178,7 +197,7 @@ func snapEnv(envSerializedPath string) (err error) {
 	defer cancel()
 
 	var script bytes.Buffer
-	fmt.Fprintln(&script, "declare -p")
+	fmt.Fprintln(&script, "declare -p") // bash specific
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
@@ -199,7 +218,7 @@ func readEnv(envVar string) string {
 
 	cmd := "source " + envID() + " >/dev/null 2>&1 " +
 		"&& set -o nounset " +
-		"&& echo -n $" + envVar
+		"&& printf $" + envVar
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
@@ -248,7 +267,7 @@ func unstache(field string) string {
 func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
 	var wg sync.WaitGroup
 
-	if kind != kindReset || cfg.FinalHost == "" {
+	if cfg.FinalHost == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
 			cfg.FinalHost = unstache(cfg.Host)
@@ -256,7 +275,7 @@ func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
 		}()
 	}
 
-	if kind != kindReset || cfg.FinalPort == "" {
+	if cfg.FinalPort == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
 			cfg.FinalPort = unstache(cfg.Port)

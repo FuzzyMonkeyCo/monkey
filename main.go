@@ -188,7 +188,7 @@ func doFuzz(apiKey string) int {
 		if cfg == nil {
 			return retryOrReport()
 		}
-		return retryOrReportThenCleanup(cfg)
+		return retryOrReportThenCleanup(cfg, err)
 	}
 
 	for {
@@ -198,13 +198,16 @@ func doFuzz(apiKey string) int {
 		}
 
 		if cmd, err = next(cfg, cmd); err != nil {
-			return retryOrReportThenCleanup(cfg)
+			return retryOrReportThenCleanup(cfg, err)
 		}
 	}
 }
 
-func retryOrReportThenCleanup(cfg *ymlCfg) int {
+func retryOrReportThenCleanup(cfg *ymlCfg, err error) int {
 	defer maybePostStop(cfg)
+	if hadExecError {
+		return 7
+	}
 	return retryOrReport()
 }
 

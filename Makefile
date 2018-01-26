@@ -33,6 +33,11 @@ latest:
 vendor:
 	go generate
 	dep ensure -v
+#	Note: workaround to https://github.com/golang/dep/issues/1554
+#	Writes to $GOPATH/bin so keep that in mind...
+	for pkg in $$(grep -Eo '"[^"]+",' Gopkg.toml | tr -d '",'); do \
+	  cd vendor/$$pkg && go install . && cd - ; \
+	done
 
 deps:
 	mkdir -p release
@@ -42,12 +47,6 @@ deps:
 	chmod +x release/$(DEP)
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
-#FIXME: lock these with dep if possible # https://github.com/golang/dep/issues/1554
-	go get -u -v github.com/fenollp/gox # https://github.com/mitchellh/gox/pull/103
-	go get -u -v github.com/golang/lint/golint
-	go get -u -v honnef.co/go/tools/cmd/megacheck
-	go get -u -v github.com/idubinskiy/schematyper
-	go get -u -v github.com/wadey/gocovmerge
 
 lint:
 	golint -set_exit_status

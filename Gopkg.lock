@@ -14,10 +14,25 @@
   revision = "ee0de3bc6815ee19d4a46c7eb90f829db0e014b1"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/fenollp/gox"
+  packages = ["."]
+  revision = "5c802456ccde2dae9010fe3ee1475ba6640da597"
+
+[[projects]]
   branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
   revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golang/lint"
+  packages = [
+    ".",
+    "golint"
+  ]
+  revision = "e14d9b0f1d332b1420c1ffa32562ad2dc84d645d"
 
 [[projects]]
   branch = "master"
@@ -27,9 +42,30 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/kisielk/gotool"
+  packages = [
+    ".",
+    "internal/load"
+  ]
+  revision = "d6ce6262d87e3a4e153e86023ff56ae771554a41"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/iochan"
+  packages = ["."]
+  revision = "87b45ffd0e9581375c491fef3d32130bb15c5bd7"
+
+[[projects]]
+  branch = "master"
   name = "github.com/sebcat/har"
   packages = ["."]
   revision = "e5490f454e487f004446592803b2b37f0db1054a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/wadey/gocovmerge"
+  packages = ["."]
+  revision = "b5bfa59ec0adc420475f97f89b58045c721d761c"
 
 [[projects]]
   branch = "master"
@@ -49,9 +85,45 @@
   packages = ["."]
   revision = "511d08a359d14c0dd9c4302af52ee9abb6f93c2a"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/tools"
+  packages = [
+    "cover",
+    "go/ast/astutil",
+    "go/buildutil",
+    "go/gcexportdata",
+    "go/gcimporter15",
+    "go/loader",
+    "go/types/typeutil"
+  ]
+  revision = "25101aadb97aa42907eee6a238d6d26a6cb3c756"
+
+[[projects]]
+  branch = "master"
+  name = "honnef.co/go/tools"
+  packages = [
+    "callgraph",
+    "callgraph/static",
+    "cmd/megacheck",
+    "deprecated",
+    "functions",
+    "internal/sharedcheck",
+    "lint",
+    "lint/lintutil",
+    "simple",
+    "ssa",
+    "ssa/ssautil",
+    "staticcheck",
+    "staticcheck/vrp",
+    "unused",
+    "version"
+  ]
+  revision = "8ed405e85c65fb38745a8eafe01ee9590523f172"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "83d455ad8e399f097f4b06aa5a024581a8bf78e508205b8ed0c422aea2071742"
+  inputs-digest = "06334e64e8e1431b58848545809337d87a56e8ee9c3d42eff7c017d28ceb5bd3"
   solver-name = "gps-cdcl"
   solver-version = 1
