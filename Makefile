@@ -5,6 +5,7 @@ OS ?= linux darwin windows
 ARCH ?= amd64
 SHA = sha256.txt
 FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
+LNX = $(EXE)-Linux-x86_64
 DST ?= .
 
 DEP ?= dep-linux-amd64
@@ -17,9 +18,12 @@ all: lint vendor
 x: vendor
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	go generate
-	gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
+	CGO_ENABLED=0 gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
+
+image:
+	tar c $(LNX) | docker import --change 'ENTRYPOINT ["/$(LNX)"]' --change 'WORKDIR /app' - $(EXE)
 
 update: SHELL := /bin/bash
 update:

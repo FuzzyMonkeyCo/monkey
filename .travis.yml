@@ -1,10 +1,7 @@
 sudo: false
 language: go
 go: 1.9.2
-
-env:
-  global:
-    - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
+services: docker
 
 before_install:
   - set -o errexit
@@ -53,6 +50,14 @@ script:
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
+  - make image
+  - docker tag monkey fuzzymonkey/monkey:$CURRENT_TAG
+  - docker tag monkey fuzzymonkey/monkey:latest
+  - |
+    if [[ $CURRENT_TAG != 0.0.0 ]]; then
+      echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
+      docker push fuzzymonkey/monkey
+    fi
 
 after_script:
   - set +e
@@ -69,6 +74,10 @@ deploy:
   on:
     repo: FuzzyMonkeyCo/monkey
     tags: true
+
+env:
+  global:
+    - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
 
 notifications:
   email:
