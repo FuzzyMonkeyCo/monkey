@@ -20,6 +20,7 @@ const (
 
 var (
 	wasPreStarted = false
+	hadExecError  = false
 )
 
 type simpleCmd struct {
@@ -103,8 +104,8 @@ func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
-			fmt.Printf("Command #%d failed during step '%s' with:\n", i+1, kind.String())
-			fmt.Println(err.Error())
+			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
+			hadExecError = true
 			cmdRep.Failed = true
 			return
 		}
@@ -166,6 +167,14 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 	return
 }
 
+func fmtExecError(k cmdKind, i int, c, e, s string) {
+	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, k.String(), e)
+	fmt.Printf("Command:\n%s\nStderr:\n%s", c, s)
+	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
+	fmt.Println(" along with some shell flags.")
+	fmt.Printf("If you're curious, have a look at %s\n", logID())
+}
+
 func snapEnv(envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
@@ -178,7 +187,7 @@ func snapEnv(envSerializedPath string) (err error) {
 	defer cancel()
 
 	var script bytes.Buffer
-	fmt.Fprintln(&script, "declare -p")
+	fmt.Fprintln(&script, "declare -p") // bash specific
 	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
