@@ -53,7 +53,6 @@ script:
   - make image
   - docker tag monkey fuzzymonkey/monkey:$CURRENT_TAG
   - docker tag monkey fuzzymonkey/monkey:latest
-  - echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
   - |
     if [[ $CURRENT_TAG != 0.0.0 ]]; then
       echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
