@@ -19,8 +19,12 @@ const (
 )
 
 var (
+	// To not pre-start more than once
 	wasPreStarted = false
-	hadExecError  = false
+	// To exit with 7
+	hadExecError = false
+	// To not post-stop after stop
+	wasStopped = false
 )
 
 type simpleCmd struct {
@@ -67,7 +71,9 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 }
 
 func maybePostStop(cfg *ymlCfg) {
-	executeScript(cfg, kindStop)
+	if !wasStopped {
+		executeScript(cfg, kindStop)
+	}
 }
 
 func progress(cmd *simpleCmd) {
@@ -91,12 +97,14 @@ func progress(cmd *simpleCmd) {
 
 func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	cmdRep = &simpleCmdRep{V: v, Cmd: kind, Failed: false}
-	if wasPreStarted && kind == kindStart {
+	shellCmds := cfg.script(kind)
+	if len(shellCmds) == 0 {
 		return
 	}
 
-	shellCmds := cfg.script(kind)
-	if len(shellCmds) == 0 {
+	wasStopped = kind == kindStop
+	if kind == kindStart && wasPreStarted {
+		wasPreStarted = false
 		return
 	}
 
@@ -169,7 +177,8 @@ func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string)
 
 func fmtExecError(k cmdKind, i int, c, e, s string) {
 	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, k.String(), e)
-	fmt.Printf("Command:\n%s\nStderr:\n%s", c, s)
+	fmt.Printf("Command:\n%s\n", c)
+	fmt.Printf("Stderr:\n%s\n", s)
 	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
 	fmt.Println(" along with some shell flags.")
 	fmt.Printf("If you're curious, have a look at %s\n", logID())
