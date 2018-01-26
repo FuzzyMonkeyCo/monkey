@@ -182,6 +182,7 @@ func fmtExecError(k cmdKind, i int, c, e, s string) {
 	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
 	fmt.Println(" along with some shell flags.")
 	fmt.Printf("If you're curious, have a look at %s\n", logID())
+	fmt.Printf("And the dumped environment %s\n", envID())
 }
 
 func snapEnv(envSerializedPath string) (err error) {
