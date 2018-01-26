@@ -217,7 +217,7 @@ func readEnv(envVar string) string {
 
 	cmd := "source " + envID() + " >/dev/null 2>&1 " +
 		"&& set -o nounset " +
-		"&& echo -n $" + envVar
+		"&& printf $" + envVar
 	var stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
 	exe.Stdout = &stdout
