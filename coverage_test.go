@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -17,6 +18,7 @@ func TestCov(t *testing.T) {
 
 	code := actualMain()
 
+	fmt.Println("EXIT", code)
 	data := []byte(strconv.Itoa(code))
 	path := os.Getenv("MONKEY_CODEFILE")
 	if err := ioutil.WriteFile(path, data, 0644); err != nil {
