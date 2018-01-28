@@ -22,8 +22,10 @@ x: vendor
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
 
-image:
-	tar c $(LNX) | docker import --change 'ENTRYPOINT ["/$(LNX)"]' --change 'WORKDIR /app' - $(EXE)
+image: monkey-Linux-x86_64
+	cp $^ misc/
+	docker build --tag monkey misc/
+	rm misc/$^
 
 update: SHELL := /bin/bash
 update:

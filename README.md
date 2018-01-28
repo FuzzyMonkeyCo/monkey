@@ -32,7 +32,8 @@ A bug was detected after 11 tests then shrunk 9 times!
 Or using a Docker image:
 
 ```shell
-docker run --rm -it -v /tmp:/tmp:rw -v "$PWD":/app:ro fuzzymonkey/monkey fuzz
+$ alias monkey='docker run --rm -it --user $(id -u):$(id -g) -v /tmp:/tmp:rw -v "$PWD":/app:ro -e FUZZYMONKEY_API_KEY="$KEY" fuzzymonkey/monkey'
+$ monkey fuzz
 ```
 
 ### Example `.fuzzymonkey.yml` file:
