@@ -23,7 +23,7 @@ x: vendor
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
 
 image:
-	tar c $(LNX) | docker import --change 'ENTRYPOINT ["/$(LNX)"]' --change 'WORKDIR /app' - $(EXE)
+	docker build --tag monkey .
 
 update: SHELL := /bin/bash
 update:
