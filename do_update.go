@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime"
 )
 
@@ -99,7 +100,12 @@ func replaceCurrentRelease(latest string) (err error) {
 		return
 	}
 
-	dst := os.Args[0]
+	dst, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	log.Println("[NFO] replacing", dst)
 	fmt.Println("Replacing", dst)
 	err = os.Rename(updateID(), dst)
 	return
