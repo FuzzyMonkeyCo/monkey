@@ -1,0 +1,12 @@
+version: '{build}'
+platform: x64
+clone_folder: c:\gopath\src\github.com\FuzzyMonkeyCo\monkey
+
+build_script:
+  - curl -#fSLo latest.sh http://goo.gl/3d7tPe -A "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0" -e https://ci.appveyor.com/project/fenollp/monkey
+  - bash latest.sh
+  # - bash -c 'curl -#fSLo monkey.exe https://github.com/FuzzyMonkeyCo/monkey/releases/download/$(git describe --tags --abbrev=0)/monkey-Windows-x86_64.exe && chmod +x monkey.exe && mv monkey.exe "C:/Program Files/Git/usr/bin/monkey.exe"'
+  # - monkey --help | grep monkey
+  # - monkey -V | grep monkey/%APPVEYOR_REPO_TAG_NAME%
+  # - monkey --version | grep monkey/%APPVEYOR_REPO_TAG_NAME%
+  - monkey -vvv --update
