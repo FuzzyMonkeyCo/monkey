@@ -31,8 +31,13 @@ func makePwdID() {
 		log.Panic("[ERR] ", err)
 	}
 
+	realCwd, err := filepath.EvalSymlinks(cwd)
+	if err != nil {
+		log.Panic("[ERR] ", err)
+	}
+
 	h := fnv.New64a()
-	h.Write([]byte(cwd))
+	h.Write([]byte(realCwd))
 	id := "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
 
 	slot, err := findNewIDSlot(id)
