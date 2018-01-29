@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime"
 )
 
@@ -87,6 +88,7 @@ func replaceCurrentRelease(latest string) (err error) {
 
 	sum := hex.EncodeToString(hash.Sum(nil))
 	log.Printf("[NFO] checksumed: %s", sum)
+	log.Printf("[NFO] fetching checksum from %s\n", sumsURL)
 	fmt.Println("Fetching checksum...")
 	latestSum, err := fetchLatestSum(sumsURL)
 	if err != nil {
@@ -99,7 +101,12 @@ func replaceCurrentRelease(latest string) (err error) {
 		return
 	}
 
-	dst := os.Args[0]
+	dst, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	log.Println("[NFO] replacing", dst)
 	fmt.Println("Replacing", dst)
 	err = os.Rename(updateID(), dst)
 	return
@@ -141,7 +148,6 @@ func unameM(arch string) string {
 }
 
 func fetchLatestSum(URL string) (sum string, err error) {
-	log.Printf("[NFO] fetching checksum from %s\n", URL)
 	resp, err := clientUtils.Get(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
