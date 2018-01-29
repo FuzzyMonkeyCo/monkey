@@ -37,15 +37,13 @@ script:
   - shellcheck $(find . -name '*.sh')
   - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
   - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-  - make vendor
+  - OSARCH=linux/amd64 make x
   - go fmt && git --no-pager diff
   - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - make lint
   - go vet $(go list ./... | grep -v /vendor/)
   - megacheck -show-ignored -unused.exported
  #- go test -v -race .
-  - OSARCH=linux/amd64 make x
-  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - ./monkey-Linux-x86_64 -h | grep monkey
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
