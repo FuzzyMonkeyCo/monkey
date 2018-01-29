@@ -48,13 +48,13 @@ script:
   - ./monkey-Linux-x86_64 --help | grep monkey
   - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
   - ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
-  - make x
-  - '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
   - make image
   - docker tag monkey fuzzymonkey/monkey:$CURRENT_TAG
   - docker tag monkey fuzzymonkey/monkey:latest
   - |
     if [[ $CURRENT_TAG != 0.0.0 ]]; then
+      make x
+      [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
       echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
       docker push fuzzymonkey/monkey
     fi
