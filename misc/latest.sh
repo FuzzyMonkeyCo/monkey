@@ -54,7 +54,7 @@ fi
 
 exe=monkey-"$(uname -s)-$(uname -m)"
 case "$exe" in
-    CYGWIN*|MINGW32*|MSYS*) exe=$exe.exe ;;
+    CYGWIN*|MINGW32*|MSYS*) exe=monkey-Windows-"$(uname -m)".exe ;;
 esac
 
 echo "Downloading v$latest_tag of $exe"
