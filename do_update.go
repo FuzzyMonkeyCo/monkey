@@ -88,6 +88,7 @@ func replaceCurrentRelease(latest string) (err error) {
 
 	sum := hex.EncodeToString(hash.Sum(nil))
 	log.Printf("[NFO] checksumed: %s", sum)
+	log.Printf("[NFO] fetching checksum from %s\n", sumsURL)
 	fmt.Println("Fetching checksum...")
 	latestSum, err := fetchLatestSum(sumsURL)
 	if err != nil {
@@ -147,7 +148,6 @@ func unameM(arch string) string {
 }
 
 func fetchLatestSum(URL string) (sum string, err error) {
-	log.Printf("[NFO] fetching checksum from %s\n", URL)
 	resp, err := clientUtils.Get(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
