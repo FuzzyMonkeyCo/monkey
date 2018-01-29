@@ -53,7 +53,7 @@ if [ "$("$target" --version 2>&1 || true)" = "$latest_version" ]; then
 fi
 
 exe=monkey-"$(uname -s)-$(uname -m)"
-case "$exe" in
+case "${exe##monkey-}" in
     CYGWIN*|MINGW32*|MSYS*) exe=monkey-Windows-"$(uname -m)".exe ;;
 esac
 
