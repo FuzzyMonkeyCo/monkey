@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -31,23 +32,28 @@ func makePwdID() (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-
 	realCwd, err := filepath.EvalSymlinks(cwd)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
+	tmp := os.TempDir()
+	if err = os.MkdirAll(tmp, 0700); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 	h := fnv.New64a()
 	h.Write([]byte(realCwd))
-	id := "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
+	id := fmt.Sprintf("%d", h.Sum64())
+	prefix := path.Join(tmp, "."+binName+"_"+id)
 
-	slot, err := findNewIDSlot(id)
+	slot, err := findNewIDSlot(prefix)
 	if err != nil {
 		return
 	}
 
-	pwdID = id + "_" + slot
+	pwdID = prefix + "_" + slot
 	return
 }
 
