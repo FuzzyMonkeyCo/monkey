@@ -25,15 +25,17 @@ func updateID() string {
 	return pwdID + "_update.bin"
 }
 
-func makePwdID() {
+func makePwdID() (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	realCwd, err := filepath.EvalSymlinks(cwd)
 	if err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
 	h := fnv.New64a()
@@ -42,10 +44,11 @@ func makePwdID() {
 
 	slot, err := findNewIDSlot(id)
 	if err != nil {
-		log.Panic("[ERR] ", err)
+		return
 	}
 
 	pwdID = id + "_" + slot
+	return
 }
 
 func findNewIDSlot(prefix string) (slot string, err error) {
