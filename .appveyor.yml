@@ -1,5 +1,7 @@
 version: '{build}'
-platform: x64
+platform:
+  - x64
+  - x86
 clone_folder: c:\gopath\src\github.com\FuzzyMonkeyCo\monkey
 
 build_script:
