@@ -46,8 +46,6 @@ func init() {
 	nextURL = apiRoot + "/next"
 
 	loadSchemas()
-
-	makePwdID()
 }
 
 func main() {
@@ -72,7 +70,7 @@ Options:
 
 Try:
      export FUZZYMONKEY_API_KEY=42
-  ` + binName + ` --update -v
+  ` + binName + ` --update
   ` + binName + ` fuzz`
 
 	parser := &docopt.Parser{
@@ -91,6 +89,10 @@ func actualMain() int {
 	if len(args) == 0 {
 		// Help or version shown
 		return 0
+	}
+
+	if err := makePwdID(); err != nil {
+		return retryOrReport()
 	}
 
 	logCatchall, err := os.OpenFile(logID(), os.O_WRONLY|os.O_CREATE, 0640)

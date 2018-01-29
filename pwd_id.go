@@ -5,6 +5,7 @@ import (
 	"hash/fnv"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -25,22 +26,35 @@ func updateID() string {
 	return pwdID + "_update.bin"
 }
 
-func makePwdID() {
+func makePwdID() (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
-
-	h := fnv.New64a()
-	h.Write([]byte(cwd))
-	id := "/tmp/." + binName + "_" + fmt.Sprintf("%d", h.Sum64())
-
-	slot, err := findNewIDSlot(id)
+	realCwd, err := filepath.EvalSymlinks(cwd)
 	if err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		return
 	}
 
-	pwdID = id + "_" + slot
+	tmp := os.TempDir()
+	if err = os.MkdirAll(tmp, 0700); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	h := fnv.New64a()
+	h.Write([]byte(realCwd))
+	id := fmt.Sprintf("%d", h.Sum64())
+	prefix := path.Join(tmp, "."+binName+"_"+id)
+
+	slot, err := findNewIDSlot(prefix)
+	if err != nil {
+		return
+	}
+
+	pwdID = prefix + "_" + slot
+	return
 }
 
 func findNewIDSlot(prefix string) (slot string, err error) {

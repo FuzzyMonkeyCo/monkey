@@ -1,8 +1,15 @@
 .PHONY: all update debug lint x test
 
 EXE = monkey
-OS ?= linux darwin windows
-ARCH ?= amd64
+OSARCH ?= \
+  windows/386 windows/amd64 \
+   darwin/386  darwin/amd64 \
+    linux/386   linux/amd64   linux/arm linux/arm64 linux/mips linux/mipsle \
+  freebsd/386 freebsd/amd64 freebsd/arm \
+   netbsd/386  netbsd/amd64  netbsd/arm \
+  openbsd/386 openbsd/amd64 \
+    plan9/386   plan9/amd64 \
+              solaris/amd64
 SHA = sha256.txt
 FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 LNX = $(EXE)-Linux-x86_64
@@ -18,7 +25,7 @@ all: lint vendor
 x: vendor
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	go generate
-	CGO_ENABLED=0 gox -os '$(OS)' -arch '$(ARCH)' -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose .
+	CGO_ENABLED=0 gox -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose -osarch "$$(echo $(OSARCH))" .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
 
