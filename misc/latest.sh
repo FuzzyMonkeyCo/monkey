@@ -17,8 +17,11 @@ fatal() {
 # Note: ~/.local/bin is for TravisCI.com
 # Note: C:\Program Files\Git\usr\bin is for appveyor.com
 target_path=
-for path in "$@" /usr/local/bin /usr/bin ~/.local/bin 'C:\Program Files\Git\usr\bin'; do
-    case :"$path": in
+for path in "$@" \
+                'C:/Program Files/Git/usr/bin' ~/.local/bin \
+                /usr/local/bin /usr/bin /bin
+do
+    case :"$PATH": in
         *:"$path":*)
             if ! mkdir -p "$path" >/dev/null 2>&1; then
                 continue

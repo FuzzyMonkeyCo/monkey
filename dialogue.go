@@ -46,18 +46,14 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 		return
 	}
 
-	c := make(chan error)
-	go func() { c <- maybePreStart(cfg) }()
-	cmdJSON, authToken, err := initPUT(apiKey, validationJSON)
-
-	if errPre := <-c; errPre != nil {
-		err = errPre
+	if err = maybePreStart(cfg); err != nil {
 		return
 	}
+
+	cmdJSON, authToken, err := initPUT(apiKey, validationJSON)
 	if err != nil {
 		return
 	}
-
 	log.Printf("[NFO] got auth token: %s\n", authToken)
 	cfg.AuthToken = authToken
 
