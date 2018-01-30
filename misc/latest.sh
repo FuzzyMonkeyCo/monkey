@@ -65,12 +65,22 @@ tmp="$(mktemp)"
 url="$page/releases/download/$latest_tag/$exe"
 curl -# --fail --location --output "$tmp" "$url"
 echo Verifying checksum...
-curl -# --fail --location --output "$tmp".sha256.txt "$url.sha256.txt"
+sha="$tmp".sha256.txt
+curl -# --fail --location --output "$sha" "$url".sha256.txt
 tmpdir="$(dirname "$tmp")"
 ( cd "$tmpdir"
   mv "$tmp" "$exe"
-  sha256sum --check --strict "$tmp".sha256.txt
-  rm "$tmp".sha256.txt
+  if   which sha256sum >/dev/null 2>&1; then
+      sha256sum --check --strict "$sha"
+  elif which shasum >/dev/null 2>&1; then
+      shasum -a 256 -c "$sha"
+  elif which openssl >/dev/null 2>&1; then
+      sum="$(openssl sha256 "$exe" | cut -d= -f2)"
+      grep -F "$sum" "$sha" >/dev/null 2>&1
+  else
+      echo Found no way of verifying checksum. Skipping!
+  fi
+  rm "$sha"
   chmod +x "$exe"
 )
 mv -v "$tmpdir/$exe" "$target"
