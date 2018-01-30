@@ -1,7 +1,6 @@
 sudo: false
 language: go
 go: 1.9.2
-services: docker
 
 before_install:
   - set -o errexit
@@ -24,6 +23,15 @@ addons:
 #   directories:
 #     - $GOPATH/src
 #     - $GOPATH/pkg
+
+before_install:
+  - echo $PATH
+  - |
+    if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
+      sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R"
+      monkey -vvv --update
+      exit 0
+    fi
 
 install:
   - make deps
@@ -80,6 +88,16 @@ env:
     - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
     - secure: W60uCgZn/WMIgRPV6aU2UQEsCQcu7zXd+MCIDmWG4ZDD72Il7h/3DzcVRPolBTWB7ezef8zgA1NImCWuG60ohHlP3gOriWPtNMFD7bLZy3mzwjGbHi/6bGhmrHX0YqU44Y0zeOxoI+MPPB/FYcIhSaDvwkyeU8q0YMvrwZ8DqnvVCcelQF3Kx0grfQDI6iHrUZHTcMdLwc4FK7NDGnDjMzp4GRIrtbpxCKH/qHXIDogLWREEcEzeHYBsk0fIg0Zni+4ZGGuM855XiM4ps3GypitIKjvYHVbGm829WrMKhWGLUYOy4EMRxzmKOfR6lbcLE9rL+kNgtjlvqYrlxf6tKdc2fi2QkkAwCIa6bdZXxCcnuM2gwmWd7u+GaLsPasT02d2M3x23a5X0wsBzFGVJXWAWDB/g5DvkvlMoJvSw0Mw9YLo4mPhBZUOjHjuniJrxszMyWSsxLJCHNHk74QzU/V/M9M75sIV05iW1twEo8uWgFVpOEoW710tk0Y4IINavR5xUVd2INy91xHZHS3uaF9IMoaPb81SkyYAyFbmGmZqwJXGo1e9cNLhZ1p5qPW7NbForF35yCl61MH+Gxps8mx7pO1oBiwSLqPD/T+pZTKtpkfOzXMNEDOybKLzRJbMKhiyExyDMw4sOW/EiBQ01/3HcrwPe5BO/cQfUoaPwQ/w=
     - secure: E1hb0aDL0Gj7jARazeFIwymAD6Wr3T6mtFghiCvdH66T6i8EflCFoX+c+MDYstC7jo5ZWUUtPNiVXDaqBmBDKvLihG+8Ucw43H/gQfnIj/JkpAZPpGO7duh/ZmKO4wl6xwmOzvpzTsK/199DZOBrnldenUlyNnrkV1rI+q8Y1zKe+v0jtsiU5R9p3rgyWoN4BI7qTfAb2lxDoBJ7kmaJpfC/TEN0sKA9U9Mu+V1V0BioO+dVYcJd9rjjcIls3oHFBBMmIxX1D49THMCfXBHBcXUWC/rJOGREChy0IkAd3K/5BuH7X2Sn6X6zUC4UKGrzg+6KLYho4UHOC/193ePRnpZ3YXAu1R97o0uglT9I5sw2VUIi6dJEzt2WIvlxNxLE5JUfb3l7d/ZhDRTvD/yEG9VdqQv7RVKoGO1cOr+FO5pfhBowKe4oS/Vk9yFdbzPFhDnJjdEVxtm6PUdPI3Cbmfugf0uq+kJaJ1IbLViqP6K8BUIPDGWn1+NT1DI4nZKPQv17HQhBeKag36BkC1mcS4O1EC+gJ9EFvRFaIebN76n0DfAehK2DMDxnN0kHvcgnyCF+yudo4pbc9I1Lu46w8PL+XfMkY7m8ENPpHqD+wm78a/OWZSqHkb9XKIN9Nhg8cOZCpNBbKwTOpvIC65WPcr0i2mP96sb6jnL51zNlBAA=
+    - UA: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0'
+    - R: 'https://travis-ci.org/FuzzyMonkeyCo/monkey'
+
+matrix:
+  include:
+    - env: KIND=normal
+      os: linux
+      services: docker
+    - env: KIND=rel
+      os: osx
 
 notifications:
   email:
