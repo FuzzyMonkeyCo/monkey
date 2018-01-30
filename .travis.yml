@@ -1,6 +1,6 @@
 sudo: false
 language: go
-go: 1.9.2
+go: 1.9.3
 
 before_install:
   - set -o errexit
