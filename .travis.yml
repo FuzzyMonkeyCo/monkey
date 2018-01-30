@@ -24,14 +24,13 @@ addons:
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
-before_install:
-  - echo $PATH
-  - |
-    if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
-      sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R"
-      monkey -vvv --update
-      exit 0
-    fi
+before_install: |
+  if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
+    sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
+    monkey -vvv --update
+    set +e
+    exit 0
+  fi
 
 install:
   - make deps
