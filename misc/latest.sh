@@ -15,10 +15,10 @@ fatal() {
 }
 
 # Note: ~/.local/bin is for TravisCI.com
-# Note: C:\Program Files\Git\usr\bin is for appveyor.com
+# Note: /c/go/bin is for appveyor.com
 target_path=
 for path in "$@" \
-                'C:/Program Files/Git/usr/bin' ~/.local/bin \
+                /c/go/bin ~/.local/bin \
                 /usr/local/bin /usr/bin /bin
 do
     case :"$PATH": in
@@ -57,7 +57,10 @@ fi
 
 exe=monkey-"$(uname -s)-$(uname -m)"
 case "${exe##monkey-}" in
-    CYGWIN*|MINGW32*|MSYS*) exe=monkey-Windows-"$(uname -m)".exe ;;
+    CYGWIN*|MINGW32*|MSYS*)
+        exe=monkey-Windows-"$(uname -m)".exe
+        target="$target".exe
+        ;;
 esac
 
 echo "Downloading v$latest_tag of $exe"
