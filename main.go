@@ -57,7 +57,7 @@ func usage() (docopt.Opts, error) {
 
 Usage:
   ` + binName + ` [-vvv] fuzz
-  ` + binName + ` [-vvv] validate
+  ` + binName + ` [-vvv] lint
   ` + binName + ` [-vvv] -h | --help
   ` + binName + ` [-vvv] -U | --update
   ` + binName + ` [-vvv] -V | --version
@@ -114,8 +114,8 @@ func actualMain() int {
 	}
 
 	apiKey := os.Getenv(envAPIKey)
-	if args["validate"].(bool) {
-		return doValidate(apiKey)
+	if args["lint"].(bool) {
+		return doLint(apiKey)
 	}
 
 	// if args["fuzz"].(bool)
@@ -158,9 +158,9 @@ func doUpdate() int {
 	return 0
 }
 
-func doValidate(apiKey string) int {
+func doLint(apiKey string) int {
 	if yml, err := readYML(); err == nil {
-		if _, err := validateDocs(apiKey, yml); err != nil {
+		if _, err := lintDocs(apiKey, yml); err != nil {
 			return 2
 		}
 		return 0

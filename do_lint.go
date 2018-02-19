@@ -14,7 +14,7 @@ import (
 
 const localYML = ".fuzzymonkey.yml"
 
-func validateDocs(apiKey string, yml []byte) (rep []byte, err error) {
+func lintDocs(apiKey string, yml []byte) (rep []byte, err error) {
 	blobs, err := makeBlobs(yml)
 	if err != nil {
 		return

@@ -66,7 +66,7 @@ lint:
 	./misc/goolint.sh
 
 debug: all
-	./$(EXE) validate
+	./$(EXE) lint
 	./$(EXE) -vvv fuzz
 
 distclean: clean
