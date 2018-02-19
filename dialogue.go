@@ -37,7 +37,7 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 		return
 	}
 
-	validationJSON, err := validateDocs(apiKey, yml)
+	validationJSON, err := lintDocs(apiKey, yml)
 	if err != nil {
 		return
 	}
