@@ -14,8 +14,7 @@ addons:
       - debian-sid # shellcheck
     packages:
       - shellcheck
-      # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
-      # - silversearcher-ag FIXME
+      - silversearcher-ag
 
 # before_cache:
 #   - rm -rf $TRAVIS_BUILD_DIR
@@ -37,7 +36,7 @@ install:
   - go version
   - shellcheck --version
   - git --version
-  # - ag --version
+  - ag --version
   - dep version
 
 script:
