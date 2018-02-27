@@ -2,20 +2,22 @@ sudo: false
 language: go
 go: 1.9.3
 
-before_install:
-  - set -o errexit
-  - set -o errtrace
-  # - set -o nounset # TravisCI is unclean
-  - set -o pipefail
-
-addons:
-  apt:
-    sources:
-      - debian-sid # shellcheck
-    packages:
-      - shellcheck
-      # dpkg-deb: error: archive '/var/cache/apt/archives/silversearcher-ag_2.1.0-1_amd64.deb' has premature member 'control.tar.xz' before 'control.tar.gz', giving up
-      # - silversearcher-ag FIXME
+before_install: |
+  if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
+    brew install the_silver_searcher
+    ag --version
+    ./misc/goolint.sh
+    sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
+    monkey -vvv --version
+    set +e
+    exit
+  else
+    set -o errexit
+    set -o errtrace
+  # set -o nounset # TravisCI is unclean
+    set -o pipefail
+  fi
+after_script: set +e
 
 # before_cache:
 #   - rm -rf $TRAVIS_BUILD_DIR
@@ -24,20 +26,11 @@ addons:
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
-before_install: |
-  if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
-    sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
-    monkey -vvv --update
-    set +e
-    exit
-  fi
-
 install:
   - make deps
   - go version
   - shellcheck --version
   - git --version
-  # - ag --version
   - dep version
 
 script:
@@ -65,9 +58,6 @@ script:
       echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
       docker push fuzzymonkey/monkey
     fi
-
-after_script:
-  - set +e
 
 deploy:
   provider: releases
