@@ -16,6 +16,7 @@ before_install: |
     set -o errtrace
   # set -o nounset # TravisCI is unclean
     set -o pipefail
+  fi
 after_script: set +e
 
 # before_cache:
