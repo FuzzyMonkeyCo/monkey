@@ -5,13 +5,8 @@ go: 1.9.3
 before_install:
   - set -o errexit
   - set -o errtrace
-  # - set -o nounset # TravisCI is unclean
+# - set -o nounset # TravisCI is unclean
   - set -o pipefail
-
-addons:
-  apt:
-    packages:
-      - silversearcher-ag
 
 # before_cache:
 #   - rm -rf $TRAVIS_BUILD_DIR
@@ -22,6 +17,9 @@ addons:
 
 before_install: |
   if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
+    brew install the_silver_searcher
+    ag --version
+    ./misc/goolint.sh
     sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
     monkey -vvv --update
     set +e
@@ -33,7 +31,6 @@ install:
   - go version
   - shellcheck --version
   - git --version
-  - ag --version
   - dep version
 
 script:
