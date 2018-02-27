@@ -21,7 +21,7 @@ before_install: |
     ag --version
     ./misc/goolint.sh
     sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
-    monkey -vvv --update
+    monkey -vvv --version
     set +e
     exit
   fi
