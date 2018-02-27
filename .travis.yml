@@ -2,19 +2,6 @@ sudo: false
 language: go
 go: 1.9.3
 
-before_install:
-  - set -o errexit
-  - set -o errtrace
-# - set -o nounset # TravisCI is unclean
-  - set -o pipefail
-
-# before_cache:
-#   - rm -rf $TRAVIS_BUILD_DIR
-# cache:
-#   directories:
-#     - $GOPATH/src
-#     - $GOPATH/pkg
-
 before_install: |
   if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
     brew install the_silver_searcher
@@ -24,7 +11,19 @@ before_install: |
     monkey -vvv --version
     set +e
     exit
-  fi
+  else
+    set -o errexit
+    set -o errtrace
+  # set -o nounset # TravisCI is unclean
+    set -o pipefail
+after_script: set +e
+
+# before_cache:
+#   - rm -rf $TRAVIS_BUILD_DIR
+# cache:
+#   directories:
+#     - $GOPATH/src
+#     - $GOPATH/pkg
 
 install:
   - make deps
@@ -58,9 +57,6 @@ script:
       echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
       docker push fuzzymonkey/monkey
     fi
-
-after_script:
-  - set +e
 
 deploy:
   provider: releases
