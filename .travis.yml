@@ -10,10 +10,7 @@ before_install:
 
 addons:
   apt:
-    sources:
-      - debian-sid # shellcheck
     packages:
-      - shellcheck
       - silversearcher-ag
 
 # before_cache:
