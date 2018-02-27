@@ -20,10 +20,10 @@
   revision = "5c802456ccde2dae9010fe3ee1475ba6640da597"
 
 [[projects]]
-  branch = "v2"
   name = "github.com/go-yaml/yaml"
   packages = ["."]
-  revision = "d670f9405373e636a5a2765eea47fac0c9bc91a4"
+  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
+  version = "v2.1.1"
 
 [[projects]]
   branch = "master"
@@ -32,7 +32,7 @@
     ".",
     "golint"
   ]
-  revision = "e14d9b0f1d332b1420c1ffa32562ad2dc84d645d"
+  revision = "3ea3fa98a8104b2c8f8a7bffaebc7e54dddf99e1"
 
 [[projects]]
   branch = "master"
@@ -41,13 +41,13 @@
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
-  branch = "master"
   name = "github.com/kisielk/gotool"
   packages = [
     ".",
     "internal/load"
   ]
-  revision = "d6ce6262d87e3a4e153e86023ff56ae771554a41"
+  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -97,7 +97,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "ce871d178848e3eea1e8795e5cfb74053dde4bb9"
+  revision = "10db2d12cfa8602d0ffa73c5c2270ce47ba56b30"
 
 [[projects]]
   branch = "master"
