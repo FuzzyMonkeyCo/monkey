@@ -1,3 +1,4 @@
+src/cmd/go/internal/work/buildid.go
 # [monkey](https://github.com/FuzzyMonkeyCo/monkey) ~ FuzzyMonkeyCo's minion [![TravisCI build status](https://travis-ci.org/FuzzyMonkeyCo/monkey.svg?branch=master)](https://travis-ci.org/FuzzyMonkeyCo/monkey/builds) [![Goreport card](https://goreportcard.com/badge/github.com/FuzzyMonkeyCo/monkey)](https://goreportcard.com/report/github.com/FuzzyMonkeyCo/monkey)
 
 [FuzzyMonkey](https://fuzzymonkey.co) is an automated JSON API testing service based on QuickCheck.
