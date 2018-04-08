@@ -4,6 +4,8 @@
 
 [monkey](https://github.com/FuzzyMonkeyCo/monkey) is the official open source client that executes the tests FuzzyMonkey generates.
 
+[![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
+
 ### Getting started
 
 Quick install:
@@ -16,24 +18,6 @@ or the equivalent:
 
 ```shell
 sh <(curl -#fSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
-```
-
-Then run:
-
-```shell
-$ monkey fuzz
-No validation errors found.
-✓✓✓✓✓✓✓✓✓✓✗
-✗✗✓✓✓✓✓✓✓
-Ran 20 tests totalling 47 requests
-A bug was detected after 11 tests then shrunk 9 times!
-```
-
-Or using a Docker image:
-
-```shell
-$ alias monkey='docker run --rm -it --user $(id -u):$(id -g) -v /tmp:/tmp:rw -v "$PWD":/app:ro -e FUZZYMONKEY_API_KEY="$KEY" fuzzymonkey/monkey'
-$ monkey fuzz
 ```
 
 ### Example `.fuzzymonkey.yml` file:
