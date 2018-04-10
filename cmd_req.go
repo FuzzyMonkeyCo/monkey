@@ -106,7 +106,7 @@ func (cmd *reqCmd) updateURL(cfg *ymlCfg) (err error) {
 func (cmd *reqCmd) updateUserAgentHeader() {
 	for i := range cmd.HARRequest.Headers {
 		if cmd.HARRequest.Headers[i].Name == "User-Agent" {
-			if strings.HasPrefix("FuzzyMonkey.co/", cmd.HARRequest.Headers[i].Value) {
+			if strings.HasPrefix(cmd.HARRequest.Headers[i].Value, "FuzzyMonkey.co/") {
 				cmd.HARRequest.Headers[i].Value = binTitle
 				break
 			}
