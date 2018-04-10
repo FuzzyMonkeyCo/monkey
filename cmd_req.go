@@ -39,10 +39,11 @@ func (cmd *reqCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 		newHARTransport()
 	}
 
-	cmd.updateUserAgent()
+	cmd.updateUserAgentHeader()
 	if err = cmd.updateURL(cfg); err != nil {
 		return
 	}
+	cmd.updateHostHeader(cfg)
 	cmdRep, err := cmd.makeRequest()
 	if err != nil {
 		return
@@ -102,13 +103,22 @@ func (cmd *reqCmd) updateURL(cfg *ymlCfg) (err error) {
 	return
 }
 
-func (cmd *reqCmd) updateUserAgent() {
+func (cmd *reqCmd) updateUserAgentHeader() {
 	for i := range cmd.HARRequest.Headers {
 		if cmd.HARRequest.Headers[i].Name == "User-Agent" {
 			if strings.HasPrefix("FuzzyMonkey.co/", cmd.HARRequest.Headers[i].Value) {
 				cmd.HARRequest.Headers[i].Value = binTitle
 				break
 			}
+		}
+	}
+}
+
+func (cmd *reqCmd) updateHostHeader(cfg *ymlCfg) {
+	for i := range cmd.HARRequest.Headers {
+		if cmd.HARRequest.Headers[i].Name == "Host" {
+			cmd.HARRequest.Headers[i].Value = cfg.FinalHost + ":" + cfg.FinalPort
+			break
 		}
 	}
 }
