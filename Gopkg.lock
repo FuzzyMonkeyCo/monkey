@@ -22,17 +22,14 @@
 [[projects]]
   name = "github.com/go-yaml/yaml"
   packages = ["."]
-  revision = "7f97868eec74b32b0982dd158a51a446d1da7eb5"
-  version = "v2.1.1"
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [[projects]]
   branch = "master"
   name = "github.com/golang/lint"
-  packages = [
-    ".",
-    "golint"
-  ]
-  revision = "3ea3fa98a8104b2c8f8a7bffaebc7e54dddf99e1"
+  packages = ["golint"]
+  revision = "85993ffd0a6cd043291f3f63d45d656d97b165bd"
 
 [[projects]]
   branch = "master"
@@ -87,6 +84,12 @@
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/lint"
+  packages = ["."]
+  revision = "85993ffd0a6cd043291f3f63d45d656d97b165bd"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -97,7 +100,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "10db2d12cfa8602d0ffa73c5c2270ce47ba56b30"
+  revision = "ac136b6c2db7c4d43955e4bc7174db36dc0539c0"
 
 [[projects]]
   branch = "master"
@@ -119,7 +122,7 @@
     "unused",
     "version"
   ]
-  revision = "8ed405e85c65fb38745a8eafe01ee9590523f172"
+  revision = "57ee65dc7ff868f8fe21064b05f9e744a73bc9ab"
 
 [solve-meta]
   analyzer-name = "dep"
