@@ -51,14 +51,12 @@ func (k *cmdKind) UnmarshalJSON(data []byte) (err error) {
 	if kind, ok := map[string]cmdKind{
 		"req":   kindReq,
 		"reset": kindReset,
-		"start": kindStart,
-		"stop":  kindStop,
 		"done":  kindDone,
 	}[cmd]; ok {
 		*k = kind
 		return
 	}
-	err = fmt.Errorf("expected one of req reset start stop done, not %s", cmd)
+	err = fmt.Errorf("expected one of req reset done, not %s", cmd)
 	return
 }
 

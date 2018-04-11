@@ -197,6 +197,7 @@ func doFuzz(apiKey string) int {
 
 	for {
 		if cmd.Kind() == kindDone {
+			maybePostStop(cfg)
 			ensureDeleted(envID())
 			return fuzzOutcome(cmd.(*doneCmd))
 		}

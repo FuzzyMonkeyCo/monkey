@@ -21,6 +21,7 @@ const (
 var (
 	// To not pre-start more than once
 	wasPreStarted = false
+	isRunning     = false
 	// To exit with 7
 	hadExecError = false
 	// To not post-stop after stop
@@ -51,10 +52,31 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 		clearHAR()
 	}
 
-	cmdRep := executeScript(cfg, cmd.Kind())
+	cmdRep := cmd.pickScriptThenExec(cfg)
 	if rep, err = json.Marshal(cmdRep); err != nil {
 		log.Println("[ERR]", err)
 	}
+	return
+}
+
+func (cmd *simpleCmd) pickScriptThenExec(cfg *ymlCfg) (cmdRep *simpleCmdRep) {
+	if !isRunning {
+		if len(cfg.script(kindStart)) != 0 {
+			return executeScript(cfg, kindStart)
+		}
+		return executeScript(cfg, kindReset)
+	}
+
+	if len(cfg.script(kindReset)) != 0 {
+		return executeScript(cfg, kindReset)
+	}
+
+	cmdStopRep := executeScript(cfg, kindStop)
+	if cmdStopRep.Failed {
+		return cmdStopRep
+	}
+	cmdRep = executeScript(cfg, kindStart)
+	cmdRep.Us += cmdStopRep.Us
 	return
 }
 
@@ -119,6 +141,7 @@ func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 		}
 	}
 
+	isRunning = kind != kindStop
 	maybeFinalizeConf(cfg, kind)
 	return
 }
@@ -265,6 +288,9 @@ func unstache(field string) string {
 }
 
 func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
+	if kind == kindStop {
+		return
+	}
 	var wg sync.WaitGroup
 
 	if cfg.FinalHost == "" || kind != kindReset {
