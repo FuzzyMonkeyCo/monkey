@@ -17,7 +17,7 @@ type lane struct {
 	R uint `json:"r"`
 }
 
-type aCmd interface {
+type someCmd interface {
 	Kind() cmdKind
 	Exec(cfg *ymlCfg) (rep []byte, err error)
 }
@@ -77,7 +77,7 @@ func (k cmdKind) MarshalJSON() (data []byte, err error) {
 	return
 }
 
-func unmarshalCmd(cmdJSON []byte) (cmd aCmd, err error) {
+func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
 	var ok bool
 
 	if ok, err = isValidForSchemaREQv1(cmdJSON); err != nil {

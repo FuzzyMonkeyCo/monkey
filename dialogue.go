@@ -31,7 +31,7 @@ type ymlCfg struct {
 	Stop      []string
 }
 
-func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
+func initDialogue(apiKey string) (cfg *ymlCfg, cmd someCmd, err error) {
 	yml, err := readYML()
 	if err != nil {
 		return
@@ -61,7 +61,7 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd aCmd, err error) {
 	return
 }
 
-func next(cfg *ymlCfg, cmd aCmd) (someCmd aCmd, err error) {
+func next(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
 	// Sometimes sets cfg.Final* fields
 	rep, err := cmd.Exec(cfg)
 	if err != nil {
