@@ -58,6 +58,7 @@ func usage() (docopt.Opts, error) {
 Usage:
   ` + binName + ` [-vvv] fuzz
   ` + binName + ` [-vvv] lint
+  ` + binName + ` [-vvv] exec (start | reset | stop)
   ` + binName + ` [-vvv] -h | --help
   ` + binName + ` [-vvv] -U | --update
   ` + binName + ` [-vvv] -V | --version
@@ -113,6 +114,16 @@ func actualMain() int {
 		return doUpdate()
 	}
 
+	if args["exec"].(bool) {
+		switch {
+		case args["start"].(bool):
+			return doExec(kindStart)
+		case args["reset"].(bool):
+			return doExec(kindReset)
+		}
+		return doExec(kindStop)
+	}
+
 	apiKey := os.Getenv(envAPIKey)
 	if args["lint"].(bool) {
 		return doLint(apiKey)
@@ -158,6 +169,30 @@ func doUpdate() int {
 	return 0
 }
 
+func doExec(kind cmdKind) int {
+	yml, err := readYML()
+	if err != nil {
+		return retryOrReport()
+	}
+	cfg, err := newCfg(yml)
+	if err != nil {
+		return retryOrReport()
+	}
+
+	if _, err := os.Stat(shell()); os.IsNotExist(err) {
+		log.Printf("%s is required\n", shell())
+		return 5
+	}
+	if err := snapEnv(envID()); err != nil {
+		return retryOrReport()
+	}
+
+	if cmdRep := executeScript(cfg, kind); cmdRep.Failed {
+		return 7
+	}
+	return 0
+}
+
 func doLint(apiKey string) int {
 	if yml, err := readYML(); err == nil {
 		if _, err := lintDocs(apiKey, yml); err != nil {
@@ -174,13 +209,13 @@ func doFuzz(apiKey string) int {
 		return 5
 	}
 
+	if err := snapEnv(envID()); err != nil {
+		return retryOrReport()
+	}
+
 	if apiKey == "" {
 		log.Printf("$%s is unset\n", envAPIKey)
 		return 4
-	}
-
-	if err := snapEnv(envID()); err != nil {
-		return retryOrReport()
 	}
 
 	cfg, cmd, err := initDialogue(apiKey)
