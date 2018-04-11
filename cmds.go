@@ -94,7 +94,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
 		return
 	}
 	if ok {
-		var cmd simpleCmd
+		var cmd rstCmd
 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
 			log.Println("[ERR]", err)
 			return nil, err

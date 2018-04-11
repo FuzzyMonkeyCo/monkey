@@ -28,25 +28,25 @@ var (
 	wasStopped = false
 )
 
-type simpleCmd struct {
+type rstCmd struct {
 	V             uint    `json:"v"`
 	Cmd           cmdKind `json:"cmd"`
 	Passed        *bool   `json:"passed"`
 	ShrinkingFrom *lane   `json:"shrinking_from"`
 }
 
-type simpleCmdRep struct {
+type rstCmdRep struct {
 	Cmd    cmdKind `json:"cmd"`
 	V      uint    `json:"v"`
 	Us     uint64  `json:"us"`
 	Failed bool    `json:"failed"`
 }
 
-func (cmd *simpleCmd) Kind() cmdKind {
+func (cmd *rstCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+func (cmd *rstCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	if isHARReady() {
 		progress(cmd)
 		clearHAR()
@@ -59,7 +59,7 @@ func (cmd *simpleCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	return
 }
 
-func (cmd *simpleCmd) pickScriptThenExec(cfg *ymlCfg) (cmdRep *simpleCmdRep) {
+func (cmd *rstCmd) pickScriptThenExec(cfg *ymlCfg) (cmdRep *rstCmdRep) {
 	if !isRunning {
 		if len(cfg.script(kindStart)) != 0 {
 			return executeScript(cfg, kindStart)
@@ -98,7 +98,7 @@ func maybePostStop(cfg *ymlCfg) {
 	}
 }
 
-func progress(cmd *simpleCmd) {
+func progress(cmd *rstCmd) {
 	var str string
 	if *cmd.Passed {
 		str = "✓"
@@ -117,8 +117,8 @@ func progress(cmd *simpleCmd) {
 	fmt.Print(str)
 }
 
-func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
-	cmdRep = &simpleCmdRep{V: v, Cmd: kind, Failed: false}
+func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *rstCmdRep) {
+	cmdRep = &rstCmdRep{V: v, Cmd: kind, Failed: false}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
 		return
@@ -146,7 +146,7 @@ func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *simpleCmdRep) {
 	return
 }
 
-func executeCommand(cmdRep *simpleCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
+func executeCommand(cmdRep *rstCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
