@@ -62,6 +62,7 @@ deps:
 	rm -r release
 
 lint:
+	gofmt -s -w *.go misc/*.go
 	golint -set_exit_status
 	./misc/goolint.sh
 
