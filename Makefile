@@ -20,7 +20,8 @@ GODEP = v0.4.1
 
 all: lint vendor
 	go generate
-	go build -o $(EXE) || rm $(EXE)
+	$(if $(wildcard $(EXE)),rm $(EXE))
+	go build -o $(EXE)
 
 x: vendor
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
