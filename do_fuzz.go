@@ -2,14 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 	"time"
-
-	"github.com/go-yaml/yaml"
 )
 
 const (
@@ -20,29 +18,9 @@ const (
 	xAuthTokenHeader = "X-Auth-Token"
 )
 
-type ymlCfg struct {
-	AuthToken string
-	Host      string
-	Port      string
-	FinalHost string
-	FinalPort string
-	Start     []string
-	Reset     []string
-	Stop      []string
-}
-
-func initDialogue(apiKey string) (cfg *ymlCfg, cmd someCmd, err error) {
-	yml, err := readYML()
+func newFuzz(cfg *ymlCfg, apiKey string, spec []byte) (cmd someCmd, err error) {
+	blobs, err := makeBlobs(cfg, spec)
 	if err != nil {
-		return
-	}
-
-	validationJSON, err := lintDocs(apiKey, yml)
-	if err != nil {
-		return
-	}
-
-	if cfg, err = newCfg(yml); err != nil {
 		return
 	}
 
@@ -50,7 +28,7 @@ func initDialogue(apiKey string) (cfg *ymlCfg, cmd someCmd, err error) {
 		return
 	}
 
-	cmdJSON, authToken, err := initPUT(apiKey, validationJSON)
+	cmdJSON, authToken, err := initPUT(apiKey, blobs)
 	if err != nil {
 		return
 	}
@@ -75,54 +53,6 @@ func next(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
 
 	someCmd, err = unmarshalCmd(nextCmdJSON)
 	return
-}
-
-func readYML() (yml []byte, err error) {
-	fd, err := os.Open(localYML)
-	if err != nil {
-		log.Println("[ERR]", err)
-		fmt.Printf("You must provide a readable %s file in the current directory.\n", localYML)
-		return
-	}
-	defer fd.Close()
-
-	if yml, err = ioutil.ReadAll(fd); err != nil {
-		log.Println("[ERR]", err)
-	}
-	return
-}
-
-func newCfg(yml []byte) (cfg *ymlCfg, err error) {
-	var ymlConf struct {
-		Start []string `yaml:"start"`
-		Reset []string `yaml:"reset"`
-		Stop  []string `yaml:"stop"`
-		Doc   struct {
-			Host string `yaml:"host"`
-			Port string `yaml:"port"`
-		} `yaml:"documentation"`
-	}
-	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	cfg = &ymlCfg{
-		Host:  ymlConf.Doc.Host,
-		Port:  ymlConf.Doc.Port,
-		Start: ymlConf.Start,
-		Reset: ymlConf.Reset,
-		Stop:  ymlConf.Stop,
-	}
-	return
-}
-
-func (cfg *ymlCfg) script(kind cmdKind) []string {
-	return map[cmdKind][]string{
-		kindStart: cfg.Start,
-		kindReset: cfg.Reset,
-		kindStop:  cfg.Stop,
-	}[kind]
 }
 
 func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {
@@ -200,5 +130,23 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 		err = newStatusError(200, resp.Status)
 		log.Println("[ERR]", err)
 	}
+	return
+}
+
+func makeBlobs(cfg *ymlCfg, spec []byte) (payload []byte, err error) {
+	blobs := map[string]string{localYML: cfg.Kind}
+	blobs[cfg.File] = string(spec)
+
+	docs := struct {
+		V     uint              `json:"v"`
+		Blobs map[string]string `json:"blobs"`
+	}{
+		V:     v,
+		Blobs: blobs,
+	}
+	if payload, err = json.Marshal(docs); err != nil {
+		log.Println("[ERR]", err)
+	}
+
 	return
 }

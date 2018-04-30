@@ -114,23 +114,32 @@ func actualMain() int {
 		return doUpdate()
 	}
 
+	cfg, err := newCfg()
+	if err != nil || cfg == nil {
+		return retryOrReport()
+	}
+
 	if args["exec"].(bool) {
 		switch {
 		case args["start"].(bool):
-			return doExec(kindStart)
+			return doExec(cfg, kindStart)
 		case args["reset"].(bool):
-			return doExec(kindReset)
+			return doExec(cfg, kindReset)
 		}
-		return doExec(kindStop)
+		return doExec(cfg, kindStop)
 	}
 
 	apiKey := os.Getenv(envAPIKey)
+	// Always lint before fuzzing
+	validSpec, err := lintDocs(cfg, apiKey)
+	if err != nil {
+		return 2
+	}
 	if args["lint"].(bool) {
-		return doLint(apiKey)
+		return 0
 	}
 
-	// if args["fuzz"].(bool)
-	return doFuzz(apiKey)
+	return doFuzz(cfg, apiKey, validSpec)
 }
 
 func ensureDeleted(path string) {
@@ -169,16 +178,7 @@ func doUpdate() int {
 	return 0
 }
 
-func doExec(kind cmdKind) int {
-	yml, err := readYML()
-	if err != nil {
-		return retryOrReport()
-	}
-	cfg, err := newCfg(yml)
-	if err != nil {
-		return retryOrReport()
-	}
-
+func doExec(cfg *ymlCfg, kind cmdKind) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -193,17 +193,7 @@ func doExec(kind cmdKind) int {
 	return 0
 }
 
-func doLint(apiKey string) int {
-	if yml, err := readYML(); err == nil {
-		if _, err := lintDocs(apiKey, yml); err != nil {
-			return 2
-		}
-		return 0
-	}
-	return retryOrReport()
-}
-
-func doFuzz(apiKey string) int {
+func doFuzz(cfg *ymlCfg, apiKey string, spec []byte) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -218,15 +208,8 @@ func doFuzz(apiKey string) int {
 		return 4
 	}
 
-	cfg, cmd, err := initDialogue(apiKey)
+	cmd, err := newFuzz(cfg, apiKey, spec)
 	if err != nil {
-		if _, ok := err.(*docsInvalidError); ok {
-			ensureDeleted(envID())
-			return 2
-		}
-		if cfg == nil {
-			return retryOrReport()
-		}
 		return retryOrReportThenCleanup(cfg, err)
 	}
 
