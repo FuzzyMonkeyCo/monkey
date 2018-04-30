@@ -19,7 +19,7 @@ fi
 
 errors=0
 
-! ag 'return\s+}\s+return\s+$'
+! ag 'return\s+}\s+return\s+}'
 : first return can be dropped
 
 ! ag '^\s+fmt\.[^\n]+\s+log\.Print'
