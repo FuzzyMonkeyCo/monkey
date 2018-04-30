@@ -32,6 +32,28 @@
   revision = "85993ffd0a6cd043291f3f63d45d656d97b165bd"
 
 [[projects]]
+  name = "github.com/golang/protobuf"
+  packages = [
+    "proto",
+    "ptypes",
+    "ptypes/any",
+    "ptypes/duration",
+    "ptypes/timestamp"
+  ]
+  revision = "925541529c1fa6821df4e44ce2723319eb2be768"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/googleapis/gnostic"
+  packages = [
+    "OpenAPIv3",
+    "compiler",
+    "extensions"
+  ]
+  revision = "ee43cbb60db7bd22502942cccbc39059117352ab"
+  version = "v0.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/hashicorp/logutils"
   packages = ["."]
@@ -103,6 +125,12 @@
   revision = "ac136b6c2db7c4d43955e4bc7174db36dc0539c0"
 
 [[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
+
+[[projects]]
   branch = "master"
   name = "honnef.co/go/tools"
   packages = [
@@ -127,6 +155,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "06334e64e8e1431b58848545809337d87a56e8ee9c3d42eff7c017d28ceb5bd3"
+  inputs-digest = "e963f0d57ddfc9231be4ff25c3a8e9117f3d70bf551e9a06d60a98b919697db5"
   solver-name = "gps-cdcl"
   solver-version = 1
