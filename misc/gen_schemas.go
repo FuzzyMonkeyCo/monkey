@@ -100,7 +100,6 @@ func writeReqSchema(fd *bytes.Buffer) (err error) {
 		defs[key] = def
 	}
 
-	writer := json.NewEncoder(fd)
-	err = writer.Encode(reqJSON)
+	err = json.NewEncoder(fd).Encode(reqJSON)
 	return
 }

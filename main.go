@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/docopt/docopt-go"
+	"github.com/fatih/color"
 	"github.com/hashicorp/logutils"
 )
 
@@ -24,11 +25,16 @@ const (
 )
 
 var (
-	apiRoot     string
-	initURL     string
-	nextURL     string
-	lintURL     string
+	apiRoot string
+	initURL string
+	nextURL string
+	lintURL string
+
 	clientUtils = &http.Client{}
+
+	colorERR *color.Color
+	colorWRN *color.Color
+	colorNFO *color.Color
 )
 
 func init() {
@@ -44,6 +50,10 @@ func init() {
 	}
 	initURL = apiRoot + "/init"
 	nextURL = apiRoot + "/next"
+
+	colorERR = color.New(color.FgRed)
+	colorWRN = color.New(color.FgYellow)
+	colorNFO = color.New(color.FgWhite, color.Bold)
 
 	loadSchemas()
 }
@@ -135,6 +145,8 @@ func actualMain() int {
 	if err != nil {
 		return 2
 	}
+	log.Println("[NFO] No validation errors found.")
+	colorNFO.Println("No validation errors found.")
 	if args["lint"].(bool) {
 		return 0
 	}

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"strings"
 
 	"github.com/go-yaml/yaml"
-
 	"github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
-	"strings"
 )
 
 func lintDocs(cfg *ymlCfg, apiKey string) (bytes []byte, err error) {
@@ -46,40 +46,52 @@ func lintDocs(cfg *ymlCfg, apiKey string) (bytes []byte, err error) {
 	doc, err := openapi_v3.NewDocument(info, compiler.NewContext("$root", nil))
 	if err != nil {
 		log.Println("[ERR]", err)
-		fmt.Println("Validation errors:")
+		colorWRN.Println("Validation errors:")
 		for i, line := range strings.Split(err.Error(), "\n") {
 			e := strings.TrimPrefix(line, "ERROR $root.")
-			fmt.Printf("%d: %s\n", 1+i, e)
+			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
 		}
-		fmt.Println("Documentation validation failed.")
+		colorWRN.Println("Documentation validation failed.")
 		return
 	}
 
-	rawInfo, ok := doc.ToRawInfo().(yaml.MapSlice)
-	if !ok || rawInfo == nil {
-		err = fmt.Errorf("!yaml")
-		log.Println("[ERR]", err)
+	if err = dumpGnostic("_", doc); err != nil {
 		return
 	}
-	if bytes, err = yaml.Marshal(rawInfo); err != nil {
+	if _, err = doc.ResolveReferences(docPath); err != nil {
 		log.Println("[ERR]", err)
+		colorWRN.Println("Validation errors:")
+		for i, line := range strings.Split(err.Error(), "\n") {
+			e := strings.TrimPrefix(line, "ERROR ")
+			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
+		}
+		colorWRN.Println("Documentation validation failed.")
 		return
 	}
-	fmt.Println(bytes)
+	err = dumpGnostic("__", doc)
 
-	_, err = doc.ResolveReferences(docPath)
+	return
+}
 
-	rawInfo, ok = doc.ToRawInfo().(yaml.MapSlice)
-	if !ok || rawInfo == nil {
-		err = fmt.Errorf("!yaml")
+func dumpGnostic(path string, doc *openapi_v3.Document) (err error) {
+	raw := doc.ToRawInfo()
+	if raw == nil {
+		err = fmt.Errorf("!yaml! %+v", raw)
 		log.Println("[ERR]", err)
 		return
 	}
-	if bytes, err = yaml.Marshal(rawInfo); err != nil {
+
+	fd, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0640)
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	fmt.Println(bytes)
+	defer fd.Close()
 
+	if err = yaml.NewEncoder(fd).Encode(raw); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	colorNFO.Println(path)
 	return
 }
