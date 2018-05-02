@@ -1,5 +1,4 @@
 {
-    "$id": "cmd_req_v1",
     "$schema": "http://json-schema.org/draft-04/schema#",
     "additionalProperties": false,
     "definitions": {
