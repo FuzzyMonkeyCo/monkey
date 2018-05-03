@@ -13,6 +13,14 @@ required = [
 
 [[constraint]]
   branch = "master"
+  name = "github.com/googleapis/gnostic"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/fatih/color"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/cardigann/harhar"
 
 [[constraint]]

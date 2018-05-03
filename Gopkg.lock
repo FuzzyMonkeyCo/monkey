@@ -50,6 +50,7 @@
   version = "v1.1.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/googleapis/gnostic"
   packages = [
     "OpenAPIv3",
@@ -57,8 +58,7 @@
     "extensions",
     "jsonwriter"
   ]
-  revision = "ee43cbb60db7bd22502942cccbc39059117352ab"
-  version = "v0.1.0"
+  revision = "664776a3b48a89d0b750396afd90a7012657a293"
 
 [[projects]]
   branch = "master"
@@ -147,7 +147,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "a25dedfa5301ffeb4be3968bf2d852610eb0a680"
+  revision = "f4ce24f1d8feacab63a0476fc8bee0de7f9dc291"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -180,6 +180,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4891c41d5d29185ba096f6a8b2c555137f58e24d67250481e602ea7398f06fe6"
+  inputs-digest = "d5ea1b76c883e99f7a5c1563b3db086fb45c1a9232a49c31d80915c8471047c3"
   solver-name = "gps-cdcl"
   solver-version = 1
