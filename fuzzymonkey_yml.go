@@ -51,6 +51,7 @@ func newCfg() (cfg *ymlCfg, err error) {
 
 	cfg = &ymlCfg{
 		File:  ymlConf.Doc.File,
+		Kind:  ymlConf.Doc.Kind,
 		Host:  ymlConf.Doc.Host,
 		Port:  ymlConf.Doc.Port,
 		Start: ymlConf.Start,

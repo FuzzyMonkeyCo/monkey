@@ -39,7 +39,7 @@ func lintDocs(cfg *ymlCfg, apiKey string) (bytes []byte, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Println("[NFO] verifying format is supported")
+	log.Println("[NFO] verifying format is supported", cfg.Kind)
 	openapi, ok := compiler.MapValueForKey(infoMap, "openapi").(string)
 	if !ok || !strings.HasPrefix(openapi, "3.0") {
 		err = fmt.Errorf("format:unsupported")
