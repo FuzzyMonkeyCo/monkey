@@ -133,7 +133,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "78d5f264b493f125018180c204871ecf58a2dce1"
+  revision = "7db1c3b1a98089d0071c84f646ff5c96aad43682"
 
 [[projects]]
   branch = "master"
@@ -147,7 +147,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "ae8027637c91c400af8a3e006c35c7011b3ca1fe"
+  revision = "48418e5732e1b1e2a10207c8007a5f959e422f20"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
