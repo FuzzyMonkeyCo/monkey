@@ -8,16 +8,22 @@
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/docopt/docopt-go"
   packages = ["."]
   revision = "ee0de3bc6815ee19d4a46c7eb90f829db0e014b1"
 
 [[projects]]
+  branch = "master"
   name = "github.com/fatih/color"
   packages = ["."]
-  revision = "507f6050b8568533fb3f5504de8e5205fa62a114"
-  version = "v1.6.0"
+  revision = "2d684516a8861da43017284349b7e303e809ac21"
 
 [[projects]]
   branch = "master"
@@ -76,6 +82,23 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/kyoh86/richgo"
+  packages = [
+    ".",
+    "config",
+    "editor",
+    "editor/test"
+  ]
+  revision = "906501ce46a1aeba810c142a15fa6ac2d6f67424"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/kyoh86/xdg"
+  packages = ["."]
+  revision = "fcdc7e7a466bd4a15ee12d462a6582ff35f90e81"
+
+[[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
@@ -95,9 +118,36 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/morikuni/aec"
+  packages = ["."]
+  revision = "39771216ff4c63d11f5e604076f9c45e8be1067b"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
   name = "github.com/sebcat/har"
   packages = ["."]
   revision = "e5490f454e487f004446592803b2b37f0db1054a"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require"
+  ]
+  revision = "c679ae2cc0cb27ec3293fea7e254e47386f05d69"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/wacul/ptr"
+  packages = ["."]
+  revision = "91632201dfc876021121963a76f103bbe1756b09"
 
 [[projects]]
   branch = "master"
@@ -133,7 +183,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "7db1c3b1a98089d0071c84f646ff5c96aad43682"
+  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
 
 [[projects]]
   branch = "master"
@@ -180,6 +230,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d5ea1b76c883e99f7a5c1563b3db086fb45c1a9232a49c31d80915c8471047c3"
+  inputs-digest = "1864c5ebaf221acaf5c8b2c9d1edacf00a97581f7ba8841f0bcb52aa339d68bb"
   solver-name = "gps-cdcl"
   solver-version = 1

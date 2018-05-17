@@ -10,7 +10,10 @@ import (
 )
 
 const (
-	localYML = ".fuzzymonkey.yml"
+	localYML       = ".fuzzymonkey.yml"
+	lastYMLVersion = 1
+	defaultYMLHost = "localhost"
+	defaultYMLPort = "3000"
 )
 
 type ymlCfg struct {
@@ -26,12 +29,42 @@ type ymlCfg struct {
 	Stop      []string
 }
 
-func newCfg() (cfg *ymlCfg, err error) {
-	yml, err := readYML()
-	if err != nil {
+func newCfg(yml []byte) (cfg *ymlCfg, err error) {
+	var vsn struct {
+		V interface{} `yaml:"version"`
+	}
+	if vsnErr := yaml.Unmarshal(yml, &vsn); vsnErr != nil {
+		err = fmt.Errorf("field 'version' missing! Try `version: %d`",
+			lastYMLVersion)
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
 		return
 	}
 
+	version, ok := vsn.V.(int)
+	if !ok || !knownVersion(version) {
+		err = fmt.Errorf("bad version: `%+v'", vsn.V)
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
+		return
+	}
+
+	type cfgParser func(yml []byte) (cfg *ymlCfg, err error)
+	cfgParsers := []cfgParser{
+		newCfgV001,
+	}
+
+	return cfgParsers[version-1](yml)
+}
+
+func knownVersion(v int) bool {
+	if 0 < v && v <= lastYMLVersion {
+		return true
+	}
+	return false
+}
+
+func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 	var ymlConf struct {
 		Start []string `yaml:"start"`
 		Reset []string `yaml:"reset"`
@@ -43,6 +76,7 @@ func newCfg() (cfg *ymlCfg, err error) {
 			Port string `yaml:"port"`
 		} `yaml:"documentation"`
 	}
+
 	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
 		log.Println("[ERR]", err)
 		fmt.Printf("Failed to parse %s: %+v\n", localYML, err)
@@ -58,6 +92,19 @@ func newCfg() (cfg *ymlCfg, err error) {
 		Reset: ymlConf.Reset,
 		Stop:  ymlConf.Stop,
 	}
+
+	if cfg.Host == "" {
+		def := defaultYMLHost
+		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
+		cfg.Host = def
+	}
+
+	if cfg.Port == "" {
+		def := defaultYMLPort
+		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
+		cfg.Port = def
+	}
+
 	return
 }
 

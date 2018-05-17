@@ -25,10 +25,6 @@ const (
 )
 
 var (
-	apiRoot string
-	initURL string
-	nextURL string
-
 	clientUtils = &http.Client{}
 
 	colorERR *color.Color
@@ -38,14 +34,6 @@ var (
 
 func init() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
-
-	if binVersion == "0.0.0" {
-		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
-	} else {
-		apiRoot = "http://fuzz.fuzzymonkey.co/1" //FIXME: use HTTPS
-	}
-	initURL = apiRoot + "/init"
-	nextURL = apiRoot + "/next"
 
 	colorERR = color.New(color.FgRed)
 	colorWRN = color.New(color.FgYellow)
@@ -120,7 +108,11 @@ func actualMain() int {
 		return doUpdate()
 	}
 
-	cfg, err := newCfg()
+	yml, err := readYML()
+	if err != nil {
+		return retryOrReport()
+	}
+	cfg, err := newCfg(yml)
 	if err != nil || cfg == nil {
 		return retryOrReport()
 	}

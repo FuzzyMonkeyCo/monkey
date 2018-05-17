@@ -1,4 +1,4 @@
-.PHONY: all update debug lint x test
+.PHONY: all update debug lint x test ape
 
 EXE = monkey
 OSARCH ?= \
@@ -29,11 +29,6 @@ x: vendor
 	CGO_ENABLED=0 gox -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose -osarch "$$(echo $(OSARCH))" .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
-
-image: monkey-Linux-x86_64
-	cp $^ misc/
-	docker build --tag monkey misc/
-	rm misc/$^
 
 update: SHELL := /bin/bash
 update:
@@ -83,7 +78,10 @@ clean:
 	$(if $(wildcard *.cov),rm *.cov)
 	$(if $(wildcard cov.out),rm cov.out)
 
-test: $(EXE).test
+test: all
+	go test -v -race . | richgo testfilter
+
+ape: $(EXE).test
 	./ape.sh --version
 	gocovmerge *.cov >cov.out
 	go tool cover -func cov.out
@@ -95,7 +93,7 @@ $(EXE).test: lint vendor
 	go generate
 	go test -covermode=count -c
 
-test-cleanup:
+ape-cleanup:
 	gocovmerge *.cov >cov.out
 	go tool cover -func cov.out
 	go tool cover -html cov.out

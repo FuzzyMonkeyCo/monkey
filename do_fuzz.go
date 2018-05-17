@@ -18,6 +18,12 @@ const (
 	xAuthTokenHeader = "X-Auth-Token"
 )
 
+var (
+	apiFuzz  string
+	fuzzNew  string
+	fuzzNext string
+)
+
 func newFuzz(cfg *ymlCfg, apiKey string, spec []byte) (cmd someCmd, err error) {
 	blobs, err := makeBlobs(cfg, spec)
 	if err != nil {
@@ -27,6 +33,15 @@ func newFuzz(cfg *ymlCfg, apiKey string, spec []byte) (cmd someCmd, err error) {
 	if err = maybePreStart(cfg); err != nil {
 		return
 	}
+
+	if binVersion == "0.0.0" {
+		apiFuzz = "http://fuzz.dev.fuzzymonkey.co/1"
+	} else {
+		//FIXME: use HTTPS
+		apiFuzz = "http://fuzz.fuzzymonkey.co/1"
+	}
+	fuzzNew = apiFuzz + "/new"
+	fuzzNext = apiFuzz + "/next"
 
 	cmdJSON, authToken, err := initPUT(apiKey, blobs)
 	if err != nil {
@@ -56,7 +71,7 @@ func next(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
 }
 
 func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {
-	r, err := http.NewRequest(http.MethodPut, initURL, bytes.NewBuffer(JSON))
+	r, err := http.NewRequest(http.MethodPut, fuzzNew, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -67,7 +82,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	r.Header.Set("User-Agent", binTitle)
 	r.Header.Set(xAPIKeyHeader, apiKey)
 
-	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", initURL, JSON)
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", fuzzNew, JSON)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
@@ -99,7 +114,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 }
 
 func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
-	r, err := http.NewRequest(http.MethodPost, nextURL, bytes.NewBuffer(payload))
+	r, err := http.NewRequest(http.MethodPost, fuzzNext, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -110,7 +125,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	r.Header.Set("User-Agent", binTitle)
 	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
 
-	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", nextURL, payload)
+	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", fuzzNext, payload)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
