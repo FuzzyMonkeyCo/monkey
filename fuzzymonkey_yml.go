@@ -66,6 +66,7 @@ func knownVersion(v int) bool {
 
 func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 	var ymlConf struct {
+		V     uint     `yaml:"version"`
 		Start []string `yaml:"start"`
 		Reset []string `yaml:"reset"`
 		Stop  []string `yaml:"stop"`
@@ -77,7 +78,7 @@ func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 		} `yaml:"documentation"`
 	}
 
-	if err = yaml.Unmarshal(yml, &ymlConf); err != nil {
+	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
 		log.Println("[ERR]", err)
 		fmt.Printf("Failed to parse %s: %+v\n", localYML, err)
 		return
