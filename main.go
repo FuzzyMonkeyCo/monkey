@@ -50,11 +50,14 @@ func usage() (docopt.Opts, error) {
 	usage := binName + "\tv" + binVersion + "\t" + binDescribe + "\t" + runtime.Version() + `
 
 Usage:
-  ` + binName + ` [-vvv] fuzz
+  ` + binName + ` [-vvv] init [--with-magic]
+  ` + binName + ` [-vvv] login [--user user]
+  ` + binName + ` [-vvv] fuzz [N] [--tag tag]
+  ` + binName + ` [-vvv] shrink
   ` + binName + ` [-vvv] lint
   ` + binName + ` [-vvv] exec (start | reset | stop)
   ` + binName + ` [-vvv] -h | --help
-  ` + binName + ` [-vvv] -U | --update
+  ` + binName + ` [-vvv]      --update
   ` + binName + ` [-vvv] -V | --version
 
 Options:
@@ -62,10 +65,13 @@ Options:
   -h, --help     Show this screen
   -U, --update   Ensures ` + binName + ` is latest
   -V, --version  Show version
+  -u, --user     User to login as
+  --with-magic   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   ` + binName + ` --update
+  ` + binName + ` init --with-magic
   ` + binName + ` fuzz`
 
 	parser := &docopt.Parser{
