@@ -52,8 +52,8 @@ func usage() (docopt.Opts, error) {
 Usage:
   ` + binName + ` [-vvv] init [--with-magic]
   ` + binName + ` [-vvv] login [--user user]
-  ` + binName + ` [-vvv] fuzz [N] [--tag tag]
-  ` + binName + ` [-vvv] shrink
+  ` + binName + ` [-vvv] fuzz [N] [--seed 0xb1b1] [--tag tag]
+  ` + binName + ` [-vvv] shrink [--seed 0xb1b1] [--tag tag]
   ` + binName + ` [-vvv] lint
   ` + binName + ` [-vvv] exec (start | reset | stop)
   ` + binName + ` [-vvv] -h | --help

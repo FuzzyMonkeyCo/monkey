@@ -79,7 +79,7 @@ func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 	}
 
 	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
-		log.Println("[ERR]", err)
+		log.Println("[ERR]", ymlConf.V, err)
 		fmt.Printf("Failed to parse %s: %+v\n", localYML, err)
 		return
 	}

@@ -13,6 +13,7 @@ func TestReadBadVersions(t *testing.T) {
 		"string a la docker config": []byte(`version: '4'`),
 		"missing value":             []byte(`version: `),
 		"typo in value":             []byte(`version:\n1`),
+		"duplicate key":             []byte(`{version: 1, port: 80, port: 443}`),
 	} {
 		t.Run(name, func(t *testing.T) {
 			cfg, err := newCfg(yml)
