@@ -16,7 +16,40 @@ func TestReadBadVersions(t *testing.T) {
 		"duplicate key":             []byte(`{version: 1, port: 80, port: 443}`),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(yml)
+			cfg, err := newCfg(yml, false)
+			require.Error(t, err)
+			require.Equal(t, (*ymlCfg)(nil), cfg)
+		})
+	}
+}
+
+func TestV1ReadErrors(t *testing.T) {
+	for name, yml := range map[string][]byte{
+		"duplicate key": []byte(`
+version: 1
+documentation:
+  kind: OpenAPIv3
+  file: some_file.json
+documentation: blbl
+`),
+		"unexpected key": []byte(`
+version: 1
+documentation:
+  kind: OpenAPIv3
+  file: some_file.json
+blabla: blbl
+`),
+		"more than one issue at once": []byte(`
+version: 1
+documentation: yes
+documentation:
+  kind: OpenAPIv3
+  file: some_file.json
+blabla: blbl
+`),
+	} {
+		t.Run(name, func(t *testing.T) {
+			cfg, err := newCfg(yml, false)
 			require.Error(t, err)
 			require.Equal(t, (*ymlCfg)(nil), cfg)
 		})
@@ -39,7 +72,7 @@ stop:
 - make service-kill
 `)
 
-	cfg, err := newCfg(yml)
+	cfg, err := newCfg(yml, false)
 	require.NoError(t, err)
 	require.Equal(t, "app.vcap.me", cfg.Host)
 	require.Equal(t, "8000", cfg.Port)
@@ -65,7 +98,7 @@ documentation:
 `),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(yml)
+			cfg, err := newCfg(yml, false)
 			require.NoError(t, err)
 			require.Equal(t, "localhost", cfg.Host)
 			require.Equal(t, "3000", cfg.Port)

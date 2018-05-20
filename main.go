@@ -52,9 +52,8 @@ func usage() (docopt.Opts, error) {
 Usage:
   ` + binName + ` [-vvv] init [--with-magic]
   ` + binName + ` [-vvv] login [--user user]
-  ` + binName + ` [-vvv] fuzz [N] [--seed 0xb1b1] [--tag tag]
-  ` + binName + ` [-vvv] shrink [--seed 0xb1b1] [--tag tag]
-  ` + binName + ` [-vvv] lint
+  ` + binName + ` [-vvv] (fuzz [<N>] | shrink <ID>) [--seed <seed>] [--tag <tag>]
+  ` + binName + ` [-vvv] lint [--show-spec] [--hide-conf]
   ` + binName + ` [-vvv] exec (start | reset | stop)
   ` + binName + ` [-vvv] -h | --help
   ` + binName + ` [-vvv]      --update
@@ -67,6 +66,7 @@ Options:
   -V, --version  Show version
   -u, --user     User to login as
   --with-magic   Auto fill in schemas from random API calls
+  --hide-conf    Do not show YAML configuration while linting
 
 Try:
      export FUZZYMONKEY_API_KEY=42
@@ -118,7 +118,7 @@ func actualMain() int {
 	if err != nil {
 		return retryOrReport()
 	}
-	cfg, err := newCfg(yml)
+	cfg, err := newCfg(yml, args["lint"].(bool) && !args["--hide-conf"].(bool))
 	if err != nil || cfg == nil {
 		return retryOrReport()
 	}
@@ -135,7 +135,7 @@ func actualMain() int {
 
 	apiKey := os.Getenv(envAPIKey)
 	// Always lint before fuzzing
-	validSpec, err := lintDocs(cfg, apiKey)
+	validSpec, err := lintDocs(cfg, apiKey, args["--show-spec"].(bool))
 	if err != nil {
 		return 2
 	}

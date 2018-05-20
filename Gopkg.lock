@@ -64,7 +64,7 @@
     "extensions",
     "jsonwriter"
   ]
-  revision = "664776a3b48a89d0b750396afd90a7012657a293"
+  revision = "48a0ecefe2e4190c7a2d63b477875854a2f993b3"
 
 [[projects]]
   branch = "master"
@@ -197,7 +197,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "48418e5732e1b1e2a10207c8007a5f959e422f20"
+  revision = "28aef64757f4d432485ab970b094e1af8b301e84"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/go-yaml/yaml"
 )
@@ -29,7 +30,7 @@ type ymlCfg struct {
 	Stop      []string
 }
 
-func newCfg(yml []byte) (cfg *ymlCfg, err error) {
+func newCfg(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 	var vsn struct {
 		V interface{} `yaml:"version"`
 	}
@@ -49,12 +50,12 @@ func newCfg(yml []byte) (cfg *ymlCfg, err error) {
 		return
 	}
 
-	type cfgParser func(yml []byte) (cfg *ymlCfg, err error)
+	type cfgParser func(yml []byte, showCfg bool) (cfg *ymlCfg, err error)
 	cfgParsers := []cfgParser{
 		newCfgV001,
 	}
 
-	return cfgParsers[version-1](yml)
+	return cfgParsers[version-1](yml, showCfg)
 }
 
 func knownVersion(v int) bool {
@@ -64,7 +65,7 @@ func knownVersion(v int) bool {
 	return false
 }
 
-func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
+func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 	var ymlConf struct {
 		V     uint     `yaml:"version"`
 		Start []string `yaml:"start"`
@@ -79,9 +80,37 @@ func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 	}
 
 	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
-		log.Println("[ERR]", ymlConf.V, err)
-		fmt.Printf("Failed to parse %s: %+v\n", localYML, err)
+		log.Println("[ERR]", err)
+		colorERR.Println("Failed to parse", localYML)
+		r := strings.NewReplacer("not found", "unknown")
+		for _, e := range strings.Split(err.Error(), "\n") {
+			if end := strings.Index(e, " in type struct"); end != -1 {
+				colorERR.Println(r.Replace(e[:end]))
+			}
+		}
 		return
+	}
+
+	if ymlConf.Doc.Host == "" {
+		def := defaultYMLHost
+		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
+		ymlConf.Doc.Host = def
+	}
+
+	if ymlConf.Doc.Port == "" {
+		def := defaultYMLPort
+		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
+		ymlConf.Doc.Port = def
+	}
+
+	if showCfg {
+		enc := yaml.NewEncoder(os.Stderr)
+		defer enc.Close()
+		if err = enc.Encode(ymlConf); err != nil {
+			log.Println("[ERR]", err)
+			colorERR.Printf("Failed to pretty-print %s: %+v\n", localYML, err)
+			return
+		}
 	}
 
 	cfg = &ymlCfg{
@@ -92,18 +121,6 @@ func newCfgV001(yml []byte) (cfg *ymlCfg, err error) {
 		Start: ymlConf.Start,
 		Reset: ymlConf.Reset,
 		Stop:  ymlConf.Stop,
-	}
-
-	if cfg.Host == "" {
-		def := defaultYMLHost
-		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
-		cfg.Host = def
-	}
-
-	if cfg.Port == "" {
-		def := defaultYMLPort
-		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
-		cfg.Port = def
 	}
 
 	return
@@ -123,7 +140,7 @@ func (cfg *ymlCfg) findBlobs() (path string, err error) {
 	if len(path) == 0 {
 		err = fmt.Errorf("Path to documentation is empty")
 		log.Println("[ERR]", err)
-		fmt.Println(err)
+		colorERR.Println(err)
 		return
 	}
 
@@ -135,7 +152,7 @@ func readYML() (yml []byte, err error) {
 	fd, err := os.Open(localYML)
 	if err != nil {
 		log.Println("[ERR]", err)
-		fmt.Printf("You must provide a readable %s file in the current directory.\n", localYML)
+		colorERR.Printf("You must provide a readable %s file in the current directory.\n", localYML)
 		return
 	}
 	defer fd.Close()

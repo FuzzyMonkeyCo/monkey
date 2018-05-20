@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
-	// "github.com/go-yaml/yaml"
 	"github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
 	"github.com/googleapis/gnostic/jsonwriter"
 )
 
-func lintDocs(cfg *ymlCfg, apiKey string) (bytes []byte, err error) {
+func lintDocs(cfg *ymlCfg, apiKey string, showSpec bool) (bytes []byte, err error) {
 	docPath, err := cfg.findBlobs()
 	if err != nil {
 		return
@@ -87,7 +87,9 @@ func lintDocs(cfg *ymlCfg, apiKey string) (bytes []byte, err error) {
 	if bytes, err = jsonwriter.Marshal(rawInfo); err != nil {
 		log.Println("[ERR]", err)
 	}
-	fmt.Printf("%s\n", bytes)
+	if showSpec {
+		fmt.Fprintf(os.Stderr, "%s\n", bytes)
+	}
 
 	//FIXME: this MapSlice casting never works!
 	// log.Println("[NFO] serialyzing spec to YAML")
