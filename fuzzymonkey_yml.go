@@ -81,7 +81,7 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 
 	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println("Failed to parse", localYML)
+		colorERR.Println("Failed to parse", localYML, ymlConf.V)
 		r := strings.NewReplacer("not found", "unknown")
 		for _, e := range strings.Split(err.Error(), "\n") {
 			if end := strings.Index(e, " in type struct"); end != -1 {
