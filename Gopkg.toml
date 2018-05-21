@@ -15,6 +15,10 @@ required = [
 
 [[constraint]]
   branch = "master"
+  name = "github.com/mitchellh/mapstructure"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/kyoh86/richgo"
 
 [[constraint]]

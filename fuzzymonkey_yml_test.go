@@ -27,22 +27,22 @@ func TestV1ReadErrors(t *testing.T) {
 	for name, yml := range map[string][]byte{
 		"duplicate key": []byte(`
 version: 1
-documentation:
+spec:
   kind: OpenAPIv3
   file: some_file.json
-documentation: blbl
+spec: blbl
 `),
 		"unexpected key": []byte(`
 version: 1
-documentation:
+spec:
   kind: OpenAPIv3
   file: some_file.json
 blabla: blbl
 `),
 		"more than one issue at once": []byte(`
 version: 1
-documentation: yes
-documentation:
+spec: yes
+spec:
   kind: OpenAPIv3
   file: some_file.json
 blabla: blbl
@@ -59,7 +59,7 @@ blabla: blbl
 func TestV1ReadAllSet(t *testing.T) {
 	yml := []byte(`
 version: 1
-documentation:
+spec:
   host: app.vcap.me
   port: 8000
   file: ./spec.yml
@@ -88,12 +88,12 @@ func TestV1ReadDefaults(t *testing.T) {
 		"version only": []byte("version: 1"),
 		"version & host": []byte(`
 version: 1
-documentation:
+spec:
   host: localhost
 `),
 		"version & port": []byte(`
 version: 1
-documentation:
+spec:
   port: 3000
 `),
 	} {

@@ -11,6 +11,7 @@ import (
 	"github.com/docopt/docopt-go"
 	"github.com/fatih/color"
 	"github.com/hashicorp/logutils"
+	"github.com/mitchellh/mapstructure"
 )
 
 //go:generate echo Let's go bananas!
@@ -46,14 +47,25 @@ func main() {
 	os.Exit(actualMain())
 }
 
-func usage() (docopt.Opts, error) {
+type params struct {
+	Init, Login, Fuzz, Shrink, Lint bool
+	Exec, Start, Reset, Stop        bool
+	Update                          bool `mapstructure:"--update"`
+	HideConfig                      bool `mapstructure:"--hide-config"`
+	ShowSpec                        bool `mapstructure:"--show-spec"`
+	N                               uint `mapstructure:"--tests"`
+	Verbosity                       uint `mapstructure:"-v"`
+}
+
+func usage() (args *params, ret int) {
 	usage := binName + "\tv" + binVersion + "\t" + binDescribe + "\t" + runtime.Version() + `
 
 Usage:
   ` + binName + ` [-vvv] init [--with-magic]
-  ` + binName + ` [-vvv] login [--user user]
-  ` + binName + ` [-vvv] (fuzz [<N>] | shrink <ID>) [--seed <seed>] [--tag <tag>]
-  ` + binName + ` [-vvv] lint [--show-spec] [--hide-conf]
+  ` + binName + ` [-vvv] login --user=USER
+  ` + binName + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+  ` + binName + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
+  ` + binName + ` [-vvv] lint [--show-spec] [--hide-config]
   ` + binName + ` [-vvv] exec (start | reset | stop)
   ` + binName + ` [-vvv] -h | --help
   ` + binName + ` [-vvv]      --update
@@ -64,9 +76,13 @@ Options:
   -h, --help     Show this screen
   -U, --update   Ensures ` + binName + ` is latest
   -V, --version  Show version
-  -u, --user     User to login as
+  --hide-config  Do not show YAML configuration while linting
+  --seed=SEED    Use specific parameters for the RNG
+  --tag=TAG      Labels that can help classification
+  --test=ID      Which test to shrink
+  --tests=N      Number of tests to run [default: 100]
+  --user=USER    Authenticate on fuzzymonkey.co as USER
   --with-magic   Auto fill in schemas from random API calls
-  --hide-conf    Do not show YAML configuration while linting
 
 Try:
      export FUZZYMONKEY_API_KEY=42
@@ -74,22 +90,31 @@ Try:
   ` + binName + ` init --with-magic
   ` + binName + ` fuzz`
 
-	parser := &docopt.Parser{
-		HelpHandler:  docopt.PrintHelpOnly,
-		OptionsFirst: true,
+	// https://github.com/docopt/docopt.go/issues/59
+	opts, err := docopt.ParseDoc(usage)
+	if err != nil {
+		// Usage shown: bad args
+		colorERR.Println(err)
+		ret = 1
+		return
 	}
-	return parser.ParseArgs(usage, os.Args[1:], binTitle)
+	if opts["--version"].(bool) {
+		fmt.Println(binTitle)
+		return // ret = 0
+	}
+
+	args = &params{}
+	if err := mapstructure.WeakDecode(opts, args); err != nil {
+		colorERR.Println(err)
+		return nil, 1
+	}
+	return
 }
 
 func actualMain() int {
-	args, err := usage()
-	if err != nil {
-		// Usage shown: bad args
-		return 1
-	}
-	if len(args) == 0 {
-		// Help or version shown
-		return 0
+	args, ret := usage()
+	if args == nil {
+		return ret
 	}
 
 	if err := makePwdID(); err != nil {
@@ -104,13 +129,13 @@ func actualMain() int {
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DBG", "NFO", "ERR", "NOP"},
-		MinLevel: logLevel(args["-v"].(int)),
+		MinLevel: logLevel(args.Verbosity),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Println("[ERR] (not an error)", binTitle, logID(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, logID(), args)
 
-	if args["--update"].(bool) {
+	if args.Update {
 		return doUpdate()
 	}
 
@@ -118,16 +143,16 @@ func actualMain() int {
 	if err != nil {
 		return retryOrReport()
 	}
-	cfg, err := newCfg(yml, args["lint"].(bool) && !args["--hide-conf"].(bool))
+	cfg, err := newCfg(yml, args.Lint && !args.HideConfig)
 	if err != nil || cfg == nil {
 		return retryOrReport()
 	}
 
-	if args["exec"].(bool) {
+	if args.Exec {
 		switch {
-		case args["start"].(bool):
+		case args.Start:
 			return doExec(cfg, kindStart)
-		case args["reset"].(bool):
+		case args.Reset:
 			return doExec(cfg, kindReset)
 		}
 		return doExec(cfg, kindStop)
@@ -135,17 +160,17 @@ func actualMain() int {
 
 	apiKey := os.Getenv(envAPIKey)
 	// Always lint before fuzzing
-	validSpec, err := lintDocs(cfg, apiKey, args["--show-spec"].(bool))
+	validSpec, err := lintDocs(cfg, apiKey, args.ShowSpec)
 	if err != nil {
 		return 2
 	}
 	log.Println("[NFO] No validation errors found.")
 	colorNFO.Println("No validation errors found.")
-	if args["lint"].(bool) {
+	if args.Lint {
 		return 0
 	}
 
-	return doFuzz(cfg, apiKey, validSpec)
+	return doFuzz(cfg, apiKey, validSpec, args.N)
 }
 
 func ensureDeleted(path string) {
@@ -155,8 +180,8 @@ func ensureDeleted(path string) {
 	}
 }
 
-func logLevel(verbosity int) logutils.LogLevel {
-	lvl := map[int]string{
+func logLevel(verbosity uint) logutils.LogLevel {
+	lvl := map[uint]string{
 		0: "NOP",
 		1: "ERR",
 		2: "NFO",
@@ -199,7 +224,7 @@ func doExec(cfg *ymlCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *ymlCfg, apiKey string, spec []byte) int {
+func doFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -214,7 +239,7 @@ func doFuzz(cfg *ymlCfg, apiKey string, spec []byte) int {
 		return 4
 	}
 
-	cmd, err := newFuzz(cfg, apiKey, spec)
+	cmd, err := newFuzz(cfg, apiKey, spec, N)
 	if err != nil {
 		return retryOrReportThenCleanup(cfg, err)
 	}
@@ -241,8 +266,8 @@ func retryOrReportThenCleanup(cfg *ymlCfg, err error) int {
 }
 
 func retryOrReport() int {
-	issues := "https://github.com/" + githubSlug + "/issues"
-	email := "ook@fuzzymonkey.co"
+	const issues = "https://github.com/" + githubSlug + "/issues"
+	const email = "ook@fuzzymonkey.co"
 	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
 	fmt.Printf("\nYou may want to take a look at %s\n", logID())
 	fmt.Printf("or come by %s\n", issues)

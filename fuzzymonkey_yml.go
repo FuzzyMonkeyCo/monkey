@@ -71,12 +71,12 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		Start []string `yaml:"start"`
 		Reset []string `yaml:"reset"`
 		Stop  []string `yaml:"stop"`
-		Doc   struct {
+		Spec  struct {
 			File string `yaml:"file"`
 			Kind string `yaml:"kind"`
 			Host string `yaml:"host"`
 			Port string `yaml:"port"`
-		} `yaml:"documentation"`
+		} `yaml:"spec"`
 	}
 
 	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
@@ -91,16 +91,23 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		return
 	}
 
-	if ymlConf.Doc.Host == "" {
-		def := defaultYMLHost
-		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
-		ymlConf.Doc.Host = def
+	if ymlConf.Spec.Kind != "OpenAPIv3" {
+		err = fmt.Errorf("spec's kind must be set to OpenAPIv3")
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
+		return
 	}
 
-	if ymlConf.Doc.Port == "" {
+	if ymlConf.Spec.Host == "" {
+		def := defaultYMLHost
+		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
+		ymlConf.Spec.Host = def
+	}
+
+	if ymlConf.Spec.Port == "" {
 		def := defaultYMLPort
 		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
-		ymlConf.Doc.Port = def
+		ymlConf.Spec.Port = def
 	}
 
 	if showCfg {
@@ -114,10 +121,10 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 	}
 
 	cfg = &ymlCfg{
-		File:  ymlConf.Doc.File,
-		Kind:  ymlConf.Doc.Kind,
-		Host:  ymlConf.Doc.Host,
-		Port:  ymlConf.Doc.Port,
+		File:  ymlConf.Spec.File,
+		Kind:  ymlConf.Spec.Kind,
+		Host:  ymlConf.Spec.Host,
+		Port:  ymlConf.Spec.Port,
 		Start: ymlConf.Start,
 		Reset: ymlConf.Reset,
 		Stop:  ymlConf.Stop,
@@ -138,7 +145,7 @@ func (cfg *ymlCfg) findBlobs() (path string, err error) {
 	//FIXME: force relative paths & nested under workdir. Watch out for links
 	path = cfg.File
 	if len(path) == 0 {
-		err = fmt.Errorf("Path to documentation is empty")
+		err = fmt.Errorf("Path to spec is empty")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return

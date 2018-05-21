@@ -24,7 +24,7 @@ var (
 	fuzzNext string
 )
 
-func newFuzz(cfg *ymlCfg, apiKey string, spec []byte) (cmd someCmd, err error) {
+func newFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) (cmd someCmd, err error) {
 	blobs, err := makeBlobs(cfg, spec)
 	if err != nil {
 		return
@@ -87,6 +87,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
 	if err != nil {
+		// if here probably a HomeConnectionError
 		log.Println("[ERR]", err)
 		return
 	}
