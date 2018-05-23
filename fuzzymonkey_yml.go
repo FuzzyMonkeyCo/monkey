@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -93,7 +94,7 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 	}
 
 	if ymlConf.Spec.Kind != "OpenAPIv3" {
-		err = fmt.Errorf("spec's kind must be set to OpenAPIv3")
+		err = errors.New("spec's kind must be set to OpenAPIv3")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
@@ -147,7 +148,7 @@ func (cfg *ymlCfg) findBlobs() (path string, err error) {
 	//FIXME: force relative paths & nested under workdir. Watch out for links
 	path = cfg.File
 	if len(path) == 0 {
-		err = fmt.Errorf("Path to spec is empty")
+		err = errors.New("Path to spec is empty")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return

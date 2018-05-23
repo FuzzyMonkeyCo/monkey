@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -80,7 +81,7 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 
 	authToken := resp.Header.Get(headerXAuthToken)
 	if authToken == "" {
-		err = fmt.Errorf("Could not acquire an AuthToken")
+		err = errors.New("Could not acquire an AuthToken")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return

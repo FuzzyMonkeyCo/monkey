@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -87,7 +88,7 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 	cmdRep := executeScript(cfg, kindStart)
 	wasPreStarted = true
 	if cmdRep.Failed {
-		err = fmt.Errorf("failed during maybePreStart")
+		err = errors.New("failed during maybePreStart")
 	}
 	return
 }

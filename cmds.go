@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 )
@@ -114,7 +115,7 @@ func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
 		return &cmd, nil
 	}
 
-	err = fmt.Errorf("invalid JSON data received")
+	err = errors.New("invalid JSON data received")
 	log.Println("[ERR]", err)
 	return
 }

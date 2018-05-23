@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -35,14 +36,14 @@ func doLint(cfg *ymlCfg, showSpec bool) (bytes []byte, err error) {
 	log.Println("[NFO] unpacking info")
 	infoMap, ok := compiler.UnpackMap(info)
 	if !ok {
-		err = fmt.Errorf("format:unknown")
+		err = errors.New("format:unknown")
 		log.Println("[ERR]", err)
 		return
 	}
 	log.Println("[NFO] verifying format is supported", cfg.Kind)
 	openapi, ok := compiler.MapValueForKey(infoMap, "openapi").(string)
 	if !ok || !strings.HasPrefix(openapi, "3.0") {
-		err = fmt.Errorf("format:unsupported")
+		err = errors.New("format:unsupported")
 		log.Println("[ERR]", err)
 		colorERR.Printf("Format of '%s' is not supported", docPath)
 		return

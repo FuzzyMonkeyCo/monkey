@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -95,7 +96,7 @@ func replaceCurrentRelease(latest string) (err error) {
 		return
 	}
 	if latestSum != sum {
-		err = fmt.Errorf("checksums did not match")
+		err = errors.New("checksums did not match")
 		log.Println("[ERR]", err)
 		fmt.Println("Data was corrupted!")
 		return
