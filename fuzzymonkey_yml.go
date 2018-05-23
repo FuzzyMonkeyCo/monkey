@@ -18,6 +18,7 @@ const (
 )
 
 type ymlCfg struct {
+	Version   uint
 	AuthToken string
 	File      string
 	Kind      string
@@ -44,7 +45,7 @@ func newCfg(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 
 	version, ok := vsn.V.(int)
 	if !ok || !knownVersion(version) {
-		err = fmt.Errorf("bad version: `%+v'", vsn.V)
+		err = fmt.Errorf("bad version: `%#v'", vsn.V)
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
@@ -81,7 +82,7 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 
 	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println("Failed to parse", localYML, ymlConf.V)
+		colorERR.Println("Failed to parse", localYML)
 		r := strings.NewReplacer("not found", "unknown")
 		for _, e := range strings.Split(err.Error(), "\n") {
 			if end := strings.Index(e, " in type struct"); end != -1 {
@@ -115,19 +116,20 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		defer enc.Close()
 		if err = enc.Encode(ymlConf); err != nil {
 			log.Println("[ERR]", err)
-			colorERR.Printf("Failed to pretty-print %s: %+v\n", localYML, err)
+			colorERR.Printf("Failed to pretty-print %s: %#v\n", localYML, err)
 			return
 		}
 	}
 
 	cfg = &ymlCfg{
-		File:  ymlConf.Spec.File,
-		Kind:  ymlConf.Spec.Kind,
-		Host:  ymlConf.Spec.Host,
-		Port:  ymlConf.Spec.Port,
-		Start: ymlConf.Start,
-		Reset: ymlConf.Reset,
-		Stop:  ymlConf.Stop,
+		Version: ymlConf.V,
+		File:    ymlConf.Spec.File,
+		Kind:    ymlConf.Spec.Kind,
+		Host:    ymlConf.Spec.Host,
+		Port:    ymlConf.Spec.Port,
+		Start:   ymlConf.Start,
+		Reset:   ymlConf.Reset,
+		Stop:    ymlConf.Stop,
 	}
 
 	return

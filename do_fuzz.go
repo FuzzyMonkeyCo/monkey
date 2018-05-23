@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,11 +10,14 @@ import (
 )
 
 const (
-	v                = 1
-	mimeJSON         = "application/json"
-	mimeYAML         = "application/x-yaml"
-	xAPIKeyHeader    = "X-Api-Key"
-	xAuthTokenHeader = "X-Auth-Token"
+	v                 = 1
+	mimeJSON          = "application/json"
+	mimeYAML          = "application/x-yaml"
+	headerContentType = "Content-Type"
+	headerAccept      = "Accept"
+	headerUserAgent   = "User-Agent"
+	headerXAPIKey     = "X-Api-Key"
+	headerXAuthToken  = "X-Auth-Token"
 )
 
 var (
@@ -24,7 +26,7 @@ var (
 	fuzzNext string
 )
 
-func newFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) (cmd someCmd, err error) {
+func newFuzz(cfg *ymlCfg, spec []byte) (cmd someCmd, err error) {
 	blobs, err := makeBlobs(cfg, spec)
 	if err != nil {
 		return
@@ -43,12 +45,10 @@ func newFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) (cmd someCmd, err 
 	fuzzNew = apiFuzz + "/new"
 	fuzzNext = apiFuzz + "/next"
 
-	cmdJSON, authToken, err := initPUT(apiKey, blobs)
+	cmdJSON, err := initPUT(cfg, blobs)
 	if err != nil {
 		return
 	}
-	log.Printf("[NFO] got auth token: %s\n", authToken)
-	cfg.AuthToken = authToken
 
 	cmd, err = unmarshalCmd(cmdJSON)
 	return
@@ -70,7 +70,7 @@ func next(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
 	return
 }
 
-func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err error) {
+func initPUT(cfg *ymlCfg, JSON []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPut, fuzzNew, bytes.NewBuffer(JSON))
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -80,7 +80,7 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	r.Header.Set("Content-Type", mimeYAML)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("User-Agent", binTitle)
-	r.Header.Set(xAPIKeyHeader, apiKey)
+	r.Header.Set(headerXAuthToken, cfg.AuthToken)
 
 	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", fuzzNew, JSON)
 	start := time.Now()
@@ -99,18 +99,13 @@ func initPUT(apiKey string, JSON []byte) (rep []byte, authToken string, err erro
 	}
 	log.Printf("[DBG]\n  🡳  %s\n", rep)
 
-	if resp.StatusCode != 201 {
-		err = newStatusError(201, resp.Status)
+	if resp.StatusCode != http.StatusCreated {
+		err = newStatusError(http.StatusCreated, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
 
-	authToken = resp.Header.Get(xAuthTokenHeader)
-	if authToken == "" {
-		err = fmt.Errorf("Could not acquire an AuthToken")
-		log.Println("[ERR]", err)
-		fmt.Println(err)
-	}
+	cfg.AuthToken = resp.Header.Get(headerXAuthToken)
 	return
 }
 
@@ -124,7 +119,7 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	r.Header.Set("content-type", mimeJSON)
 	r.Header.Set("Accept", mimeJSON)
 	r.Header.Set("User-Agent", binTitle)
-	r.Header.Set(xAuthTokenHeader, cfg.AuthToken)
+	r.Header.Set(headerXAuthToken, cfg.AuthToken)
 
 	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", fuzzNext, payload)
 	start := time.Now()
@@ -142,10 +137,13 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	}
 	log.Printf("[DBG]\n  🡳  %s\n", rep)
 
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
+		return
 	}
+
+	cfg.AuthToken = resp.Header.Get(headerXAuthToken)
 	return
 }
 

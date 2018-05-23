@@ -1,7 +1,10 @@
 package main
 
-import "testing"
-import "github.com/stretchr/testify/require"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func TestReadBadVersions(t *testing.T) {
 	for name, yml := range map[string][]byte{

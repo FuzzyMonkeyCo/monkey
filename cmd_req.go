@@ -63,7 +63,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 		return
 	}
 
-	log.Printf("[NFO] 🡳\n  ▲  %+v\n", cmd.HARRequest)
+	log.Printf("[NFO] 🡳\n  ▲  %#v\n", cmd.HARRequest)
 	start := time.Now()
 	_, err = clientReq.Do(r)
 	us := uint64(time.Since(start) / time.Microsecond)
@@ -77,7 +77,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
-		rep.Reason = fmt.Sprintf("%+v", err.Error())
+		rep.Reason = fmt.Sprintf("%#v", err.Error())
 		log.Printf("[NFO]\n  ▼  %s\n", rep.Reason)
 		err = nil
 		return
@@ -86,7 +86,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
 	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
 	rep.HAREntry = lastHAR()
-	log.Printf("[NFO]\n  ▼  %+v\n", rep.HAREntry)
+	log.Printf("[NFO]\n  ▼  %#v\n", rep.HAREntry)
 	return
 }
 

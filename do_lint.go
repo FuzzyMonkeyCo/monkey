@@ -12,7 +12,7 @@ import (
 	"github.com/googleapis/gnostic/jsonwriter"
 )
 
-func lintDocs(cfg *ymlCfg, apiKey string, showSpec bool) (bytes []byte, err error) {
+func doLint(cfg *ymlCfg, showSpec bool) (bytes []byte, err error) {
 	docPath, err := cfg.findBlobs()
 	if err != nil {
 		return
@@ -78,7 +78,7 @@ func lintDocs(cfg *ymlCfg, apiKey string, showSpec bool) (bytes []byte, err erro
 	// rawInfo, ok := doc.ToRawInfo().(yaml.MapSlice)
 	// if !ok { rawInfo = nil }
 	if rawInfo == nil {
-		err = fmt.Errorf("!yaml! %+v", rawInfo)
+		err = fmt.Errorf("!yaml! %#v", rawInfo)
 		log.Println("[ERR]", err)
 		return
 	}

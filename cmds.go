@@ -63,15 +63,15 @@ func (k *cmdKind) UnmarshalJSON(data []byte) (err error) {
 func (k cmdKind) MarshalJSON() (data []byte, err error) {
 	var ok bool
 	if data, ok = map[cmdKind][]byte{
-		kindReq:   []byte("\"req\""),
-		kindReset: []byte("\"reset\""),
-		kindStart: []byte("\"start\""),
-		kindStop:  []byte("\"stop\""),
-		kindDone:  []byte("\"done\""),
+		kindReq:   []byte(`"req"`),
+		kindReset: []byte(`"reset"`),
+		kindStart: []byte(`"start"`),
+		kindStop:  []byte(`"stop"`),
+		kindDone:  []byte(`"done"`),
 	}[k]; ok {
 		return
 	}
-	err = fmt.Errorf("impossibru %v", k)
+	err = fmt.Errorf("impossibru %#v", k)
 	return
 }
 

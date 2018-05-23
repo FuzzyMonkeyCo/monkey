@@ -278,11 +278,13 @@ func unstache(field string) string {
 
 	var err error
 	if tmpl, err = tmpl.Parse(field); err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		panic(err)
 	}
 	var buffer bytes.Buffer
 	if err := tmpl.Execute(&buffer, ""); err != nil {
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		panic(err)
 	}
 	return buffer.String()
 }

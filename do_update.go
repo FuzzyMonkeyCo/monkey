@@ -36,8 +36,8 @@ func peekLatestRelease() (latest string, err error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
@@ -75,8 +75,8 @@ func replaceCurrentRelease(latest string) (err error) {
 		return
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
@@ -155,8 +155,8 @@ func fetchLatestSum(URL string) (sum string, err error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}

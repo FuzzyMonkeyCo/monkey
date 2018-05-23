@@ -158,9 +158,8 @@ func actualMain() int {
 		return doExec(cfg, kindStop)
 	}
 
-	apiKey := os.Getenv(envAPIKey)
 	// Always lint before fuzzing
-	validSpec, err := lintDocs(cfg, apiKey, args.ShowSpec)
+	validSpec, err := doLint(cfg, args.ShowSpec)
 	if err != nil {
 		return 2
 	}
@@ -170,13 +169,19 @@ func actualMain() int {
 		return 0
 	}
 
-	return doFuzz(cfg, apiKey, validSpec, args.N)
+	apiKey := os.Getenv(envAPIKey)
+	if err := doAuth(cfg, apiKey, args.N); err != nil {
+		return retryOrReport()
+	}
+
+	return doFuzz(cfg, validSpec)
 }
 
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		fmt.Println(err)
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
+		panic(err)
 	}
 }
 
@@ -224,7 +229,7 @@ func doExec(cfg *ymlCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) int {
+func doFuzz(cfg *ymlCfg, spec []byte) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -234,12 +239,7 @@ func doFuzz(cfg *ymlCfg, apiKey string, spec []byte, N uint) int {
 		return retryOrReport()
 	}
 
-	if apiKey == "" {
-		log.Printf("$%s is unset\n", envAPIKey)
-		return 4
-	}
-
-	cmd, err := newFuzz(cfg, apiKey, spec, N)
+	cmd, err := newFuzz(cfg, spec)
 	if err != nil {
 		return retryOrReportThenCleanup(cfg, err)
 	}
