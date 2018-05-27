@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/docopt/docopt-go"
 	"github.com/fatih/color"
@@ -26,7 +27,9 @@ const (
 )
 
 var (
-	clientUtils = &http.Client{}
+	clientUtils = &http.Client{
+		Timeout: time.Duration(10 * time.Second),
+	}
 
 	colorERR *color.Color
 	colorWRN *color.Color

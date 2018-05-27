@@ -177,7 +177,7 @@
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
-  revision = "2c8e4be869c17540b336bab0ea18b8d73e6a28b7"
+  revision = "9ff6d6c47f3f5de55acc6f464d6e3719b02818ae"
 
 [[projects]]
   branch = "master"
@@ -189,7 +189,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
 
 [[projects]]
   branch = "master"
@@ -203,7 +203,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "28aef64757f4d432485ab970b094e1af8b301e84"
+  revision = "a5b4c53f6e8bdcafa95a94671bf2d1203365858b"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
