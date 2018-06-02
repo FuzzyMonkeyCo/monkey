@@ -74,8 +74,10 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		err = newStatusError(http.StatusCreated, resp.Status)
+		log.Println("[ERR]", newStatusError(http.StatusCreated, resp.Status))
+		err = errors.New("Bad API key")
 		log.Println("[ERR]", err)
+		colorERR.Println(err)
 		return
 	}
 
