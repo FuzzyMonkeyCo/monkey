@@ -45,10 +45,10 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 
 	var URL string
 	if binVersion == "0.0.0" {
-		URL = "http://auth.dev.fuzzymonkey.co/1/token"
+		URL = "http://hoth.dev.fuzzymonkey.co/1/token"
 	} else {
 		//FIXME: use HTTPS
-		URL = "http://auth.fuzzymonkey.co/1/token"
+		URL = "http://hoth.fuzzymonkey.co/1/token"
 	}
 
 	r, err := http.NewRequest(http.MethodPut, URL, buf)
