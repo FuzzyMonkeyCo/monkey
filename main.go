@@ -232,7 +232,7 @@ func doExec(cfg *ymlCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *ymlCfg, spec []byte) int {
+func doFuzz(cfg *ymlCfg, spec *sut) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -254,7 +254,7 @@ func doFuzz(cfg *ymlCfg, spec []byte) int {
 			return fuzzOutcome(cmd.(*doneCmd))
 		}
 
-		if cmd, err = next(cfg, cmd); err != nil {
+		if cmd, err = fuzzNext(cfg, cmd); err != nil {
 			return retryOrReportThenCleanup(cfg, err)
 		}
 	}

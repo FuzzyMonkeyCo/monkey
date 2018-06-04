@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
-	"github.com/googleapis/gnostic/jsonwriter"
+	"gopkg.in/yaml.v2"
 )
 
-func doLint(cfg *ymlCfg, showSpec bool) (bytes []byte, err error) {
+func doLint(cfg *ymlCfg, showSpec bool) (spec *sut, err error) {
 	docPath, err := cfg.findBlobs()
 	if err != nil {
 		return
@@ -74,30 +73,29 @@ func doLint(cfg *ymlCfg, showSpec bool) (bytes []byte, err error) {
 	}
 
 	log.Println("[NFO] preparing spec")
-	// var rawInfo yaml.MapSlice
-	rawInfo := doc.ToRawInfo()
-	// rawInfo, ok := doc.ToRawInfo().(yaml.MapSlice)
-	// if !ok { rawInfo = nil }
+	rawInfo, ok := doc.ToRawInfo().(yaml.MapSlice)
+	if !ok {
+		rawInfo = nil
+	}
 	if rawInfo == nil {
-		err = fmt.Errorf("!yaml! %#v", rawInfo)
+		err = errors.New("empty gnostic doc")
 		log.Println("[ERR]", err)
 		return
 	}
+	spec = newSUTFromOpenAPIv3(rawInfo)
 
-	log.Println("[NFO] serialyzing spec to JSON")
-	if bytes, err = jsonwriter.Marshal(rawInfo); err != nil {
-		log.Println("[ERR]", err)
-	}
-	if showSpec {
-		fmt.Fprintf(os.Stderr, "%s\n", bytes)
-	}
-
-	//FIXME: this MapSlice casting never works!
 	// log.Println("[NFO] serialyzing spec to YAML")
-	// if bytes, err = yaml.Marshal(rawInfo); err != nil {
-	// 	log.Println("[ERR]", err)
-	// }
-	// fmt.Printf("%s\n", bytes)
+	// bytes, err := yaml.Marshal(rawInfo)
+	// fmt.Printf("%s %#v\n", bytes, err)
 
 	return
+}
+
+type sut struct {
+}
+
+func newSUTFromOpenAPIv3(spec yaml.MapSlice) *sut {
+	log.Printf(">>> %#v\n", spec)
+
+	return &sut{}
 }

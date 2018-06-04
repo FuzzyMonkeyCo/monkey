@@ -43,15 +43,7 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 		return
 	}
 
-	var URL string
-	if binVersion == "0.0.0" {
-		URL = "http://hoth.dev.fuzzymonkey.co/1/token"
-	} else {
-		//FIXME: use HTTPS
-		URL = "http://hoth.fuzzymonkey.co/1/token"
-	}
-
-	r, err := http.NewRequest(http.MethodPut, URL, buf)
+	r, err := http.NewRequest(http.MethodPut, apiAuthURL, buf)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -62,7 +54,7 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 	r.Header.Set(headerUserAgent, binTitle)
 	r.Header.Set(headerXAPIKey, apiKey)
 
-	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %#v\n", URL, payload)
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %#v\n", apiAuthURL, payload)
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
