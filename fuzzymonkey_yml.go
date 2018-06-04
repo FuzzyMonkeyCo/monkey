@@ -113,6 +113,7 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 	}
 
 	if showCfg {
+		colorNFO.Println("Config:")
 		enc := yaml.NewEncoder(os.Stderr)
 		defer enc.Close()
 		if err = enc.Encode(ymlConf); err != nil {

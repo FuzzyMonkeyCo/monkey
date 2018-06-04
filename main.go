@@ -232,7 +232,7 @@ func doExec(cfg *ymlCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *ymlCfg, spec *sut) int {
+func doFuzz(cfg *ymlCfg, spec *specIR) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5

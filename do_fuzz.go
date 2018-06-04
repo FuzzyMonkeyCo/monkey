@@ -20,7 +20,7 @@ const (
 	headerXAuthToken  = "X-Auth-Token"
 )
 
-func newFuzz(cfg *ymlCfg, spec *sut) (cmd someCmd, err error) {
+func newFuzz(cfg *ymlCfg, spec *specIR) (cmd someCmd, err error) {
 	blobs, err := makeBlobs(cfg, spec)
 	if err != nil {
 		return
@@ -132,11 +132,11 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	return
 }
 
-func makeBlobs(cfg *ymlCfg, spec *sut) (payload []byte, err error) {
+func makeBlobs(cfg *ymlCfg, spec *specIR) (payload []byte, err error) {
 	docs := struct {
 		V      uint    `json:"v"`
 		Config *ymlCfg `json:"cfg"`
-		Spec   *sut    `json:"sut"`
+		Spec   *specIR `json:"spec"`
 	}{
 		V:      v,
 		Config: cfg,

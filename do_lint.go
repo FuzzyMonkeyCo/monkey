@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/googleapis/gnostic/OpenAPIv3"
@@ -12,7 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func doLint(cfg *ymlCfg, showSpec bool) (spec *sut, err error) {
+func doLint(cfg *ymlCfg, showSpec bool) (spec *specIR, err error) {
 	docPath, err := cfg.findBlobs()
 	if err != nil {
 		return
@@ -82,20 +83,18 @@ func doLint(cfg *ymlCfg, showSpec bool) (spec *sut, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	spec = newSUTFromOpenAPIv3(rawInfo)
 
-	// log.Println("[NFO] serialyzing spec to YAML")
-	// bytes, err := yaml.Marshal(rawInfo)
-	// fmt.Printf("%s %#v\n", bytes, err)
+	if showSpec {
+		log.Println("[NFO] serialyzing spec to YAML")
+		colorNFO.Println("Spec:")
+		var pretty []byte
+		if pretty, err = yaml.Marshal(rawInfo); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		fmt.Fprintf(os.Stderr, "%s\n", pretty)
+	}
 
+	spec, err = newSpecFromOpenAPIv3(rawInfo)
 	return
-}
-
-type sut struct {
-}
-
-func newSUTFromOpenAPIv3(spec yaml.MapSlice) *sut {
-	log.Printf(">>> %#v\n", spec)
-
-	return &sut{}
 }
