@@ -145,17 +145,21 @@ func (cfg *ymlCfg) script(kind cmdKind) []string {
 	}[kind]
 }
 
-func (cfg *ymlCfg) findBlobs() (path string, err error) {
-	//FIXME: force relative paths & nested under workdir. Watch out for links
-	path = cfg.File
-	if len(path) == 0 {
+func (cfg *ymlCfg) findThenReadBlob() (docPath string, blob []byte, err error) {
+	//TODO: force relative paths & nested under workdir. Watch out for links
+	docPath = cfg.File
+	if docPath == `` {
 		err = errors.New("Path to spec is empty")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
 	}
 
-	log.Println("[NFO] spec is at", path)
+	log.Println("[NFO] reading spec from", docPath)
+	if blob, err = ioutil.ReadFile(docPath); err != nil {
+		log.Println("[ERR]", err)
+		fmt.Printf("Could not read '%s'\n", docPath)
+	}
 	return
 }
 

@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -13,22 +12,9 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func doLint(cfg *ymlCfg, showSpec bool) (spec *specIR, err error) {
-	docPath, err := cfg.findBlobs()
-	if err != nil {
-		return
-	}
-
-	log.Println("[NFO] reading spec from", docPath)
-	docBytes, err := ioutil.ReadFile(docPath)
-	if err != nil {
-		log.Println("[ERR]", err)
-		fmt.Printf("Could not read '%s'\n", docPath)
-		return
-	}
-
-	log.Printf("[NFO] reading info in %dB", len(docBytes))
-	info, err := compiler.ReadInfoFromBytes(docPath, docBytes)
+func doLint(docPath string, blob []byte, showSpec bool) (spec *specIR, err error) {
+	log.Printf("[NFO] reading info in %dB", len(blob))
+	info, err := compiler.ReadInfoFromBytes(docPath, blob)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -40,7 +26,7 @@ func doLint(cfg *ymlCfg, showSpec bool) (spec *specIR, err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Println("[NFO] verifying format is supported", cfg.Kind)
+	log.Println("[NFO] verifying format is supported")
 	openapi, ok := compiler.MapValueForKey(infoMap, "openapi").(string)
 	if !ok || !strings.HasPrefix(openapi, "3.0") {
 		err = errors.New("format:unsupported")
@@ -71,6 +57,7 @@ func doLint(cfg *ymlCfg, showSpec bool) (spec *specIR, err error) {
 			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
 		}
 		colorWRN.Println("Documentation validation failed.")
+		return
 	}
 
 	log.Println("[NFO] preparing spec")
@@ -95,6 +82,6 @@ func doLint(cfg *ymlCfg, showSpec bool) (spec *specIR, err error) {
 		fmt.Fprintf(os.Stderr, "%s\n", pretty)
 	}
 
-	spec, err = newSpecFromOpenAPIv3(rawInfo)
+	spec, err = newSpecFromOpenAPIv3(doc)
 	return
 }

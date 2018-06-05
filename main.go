@@ -161,8 +161,13 @@ func actualMain() int {
 		return doExec(cfg, kindStop)
 	}
 
+	docPath, blob, err := cfg.findThenReadBlob()
+	if err != nil {
+		return retryOrReport()
+	}
+
 	// Always lint before fuzzing
-	validSpec, err := doLint(cfg, args.ShowSpec)
+	validSpec, err := doLint(docPath, blob, args.ShowSpec)
 	if err != nil {
 		return 2
 	}

@@ -88,15 +88,21 @@ stop:
 
 func TestV1ReadDefaults(t *testing.T) {
 	for name, yml := range map[string][]byte{
-		"version only": []byte("version: 1"),
+		"bare minimum": []byte(`
+version: 1
+spec:
+  kind: OpenAPIv3
+`),
 		"version & host": []byte(`
 version: 1
 spec:
+  kind: OpenAPIv3
   host: localhost
 `),
 		"version & port": []byte(`
 version: 1
 spec:
+  kind: OpenAPIv3
   port: 3000
 `),
 	} {
