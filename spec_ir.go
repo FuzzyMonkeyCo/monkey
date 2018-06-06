@@ -7,10 +7,7 @@ import (
 	o "github.com/googleapis/gnostic/OpenAPIv3"
 )
 
-type specIR struct {
-}
-
-func newSpecFromOpenAPIv3(doc *o.Document) (spec *specIR, err error) {
+func newSpecFromOpenAPIv3(doc *o.Document) (spec *SpecIR, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	basePath, err := specBasePath(doc)
@@ -19,7 +16,8 @@ func newSpecFromOpenAPIv3(doc *o.Document) (spec *specIR, err error) {
 	}
 	log.Println(basePath)
 
-	spec = &specIR{}
+	spec = &SpecIR{}
+	log.Println(spec.String())
 	return
 }
 

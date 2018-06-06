@@ -30,6 +30,13 @@ after_script: set +e
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
+addons:
+  apt:
+    packages:
+    - protobuf
+cache:
+  apt: true
+
 install:
   - make deps
   - go version

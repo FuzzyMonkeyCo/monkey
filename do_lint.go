@@ -12,7 +12,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func doLint(docPath string, blob []byte, showSpec bool) (spec *specIR, err error) {
+func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	info, err := compiler.ReadInfoFromBytes(docPath, blob)
 	if err != nil {

@@ -1,0 +1,192 @@
+// https://developers.google.com/protocol-buffers/docs/proto3
+// See: https://github.com/googleapis/gnostic/blob/48a0ecef/OpenAPIv3/OpenAPIv3.proto
+// See: https://github.com/luckymarmot/API-Flow/blob/24cc71a/src/README.md
+
+syntax = "proto3";
+package main;
+
+// Ptr = string  in SpecIR
+// Ptr = uint32  everywhere else
+
+message SpecIR {
+    // map<Ptr,string> ptrs = 1; //FIXME: really needed?
+    // Since order is preserved, offset in this list can be used as uint32
+    repeated string ptrs = 1;
+    Schemas schemas = 2;
+    repeated Endpoint endpoints = 3;
+}
+
+message Schemas {
+    map<string,Schema.JSONDraft05> schemas_JSONDraft05 = 1;
+}
+
+message Endpoint {
+    oneof endpoint {
+        EndpointJSONDraft05 endpoint_JSONDraft05 = 1;
+    }
+}
+
+message EndpointJSONDraft05 {
+    Method method = 1;
+    Path path = 2;
+    ParamsJSONDraft05 params = 3;
+    // This uint32 replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+    map<uint32,PtrOrSchemaJSONDraft05> outputs = 4;
+}
+
+enum Method {
+    GET = 0;
+    HEAD = 1;
+    POST = 2;
+    PUT = 3;
+    PATCH = 4;
+    DELETE = 5;
+    CONNECT = 6;
+    OPTIONS = 7;
+    TRACE = 8;
+}
+
+message Path {
+    message PathPartial {
+        oneof pp {
+            string part = 1;
+            uint32 ptr = 2;
+        }
+    }
+    repeated PathPartial partial = 1;
+}
+
+message ParamsJSONDraft05 {
+    // These uint32s are Ptrs
+    map<uint32,ParamJSONDraft05> header = 1;
+    map<uint32,ParamJSONDraft05> path = 2;
+    map<uint32,ParamJSONDraft05> body = 3;
+    map<uint32,ParamJSONDraft05> query = 4;
+}
+
+message ParamJSONDraft05 {
+    PtrOrSchemaJSONDraft05 schema_or_ptr = 1;
+    bool required = 2;
+    //TODO: repeated Example examples
+}
+
+message PtrOrSchemaJSONDraft05 {
+    oneof ptr_or_schema_JSONDraft05 {
+        uint32 ptr = 1;
+        Schema.JSONDraft05 schema = 2;
+    }
+}
+
+/// https://swagger.io/docs/specification/data-models/keywords/
+/// https://tools.ietf.org/html/draft-wright-json-schema-validation-00
+// https://github.com/mikunn/openapi-schema-to-json-schema
+// https://github.com/kogosoftwarellc/openapi-jsonschema-parameters
+// https://github.com/garethr/openapi2jsonschema
+
+message Schema {
+    message JSONDraft05 {
+        // (Some) Things can be combined (: enum + type)
+        //   so just lay things out flat...
+
+        message Type {
+            enum type {
+                ANY = 0;
+                NULL = 1;
+                BOOLEAN = 2;
+                INTEGER = 3;
+                NUMBER = 4;
+                ARRAY = 5;
+                STRING = 6;
+                OBJECT = 7;
+            }
+        }
+        repeated Type type = 1; // default: []
+
+        JSON.Array enum = 2; // default: []
+
+        // type: string
+        string format = 3; // default: ""
+        uint64 min_length = 4; // default: 0
+        uint64 max_length = 5;
+        bool has_max_length = 6;
+        string pattern = 7; // default: ""
+
+        // type: number | integer
+        double minimum = 8;
+        double maximum = 9;
+        bool has_minimum = 10;
+        bool has_maximum = 11;
+        double translated_multiple_of = 12; // default: 0.0, add +1.0 when reading
+        bool exclusive_minimum = 13; // default: false
+        bool exclusive_maximum = 14; // default: false
+
+        // type: array
+        repeated PtrOrSchemaJSONDraft05 items = 15; // default: empty list
+        bool unique_items = 16; // default: false
+        uint64 min_items = 17; // default: 0
+        uint64 max_items = 18;
+        bool has_max_items = 19;
+        //TODO: additionalItems
+
+        // type: object
+        map<string,PtrOrSchemaJSONDraft05> properties = 20; // default {}
+        repeated string required = 21; // default: []
+        uint64 min_properties = 22; // default: 0
+        uint64 max_properties = 23;
+        bool has_max_properties = 24;
+        message AdditionalProperties {
+            oneof add_props {
+                bool has = 1;
+                PtrOrSchemaJSONDraft05 schema_or_ptr = 2;
+            }
+        }
+        AdditionalProperties additional_properties = 25;
+        bool has_additional_properties = 26;
+        //patternProperties
+
+        repeated PtrOrSchemaJSONDraft05 all_of = 27; // default: []
+        repeated PtrOrSchemaJSONDraft05 any_of = 28; // default: []
+        repeated PtrOrSchemaJSONDraft05 one_of = 29; // default: []
+
+        Schema.JSONDraft05 not = 30;
+
+        //TODO: default
+        /* TODO: not part of OpenAPIv3.0.0
+           $schema
+           const
+           contains
+           dependencies
+           id, $id
+           propertyNames
+        */
+    }
+}
+
+message JSON {
+    message Object {
+        map<string,JSON.Value> object = 1;
+    }
+    message Array {
+        repeated JSON.Value array = 1;
+    }
+    message Value {
+        oneof value {
+            bool is_null = 1;
+
+            bool boolean_value = 2;
+            bool is_boolean = 3;
+
+            double number_value = 4;
+            bool is_number = 5;
+
+            string text_value = 6;
+            bool is_text = 7;
+
+            Array array_value = 8;
+            bool is_array = 9;
+
+            Object object_value = 10;
+            bool is_object = 11;
+        }
+    }
+}

@@ -19,6 +19,7 @@ DEP ?= dep-linux-amd64
 GODEP = v0.4.1
 
 all: lint vendor
+	protoc --go_out=. messages.proto
 	go generate
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
@@ -45,7 +46,7 @@ vendor:
 #	Note: workaround to https://github.com/golang/dep/issues/1554
 #	Writes to $GOPATH/bin so keep that in mind...
 	for pkg in $$(grep -Eo '"[^"]+",' Gopkg.toml | tr -d '",'); do \
-	  cd vendor/$$pkg && go install . && cd - ; \
+	  echo $$pkg && cd vendor/$$pkg && go install . && cd - ; \
 	done
 
 deps:
