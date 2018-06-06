@@ -20,7 +20,7 @@ type lane struct {
 
 type someCmd interface {
 	Kind() cmdKind
-	Exec(cfg *ymlCfg) (rep []byte, err error)
+	Exec(cfg *YmlCfg) (rep []byte, err error)
 }
 
 type cmdKind int

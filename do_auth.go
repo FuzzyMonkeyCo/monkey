@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
+func doAuth(cfg *YmlCfg, apiKey string, N uint) (err error) {
 	if apiKey == "" {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
@@ -25,7 +25,7 @@ func doAuth(cfg *ymlCfg, apiKey string, N uint) (err error) {
 
 	payload := struct {
 		V       uint    `json:"v"`
-		YML     uint    `json:"version"`
+		YML     uint32  `json:"version"`
 		Client  string  `json:"client"`
 		Options options `json:"options"`
 	}{

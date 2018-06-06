@@ -222,7 +222,7 @@ func doUpdate() int {
 	return 0
 }
 
-func doExec(cfg *ymlCfg, kind cmdKind) int {
+func doExec(cfg *YmlCfg, kind cmdKind) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -237,7 +237,7 @@ func doExec(cfg *ymlCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *ymlCfg, spec *SpecIR) int {
+func doFuzz(cfg *YmlCfg, spec *SpecIR) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("%s is required\n", shell())
 		return 5
@@ -265,7 +265,7 @@ func doFuzz(cfg *ymlCfg, spec *SpecIR) int {
 	}
 }
 
-func retryOrReportThenCleanup(cfg *ymlCfg, err error) int {
+func retryOrReportThenCleanup(cfg *YmlCfg, err error) int {
 	defer maybePostStop(cfg)
 	if hadExecError {
 		return 7

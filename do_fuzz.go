@@ -2,11 +2,12 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -20,9 +21,14 @@ const (
 	headerXAuthToken  = "X-Auth-Token"
 )
 
-func newFuzz(cfg *ymlCfg, spec *SpecIR) (cmd someCmd, err error) {
-	blobs, err := makeBlobs(cfg, spec)
+func newFuzz(cfg *YmlCfg, spec *SpecIR) (cmd someCmd, err error) {
+	initer := &InitFuzzing{
+		Config: cfg,
+		Spec:   spec,
+	}
+	payload, err := proto.Marshal(initer)
 	if err != nil {
+		log.Println("[ERR]", err)
 		return
 	}
 
@@ -30,7 +36,7 @@ func newFuzz(cfg *ymlCfg, spec *SpecIR) (cmd someCmd, err error) {
 		return
 	}
 
-	cmdJSON, err := fuzzNew(cfg, blobs)
+	cmdJSON, err := fuzzNew(cfg, payload)
 	if err != nil {
 		return
 	}
@@ -39,8 +45,8 @@ func newFuzz(cfg *ymlCfg, spec *SpecIR) (cmd someCmd, err error) {
 	return
 }
 
-func fuzzNext(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
-	// Sometimes sets cfg.Final* fields
+func fuzzNext(cfg *YmlCfg, cmd someCmd) (someCmd someCmd, err error) {
+	// Sometimes sets cfg.Runtime.Final* fields
 	rep, err := cmd.Exec(cfg)
 	if err != nil {
 		return
@@ -55,19 +61,19 @@ func fuzzNext(cfg *ymlCfg, cmd someCmd) (someCmd someCmd, err error) {
 	return
 }
 
-func fuzzNew(cfg *ymlCfg, JSON []byte) (rep []byte, err error) {
-	r, err := http.NewRequest(http.MethodPut, apiFuzzNew, bytes.NewBuffer(JSON))
+func fuzzNew(cfg *YmlCfg, payload []byte) (rep []byte, err error) {
+	r, err := http.NewRequest(http.MethodPut, apiFuzzNew, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	r.Header.Set("Content-Type", mimeYAML)
-	r.Header.Set("Accept", mimeJSON)
-	r.Header.Set("User-Agent", binTitle)
+	r.Header.Set(headerContentType, mimeYAML)
+	r.Header.Set(headerAccept, mimeJSON)
+	r.Header.Set(headerUserAgent, binTitle)
 	r.Header.Set(headerXAuthToken, cfg.AuthToken)
 
-	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %s\n", apiFuzzNew, JSON)
+	log.Printf("[DBG] 🡱  PUT %s\n  🡱  %dB\n", apiFuzzNew, len(payload))
 	start := time.Now()
 	resp, err := clientUtils.Do(r)
 	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
@@ -94,16 +100,16 @@ func fuzzNew(cfg *ymlCfg, JSON []byte) (rep []byte, err error) {
 	return
 }
 
-func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
+func nextPOST(cfg *YmlCfg, payload []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPost, apiFuzzNext, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	r.Header.Set("content-type", mimeJSON)
-	r.Header.Set("Accept", mimeJSON)
-	r.Header.Set("User-Agent", binTitle)
+	r.Header.Set(headerContentType, mimeJSON)
+	r.Header.Set(headerAccept, mimeJSON)
+	r.Header.Set(headerUserAgent, binTitle)
 	r.Header.Set(headerXAuthToken, cfg.AuthToken)
 
 	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", apiFuzzNext, payload)
@@ -129,22 +135,5 @@ func nextPOST(cfg *ymlCfg, payload []byte) (rep []byte, err error) {
 	}
 
 	cfg.AuthToken = resp.Header.Get(headerXAuthToken)
-	return
-}
-
-func makeBlobs(cfg *ymlCfg, spec *SpecIR) (payload []byte, err error) {
-	docs := struct {
-		V      uint    `json:"v"`
-		Config *ymlCfg `json:"cfg"`
-		Spec   *SpecIR `json:"spec"`
-	}{
-		V:      v,
-		Config: cfg,
-		Spec:   spec,
-	}
-	if payload, err = json.Marshal(docs); err != nil {
-		log.Println("[ERR]", err)
-	}
-
 	return
 }

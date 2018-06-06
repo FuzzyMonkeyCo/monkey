@@ -13,7 +13,7 @@ func TestLintOpenAPIv300Petstore(t *testing.T) {
 	spec, err := doLint(docPath, blob, showSpec)
 	require.NoError(t, err)
 
-	expected := &specIR{}
+	expected := &SpecIR{}
 	require.Equal(t, expected, spec)
 }
 
@@ -23,6 +23,6 @@ func TestLintOpenAPIv300PetstoreExpanded(t *testing.T) {
 	spec, err := doLint(docPath, blob, showSpec)
 	require.NoError(t, err)
 
-	expected := &specIR{}
+	expected := &SpecIR{}
 	require.Equal(t, expected, spec)
 }

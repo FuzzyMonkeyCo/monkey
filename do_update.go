@@ -28,7 +28,7 @@ func peekLatestRelease() (latest string, err error) {
 		return
 	}
 
-	get.Header.Set("Accept", githubV3APIHeader)
+	get.Header.Set(headerAccept, githubV3APIHeader)
 	log.Printf("[NFO] fetching latest version from %s\n", latestReleaseURL)
 	resp, err := clientUtils.Do(get)
 	if err != nil {

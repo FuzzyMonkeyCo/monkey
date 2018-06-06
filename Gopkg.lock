@@ -38,16 +38,22 @@
   revision = "470b6b0bb3005eda157f0275e2e4895055396a81"
 
 [[projects]]
+  branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
+    "protoc-gen-go",
+    "protoc-gen-go/descriptor",
+    "protoc-gen-go/generator",
+    "protoc-gen-go/generator/internal/remap",
+    "protoc-gen-go/grpc",
+    "protoc-gen-go/plugin",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
     "ptypes/timestamp"
   ]
-  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
-  version = "v1.1.0"
+  revision = "64db29d85ff91ba669cfaf009d5f400a4da8a55f"
 
 [[projects]]
   branch = "master"
@@ -182,7 +188,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "c11f84a56e43e20a78cee75a7c034031ecf57d1f"
+  revision = "bc2ef10f1b658ea907736406814a6187b49ea3ec"
 
 [[projects]]
   branch = "master"
@@ -229,6 +235,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9cb8c28c46c0b9598b0493094790dee44f212d2abde2f1277973520a898dc900"
+  inputs-digest = "39f8fba0e0924a33e6e97f8714be5df7acdd55b0c4502fb21ea654e7b31013c2"
   solver-name = "gps-cdcl"
   solver-version = 1

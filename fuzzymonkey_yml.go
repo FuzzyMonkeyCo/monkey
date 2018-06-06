@@ -18,21 +18,7 @@ const (
 	defaultYMLPort = "3000"
 )
 
-type ymlCfg struct {
-	Version   uint
-	AuthToken string
-	File      string
-	Kind      string
-	Host      string
-	Port      string
-	FinalHost string
-	FinalPort string
-	Start     []string
-	Reset     []string
-	Stop      []string
-}
-
-func newCfg(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
+func newCfg(yml []byte, showCfg bool) (cfg *YmlCfg, err error) {
 	var vsn struct {
 		V interface{} `yaml:"version"`
 	}
@@ -52,7 +38,7 @@ func newCfg(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		return
 	}
 
-	type cfgParser func(yml []byte, showCfg bool) (cfg *ymlCfg, err error)
+	type cfgParser func(yml []byte, showCfg bool) (cfg *YmlCfg, err error)
 	cfgParsers := []cfgParser{
 		newCfgV001,
 	}
@@ -67,17 +53,18 @@ func knownVersion(v int) bool {
 	return false
 }
 
-func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
+func newCfgV001(yml []byte, showCfg bool) (cfg *YmlCfg, err error) {
 	var ymlConf struct {
-		V     uint     `yaml:"version"`
-		Start []string `yaml:"start"`
-		Reset []string `yaml:"reset"`
-		Stop  []string `yaml:"stop"`
-		Spec  struct {
-			File string `yaml:"file"`
-			Kind string `yaml:"kind"`
-			Host string `yaml:"host"`
-			Port string `yaml:"port"`
+		Version uint32   `yaml:"version"`
+		Start   []string `yaml:"start"`
+		Reset   []string `yaml:"reset"`
+		Stop    []string `yaml:"stop"`
+		Spec    struct {
+			File           string      `yaml:"file"`
+			Kind           string      `yaml:"kind"`
+			KindIdentified YmlCfg_Kind `yaml:"-"`
+			Host           string      `yaml:"host"`
+			Port           string      `yaml:"port"`
 		} `yaml:"spec"`
 	}
 
@@ -93,12 +80,14 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		return
 	}
 
-	if ymlConf.Spec.Kind != "OpenAPIv3" {
+	expectedKind := YmlCfg_OpenAPIv3
+	if ymlConf.Spec.Kind != YmlCfg_Kind_name[int32(expectedKind)] {
 		err = errors.New("spec's kind must be set to OpenAPIv3")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
 	}
+	ymlConf.Spec.KindIdentified = expectedKind
 
 	if ymlConf.Spec.Host == "" {
 		def := defaultYMLHost
@@ -123,29 +112,32 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *ymlCfg, err error) {
 		}
 	}
 
-	cfg = &ymlCfg{
-		Version: ymlConf.V,
+	cfg = &YmlCfg{
+		Version: ymlConf.Version,
 		File:    ymlConf.Spec.File,
-		Kind:    ymlConf.Spec.Kind,
-		Host:    ymlConf.Spec.Host,
-		Port:    ymlConf.Spec.Port,
-		Start:   ymlConf.Start,
-		Reset:   ymlConf.Reset,
-		Stop:    ymlConf.Stop,
+		Kind:    ymlConf.Spec.KindIdentified,
+		Runtime: &YmlCfg_Runtime{
+			Host: ymlConf.Spec.Host,
+			Port: ymlConf.Spec.Port,
+		},
+		Exec: &YmlCfg_Exec{
+			Start:  ymlConf.Start,
+			Reset_: ymlConf.Reset,
+			Stop:   ymlConf.Stop,
+		},
 	}
-
 	return
 }
 
-func (cfg *ymlCfg) script(kind cmdKind) []string {
+func (cfg *YmlCfg) script(kind cmdKind) []string {
 	return map[cmdKind][]string{
-		kindStart: cfg.Start,
-		kindReset: cfg.Reset,
-		kindStop:  cfg.Stop,
+		kindStart: cfg.Exec.Start,
+		kindReset: cfg.Exec.Reset_,
+		kindStop:  cfg.Exec.Stop,
 	}[kind]
 }
 
-func (cfg *ymlCfg) findThenReadBlob() (docPath string, blob []byte, err error) {
+func (cfg *YmlCfg) findThenReadBlob() (docPath string, blob []byte, err error) {
 	//TODO: force relative paths & nested under workdir. Watch out for links
 	docPath = cfg.File
 	if docPath == `` {

@@ -47,7 +47,7 @@ func (cmd *rstCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *rstCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
+func (cmd *rstCmd) Exec(cfg *YmlCfg) (rep []byte, err error) {
 	if isHARReady() {
 		progress(cmd)
 		clearHAR()
@@ -60,7 +60,7 @@ func (cmd *rstCmd) Exec(cfg *ymlCfg) (rep []byte, err error) {
 	return
 }
 
-func (cmd *rstCmd) pickScriptThenExec(cfg *ymlCfg) (cmdRep *rstCmdRep) {
+func (cmd *rstCmd) pickScriptThenExec(cfg *YmlCfg) (cmdRep *rstCmdRep) {
 	if !isRunning {
 		if len(cfg.script(kindStart)) != 0 {
 			return executeScript(cfg, kindStart)
@@ -81,8 +81,8 @@ func (cmd *rstCmd) pickScriptThenExec(cfg *ymlCfg) (cmdRep *rstCmdRep) {
 	return
 }
 
-func maybePreStart(cfg *ymlCfg) (err error) {
-	if len(cfg.Reset) == 0 {
+func maybePreStart(cfg *YmlCfg) (err error) {
+	if len(cfg.Exec.Reset_) == 0 {
 		return
 	}
 	cmdRep := executeScript(cfg, kindStart)
@@ -93,7 +93,7 @@ func maybePreStart(cfg *ymlCfg) (err error) {
 	return
 }
 
-func maybePostStop(cfg *ymlCfg) {
+func maybePostStop(cfg *YmlCfg) {
 	if !wasStopped {
 		executeScript(cfg, kindStop)
 	}
@@ -118,7 +118,7 @@ func progress(cmd *rstCmd) {
 	fmt.Print(str)
 }
 
-func executeScript(cfg *ymlCfg, kind cmdKind) (cmdRep *rstCmdRep) {
+func executeScript(cfg *YmlCfg, kind cmdKind) (cmdRep *rstCmdRep) {
 	cmdRep = &rstCmdRep{V: v, Cmd: kind, Failed: false}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
@@ -290,24 +290,24 @@ func unstache(field string) string {
 	return buffer.String()
 }
 
-func maybeFinalizeConf(cfg *ymlCfg, kind cmdKind) {
+func maybeFinalizeConf(cfg *YmlCfg, kind cmdKind) {
 	if kind == kindStop {
 		return
 	}
 	var wg sync.WaitGroup
 
-	if cfg.FinalHost == "" || kind != kindReset {
+	if cfg.Runtime.FinalHost == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
-			cfg.FinalHost = unstache(cfg.Host)
+			cfg.Runtime.FinalHost = unstache(cfg.Runtime.Host)
 			wg.Done()
 		}()
 	}
 
-	if cfg.FinalPort == "" || kind != kindReset {
+	if cfg.Runtime.FinalPort == "" || kind != kindReset {
 		wg.Add(1)
 		go func() {
-			cfg.FinalPort = unstache(cfg.Port)
+			cfg.Runtime.FinalPort = unstache(cfg.Runtime.Port)
 			wg.Done()
 		}()
 	}
