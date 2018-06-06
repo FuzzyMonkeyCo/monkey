@@ -59,7 +59,7 @@ func (x Method) String() string {
 	return proto.EnumName(Method_name, int32(x))
 }
 func (Method) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{0}
 }
 
 type Schema_JSONDraft05_TypeType int32
@@ -100,7 +100,7 @@ func (x Schema_JSONDraft05_TypeType) String() string {
 	return proto.EnumName(Schema_JSONDraft05_TypeType_name, int32(x))
 }
 func (Schema_JSONDraft05_TypeType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{8, 0, 0, 0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{8, 0, 0, 0}
 }
 
 type SpecIR struct {
@@ -118,7 +118,7 @@ func (m *SpecIR) Reset()         { *m = SpecIR{} }
 func (m *SpecIR) String() string { return proto.CompactTextString(m) }
 func (*SpecIR) ProtoMessage()    {}
 func (*SpecIR) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{0}
 }
 func (m *SpecIR) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecIR.Unmarshal(m, b)
@@ -170,7 +170,7 @@ func (m *Schemas) Reset()         { *m = Schemas{} }
 func (m *Schemas) String() string { return proto.CompactTextString(m) }
 func (*Schemas) ProtoMessage()    {}
 func (*Schemas) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{1}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{1}
 }
 func (m *Schemas) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schemas.Unmarshal(m, b)
@@ -210,7 +210,7 @@ func (m *Endpoint) Reset()         { *m = Endpoint{} }
 func (m *Endpoint) String() string { return proto.CompactTextString(m) }
 func (*Endpoint) ProtoMessage()    {}
 func (*Endpoint) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{2}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{2}
 }
 func (m *Endpoint) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Endpoint.Unmarshal(m, b)
@@ -324,7 +324,7 @@ func (m *EndpointJSONDraft05) Reset()         { *m = EndpointJSONDraft05{} }
 func (m *EndpointJSONDraft05) String() string { return proto.CompactTextString(m) }
 func (*EndpointJSONDraft05) ProtoMessage()    {}
 func (*EndpointJSONDraft05) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{3}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{3}
 }
 func (m *EndpointJSONDraft05) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EndpointJSONDraft05.Unmarshal(m, b)
@@ -383,7 +383,7 @@ func (m *Path) Reset()         { *m = Path{} }
 func (m *Path) String() string { return proto.CompactTextString(m) }
 func (*Path) ProtoMessage()    {}
 func (*Path) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{4}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{4}
 }
 func (m *Path) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path.Unmarshal(m, b)
@@ -424,7 +424,7 @@ func (m *Path_PathPartial) Reset()         { *m = Path_PathPartial{} }
 func (m *Path_PathPartial) String() string { return proto.CompactTextString(m) }
 func (*Path_PathPartial) ProtoMessage()    {}
 func (*Path_PathPartial) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{4, 0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{4, 0}
 }
 func (m *Path_PathPartial) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path_PathPartial.Unmarshal(m, b)
@@ -559,7 +559,7 @@ func (m *ParamsJSONDraft05) Reset()         { *m = ParamsJSONDraft05{} }
 func (m *ParamsJSONDraft05) String() string { return proto.CompactTextString(m) }
 func (*ParamsJSONDraft05) ProtoMessage()    {}
 func (*ParamsJSONDraft05) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{5}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{5}
 }
 func (m *ParamsJSONDraft05) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ParamsJSONDraft05.Unmarshal(m, b)
@@ -619,7 +619,7 @@ func (m *ParamJSONDraft05) Reset()         { *m = ParamJSONDraft05{} }
 func (m *ParamJSONDraft05) String() string { return proto.CompactTextString(m) }
 func (*ParamJSONDraft05) ProtoMessage()    {}
 func (*ParamJSONDraft05) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{6}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{6}
 }
 func (m *ParamJSONDraft05) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ParamJSONDraft05.Unmarshal(m, b)
@@ -667,7 +667,7 @@ func (m *PtrOrSchemaJSONDraft05) Reset()         { *m = PtrOrSchemaJSONDraft05{}
 func (m *PtrOrSchemaJSONDraft05) String() string { return proto.CompactTextString(m) }
 func (*PtrOrSchemaJSONDraft05) ProtoMessage()    {}
 func (*PtrOrSchemaJSONDraft05) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{7}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{7}
 }
 func (m *PtrOrSchemaJSONDraft05) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PtrOrSchemaJSONDraft05.Unmarshal(m, b)
@@ -801,7 +801,7 @@ func (m *Schema) Reset()         { *m = Schema{} }
 func (m *Schema) String() string { return proto.CompactTextString(m) }
 func (*Schema) ProtoMessage()    {}
 func (*Schema) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{8}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{8}
 }
 func (m *Schema) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema.Unmarshal(m, b)
@@ -865,7 +865,7 @@ func (m *Schema_JSONDraft05) Reset()         { *m = Schema_JSONDraft05{} }
 func (m *Schema_JSONDraft05) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSONDraft05) ProtoMessage()    {}
 func (*Schema_JSONDraft05) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{8, 0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{8, 0}
 }
 func (m *Schema_JSONDraft05) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSONDraft05.Unmarshal(m, b)
@@ -1105,7 +1105,7 @@ func (m *Schema_JSONDraft05_Type) Reset()         { *m = Schema_JSONDraft05_Type
 func (m *Schema_JSONDraft05_Type) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSONDraft05_Type) ProtoMessage()    {}
 func (*Schema_JSONDraft05_Type) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{8, 0, 0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{8, 0, 0}
 }
 func (m *Schema_JSONDraft05_Type) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSONDraft05_Type.Unmarshal(m, b)
@@ -1141,7 +1141,7 @@ func (m *Schema_JSONDraft05_AdditionalProperties) Reset() {
 func (m *Schema_JSONDraft05_AdditionalProperties) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSONDraft05_AdditionalProperties) ProtoMessage()    {}
 func (*Schema_JSONDraft05_AdditionalProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{8, 0, 2}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{8, 0, 2}
 }
 func (m *Schema_JSONDraft05_AdditionalProperties) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSONDraft05_AdditionalProperties.Unmarshal(m, b)
@@ -1281,7 +1281,7 @@ func (m *JSON) Reset()         { *m = JSON{} }
 func (m *JSON) String() string { return proto.CompactTextString(m) }
 func (*JSON) ProtoMessage()    {}
 func (*JSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{9}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{9}
 }
 func (m *JSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JSON.Unmarshal(m, b)
@@ -1312,7 +1312,7 @@ func (m *JSON_Object) Reset()         { *m = JSON_Object{} }
 func (m *JSON_Object) String() string { return proto.CompactTextString(m) }
 func (*JSON_Object) ProtoMessage()    {}
 func (*JSON_Object) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{9, 0}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{9, 0}
 }
 func (m *JSON_Object) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JSON_Object.Unmarshal(m, b)
@@ -1350,7 +1350,7 @@ func (m *JSON_Array) Reset()         { *m = JSON_Array{} }
 func (m *JSON_Array) String() string { return proto.CompactTextString(m) }
 func (*JSON_Array) ProtoMessage()    {}
 func (*JSON_Array) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{9, 1}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{9, 1}
 }
 func (m *JSON_Array) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JSON_Array.Unmarshal(m, b)
@@ -1400,7 +1400,7 @@ func (m *JSON_Value) Reset()         { *m = JSON_Value{} }
 func (m *JSON_Value) String() string { return proto.CompactTextString(m) }
 func (*JSON_Value) ProtoMessage()    {}
 func (*JSON_Value) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_640901df4889453e, []int{9, 2}
+	return fileDescriptor_messages_079f13fbeb31f364, []int{9, 2}
 }
 func (m *JSON_Value) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_JSON_Value.Unmarshal(m, b)
@@ -1813,9 +1813,9 @@ func init() {
 	proto.RegisterEnum("main.Schema_JSONDraft05_TypeType", Schema_JSONDraft05_TypeType_name, Schema_JSONDraft05_TypeType_value)
 }
 
-func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_640901df4889453e) }
+func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_079f13fbeb31f364) }
 
-var fileDescriptor_messages_640901df4889453e = []byte{
+var fileDescriptor_messages_079f13fbeb31f364 = []byte{
 	// 1542 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xed, 0x6e, 0x1a, 0xc7,
 	0x1a, 0xf6, 0x9a, 0x65, 0x81, 0x77, 0xc1, 0x59, 0x8f, 0x1d, 0x7b, 0x8d, 0xe3, 0xc4, 0x21, 0x1f,
