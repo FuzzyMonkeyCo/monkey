@@ -37,6 +37,7 @@ message InitFuzzing {
     SpecIR spec = 2;
 }
 
+//FIXME: optimize ptrs this way?
 // Ptr = string  in SpecIR
 // Ptr = uint32  everywhere else
 
@@ -49,7 +50,8 @@ message SpecIR {
 }
 
 message Schemas {
-    map<string,Schema.JSONDraft05> schemas_JSONDraft05 = 1;
+    // This string represents a Ptr
+    map<string,PtrOrSchemaJSONDraft05> schemas_JSONDraft05 = 1;
 }
 
 message Endpoint {
@@ -82,7 +84,8 @@ message Path {
     message PathPartial {
         oneof pp {
             string part = 1;
-            uint32 ptr = 2;
+            // uint32 ptr = 2;
+            string ptr = 2;
         }
     }
     repeated PathPartial partial = 1;
@@ -90,10 +93,14 @@ message Path {
 
 message ParamsJSONDraft05 {
     // These uint32s are Ptrs
-    map<uint32,ParamJSONDraft05> header = 1;
-    map<uint32,ParamJSONDraft05> path = 2;
-    map<uint32,ParamJSONDraft05> body = 3;
-    map<uint32,ParamJSONDraft05> query = 4;
+    // map<uint32,ParamJSONDraft05> header = 1;
+    map<string,ParamJSONDraft05> header = 1;
+    // map<uint32,ParamJSONDraft05> path = 2;
+    map<string,ParamJSONDraft05> path = 2;
+    // map<uint32,ParamJSONDraft05> body = 3;
+    map<string,ParamJSONDraft05> body = 3;
+    // map<uint32,ParamJSONDraft05> query = 4;
+    map<string,ParamJSONDraft05> query = 4;
 }
 
 message ParamJSONDraft05 {
@@ -104,7 +111,8 @@ message ParamJSONDraft05 {
 
 message PtrOrSchemaJSONDraft05 {
     oneof ptr_or_schema_JSONDraft05 {
-        uint32 ptr = 1;
+        // uint32 ptr = 1;
+        string ptr = 1;
         Schema.JSONDraft05 schema = 2;
     }
 }
@@ -120,17 +128,15 @@ message Schema {
         // (Some) Things can be combined (: enum + type)
         //   so just lay things out flat...
 
-        message Type {
-            enum type {
-                ANY = 0;
-                NULL = 1;
-                BOOLEAN = 2;
-                INTEGER = 3;
-                NUMBER = 4;
-                ARRAY = 5;
-                STRING = 6;
-                OBJECT = 7;
-            }
+        enum Type {
+            any = 0;
+            null = 1;
+            boolean = 2;
+            integer = 3;
+            number = 4;
+            array = 5;
+            string = 6;
+            object = 7;
         }
         repeated Type type = 1; // default: []
 
@@ -196,29 +202,36 @@ message Schema {
 
 message JSON {
     message Object {
-        map<string,JSON.Value> object = 1;
+        map<string,Value> object = 1;
+        bool is_object = 2;
     }
     message Array {
-        repeated JSON.Value array = 1;
+        repeated Value array = 1;
+        bool is_array = 2;
+    }
+    message Text {
+        string text = 1;
+        bool is_text = 2;
+    }
+    message Number {
+        double number = 1;
+        bool is_number = 2;
+    }
+    message Boolean {
+        bool boolean = 1;
+        bool is_boolean = 2;
+    }
+    message Null {
+        bool is_null = 1;
     }
     message Value {
         oneof value {
-            bool is_null = 1;
-
-            bool boolean_value = 2;
-            bool is_boolean = 3;
-
-            double number_value = 4;
-            bool is_number = 5;
-
-            string text_value = 6;
-            bool is_text = 7;
-
-            Array array_value = 8;
-            bool is_array = 9;
-
-            Object object_value = 10;
-            bool is_object = 11;
+            Null z = 1;
+            Boolean b = 2;
+            Number n = 3;
+            Text t = 4;
+            Array a = 5;
+            Object o = 6;
         }
     }
 }
