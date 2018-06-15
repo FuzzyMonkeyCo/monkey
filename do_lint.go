@@ -5,15 +5,50 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
+	"github.com/jban332/kin-openapi/openapi3"
 	"gopkg.in/yaml.v2"
 )
 
 func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
+	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
+		return
+	}
+
+	loader := openapi3.NewSwaggerLoader()
+	var doc *openapi3.Swagger
+	switch strings.ToLower(filepath.Ext(docPath)) {
+	case ".yml", ".yaml":
+		if doc, err = loader.LoadSwaggerFromYAMLData(blob); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+	case ".json":
+		if doc, err = loader.LoadSwaggerFromData(blob); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+	default:
+		err = fmt.Errorf("unsupported file format: %s", docPath)
+		log.Println("[ERR]", err)
+		return
+	}
+
+	if err = doc.Validate(loader.Context); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	spec, err = newSpecFromOpenAPIv3(doc)
+	return
+}
+
+func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	info, err := compiler.ReadInfoFromBytes(docPath, blob)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -81,7 +116,5 @@ func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error
 		}
 		fmt.Fprintf(os.Stderr, "%s\n", pretty)
 	}
-
-	spec, err = newSpecFromOpenAPIv3(doc)
 	return
 }

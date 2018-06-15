@@ -34,4 +34,7 @@ E unused value
 ! ag 'fmt\.Errorf."[^%\n]*"'
 E prefer errors.New
 
+! ag '([^ ]+) != nil\s+{\s+for [^=]+ := range \1'
+E unnecessary nil check around range
+
 exit $errors

@@ -32,6 +32,12 @@
   revision = "5c802456ccde2dae9010fe3ee1475ba6640da597"
 
 [[projects]]
+  name = "github.com/ghodss/yaml"
+  packages = ["."]
+  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/golang/lint"
   packages = ["golint"]
@@ -41,6 +47,7 @@
   branch = "master"
   name = "github.com/golang/protobuf"
   packages = [
+    "jsonpb",
     "proto",
     "protoc-gen-go",
     "protoc-gen-go/descriptor",
@@ -51,9 +58,10 @@
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
+    "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "64db29d85ff91ba669cfaf009d5f400a4da8a55f"
+  revision = "5831880292e721c76b58a16ecc60adc27d8e6355"
 
 [[projects]]
   branch = "master"
@@ -70,6 +78,15 @@
   name = "github.com/hashicorp/logutils"
   packages = ["."]
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/jban332/kin-openapi"
+  packages = [
+    "jsoninfo",
+    "openapi3"
+  ]
+  revision = "313b35c7d96eee2ab9f15cb0a66b3b9b5394bf08"
 
 [[projects]]
   name = "github.com/kisielk/gotool"
@@ -140,13 +157,13 @@
   revision = "e5490f454e487f004446592803b2b37f0db1054a"
 
 [[projects]]
-  branch = "master"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require"
   ]
-  revision = "c679ae2cc0cb27ec3293fea7e254e47386f05d69"
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
@@ -188,7 +205,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "bc2ef10f1b658ea907736406814a6187b49ea3ec"
+  revision = "8014b7b116a67fea23fbb82cd834c9ad656ea44b"
 
 [[projects]]
   branch = "master"
@@ -202,7 +219,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "a5b4c53f6e8bdcafa95a94671bf2d1203365858b"
+  revision = "465e6f399236d0ea2466584539d4eab4d3d83720"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -235,6 +252,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "39f8fba0e0924a33e6e97f8714be5df7acdd55b0c4502fb21ea654e7b31013c2"
+  inputs-digest = "9ab70e50abbca0f125a0eb45996e791ea4efc652ae28b00cdcf037191803add1"
   solver-name = "gps-cdcl"
   solver-version = 1

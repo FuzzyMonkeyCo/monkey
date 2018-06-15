@@ -55,7 +55,9 @@ func main() {
 			defer fd.Close()
 
 			fmt.Fprintf(&initFunc, "\t%s := gojsonschema.NewStringLoader(`", loader)
-			io.Copy(&initFunc, fd)
+			if _, err := io.Copy(&initFunc, fd); err != nil {
+				panic(err)
+			}
 			fmt.Fprintln(&initFunc, "`)")
 			fmt.Fprintf(&initFunc, "\tif %s, err = gojsonschema.NewSchema(%s); err != nil { panic(err) }\n", name, loader)
 		} else {
@@ -69,10 +71,12 @@ func main() {
 	}
 
 	fmt.Fprintln(&initFunc, "}")
-	io.Copy(out, &initFunc)
+	if _, err := io.Copy(out, &initFunc); err != nil {
+		panic(err)
+	}
 }
 
-func writeReqSchema(fd *bytes.Buffer) (err error) {
+func writeReqSchema(fd io.Writer) (err error) {
 	harStr, err := ioutil.ReadFile("misc/har_1.2.json")
 	if err != nil {
 		return

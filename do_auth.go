@@ -20,7 +20,7 @@ func doAuth(cfg *YmlCfg, apiKey string, N uint) (err error) {
 
 	type options struct {
 		Tests uint   `json:"num_tests"`
-		Seed  string `json:"seed",omitempty`
+		Seed  string `json:"seed,omitempty"`
 	}
 
 	payload := struct {
