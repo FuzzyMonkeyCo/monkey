@@ -10,8 +10,8 @@ import (
 	"github.com/jban332/kin-openapi/openapi3"
 )
 
-type mapKeyToPtrOrSchema map[string]*PtrOrSchemaJSONDraft05
-type mapXXXToPtrOrSchema map[uint32]*PtrOrSchemaJSONDraft05
+type mapKeyToPtrOrSchema map[string]*PtrOrSchemaJSON
+type mapXXXToPtrOrSchema map[uint32]*PtrOrSchemaJSON
 
 func newSpecFromOpenAPIv3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
@@ -33,7 +33,7 @@ func newSpecFromOpenAPIv3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
 	spec = &SpecIR{
 		Endpoints: endpoints,
 		Schemas: &Schemas{
-			Schemas_JSONDraft05: schemas,
+			Json: schemas,
 		},
 	}
 	log.Printf("\n basePath:%#v\n spec: %v\n ", basePath, spec)
@@ -51,19 +51,8 @@ func specSchemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) (
 
 	for name, schemaRef := range docSchemas {
 		ptr := baseRef + name
-		if schemaRef.Ref != "" {
-			if schemaRef.Value == nil {
-				err = newErrorNeitherRefNorSchema(ptr)
-				log.Println("[ERR]", err)
-				return
-			}
-			schemas[ptr] = &PtrOrSchemaJSONDraft05{
-				PtrOrSchema_JSONDraft05: &PtrOrSchemaJSONDraft05_Ptr{Ptr: schemaRef.Ref},
-			}
-		}
-
-		var ptrOrSchema *PtrOrSchemaJSONDraft05
-		if ptrOrSchema, err = specSchemaFromDocSchema(ptr, schemaRef.Value); err != nil {
+		var ptrOrSchema *PtrOrSchemaJSON
+		if ptrOrSchema, err = specPtrOrSchemaFromDoc(ptr, schemaRef); err != nil {
 			return
 		}
 		colorERR.Printf("%#v --> %v\n", ptr, ptrOrSchema)
@@ -73,13 +62,31 @@ func specSchemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) (
 	return
 }
 
-func newErrorNeitherRefNorSchema(ptr string) error {
-	return fmt.Errorf("%s is neither ref nor schema", ptr)
+func specPtrOrSchemaFromDoc(ptr string, schemaRef *openapi3.SchemaRef) (
+	schema *PtrOrSchemaJSON,
+	err error,
+) {
+	//FIXME: Schemas::map[str]schemaORptr, Endpoints::only ptrs to schemas
+	if schemaRef.Ref != "" {
+		if schemaRef.Value == nil {
+			err = fmt.Errorf("%s is neither ref nor schema", ptr)
+			log.Println("[ERR]", err)
+			return
+		}
+		schema = &PtrOrSchemaJSON{
+			PtrOrSchema_JSON: &PtrOrSchemaJSON_Ptr{
+				Ptr: schemaRef.Ref,
+			},
+		}
+	}
+
+	schema, err = specSchemaFromDocSchema(ptr, schemaRef.Value)
+	return
 }
 
-func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSONDraft05, error) {
+func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, error) {
 	wasSet := false
-	schema := &Schema_JSONDraft05{}
+	schema := &Schema_JSON{}
 
 	// enum
 	// sEnum := s.GetEnum()
@@ -87,15 +94,17 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSONDr
 	// 	schema.Enum =
 	// }
 
-	// type, nullable
+	// nullable
+	if s.Nullable {
+		schema.Type = []Schema_JSON_Type{Schema_JSON_null}
+		wasSet = true
+	}
+
+	// type
 	sType := s.Type
 	if sType != "" {
-		t := Schema_JSONDraft05_Type(Schema_JSONDraft05_Type_value[sType])
-		if s.Nullable {
-			schema.Type = []Schema_JSONDraft05_Type{t, Schema_JSONDraft05_null}
-		} else {
-			schema.Type = []Schema_JSONDraft05_Type{t}
-		}
+		t := Schema_JSON_Type(Schema_JSON_Type_value[sType])
+		specMaybeAddType(t, schema.Type)
 		wasSet = true
 	}
 
@@ -109,24 +118,12 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSONDr
 	// properties, required
 	sProperties := s.Properties
 	if len(sProperties) != 0 {
-		specMaybeAddType(Schema_JSONDraft05_object, schema.Type)
+		specMaybeAddType(Schema_JSON_object, schema.Type)
 		schema.Required = s.Required
 		schema.Properties = make(mapKeyToPtrOrSchema)
 		for propName, propSchemaRef := range sProperties {
 			subPtr := ptr + "/" + propName
-			if propSchemaRef.Ref != "" {
-				if propSchemaRef.Value == nil {
-					err := newErrorNeitherRefNorSchema(subPtr)
-					log.Println("[ERR]", err)
-					return nil, err
-				}
-				err := fmt.Errorf("%s is a ref and that's not yet supported", subPtr)
-				log.Println("[ERR]", err)
-				log.Printf("[ERR] >>> %#v\n", propSchemaRef)
-				return nil, err
-			}
-
-			subS, err := specSchemaFromDocSchema(subPtr, propSchemaRef.Value)
+			subS, err := specPtrOrSchemaFromDoc(subPtr, propSchemaRef)
 			if err != nil {
 				return nil, err
 			}
@@ -135,20 +132,20 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSONDr
 		wasSet = true
 	}
 
-	//FIXME: support all Schema.JSONDraft05 fields
+	//FIXME: support all Schema.JSON fields
 
 	if !wasSet {
 		err := fmt.Errorf("%s is an empty schema: %#v", ptr, s)
 		log.Println("[ERR]", err)
 		return nil, err
 	}
-	ptrOrSchema := &PtrOrSchemaJSONDraft05{
-		PtrOrSchema_JSONDraft05: &PtrOrSchemaJSONDraft05_Schema{schema},
+	ptrOrSchema := &PtrOrSchemaJSON{
+		PtrOrSchema_JSON: &PtrOrSchemaJSON_Schema{schema},
 	}
 	return ptrOrSchema, nil
 }
 
-func specMaybeAddType(t Schema_JSONDraft05_Type, ts []Schema_JSONDraft05_Type) {
+func specMaybeAddType(t Schema_JSON_Type, ts []Schema_JSON_Type) {
 	for _, aT := range ts {
 		if t == aT {
 			return
@@ -177,11 +174,11 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 			}
 
 			endpoint := &Endpoint{
-				Endpoint: &Endpoint_Endpoint_JSONDraft05{
-					&EndpointJSONDraft05{
+				Endpoint: &Endpoint_Json{
+					&EndpointJSON{
 						Method:  method,
 						Path:    partials,
-						Params:  &ParamsJSONDraft05{},
+						Params:  &ParamsJSON{},
 						Outputs: outputs,
 					},
 				},
@@ -251,7 +248,7 @@ func specEndpointResponses(docResponses openapi3.Responses) (
 		}
 		// for mime, ct := range responseRef.Value.Content {
 		// 	if mimeJSON == mime {
-		// 		schema, err := specSchemaFromDocSchema("", ct.Schema)
+		// 		schema, err := specPtrOrSchemaFromDoc("", ct.Schema)
 		// 	}
 		// }
 	}

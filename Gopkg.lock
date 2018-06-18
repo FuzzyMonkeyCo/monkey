@@ -26,10 +26,10 @@
   revision = "2d684516a8861da43017284349b7e303e809ac21"
 
 [[projects]]
-  branch = "master"
+  branch = "uname-it"
   name = "github.com/fenollp/gox"
   packages = ["."]
-  revision = "5c802456ccde2dae9010fe3ee1475ba6640da597"
+  revision = "8f9d0bdfdd0371d0d118d1e43d135f04391ba6fa"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -61,7 +61,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "5831880292e721c76b58a16ecc60adc27d8e6355"
+  revision = "9f81198da99b79e14d70ca2c3cc1bbe44c6e69b6"
 
 [[projects]]
   branch = "master"
@@ -72,6 +72,12 @@
     "extensions"
   ]
   revision = "48a0ecefe2e4190c7a2d63b477875854a2f993b3"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/hashicorp/go-version"
+  packages = ["."]
+  revision = "23480c0665776210b5fbbac6eaaee40e3e6a96b7"
 
 [[projects]]
   branch = "master"
@@ -205,7 +211,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "8014b7b116a67fea23fbb82cd834c9ad656ea44b"
+  revision = "6c888cc515d3ed83fc103cf1d84468aad274b0a7"
 
 [[projects]]
   branch = "master"
@@ -219,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "465e6f399236d0ea2466584539d4eab4d3d83720"
+  revision = "c06a8d8ed11aae27b08c1c109a509ada9de81240"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -252,6 +258,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9ab70e50abbca0f125a0eb45996e791ea4efc652ae28b00cdcf037191803add1"
+  inputs-digest = "2d7aea12a04e727a897821d54c4c29d8637e13ced3959342c0153a87963773a5"
   solver-name = "gps-cdcl"
   solver-version = 1

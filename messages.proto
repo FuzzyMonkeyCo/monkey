@@ -4,6 +4,7 @@
 
 syntax = "proto3";
 package main;
+import "data_json.proto";
 
 message YmlCfg {
     uint32 version = 1;
@@ -51,21 +52,21 @@ message SpecIR {
 
 message Schemas {
     // This string represents a Ptr
-    map<string,PtrOrSchemaJSONDraft05> schemas_JSONDraft05 = 1;
+    map<string,PtrOrSchemaJSON> json = 1;
 }
 
 message Endpoint {
     oneof endpoint {
-        EndpointJSONDraft05 endpoint_JSONDraft05 = 1;
+        EndpointJSON json = 1;
     }
 }
 
-message EndpointJSONDraft05 {
+message EndpointJSON {
     Method method = 1;
     Path path = 2;
-    ParamsJSONDraft05 params = 3;
+    ParamsJSON params = 3;
     // This uint32 replaces an enum of 1XX,...,201,204,...,5XX,XXX.
-    map<uint32,PtrOrSchemaJSONDraft05> outputs = 4;
+    map<uint32,PtrOrSchemaJSON> outputs = 4;
 }
 
 enum Method {
@@ -91,20 +92,20 @@ message Path {
     repeated PathPartial partial = 1;
 }
 
-message ParamsJSONDraft05 {
+message ParamsJSON {
     // These uint32s are Ptrs
-    // map<uint32,ParamJSONDraft05> header = 1;
-    map<string,ParamJSONDraft05> header = 1;
-    // map<uint32,ParamJSONDraft05> path = 2;
-    map<string,ParamJSONDraft05> path = 2;
-    // map<uint32,ParamJSONDraft05> body = 3;
-    map<string,ParamJSONDraft05> body = 3;
-    // map<uint32,ParamJSONDraft05> query = 4;
-    map<string,ParamJSONDraft05> query = 4;
+    // map<uint32,ParamJSON> header = 1;
+    map<string,ParamJSON> header = 1;
+    // map<uint32,ParamJSON> path = 2;
+    map<string,ParamJSON> path = 2;
+    // map<uint32,ParamJSON> body = 3;
+    map<string,ParamJSON> body = 3;
+    // map<uint32,ParamJSON> query = 4;
+    map<string,ParamJSON> query = 4;
 }
 
-message ParamJSONDraft05 {
-    PtrOrSchemaJSONDraft05 schema_or_ptr = 1;
+message ParamJSON {
+    PtrOrSchemaJSON schema_or_ptr = 1;
     // Whether this param was explicitly $ref'd or was it us.
     bool connected = 2;
     // Whether this param is required to be present
@@ -112,22 +113,24 @@ message ParamJSONDraft05 {
     //TODO: repeated Example examples
 }
 
-message PtrOrSchemaJSONDraft05 {
-    oneof ptr_or_schema_JSONDraft05 {
+message PtrOrSchemaJSON {
+    oneof ptr_or_schema_JSON {
         // uint32 ptr = 1;
         string ptr = 1;
-        Schema.JSONDraft05 schema = 2;
+        Schema.JSON schema = 2;
     }
 }
 
 /// https://swagger.io/docs/specification/data-models/keywords/
 /// https://tools.ietf.org/html/draft-wright-json-schema-validation-00
+/// http://json-schema.org/draft-06/json-schema-release-notes.html
+/// http://json-schema.org/draft-07/json-schema-release-notes.html
 // https://github.com/mikunn/openapi-schema-to-json-schema
 // https://github.com/kogosoftwarellc/openapi-jsonschema-parameters
 // https://github.com/garethr/openapi2jsonschema
 
 message Schema {
-    message JSONDraft05 {
+    message JSON {
         // (Some) Things can be combined (: enum + type)
         //   so just lay things out flat...
 
@@ -143,7 +146,7 @@ message Schema {
         }
         repeated Type type = 1; // default: []
 
-        JSON.Array enum = 2; // default: []
+        main.JSON.Array enum = 2; // default: []
 
         // type: string
         string format = 3; // default: ""
@@ -162,7 +165,7 @@ message Schema {
         bool exclusive_maximum = 14; // default: false
 
         // type: array
-        repeated PtrOrSchemaJSONDraft05 items = 15; // default: empty list
+        repeated PtrOrSchemaJSON items = 15; // default: empty list
         bool unique_items = 16; // default: false
         uint64 min_items = 17; // default: 0
         uint64 max_items = 18;
@@ -170,7 +173,7 @@ message Schema {
         //TODO: additionalItems
 
         // type: object
-        map<string,PtrOrSchemaJSONDraft05> properties = 20; // default {}
+        map<string,PtrOrSchemaJSON> properties = 20; // default {}
         repeated string required = 21; // default: []
         uint64 min_properties = 22; // default: 0
         uint64 max_properties = 23;
@@ -178,18 +181,18 @@ message Schema {
         message AdditionalProperties {
             oneof add_props {
                 bool always_succeed = 1;
-                PtrOrSchemaJSONDraft05 schema_or_ptr = 2;
+                PtrOrSchemaJSON schema_or_ptr = 2;
             }
         }
         AdditionalProperties additional_properties = 25;
         bool has_additional_properties = 26;
         //TODO: patternProperties
 
-        repeated PtrOrSchemaJSONDraft05 all_of = 27; // default: []
-        repeated PtrOrSchemaJSONDraft05 any_of = 28; // default: []
-        repeated PtrOrSchemaJSONDraft05 one_of = 29; // default: []
+        repeated PtrOrSchemaJSON all_of = 27; // default: []
+        repeated PtrOrSchemaJSON any_of = 28; // default: []
+        repeated PtrOrSchemaJSON one_of = 29; // default: []
 
-        PtrOrSchemaJSONDraft05 not = 30;
+        PtrOrSchemaJSON not = 30;
 
         //TODO: default
         /* TODO: not part of OpenAPIv3.0.0
@@ -200,41 +203,5 @@ message Schema {
            id, $id
            propertyNames
         */
-    }
-}
-
-message JSON {
-    message Object {
-        map<string,Value> object = 1;
-        bool is_object = 2;
-    }
-    message Array {
-        repeated Value array = 1;
-        bool is_array = 2;
-    }
-    message Text {
-        string text = 1;
-        bool is_text = 2;
-    }
-    message Number {
-        double number = 1;
-        bool is_number = 2;
-    }
-    message Boolean {
-        bool boolean = 1;
-        bool is_boolean = 2;
-    }
-    message Null {
-        bool is_null = 1;
-    }
-    message Value {
-        oneof value {
-            Null z = 1;
-            Boolean b = 2;
-            Number n = 3;
-            Text t = 4;
-            Array a = 5;
-            Object o = 6;
-        }
     }
 }

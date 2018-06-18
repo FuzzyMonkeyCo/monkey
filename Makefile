@@ -19,7 +19,7 @@ DEP ?= dep-linux-amd64
 GODEP = v0.4.1
 
 all: lint vendor
-	protoc --go_out=. messages.proto
+	protoc --go_out=. *.proto
 	go generate
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)

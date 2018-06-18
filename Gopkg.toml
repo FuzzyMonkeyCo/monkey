@@ -71,7 +71,7 @@ required = [
   name = "github.com/wadey/gocovmerge"
 
 [[constraint]]
-  branch = "master"
+  branch = "uname-it"
   name = "github.com/fenollp/gox"
 
 [[constraint]]
