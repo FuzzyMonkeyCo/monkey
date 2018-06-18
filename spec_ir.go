@@ -240,17 +240,20 @@ func specEndpointResponses(docResponses openapi3.Responses) (
 		if err != nil {
 			return outputs, err
 		}
-		log.Println("xxx =", xxx)
 		if responseRef.Value == nil {
 			err = fmt.Errorf("unresolved response %#v", responseRef)
 			log.Println("[ERR]", err)
 			return outputs, err
 		}
-		// for mime, ct := range responseRef.Value.Content {
-		// 	if mimeJSON == mime {
-		// 		schema, err := specPtrOrSchemaFromDoc("", ct.Schema)
-		// 	}
-		// }
+		for mime, ct := range responseRef.Value.Content {
+			if mime == mimeJSON {
+				schema, err := specPtrOrSchemaFromDoc("", ct.Schema)
+				if err != nil {
+					return outputs, err
+				}
+				outputs[xxx] = schema
+			}
+		}
 	}
 
 	return

@@ -65,13 +65,15 @@ dep.GODEP:
 
 dep.GPB: bin = protoc
 dep.GPB: url = https://github.com/google/protobuf/releases
+dep.GPB: pre = /usr/local
 dep.GPB:
 	( cd /tmp \
 	  && lat=$(GPB) \
 	  && curl -#fSLo protoc.zip $(url)/download/$$lat/$(bin)-$${lat##v}-linux-$$(uname -m).zip \
 	  && unzip protoc.zip -d protoc \
-	  && mv protoc/bin/* /usr/local/bin/ \
-	  && mv protoc/include/* /usr/local/include/ \
+	  && sudo mv -v protoc/bin/* $(pre)/bin/ \
+	  && sudo mv -v protoc/include/* $(pre)/include/ \
+	  && sudo chown -R $$USER:$$USER $(pre)/bin $(pre)/include \
 	)
 
 lint:
