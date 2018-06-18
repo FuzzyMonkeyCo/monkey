@@ -20,10 +20,6 @@ before_install: |
   set -o errtrace
   # set -o nounset # TravisCI is unclean
   set -o pipefail
-  GPB_VSN=$(basename $(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/google/protobuf/releases/latest))
-  wget https://protobuf.googlecode.com/files/protobuf-$GPB_VSN.tar.gz
-  tar -xzvf protobuf-$GPB_VSN.tar.gz
-  pushd protobuf-$GPB_VSN && ./configure --prefix=/usr && make && sudo make install && popd
 after_script: set +e
 
 # before_cache:
@@ -34,6 +30,7 @@ after_script: set +e
 #     - $GOPATH/pkg
 
 install:
+- make dep.GPB
 - protoc --version
 - make deps
 - go version

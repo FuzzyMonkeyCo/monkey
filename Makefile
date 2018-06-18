@@ -17,6 +17,7 @@ DST ?= .
 
 DEP ?= dep-linux-amd64
 GODEP = v0.4.1
+GPB   = v3.5.1
 
 all: lint vendor
 	protoc --go_out=. *.proto
@@ -34,6 +35,8 @@ x: vendor
 update: SHELL := /bin/bash
 update:
 	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
+	[[ $(GPB)   = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/google/protobuf/releases/latest))" ]]
+	grep -F GPB
 	go generate
 	dep ensure -v -update
 
@@ -49,7 +52,9 @@ vendor:
 	  echo $$pkg && cd vendor/$$pkg && go install . && cd - ; \
 	done
 
-deps:
+deps: dep.GODEP
+
+dep.GODEP:
 	mkdir -p release
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP) -o release/$(DEP)
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP).sha256 -o release/$(DEP).sha256
@@ -57,6 +62,17 @@ deps:
 	chmod +x release/$(DEP)
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
+
+dep.GPB: bin = protoc
+dep.GPB: url = https://github.com/google/protobuf/releases
+dep.GPB:
+	( cd /tmp \
+	  && lat=$(GPB) \
+	  && curl -#fSLo protoc.zip $(url)/download/$$lat/$(bin)-$${lat##v}-linux-$$(uname -m).zip \
+	  && unzip protoc.zip -d protoc \
+	  && mv protoc/bin/* /usr/local/bin/ \
+	  && mv protoc/include/* /usr/local/include/ \
+	)
 
 lint:
 	gofmt -s -w *.go misc/*.go
