@@ -5,8 +5,8 @@
 
 E() {
     code=$?
-    [ $code -ne 0 ] && echo "  $@"
-    errors=$(( $errors + $code ))
+    [ $code -ne 0 ] && echo "  $*"
+    errors=$(( errors + code ))
 }
 
 if ! which ag >/dev/null 2>&1; then
