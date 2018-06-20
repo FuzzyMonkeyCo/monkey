@@ -1,6 +1,7 @@
 language: go
 go_import_path: github.com/FuzzyMonkeyCo/monkey
 go: 1.10.2
+sudo: required # to install GPB
 
 os:
 - linux
@@ -48,7 +49,7 @@ script:
 - make lint
 - go vet $(go list ./... | grep -v /vendor/)
 - megacheck -show-ignored -unused.exported
-- make test
+- make test.ci
 - ./monkey-Linux-x86_64 -h | grep monkey
 - ./monkey-Linux-x86_64 --help | grep monkey
 - ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG

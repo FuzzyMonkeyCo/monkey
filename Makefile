@@ -98,6 +98,8 @@ clean:
 	$(if $(wildcard cov.out),rm cov.out)
 
 test: all
+	go test . | richgo testfilter
+test.ci: all
 	go test -v -race . | richgo testfilter
 
 ape: $(EXE).test

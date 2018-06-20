@@ -159,7 +159,7 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 	err error,
 ) {
 	for parameterizedPath, docPathItem := range docPaths {
-		partials := &Path{
+		path := &Path{
 			Partial: []*Path_PathPartial{
 				{Pp: &Path_PathPartial_Part{basePath}},
 				{Pp: &Path_PathPartial_Ptr{parameterizedPath[1:]}},
@@ -168,6 +168,10 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 
 		for docMethod, docOp := range docPathItem.Operations() {
 			method := Method(Method_value[docMethod])
+			params, err := specEndpointParams(docOp.Parameters, docOp.RequestBody)
+			if err != nil {
+				return endpoints, err
+			}
 			outputs, err := specEndpointResponses(docOp.Responses)
 			if err != nil {
 				return endpoints, err
@@ -177,8 +181,8 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
 						Method:  method,
-						Path:    partials,
-						Params:  &ParamsJSON{},
+						Path:    path,
+						Params:  params,
 						Outputs: outputs,
 					},
 				},
@@ -227,6 +231,77 @@ func specXXX(code string) (xxx uint32, err error) {
 		log.Println("[ERR]", err)
 	}
 	return
+}
+
+func specEndpointParams(
+	docParams openapi3.Parameters,
+	docReqBody *openapi3.RequestBodyRef,
+) (
+	params *ParamsJSON,
+	err error,
+) {
+	type paramsJSON map[string]*ParamJSON
+	params = &ParamsJSON{
+		Header: make(paramsJSON),
+		Path:   make(paramsJSON),
+		Body:   make(paramsJSON),
+		Query:  make(paramsJSON),
+	}
+
+	if docReqBody != nil {
+		docBody := docReqBody.Value
+		if docBody == nil {
+			err = fmt.Errorf("unresolved response %#v", docReqBody)
+			log.Println("[ERR]", err)
+			return
+		}
+
+		for mime, ct := range docBody.Content {
+			if mime == mimeJSON {
+				ptr := "FIXME"
+				schema, err := specPtrOrSchemaFromDoc(ptr, ct.Schema)
+				if err != nil {
+					return params, err
+				}
+				params.Body[ptr] = &ParamJSON{
+					SchemaOrPtr: schema,
+					Connected:   specRefConnected(ct.Schema),
+					Required:    docBody.Required,
+				}
+			}
+		}
+	}
+
+	for _, docParamRef := range docParams {
+		docParam := docParamRef.Value
+		if docParam == nil {
+			err = fmt.Errorf("unresolved response %#v", docParamRef)
+			log.Println("[ERR]", err)
+			return
+		}
+
+		ptr := "#/components/parameters/" + docParam.Name
+		schema, err := specPtrOrSchemaFromDoc(ptr, docParam.Schema)
+		if err != nil {
+			return params, err
+		}
+		param := &ParamJSON{
+			SchemaOrPtr: schema,
+			Connected:   specRefConnected(docParam.Schema),
+			Required:    docParam.Required,
+		}
+
+		switch docParam.In {
+		case openapi3.ParameterInPath:
+			params.Path[ptr] = param
+		}
+	}
+
+	return
+}
+
+func specRefConnected(schema *openapi3.SchemaRef) bool {
+	return schema.Ref != ""
 }
 
 func specEndpointResponses(docResponses openapi3.Responses) (
