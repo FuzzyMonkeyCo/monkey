@@ -10,6 +10,7 @@ import (
 func TestLintOpenAPIv300Petstore(t *testing.T) {
 	docPath, showSpec := "./misc/openapiv3.0.0_petstore.yaml", false
 	blob, err := ioutil.ReadFile(docPath)
+	require.NoError(t, err)
 	spec, err := doLint(docPath, blob, showSpec)
 	require.NoError(t, err)
 
@@ -20,6 +21,7 @@ func TestLintOpenAPIv300Petstore(t *testing.T) {
 func TestLintOpenAPIv300PetstoreExpanded(t *testing.T) {
 	docPath, showSpec := "./misc/openapiv3.0.0_petstore-expanded.yaml", false
 	blob, err := ioutil.ReadFile(docPath)
+	require.NoError(t, err)
 	spec, err := doLint(docPath, blob, showSpec)
 	require.NoError(t, err)
 

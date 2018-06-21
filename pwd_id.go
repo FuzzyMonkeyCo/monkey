@@ -44,7 +44,10 @@ func makePwdID() (err error) {
 		return
 	}
 	h := fnv.New64a()
-	h.Write([]byte(realCwd))
+	if _, err = h.Write([]byte(realCwd)); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 	id := fmt.Sprintf("%d", h.Sum64())
 	prefix := path.Join(tmp, "."+binName+"_"+id)
 

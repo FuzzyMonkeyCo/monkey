@@ -104,7 +104,7 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	sType := s.Type
 	if sType != "" {
 		t := Schema_JSON_Type(Schema_JSON_Type_value[sType])
-		specMaybeAddType(t, schema.Type)
+		specMaybeAddType(t, &schema.Type)
 		wasSet = true
 	}
 
@@ -118,7 +118,7 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	// properties, required
 	sProperties := s.Properties
 	if len(sProperties) != 0 {
-		specMaybeAddType(Schema_JSON_object, schema.Type)
+		specMaybeAddType(Schema_JSON_object, &schema.Type)
 		schema.Required = s.Required
 		schema.Properties = make(mapKeyToPtrOrSchema)
 		for propName, propSchemaRef := range sProperties {
@@ -145,13 +145,13 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	return ptrOrSchema, nil
 }
 
-func specMaybeAddType(t Schema_JSON_Type, ts []Schema_JSON_Type) {
-	for _, aT := range ts {
+func specMaybeAddType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
+	for _, aT := range *ts {
 		if t == aT {
 			return
 		}
 	}
-	ts = append(ts, t)
+	*ts = append(*ts, t)
 }
 
 func specEndpoints(basePath string, docPaths openapi3.Paths) (
