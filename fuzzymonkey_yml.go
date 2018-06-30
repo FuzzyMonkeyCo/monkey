@@ -1,5 +1,10 @@
 package main
 
+//FIXME: switch to TOML?
+// https://github.com/toml-lang/toml
+// https://github.com/crdoconnor/strictyaml#why-strictyaml
+// https://github.com/pelletier/go-toml
+
 import (
 	"errors"
 	"fmt"

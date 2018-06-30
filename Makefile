@@ -97,10 +97,11 @@ clean:
 	$(if $(wildcard *.cov),rm *.cov)
 	$(if $(wildcard cov.out),rm cov.out)
 
+test: SHELL = /bin/bash -o pipefail
 test: all
 	go test . | richgo testfilter
 test.ci: all
-	go test -v -race . | richgo testfilter
+	go test -v -race .
 
 ape: $(EXE).test
 	./ape.sh --version

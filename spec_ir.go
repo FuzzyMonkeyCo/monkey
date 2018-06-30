@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"strconv"
 
 	"github.com/golang/protobuf/jsonpb"
@@ -120,7 +121,7 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	if len(sProperties) != 0 {
 		specMaybeAddType(Schema_JSON_object, &schema.Type)
 		schema.Required = s.Required
-		schema.Properties = make(mapKeyToPtrOrSchema)
+		schema.Properties = make(mapKeyToPtrOrSchema, len(sProperties))
 		for propName, propSchemaRef := range sProperties {
 			subPtr := ptr + "/" + propName
 			subS, err := specPtrOrSchemaFromDoc(subPtr, propSchemaRef)
@@ -128,6 +129,20 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 				return nil, err
 			}
 			schema.Properties[propName] = subS
+		}
+		wasSet = true
+	}
+
+	// allOf
+	sAllOf := s.AllOf
+	if len(sAllOf) != 0 {
+		schema.AllOf = make([]*PtrOrSchemaJSON, len(sAllOf))
+		for i, sOf := range sAllOf {
+			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
+			if err != nil {
+				return nil, err
+			}
+			schema.AllOf[i] = subS
 		}
 		wasSet = true
 	}
@@ -348,7 +363,15 @@ func specBasePath(docServers openapi3.Servers) (
 	if len(docServers) != 1 {
 		log.Println(`[NFO] field 'servers' has many values: using the first one`)
 	}
-	basePath = docServers[0].URL
+
+	u, err := url.Parse(docServers[0].URL)
+	if err != nil {
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
+		return
+	}
+	basePath = u.Path
+
 	if basePath == "" || basePath[0] != '/' {
 		err = errors.New(`field 'servers' has no suitable 'url'`)
 		log.Println("[ERR]", err)
