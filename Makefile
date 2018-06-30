@@ -17,7 +17,7 @@ DST ?= .
 
 DEP ?= dep-linux-amd64
 GODEP = v0.4.1
-GPB   = v3.5.1
+GPB   = v3.6.0
 
 all: lint vendor
 	protoc --go_out=. *.proto
@@ -36,7 +36,6 @@ update: SHELL := /bin/bash
 update:
 	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
 	[[ $(GPB)   = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/google/protobuf/releases/latest))" ]]
-	grep -F GPB
 	go generate
 	dep ensure -v -update
 

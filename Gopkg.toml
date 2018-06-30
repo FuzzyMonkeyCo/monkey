@@ -16,7 +16,7 @@ required = [
 
 [[constraint]]
   branch = "master"
-  name = "github.com/jban332/kin-openapi"
+  name = "github.com/getkin/kin-openapi"
 
 [[constraint]]
   branch = "master"

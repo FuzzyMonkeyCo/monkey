@@ -32,6 +32,15 @@
   revision = "8f9d0bdfdd0371d0d118d1e43d135f04391ba6fa"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/getkin/kin-openapi"
+  packages = [
+    "jsoninfo",
+    "openapi3"
+  ]
+  revision = "b743c9cc2841b94d9db3d4628abd6ee0b684d1f4"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -61,7 +70,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "9f81198da99b79e14d70ca2c3cc1bbe44c6e69b6"
+  revision = "9eb2c01ac278a5d89ce4b2be68fe4500955d8179"
 
 [[projects]]
   branch = "master"
@@ -84,15 +93,6 @@
   name = "github.com/hashicorp/logutils"
   packages = ["."]
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/jban332/kin-openapi"
-  packages = [
-    "jsoninfo",
-    "openapi3"
-  ]
-  revision = "313b35c7d96eee2ab9f15cb0a66b3b9b5394bf08"
 
 [[projects]]
   name = "github.com/kisielk/gotool"
@@ -199,7 +199,7 @@
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
-  revision = "9ff6d6c47f3f5de55acc6f464d6e3719b02818ae"
+  revision = "1d523034197ff1f222f6429836dd36a2457a1874"
 
 [[projects]]
   branch = "master"
@@ -211,7 +211,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "6c888cc515d3ed83fc103cf1d84468aad274b0a7"
+  revision = "7138fd3d9dc8335c567ca206f4333fb75eb05d56"
 
 [[projects]]
   branch = "master"
@@ -225,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "c06a8d8ed11aae27b08c1c109a509ada9de81240"
+  revision = "1c99e1239a0c8b0e59c34000995c4e319b7702ca"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -253,11 +253,11 @@
     "unused",
     "version"
   ]
-  revision = "57ee65dc7ff868f8fe21064b05f9e744a73bc9ab"
+  revision = "85dde8b51d3a07710001c1571ac759ebdd9b0106"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2d7aea12a04e727a897821d54c4c29d8637e13ced3959342c0153a87963773a5"
+  inputs-digest = "3d0449f0d499e814b9de7d51591a6f77656a9cffed1f2ceb984f3b06455997ae"
   solver-name = "gps-cdcl"
   solver-version = 1

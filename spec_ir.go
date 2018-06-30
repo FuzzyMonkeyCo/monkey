@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/protobuf/jsonpb"
-	"github.com/jban332/kin-openapi/openapi3"
 )
 
 type mapKeyToPtrOrSchema map[string]*PtrOrSchemaJSON
