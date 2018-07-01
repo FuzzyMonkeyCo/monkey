@@ -38,7 +38,7 @@
     "jsoninfo",
     "openapi3"
   ]
-  revision = "b743c9cc2841b94d9db3d4628abd6ee0b684d1f4"
+  revision = "5918480901beb43bec100db127fe5d30d95919da"
 
 [[projects]]
   name = "github.com/ghodss/yaml"

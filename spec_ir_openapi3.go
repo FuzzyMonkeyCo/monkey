@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/golang/protobuf/jsonpb"
@@ -86,41 +87,81 @@ func specPtrOrSchemaFromDoc(ptr string, schemaRef *openapi3.SchemaRef) (
 }
 
 func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, error) {
-	wasSet := false
 	schema := &Schema_JSON{}
 
-	// enum
-	// sEnum := s.GetEnum()
-	// if len(sEnum) != 0 {
-	// 	schema.Enum =
-	// }
+	//FIXME: "enum"
 
-	// nullable
+	// "nullable"
 	if s.Nullable {
 		schema.Type = []Schema_JSON_Type{Schema_JSON_null}
-		wasSet = true
 	}
-
-	// type
-	sType := s.Type
-	if sType != "" {
+	// "type"
+	if sType := s.Type; sType != "" {
 		t := Schema_JSON_Type(Schema_JSON_Type_value[sType])
 		specMaybeAddType(t, &schema.Type)
-		wasSet = true
 	}
 
-	// format
-	sFormat := s.Format
-	if sFormat != "" {
-		schema.Format = sFormat
-		wasSet = true
+	// "format"
+	schema.Format = s.Format
+	// "minLength"
+	schema.MinLength = s.MinLength
+	// "maxLength"
+	if nil != s.MaxLength {
+		schema.MaxLength = *s.MaxLength
+		schema.HasMaxLength = true
+	}
+	// "pattern"
+	schema.Pattern = s.Pattern
+
+	// "minimum"
+	if nil != s.Min {
+		schema.Minimum = *s.Min
+		schema.HasMinimum = true
+	}
+	// "maximum"
+	if nil != s.Max {
+		schema.Maximum = *s.Max
+		schema.HasMaximum = true
+	}
+	// "exclusiveMinimum", "exclusiveMaximum"
+	schema.ExclusiveMinimum = s.ExclusiveMin
+	schema.ExclusiveMaximum = s.ExclusiveMax
+	// "multipleOf"
+	if nil != s.MultipleOf {
+		schema.TranslatedMultipleOf = *s.MultipleOf - 1.0
 	}
 
-	// properties, required
-	sProperties := s.Properties
-	if len(sProperties) != 0 {
+	// "uniqueItems"
+	schema.UniqueItems = s.UniqueItems
+	// "minItems"
+	schema.MinItems = s.MinItems
+	// "maxItems"
+	if nil != s.MaxItems {
+		schema.MaxItems = *s.MaxItems
+		schema.HasMaxItems = true
+	}
+	// "items"
+	if sItems := s.Items; nil != sItems {
+		specMaybeAddType(Schema_JSON_array, &schema.Type)
+		subS, err := specPtrOrSchemaFromDoc(ptr, sItems)
+		if err != nil {
+			return nil, err
+		}
+		schema.Items = []*PtrOrSchemaJSON{subS}
+	}
+
+	// "minProperties"
+	schema.MinProperties = s.MinProps
+	// "maxProperties"
+	if nil != s.MaxProps {
+		schema.MaxProperties = *s.MaxProps
+		schema.HasMaxProperties = true
+	}
+	// "required"
+	schema.Required = s.Required
+	// "properties"
+	if sProperties := s.Properties; len(sProperties) != 0 {
 		specMaybeAddType(Schema_JSON_object, &schema.Type)
-		schema.Required = s.Required
 		schema.Properties = make(mapKeyToPtrOrSchema, len(sProperties))
 		for propName, propSchemaRef := range sProperties {
 			subPtr := ptr + "/" + propName
@@ -130,12 +171,11 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 			}
 			schema.Properties[propName] = subS
 		}
-		wasSet = true
 	}
+	//FIXME: "additionalProperties"
 
-	// allOf
-	sAllOf := s.AllOf
-	if len(sAllOf) != 0 {
+	// "allOf"
+	if sAllOf := s.AllOf; len(sAllOf) != 0 {
 		schema.AllOf = make([]*PtrOrSchemaJSON, len(sAllOf))
 		for i, sOf := range sAllOf {
 			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
@@ -144,16 +184,41 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 			}
 			schema.AllOf[i] = subS
 		}
-		wasSet = true
 	}
 
-	//FIXME: support all Schema.JSON fields
-
-	if !wasSet {
-		err := fmt.Errorf("%s is an empty schema: %#v", ptr, s)
-		log.Println("[ERR]", err)
-		return nil, err
+	// "anyOf"
+	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
+		schema.AnyOf = make([]*PtrOrSchemaJSON, len(sAnyOf))
+		for i, sOf := range sAnyOf {
+			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
+			if err != nil {
+				return nil, err
+			}
+			schema.AnyOf[i] = subS
+		}
 	}
+
+	// "oneOf"
+	if sOneOf := s.OneOf; len(sOneOf) != 0 {
+		schema.OneOf = make([]*PtrOrSchemaJSON, len(sOneOf))
+		for i, sOf := range sOneOf {
+			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
+			if err != nil {
+				return nil, err
+			}
+			schema.OneOf[i] = subS
+		}
+	}
+
+	// "not"
+	if sNot := s.Not; nil != sNot {
+		subS, err := specPtrOrSchemaFromDoc(ptr, sNot)
+		if err != nil {
+			return nil, err
+		}
+		schema.Not = subS
+	}
+
 	ptrOrSchema := &PtrOrSchemaJSON{
 		PtrOrSchema_JSON: &PtrOrSchemaJSON_Schema{schema},
 	}
@@ -174,12 +239,7 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 	err error,
 ) {
 	for parameterizedPath, docPathItem := range docPaths {
-		path := &Path{
-			Partial: []*Path_PathPartial{
-				{Pp: &Path_PathPartial_Part{basePath}},
-				{Pp: &Path_PathPartial_Ptr{parameterizedPath[1:]}},
-			},
-		}
+		path := specPath(basePath, parameterizedPath)
 
 		for docMethod, docOp := range docPathItem.Operations() {
 			method := Method(Method_value[docMethod])
@@ -207,6 +267,26 @@ func specEndpoints(basePath string, docPaths openapi3.Paths) (
 	}
 
 	return
+}
+
+func specPath(basePath, parameterizedPath string) *Path {
+	var partials []*Path_PathPartial
+	if basePath != "/" {
+		p := &Path_PathPartial{Pp: &Path_PathPartial_Part{basePath}}
+		partials = append(partials, p)
+	}
+	onCurly := func(r rune) bool { return r == '{' || r == '}' }
+	isCurly := '{' == parameterizedPath[0]
+	for i, part := range strings.FieldsFunc(parameterizedPath, onCurly) {
+		var p Path_PathPartial
+		if isCurly || i%2 != 0 {
+			p.Pp = &Path_PathPartial_Ptr{part}
+		} else {
+			p.Pp = &Path_PathPartial_Part{part}
+		}
+		partials = append(partials, &p)
+	}
+	return &Path{Partial: partials}
 }
 
 func specXXX(code string) (xxx uint32, err error) {
