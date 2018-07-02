@@ -22,7 +22,7 @@ const (
 )
 
 func newFuzz(cfg *YmlCfg, spec *SpecIR) (cmd someCmd, err error) {
-	initer := &InitFuzzing{
+	initer := &FuzzCfg{
 		Config: cfg,
 		Spec:   spec,
 	}

@@ -33,7 +33,7 @@ message YmlCfg {
     Exec exec = 6;
 }
 
-message InitFuzzing {
+message FuzzCfg {
     YmlCfg config = 1;
     SpecIR spec = 2;
 }
@@ -112,7 +112,7 @@ message ParamJSON {
     bool required = 3;
     //TODO: repeated Example examples
 }
-
+//FIXME: make em all pointers!
 message PtrOrSchemaJSON {
     oneof ptr_or_schema_JSON {
         // uint32 ptr = 1;
