@@ -38,21 +38,31 @@ message FuzzCfg {
     SpecIR spec = 2;
 }
 
-//FIXME: optimize ptrs this way?
-// Ptr = string  in SpecIR
-// Ptr = uint32  everywhere else
-
 message SpecIR {
-    // map<Ptr,string> ptrs = 1; //FIXME: really needed?
-    // Since order is preserved, offset in this list can be used as uint32
-    repeated string ptrs = 1;
-    Schemas schemas = 2;
-    repeated Endpoint endpoints = 3;
+    Schemas schemas = 1;
+    repeated Endpoint endpoints = 2;
 }
 
 message Schemas {
-    // This string represents a Ptr
-    map<string,PtrOrSchemaJSON> json = 1;
+    // All schemas are here. Only mention SchemaPtr everywhere else.
+    // Start at 1. 0 (zero) is reserved for bug finding.
+    map<uint32,RefOrSchemaJSON> json = 1;
+}
+
+message RefOrSchemaJSON {
+    oneof ptr_or_schema {
+        // Probably most often from a $ref
+        SchemaPtr ptr = 1;
+        // Actual schema when not a $ref
+        Schema.JSON schema = 2;
+    }
+}
+
+message SchemaPtr {
+    // Pointer to actual schema. i.e. key in Schemas message.
+    uint32 UID = 1;
+    // $ref if was ref'd, in canonical/absolute (#/...-like) format.
+    string ref = 2;
 }
 
 message Endpoint {
@@ -64,9 +74,24 @@ message Endpoint {
 message EndpointJSON {
     Method method = 1;
     Path path = 2;
-    ParamsJSON params = 3;
-    // This uint32 replaces an enum of 1XX,...,201,204,...,5XX,XXX.
-    map<uint32,PtrOrSchemaJSON> outputs = 4;
+    ParamsJSON inputs = 3;
+    // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+    map<uint32,SchemaPtr> outputs = 4;
+}
+
+message ParamsJSON {
+    ParamJSON body = 1;
+    map<string,ParamJSON> header = 2;
+    map<string,ParamJSON> path = 3;
+    map<string,ParamJSON> query = 4;
+}
+
+message ParamJSON {
+    // Whether this param has to be present
+    bool required = 1;
+    // Pointer to Schemas message
+    SchemaPtr ptr = 2;
+    //TODO: repeated Example examples
 }
 
 enum Method {
@@ -85,40 +110,10 @@ message Path {
     message PathPartial {
         oneof pp {
             string part = 1;
-            // uint32 ptr = 2;
-            string ptr = 2;
+            string ptr = 2; //FIXME? uint32 ptr = 2;
         }
     }
     repeated PathPartial partial = 1;
-}
-
-message ParamsJSON {
-    // These uint32s are Ptrs
-    // map<uint32,ParamJSON> header = 1;
-    map<string,ParamJSON> header = 1;
-    // map<uint32,ParamJSON> path = 2;
-    map<string,ParamJSON> path = 2;
-    // map<uint32,ParamJSON> body = 3;
-    map<string,ParamJSON> body = 3;
-    // map<uint32,ParamJSON> query = 4;
-    map<string,ParamJSON> query = 4;
-}
-
-message ParamJSON {
-    PtrOrSchemaJSON schema_or_ptr = 1;
-    // Whether this param was explicitly $ref'd or was it us.
-    bool connected = 2;
-    // Whether this param is required to be present
-    bool required = 3;
-    //TODO: repeated Example examples
-}
-//FIXME: make em all pointers!
-message PtrOrSchemaJSON {
-    oneof ptr_or_schema_JSON {
-        // uint32 ptr = 1;
-        string ptr = 1;
-        Schema.JSON schema = 2;
-    }
 }
 
 /// https://swagger.io/docs/specification/data-models/keywords/
@@ -131,7 +126,7 @@ message PtrOrSchemaJSON {
 
 message Schema {
     message JSON {
-        // (Some) Things can be combined (: enum + type)
+        // (Some) things can be combined (: enum + type)
         //   so just lay things out flat...
 
         enum Type {
@@ -165,43 +160,49 @@ message Schema {
         bool exclusive_maximum = 14; // default: false
 
         // type: array
-        repeated PtrOrSchemaJSON items = 15; // default: empty list
+        repeated SchemaPtr items = 15; // default: empty list
         bool unique_items = 16; // default: false
         uint64 min_items = 17; // default: 0
         uint64 max_items = 18;
         bool has_max_items = 19;
-        //TODO: additionalItems
+        //TODO: additionalItems :: bool | SchemaPtr
 
         // type: object
-        map<string,PtrOrSchemaJSON> properties = 20; // default {}
+        map<string,SchemaPtr> properties = 20; // default {}
         repeated string required = 21; // default: []
         uint64 min_properties = 22; // default: 0
         uint64 max_properties = 23;
         bool has_max_properties = 24;
+        ///FIXME true is equivalent to {}, false is equivalent to {"not": {}}
         message AdditionalProperties {
             oneof add_props {
                 bool always_succeed = 1;
-                PtrOrSchemaJSON schema_or_ptr = 2;
+                SchemaPtr ref = 2;
             }
         }
         AdditionalProperties additional_properties = 25;
         bool has_additional_properties = 26;
-        //TODO: patternProperties
+        //TODO: patternProperties :: SchemaPtr
 
-        repeated PtrOrSchemaJSON all_of = 27; // default: []
-        repeated PtrOrSchemaJSON any_of = 28; // default: []
-        repeated PtrOrSchemaJSON one_of = 29; // default: []
+        repeated SchemaPtr all_of = 27; // default: []
+        repeated SchemaPtr any_of = 28; // default: []
+        repeated SchemaPtr one_of = 29; // default: []
 
-        PtrOrSchemaJSON not = 30;
+        SchemaPtr not = 30;
 
-        //TODO: default
-        /* TODO: not part of OpenAPIv3.0.0
-           $schema
-           const
-           contains
-           dependencies
-           id, $id
-           propertyNames
-        */
+        //TODO: default, examples
+        //TODO: draft-04 but not part of OpenAPIv3.0.0
+        //  $schema
+        //  id, $id
+        //  dependencies
+        //TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
+        //  const
+        //  contains
+        //  propertyNames
+        //  some formats
+        //TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
+        //  if, then, else
+        //  (readOnly, writeOnly, contentMediaType, contentEncoding)
+        //  some formats
     }
 }

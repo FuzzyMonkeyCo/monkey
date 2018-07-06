@@ -2,9 +2,9 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -12,84 +12,170 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-type mapKeyToPtrOrSchema map[string]*PtrOrSchemaJSON
-type mapXXXToPtrOrSchema map[uint32]*PtrOrSchemaJSON
+type schemap map[uint32]*RefOrSchemaJSON
 
-func newSpecFromOpenAPIv3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
-	log.Println("[DBG] normalizing spec from OpenAPIv3")
-
-	schemas, err := specSchemas("#/components/schemas/", doc.Components.Schemas)
-	if err != nil {
-		return
-	}
-
-	basePath, err := specBasePath(doc.Servers)
-	if err != nil {
-		return
-	}
-	endpoints, err := specEndpoints(basePath, doc.Paths)
-	if err != nil {
-		return
-	}
-
-	spec = &SpecIR{
-		Endpoints: endpoints,
-		Schemas: &Schemas{
-			Json: schemas,
-		},
-	}
-	log.Printf("\n basePath:%#v\n spec: %v\n ", basePath, spec)
-
-	stringified, err := new(jsonpb.Marshaler).MarshalToString(spec)
-	log.Println("[DBG]", err, stringified)
-	return
+func newSchemap(capa int) schemap {
+	return make(schemap, capa)
 }
 
-func specSchemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) (
-	schemas mapKeyToPtrOrSchema,
-	err error,
-) {
-	schemas = make(mapKeyToPtrOrSchema)
+func (sm schemap) newUID() uint32 {
+	return uint32(1 + len(sm))
+}
 
+func (sm schemap) seed(ref string, schema *Schema_JSON) {
+	schemaPtr := sm.ensureMapped("", schema)
+	schemaPtr.Ref = ref
+	sm[sm.newUID()] = &RefOrSchemaJSON{
+		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
+	}
+}
+
+func (sm schemap) ensureMapped(ref string, schema *Schema_JSON) *SchemaPtr {
+	if ref == "" {
+		for UID, schPtr := range sm {
+			//TODO: try loop & search for schema to save on space
+			if s := schPtr.GetSchema(); s != nil && schema.equal(s) {
+				log.Printf(">>> yay!")
+				return &SchemaPtr{UID: UID}
+			}
+		}
+		UID := sm.newUID()
+		sm[UID] = &RefOrSchemaJSON{
+			PtrOrSchema: &RefOrSchemaJSON_Schema{schema},
+		}
+		return &SchemaPtr{UID: UID}
+	}
+
+	if schema == nil {
+		panic("no ref nor schema!")
+	}
+
+	mappedUID := uint32(0)
+	for UID, schPtr := range sm {
+		if ptr := schPtr.GetPtr(); ptr != nil && ref == ptr.GetRef() {
+			mappedUID = UID
+			break
+		}
+	}
+	schemaPtr := &SchemaPtr{
+		Ref: ref,
+		UID: mappedUID,
+	}
+	sm[sm.newUID()] = &RefOrSchemaJSON{
+		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
+	}
+	return schemaPtr
+}
+
+func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) *SchemaPtr {
+	if docSchema := s.Value; docSchema != nil {
+		schema := sm.schemaFromOA3(docSchema)
+		return sm.ensureMapped("", schema)
+	}
+	if s.Ref != "" {
+		return sm.ensureMapped(s.Ref, nil)
+	}
+	panic("both schema and ref are empty")
+}
+
+func (sm schemap) addOA3Schemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) {
 	for name, schemaRef := range docSchemas {
-		ptr := baseRef + name
-		var ptrOrSchema *PtrOrSchemaJSON
-		if ptrOrSchema, err = specPtrOrSchemaFromDoc(ptr, schemaRef); err != nil {
-			return
-		}
-		colorERR.Printf("%#v --> %v\n", ptr, ptrOrSchema)
-		schemas[ptr] = ptrOrSchema
+		ref := baseRef + name
+		colorERR.Printf(">>> %#v\n", ref)
+		schema := sm.schemaFromOA3(schemaRef.Value)
+		colorERR.Printf(">>> %#v --> %#v\n", schemaRef.Value, schema)
+		sm.seed(ref, schema)
 	}
-
-	return
 }
 
-func specPtrOrSchemaFromDoc(ptr string, schemaRef *openapi3.SchemaRef) (
-	schema *PtrOrSchemaJSON,
-	err error,
+func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
+	endpoints []*Endpoint,
 ) {
-	//FIXME: Schemas::map[str]schemaORptr, Endpoints::only ptrs to schemas
-	if schemaRef.Ref != "" {
-		if schemaRef.Value == nil {
-			err = fmt.Errorf("%s is neither ref nor schema", ptr)
-			log.Println("[ERR]", err)
-			return
-		}
-		schema = &PtrOrSchemaJSON{
-			PtrOrSchema_JSON: &PtrOrSchemaJSON_Ptr{
-				Ptr: schemaRef.Ref,
-			},
+	for parameterizedPath, docPathItem := range docPaths {
+		path := pathFromOA3(basePath, parameterizedPath)
+
+		for docMethod, docOp := range docPathItem.Operations() {
+			method := Method(Method_value[docMethod])
+			inputs := sm.inputsFromOA3(docOp.Parameters, docOp.RequestBody)
+			outputs := sm.outputsFromOA3(docOp.Responses)
+
+			endpoint := &Endpoint{
+				Endpoint: &Endpoint_Json{
+					&EndpointJSON{
+						Method:  method,
+						Path:    path,
+						Inputs:  inputs,
+						Outputs: outputs,
+					},
+				},
+			}
+			endpoints = append(endpoints, endpoint)
 		}
 	}
-
-	schema, err = specSchemaFromDocSchema(ptr, schemaRef.Value)
 	return
 }
 
-func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, error) {
-	schema := &Schema_JSON{}
+func (sm schemap) inputsFromOA3(
+	docParams openapi3.Parameters,
+	docReqBody *openapi3.RequestBodyRef,
+) (
+	params *ParamsJSON,
+) {
+	type paramsJSON map[string]*ParamJSON
+	params = &ParamsJSON{
+		Header: make(paramsJSON),
+		Path:   make(paramsJSON),
+		Query:  make(paramsJSON),
+	}
 
-	//FIXME: "enum"
+	if docReqBody != nil {
+		//FIXME: handle .Ref
+		docBody := docReqBody.Value
+		for mime, ct := range docBody.Content {
+			if mime == mimeJSON {
+				params.Body = &ParamJSON{
+					Required: docBody.Required,
+					Ptr:      sm.ensureMappedOA3SchemaRef(ct.Schema),
+				}
+			}
+		}
+	}
+
+	for _, docParamRef := range docParams {
+		//FIXME: handle .Ref
+		docParam := docParamRef.Value
+		param := &ParamJSON{
+			Required: docParam.Required,
+			Ptr:      sm.ensureMappedOA3SchemaRef(docParam.Schema),
+		}
+
+		switch docParam.In {
+		case openapi3.ParameterInPath:
+			params.Path[docParam.Name] = param
+		}
+	}
+	return
+}
+
+func (sm schemap) outputsFromOA3(docResponses openapi3.Responses) (
+	outputs map[uint32]*SchemaPtr,
+) {
+	outputs = make(map[uint32]*SchemaPtr)
+	for code, responseRef := range docResponses {
+		//FIXME: handle .Ref
+		for mime, ct := range responseRef.Value.Content {
+			if mime == mimeJSON {
+				schemaPtr := sm.ensureMappedOA3SchemaRef(ct.Schema)
+				outputs[makeXXXFromOA3(code)] = schemaPtr
+			}
+		}
+	}
+	return
+}
+
+func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
+	schema = &Schema_JSON{}
+	// "enum" FIXME
 
 	// "nullable"
 	if s.Nullable {
@@ -98,7 +184,7 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	// "type"
 	if sType := s.Type; sType != "" {
 		t := Schema_JSON_Type(Schema_JSON_Type_value[sType])
-		specMaybeAddType(t, &schema.Type)
+		ensureSchemaType(t, &schema.Type)
 	}
 
 	// "format"
@@ -142,12 +228,9 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	}
 	// "items"
 	if sItems := s.Items; nil != sItems {
-		specMaybeAddType(Schema_JSON_array, &schema.Type)
-		subS, err := specPtrOrSchemaFromDoc(ptr, sItems)
-		if err != nil {
-			return nil, err
-		}
-		schema.Items = []*PtrOrSchemaJSON{subS}
+		ensureSchemaType(Schema_JSON_array, &schema.Type)
+		schemaPtr := sm.ensureMappedOA3SchemaRef(sItems)
+		schema.Items = []*SchemaPtr{schemaPtr}
 	}
 
 	// "minProperties"
@@ -161,71 +244,56 @@ func specSchemaFromDocSchema(ptr string, s *openapi3.Schema) (*PtrOrSchemaJSON, 
 	schema.Required = s.Required
 	// "properties"
 	if sProperties := s.Properties; len(sProperties) != 0 {
-		specMaybeAddType(Schema_JSON_object, &schema.Type)
-		schema.Properties = make(mapKeyToPtrOrSchema, len(sProperties))
+		ensureSchemaType(Schema_JSON_object, &schema.Type)
+		schema.Properties = make(map[string]*SchemaPtr, len(sProperties))
 		for propName, propSchemaRef := range sProperties {
-			subPtr := ptr + "/" + propName
-			subS, err := specPtrOrSchemaFromDoc(subPtr, propSchemaRef)
-			if err != nil {
-				return nil, err
-			}
-			schema.Properties[propName] = subS
+			schemaPtr := sm.ensureMappedOA3SchemaRef(propSchemaRef)
+			schema.Properties[propName] = schemaPtr
 		}
 	}
 	//FIXME: "additionalProperties"
 
 	// "allOf"
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
-		schema.AllOf = make([]*PtrOrSchemaJSON, len(sAllOf))
+		schema.AllOf = make([]*SchemaPtr, len(sAllOf))
 		for i, sOf := range sAllOf {
-			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
-			if err != nil {
-				return nil, err
-			}
-			schema.AllOf[i] = subS
+			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
+			schema.AllOf[i] = schemaPtr
 		}
 	}
 
 	// "anyOf"
 	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
-		schema.AnyOf = make([]*PtrOrSchemaJSON, len(sAnyOf))
+		schema.AnyOf = make([]*SchemaPtr, len(sAnyOf))
 		for i, sOf := range sAnyOf {
-			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
-			if err != nil {
-				return nil, err
-			}
-			schema.AnyOf[i] = subS
+			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
+			schema.AnyOf[i] = schemaPtr
 		}
 	}
 
 	// "oneOf"
 	if sOneOf := s.OneOf; len(sOneOf) != 0 {
-		schema.OneOf = make([]*PtrOrSchemaJSON, len(sOneOf))
+		schema.OneOf = make([]*SchemaPtr, len(sOneOf))
 		for i, sOf := range sOneOf {
-			subS, err := specPtrOrSchemaFromDoc(ptr, sOf)
-			if err != nil {
-				return nil, err
-			}
-			schema.OneOf[i] = subS
+			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
+			schema.OneOf[i] = schemaPtr
 		}
 	}
 
 	// "not"
 	if sNot := s.Not; nil != sNot {
-		subS, err := specPtrOrSchemaFromDoc(ptr, sNot)
-		if err != nil {
-			return nil, err
-		}
-		schema.Not = subS
+		schemaPtr := sm.ensureMappedOA3SchemaRef(sNot)
+		schema.Not = schemaPtr
 	}
 
-	ptrOrSchema := &PtrOrSchemaJSON{
-		PtrOrSchema_JSON: &PtrOrSchemaJSON_Schema{schema},
-	}
-	return ptrOrSchema, nil
+	return
 }
 
-func specMaybeAddType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
+func (s *Schema_JSON) equal(ss *Schema_JSON) bool {
+	return reflect.DeepEqual(s, ss)
+}
+
+func ensureSchemaType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
 	for _, aT := range *ts {
 		if t == aT {
 			return
@@ -234,42 +302,32 @@ func specMaybeAddType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
 	*ts = append(*ts, t)
 }
 
-func specEndpoints(basePath string, docPaths openapi3.Paths) (
-	endpoints []*Endpoint,
-	err error,
-) {
-	for parameterizedPath, docPathItem := range docPaths {
-		path := specPath(basePath, parameterizedPath)
+// https://swagger.io/docs/specification/data-models/data-types/
+func newSpecFromOA3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
+	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
-		for docMethod, docOp := range docPathItem.Operations() {
-			method := Method(Method_value[docMethod])
-			params, err := specEndpointParams(docOp.Parameters, docOp.RequestBody)
-			if err != nil {
-				return endpoints, err
-			}
-			outputs, err := specEndpointResponses(docOp.Responses)
-			if err != nil {
-				return endpoints, err
-			}
+	docSchemas := doc.Components.Schemas
+	sm := newSchemap(len(docSchemas))
+	sm.addOA3Schemas("#/components/schemas/", docSchemas)
 
-			endpoint := &Endpoint{
-				Endpoint: &Endpoint_Json{
-					&EndpointJSON{
-						Method:  method,
-						Path:    path,
-						Params:  params,
-						Outputs: outputs,
-					},
-				},
-			}
-			endpoints = append(endpoints, endpoint)
-		}
+	basePath, err := basePathFromOA3(doc.Servers)
+	if err != nil {
+		return
 	}
+	endpoints := sm.endpointsFromOA3(basePath, doc.Paths)
 
+	spec = &SpecIR{
+		Endpoints: endpoints,
+		Schemas:   &Schemas{Json: sm},
+	}
+	log.Printf("\n basePath:%#v\n spec: %v\n ", basePath, spec)
+
+	stringified, err := new(jsonpb.Marshaler).MarshalToString(spec)
+	log.Println("[DBG]", err, stringified)
 	return
 }
 
-func specPath(basePath, parameterizedPath string) *Path {
+func pathFromOA3(basePath, parameterizedPath string) *Path {
 	var partials []*Path_PathPartial
 	if basePath != "/" {
 		p := &Path_PathPartial{Pp: &Path_PathPartial_Part{basePath}}
@@ -289,151 +347,44 @@ func specPath(basePath, parameterizedPath string) *Path {
 	return &Path{Partial: partials}
 }
 
-func specXXX(code string) (xxx uint32, err error) {
-	var i int
+func makeXXXFromOA3(code string) uint32 {
 	switch {
 	case code == "default":
-		xxx = 0
+		return 0
 	case code == "1XX":
-		xxx = 1
+		return 1
 	case code == "2XX":
-		xxx = 2
+		return 2
 	case code == "3XX":
-		xxx = 3
+		return 3
 	case code == "4XX":
-		xxx = 4
+		return 4
 	case code == "5XX":
-		xxx = 5
+		return 5
 
 	case "100" <= code && code <= "199":
-		i, err = strconv.Atoi(code)
-		xxx = uint32(i)
+		i, _ := strconv.Atoi(code)
+		return uint32(i)
 	case "200" <= code && code <= "299":
-		i, err = strconv.Atoi(code)
-		xxx = uint32(i)
+		i, _ := strconv.Atoi(code)
+		return uint32(i)
 	case "300" <= code && code <= "399":
-		i, err = strconv.Atoi(code)
-		xxx = uint32(i)
+		i, _ := strconv.Atoi(code)
+		return uint32(i)
 	case "400" <= code && code <= "499":
-		i, err = strconv.Atoi(code)
-		xxx = uint32(i)
+		i, _ := strconv.Atoi(code)
+		return uint32(i)
 	case "500" <= code && code <= "599":
-		i, err = strconv.Atoi(code)
-		xxx = uint32(i)
+		i, _ := strconv.Atoi(code)
+		return uint32(i)
 
 	default:
-		err = fmt.Errorf("unexpected output HTTP code: '%s'", code)
-		log.Println("[ERR]", err)
+		panic(code)
 	}
-	return
-}
-
-func specEndpointParams(
-	docParams openapi3.Parameters,
-	docReqBody *openapi3.RequestBodyRef,
-) (
-	params *ParamsJSON,
-	err error,
-) {
-	type paramsJSON map[string]*ParamJSON
-	params = &ParamsJSON{
-		Header: make(paramsJSON),
-		Path:   make(paramsJSON),
-		Body:   make(paramsJSON),
-		Query:  make(paramsJSON),
-	}
-
-	if docReqBody != nil {
-		docBody := docReqBody.Value
-		if docBody == nil {
-			err = fmt.Errorf("unresolved response %#v", docReqBody)
-			log.Println("[ERR]", err)
-			return
-		}
-
-		for mime, ct := range docBody.Content {
-			if mime == mimeJSON {
-				ptr := "FIXME"
-				schema, err := specPtrOrSchemaFromDoc(ptr, ct.Schema)
-				if err != nil {
-					return params, err
-				}
-				params.Body[ptr] = &ParamJSON{
-					SchemaOrPtr: schema,
-					Connected:   specRefConnected(ct.Schema),
-					Required:    docBody.Required,
-				}
-			}
-		}
-	}
-
-	for _, docParamRef := range docParams {
-		docParam := docParamRef.Value
-		if docParam == nil {
-			err = fmt.Errorf("unresolved response %#v", docParamRef)
-			log.Println("[ERR]", err)
-			return
-		}
-
-		ptr := "#/components/parameters/" + docParam.Name
-		schema, err := specPtrOrSchemaFromDoc(ptr, docParam.Schema)
-		if err != nil {
-			return params, err
-		}
-		param := &ParamJSON{
-			SchemaOrPtr: schema,
-			Connected:   specRefConnected(docParam.Schema),
-			Required:    docParam.Required,
-		}
-
-		switch docParam.In {
-		case openapi3.ParameterInPath:
-			params.Path[ptr] = param
-		}
-	}
-
-	return
-}
-
-func specRefConnected(schema *openapi3.SchemaRef) bool {
-	return schema.Ref != ""
-}
-
-func specEndpointResponses(docResponses openapi3.Responses) (
-	outputs mapXXXToPtrOrSchema,
-	err error,
-) {
-	outputs = make(mapXXXToPtrOrSchema)
-
-	for code, responseRef := range docResponses {
-		xxx, err := specXXX(code)
-		if err != nil {
-			return outputs, err
-		}
-		if responseRef.Value == nil {
-			err = fmt.Errorf("unresolved response %#v", responseRef)
-			log.Println("[ERR]", err)
-			return outputs, err
-		}
-		for mime, ct := range responseRef.Value.Content {
-			if mime == mimeJSON {
-				schema, err := specPtrOrSchemaFromDoc("", ct.Schema)
-				if err != nil {
-					return outputs, err
-				}
-				outputs[xxx] = schema
-			}
-		}
-	}
-
-	return
 }
 
 //TODO: support the whole spec on /"servers"
-func specBasePath(docServers openapi3.Servers) (
-	basePath string,
-	err error,
-) {
+func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 	if len(docServers) == 0 {
 		log.Println(`[NFO] field 'servers' empty/unset: using "/"`)
 		basePath = "/"

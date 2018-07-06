@@ -26,16 +26,19 @@ func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error
 	case ".yml", ".yaml":
 		if doc, err = loader.LoadSwaggerFromYAMLData(blob); err != nil {
 			log.Println("[ERR]", err)
+			colorERR.Println(err)
 			return
 		}
 	case ".json":
 		if doc, err = loader.LoadSwaggerFromData(blob); err != nil {
 			log.Println("[ERR]", err)
+			colorERR.Println(err)
 			return
 		}
 	default:
 		err = fmt.Errorf("unsupported file format: %s", docPath)
 		log.Println("[ERR]", err)
+		colorERR.Println(err)
 		return
 	}
 
@@ -44,7 +47,7 @@ func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error
 		return
 	}
 
-	spec, err = newSpecFromOpenAPIv3(doc)
+	spec, err = newSpecFromOA3(doc)
 	return
 }
 
@@ -79,7 +82,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 			e := strings.TrimPrefix(line, "ERROR $root.")
 			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
 		}
-		colorWRN.Println("Documentation validation failed.")
+		colorERR.Println("Documentation validation failed.")
 		return
 	}
 
@@ -91,7 +94,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 			e := strings.TrimPrefix(line, "ERROR ")
 			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
 		}
-		colorWRN.Println("Documentation validation failed.")
+		colorERR.Println("Documentation validation failed.")
 		return
 	}
 

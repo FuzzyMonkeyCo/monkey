@@ -59,7 +59,7 @@ func (x Method) String() string {
 	return proto.EnumName(Method_name, int32(x))
 }
 func (Method) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{0}
 }
 
 type YmlCfg_Kind int32
@@ -82,7 +82,7 @@ func (x YmlCfg_Kind) String() string {
 	return proto.EnumName(YmlCfg_Kind_name, int32(x))
 }
 func (YmlCfg_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{0, 0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{0, 0}
 }
 
 type Schema_JSON_Type int32
@@ -123,7 +123,7 @@ func (x Schema_JSON_Type) String() string {
 	return proto.EnumName(Schema_JSON_Type_name, int32(x))
 }
 func (Schema_JSON_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{10, 0, 0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{11, 0, 0}
 }
 
 type YmlCfg struct {
@@ -142,7 +142,7 @@ func (m *YmlCfg) Reset()         { *m = YmlCfg{} }
 func (m *YmlCfg) String() string { return proto.CompactTextString(m) }
 func (*YmlCfg) ProtoMessage()    {}
 func (*YmlCfg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{0}
 }
 func (m *YmlCfg) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_YmlCfg.Unmarshal(m, b)
@@ -218,7 +218,7 @@ func (m *YmlCfg_Runtime) Reset()         { *m = YmlCfg_Runtime{} }
 func (m *YmlCfg_Runtime) String() string { return proto.CompactTextString(m) }
 func (*YmlCfg_Runtime) ProtoMessage()    {}
 func (*YmlCfg_Runtime) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{0, 0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{0, 0}
 }
 func (m *YmlCfg_Runtime) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_YmlCfg_Runtime.Unmarshal(m, b)
@@ -279,7 +279,7 @@ func (m *YmlCfg_Exec) Reset()         { *m = YmlCfg_Exec{} }
 func (m *YmlCfg_Exec) String() string { return proto.CompactTextString(m) }
 func (*YmlCfg_Exec) ProtoMessage()    {}
 func (*YmlCfg_Exec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{0, 1}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{0, 1}
 }
 func (m *YmlCfg_Exec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_YmlCfg_Exec.Unmarshal(m, b)
@@ -332,7 +332,7 @@ func (m *FuzzCfg) Reset()         { *m = FuzzCfg{} }
 func (m *FuzzCfg) String() string { return proto.CompactTextString(m) }
 func (*FuzzCfg) ProtoMessage()    {}
 func (*FuzzCfg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{1}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{1}
 }
 func (m *FuzzCfg) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FuzzCfg.Unmarshal(m, b)
@@ -367,11 +367,8 @@ func (m *FuzzCfg) GetSpec() *SpecIR {
 }
 
 type SpecIR struct {
-	// map<Ptr,string> ptrs = 1; //FIXME: really needed?
-	// Since order is preserved, offset in this list can be used as uint32
-	Ptrs                 []string    `protobuf:"bytes,1,rep,name=ptrs,proto3" json:"ptrs,omitempty"`
-	Schemas              *Schemas    `protobuf:"bytes,2,opt,name=schemas,proto3" json:"schemas,omitempty"`
-	Endpoints            []*Endpoint `protobuf:"bytes,3,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
+	Schemas              *Schemas    `protobuf:"bytes,1,opt,name=schemas,proto3" json:"schemas,omitempty"`
+	Endpoints            []*Endpoint `protobuf:"bytes,2,rep,name=endpoints,proto3" json:"endpoints,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
 	XXX_sizecache        int32       `json:"-"`
@@ -381,7 +378,7 @@ func (m *SpecIR) Reset()         { *m = SpecIR{} }
 func (m *SpecIR) String() string { return proto.CompactTextString(m) }
 func (*SpecIR) ProtoMessage()    {}
 func (*SpecIR) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{2}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{2}
 }
 func (m *SpecIR) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecIR.Unmarshal(m, b)
@@ -401,13 +398,6 @@ func (m *SpecIR) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SpecIR proto.InternalMessageInfo
 
-func (m *SpecIR) GetPtrs() []string {
-	if m != nil {
-		return m.Ptrs
-	}
-	return nil
-}
-
 func (m *SpecIR) GetSchemas() *Schemas {
 	if m != nil {
 		return m.Schemas
@@ -423,8 +413,9 @@ func (m *SpecIR) GetEndpoints() []*Endpoint {
 }
 
 type Schemas struct {
-	// This string represents a Ptr
-	Json                 map[string]*PtrOrSchemaJSON `protobuf:"bytes,1,rep,name=json,proto3" json:"json,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	// All schemas are here. Only mention SchemaPtr everywhere else.
+	// Start at 1. 0 (zero) is reserved for bug finding.
+	Json                 map[uint32]*RefOrSchemaJSON `protobuf:"bytes,1,rep,name=json,proto3" json:"json,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
 	XXX_sizecache        int32                       `json:"-"`
@@ -434,7 +425,7 @@ func (m *Schemas) Reset()         { *m = Schemas{} }
 func (m *Schemas) String() string { return proto.CompactTextString(m) }
 func (*Schemas) ProtoMessage()    {}
 func (*Schemas) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{3}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{3}
 }
 func (m *Schemas) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schemas.Unmarshal(m, b)
@@ -454,11 +445,202 @@ func (m *Schemas) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Schemas proto.InternalMessageInfo
 
-func (m *Schemas) GetJson() map[string]*PtrOrSchemaJSON {
+func (m *Schemas) GetJson() map[uint32]*RefOrSchemaJSON {
 	if m != nil {
 		return m.Json
 	}
 	return nil
+}
+
+type RefOrSchemaJSON struct {
+	// Types that are valid to be assigned to PtrOrSchema:
+	//	*RefOrSchemaJSON_Ptr
+	//	*RefOrSchemaJSON_Schema
+	PtrOrSchema          isRefOrSchemaJSON_PtrOrSchema `protobuf_oneof:"ptr_or_schema"`
+	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
+	XXX_unrecognized     []byte                        `json:"-"`
+	XXX_sizecache        int32                         `json:"-"`
+}
+
+func (m *RefOrSchemaJSON) Reset()         { *m = RefOrSchemaJSON{} }
+func (m *RefOrSchemaJSON) String() string { return proto.CompactTextString(m) }
+func (*RefOrSchemaJSON) ProtoMessage()    {}
+func (*RefOrSchemaJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{4}
+}
+func (m *RefOrSchemaJSON) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RefOrSchemaJSON.Unmarshal(m, b)
+}
+func (m *RefOrSchemaJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RefOrSchemaJSON.Marshal(b, m, deterministic)
+}
+func (dst *RefOrSchemaJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RefOrSchemaJSON.Merge(dst, src)
+}
+func (m *RefOrSchemaJSON) XXX_Size() int {
+	return xxx_messageInfo_RefOrSchemaJSON.Size(m)
+}
+func (m *RefOrSchemaJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_RefOrSchemaJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RefOrSchemaJSON proto.InternalMessageInfo
+
+type isRefOrSchemaJSON_PtrOrSchema interface {
+	isRefOrSchemaJSON_PtrOrSchema()
+}
+
+type RefOrSchemaJSON_Ptr struct {
+	Ptr *SchemaPtr `protobuf:"bytes,1,opt,name=ptr,proto3,oneof"`
+}
+type RefOrSchemaJSON_Schema struct {
+	Schema *Schema_JSON `protobuf:"bytes,2,opt,name=schema,proto3,oneof"`
+}
+
+func (*RefOrSchemaJSON_Ptr) isRefOrSchemaJSON_PtrOrSchema()    {}
+func (*RefOrSchemaJSON_Schema) isRefOrSchemaJSON_PtrOrSchema() {}
+
+func (m *RefOrSchemaJSON) GetPtrOrSchema() isRefOrSchemaJSON_PtrOrSchema {
+	if m != nil {
+		return m.PtrOrSchema
+	}
+	return nil
+}
+
+func (m *RefOrSchemaJSON) GetPtr() *SchemaPtr {
+	if x, ok := m.GetPtrOrSchema().(*RefOrSchemaJSON_Ptr); ok {
+		return x.Ptr
+	}
+	return nil
+}
+
+func (m *RefOrSchemaJSON) GetSchema() *Schema_JSON {
+	if x, ok := m.GetPtrOrSchema().(*RefOrSchemaJSON_Schema); ok {
+		return x.Schema
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*RefOrSchemaJSON) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _RefOrSchemaJSON_OneofMarshaler, _RefOrSchemaJSON_OneofUnmarshaler, _RefOrSchemaJSON_OneofSizer, []interface{}{
+		(*RefOrSchemaJSON_Ptr)(nil),
+		(*RefOrSchemaJSON_Schema)(nil),
+	}
+}
+
+func _RefOrSchemaJSON_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*RefOrSchemaJSON)
+	// ptr_or_schema
+	switch x := m.PtrOrSchema.(type) {
+	case *RefOrSchemaJSON_Ptr:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Ptr); err != nil {
+			return err
+		}
+	case *RefOrSchemaJSON_Schema:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Schema); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("RefOrSchemaJSON.PtrOrSchema has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _RefOrSchemaJSON_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*RefOrSchemaJSON)
+	switch tag {
+	case 1: // ptr_or_schema.ptr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(SchemaPtr)
+		err := b.DecodeMessage(msg)
+		m.PtrOrSchema = &RefOrSchemaJSON_Ptr{msg}
+		return true, err
+	case 2: // ptr_or_schema.schema
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Schema_JSON)
+		err := b.DecodeMessage(msg)
+		m.PtrOrSchema = &RefOrSchemaJSON_Schema{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _RefOrSchemaJSON_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*RefOrSchemaJSON)
+	// ptr_or_schema
+	switch x := m.PtrOrSchema.(type) {
+	case *RefOrSchemaJSON_Ptr:
+		s := proto.Size(x.Ptr)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RefOrSchemaJSON_Schema:
+		s := proto.Size(x.Schema)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type SchemaPtr struct {
+	// Pointer to actual schema. i.e. key in Schemas message.
+	UID uint32 `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	// $ref if was ref'd, in canonical/absolute (#/...-like) format.
+	Ref                  string   `protobuf:"bytes,2,opt,name=ref,proto3" json:"ref,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SchemaPtr) Reset()         { *m = SchemaPtr{} }
+func (m *SchemaPtr) String() string { return proto.CompactTextString(m) }
+func (*SchemaPtr) ProtoMessage()    {}
+func (*SchemaPtr) Descriptor() ([]byte, []int) {
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{5}
+}
+func (m *SchemaPtr) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SchemaPtr.Unmarshal(m, b)
+}
+func (m *SchemaPtr) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SchemaPtr.Marshal(b, m, deterministic)
+}
+func (dst *SchemaPtr) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SchemaPtr.Merge(dst, src)
+}
+func (m *SchemaPtr) XXX_Size() int {
+	return xxx_messageInfo_SchemaPtr.Size(m)
+}
+func (m *SchemaPtr) XXX_DiscardUnknown() {
+	xxx_messageInfo_SchemaPtr.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SchemaPtr proto.InternalMessageInfo
+
+func (m *SchemaPtr) GetUID() uint32 {
+	if m != nil {
+		return m.UID
+	}
+	return 0
+}
+
+func (m *SchemaPtr) GetRef() string {
+	if m != nil {
+		return m.Ref
+	}
+	return ""
 }
 
 type Endpoint struct {
@@ -474,7 +656,7 @@ func (m *Endpoint) Reset()         { *m = Endpoint{} }
 func (m *Endpoint) String() string { return proto.CompactTextString(m) }
 func (*Endpoint) ProtoMessage()    {}
 func (*Endpoint) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{4}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{6}
 }
 func (m *Endpoint) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Endpoint.Unmarshal(m, b)
@@ -576,19 +758,19 @@ func _Endpoint_OneofSizer(msg proto.Message) (n int) {
 type EndpointJSON struct {
 	Method Method      `protobuf:"varint,1,opt,name=method,proto3,enum=main.Method" json:"method,omitempty"`
 	Path   *Path       `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
-	Params *ParamsJSON `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
-	// This uint32 replaces an enum of 1XX,...,201,204,...,5XX,XXX.
-	Outputs              map[uint32]*PtrOrSchemaJSON `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
-	XXX_unrecognized     []byte                      `json:"-"`
-	XXX_sizecache        int32                       `json:"-"`
+	Inputs *ParamsJSON `protobuf:"bytes,3,opt,name=inputs,proto3" json:"inputs,omitempty"`
+	// The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+	Outputs              map[uint32]*SchemaPtr `protobuf:"bytes,4,rep,name=outputs,proto3" json:"outputs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
 }
 
 func (m *EndpointJSON) Reset()         { *m = EndpointJSON{} }
 func (m *EndpointJSON) String() string { return proto.CompactTextString(m) }
 func (*EndpointJSON) ProtoMessage()    {}
 func (*EndpointJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{5}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{7}
 }
 func (m *EndpointJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EndpointJSON.Unmarshal(m, b)
@@ -622,16 +804,126 @@ func (m *EndpointJSON) GetPath() *Path {
 	return nil
 }
 
-func (m *EndpointJSON) GetParams() *ParamsJSON {
+func (m *EndpointJSON) GetInputs() *ParamsJSON {
 	if m != nil {
-		return m.Params
+		return m.Inputs
 	}
 	return nil
 }
 
-func (m *EndpointJSON) GetOutputs() map[uint32]*PtrOrSchemaJSON {
+func (m *EndpointJSON) GetOutputs() map[uint32]*SchemaPtr {
 	if m != nil {
 		return m.Outputs
+	}
+	return nil
+}
+
+type ParamsJSON struct {
+	Body                 *ParamJSON            `protobuf:"bytes,1,opt,name=body,proto3" json:"body,omitempty"`
+	Header               map[string]*ParamJSON `protobuf:"bytes,2,rep,name=header,proto3" json:"header,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Path                 map[string]*ParamJSON `protobuf:"bytes,3,rep,name=path,proto3" json:"path,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Query                map[string]*ParamJSON `protobuf:"bytes,4,rep,name=query,proto3" json:"query,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
+	XXX_unrecognized     []byte                `json:"-"`
+	XXX_sizecache        int32                 `json:"-"`
+}
+
+func (m *ParamsJSON) Reset()         { *m = ParamsJSON{} }
+func (m *ParamsJSON) String() string { return proto.CompactTextString(m) }
+func (*ParamsJSON) ProtoMessage()    {}
+func (*ParamsJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{8}
+}
+func (m *ParamsJSON) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ParamsJSON.Unmarshal(m, b)
+}
+func (m *ParamsJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ParamsJSON.Marshal(b, m, deterministic)
+}
+func (dst *ParamsJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamsJSON.Merge(dst, src)
+}
+func (m *ParamsJSON) XXX_Size() int {
+	return xxx_messageInfo_ParamsJSON.Size(m)
+}
+func (m *ParamsJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamsJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ParamsJSON proto.InternalMessageInfo
+
+func (m *ParamsJSON) GetBody() *ParamJSON {
+	if m != nil {
+		return m.Body
+	}
+	return nil
+}
+
+func (m *ParamsJSON) GetHeader() map[string]*ParamJSON {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *ParamsJSON) GetPath() map[string]*ParamJSON {
+	if m != nil {
+		return m.Path
+	}
+	return nil
+}
+
+func (m *ParamsJSON) GetQuery() map[string]*ParamJSON {
+	if m != nil {
+		return m.Query
+	}
+	return nil
+}
+
+type ParamJSON struct {
+	// Whether this param has to be present
+	Required bool `protobuf:"varint,1,opt,name=required,proto3" json:"required,omitempty"`
+	// Pointer to Schemas message
+	Ptr                  *SchemaPtr `protobuf:"bytes,2,opt,name=ptr,proto3" json:"ptr,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *ParamJSON) Reset()         { *m = ParamJSON{} }
+func (m *ParamJSON) String() string { return proto.CompactTextString(m) }
+func (*ParamJSON) ProtoMessage()    {}
+func (*ParamJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{9}
+}
+func (m *ParamJSON) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ParamJSON.Unmarshal(m, b)
+}
+func (m *ParamJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ParamJSON.Marshal(b, m, deterministic)
+}
+func (dst *ParamJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamJSON.Merge(dst, src)
+}
+func (m *ParamJSON) XXX_Size() int {
+	return xxx_messageInfo_ParamJSON.Size(m)
+}
+func (m *ParamJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ParamJSON proto.InternalMessageInfo
+
+func (m *ParamJSON) GetRequired() bool {
+	if m != nil {
+		return m.Required
+	}
+	return false
+}
+
+func (m *ParamJSON) GetPtr() *SchemaPtr {
+	if m != nil {
+		return m.Ptr
 	}
 	return nil
 }
@@ -647,7 +939,7 @@ func (m *Path) Reset()         { *m = Path{} }
 func (m *Path) String() string { return proto.CompactTextString(m) }
 func (*Path) ProtoMessage()    {}
 func (*Path) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{6}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{10}
 }
 func (m *Path) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path.Unmarshal(m, b)
@@ -688,7 +980,7 @@ func (m *Path_PathPartial) Reset()         { *m = Path_PathPartial{} }
 func (m *Path_PathPartial) String() string { return proto.CompactTextString(m) }
 func (*Path_PathPartial) ProtoMessage()    {}
 func (*Path_PathPartial) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{6, 0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{10, 0}
 }
 func (m *Path_PathPartial) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Path_PathPartial.Unmarshal(m, b)
@@ -809,269 +1101,6 @@ func _Path_PathPartial_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-type ParamsJSON struct {
-	// These uint32s are Ptrs
-	// map<uint32,ParamJSON> header = 1;
-	Header map[string]*ParamJSON `protobuf:"bytes,1,rep,name=header,proto3" json:"header,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// map<uint32,ParamJSON> path = 2;
-	Path map[string]*ParamJSON `protobuf:"bytes,2,rep,name=path,proto3" json:"path,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// map<uint32,ParamJSON> body = 3;
-	Body map[string]*ParamJSON `protobuf:"bytes,3,rep,name=body,proto3" json:"body,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// map<uint32,ParamJSON> query = 4;
-	Query                map[string]*ParamJSON `protobuf:"bytes,4,rep,name=query,proto3" json:"query,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
-	XXX_unrecognized     []byte                `json:"-"`
-	XXX_sizecache        int32                 `json:"-"`
-}
-
-func (m *ParamsJSON) Reset()         { *m = ParamsJSON{} }
-func (m *ParamsJSON) String() string { return proto.CompactTextString(m) }
-func (*ParamsJSON) ProtoMessage()    {}
-func (*ParamsJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{7}
-}
-func (m *ParamsJSON) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ParamsJSON.Unmarshal(m, b)
-}
-func (m *ParamsJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ParamsJSON.Marshal(b, m, deterministic)
-}
-func (dst *ParamsJSON) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ParamsJSON.Merge(dst, src)
-}
-func (m *ParamsJSON) XXX_Size() int {
-	return xxx_messageInfo_ParamsJSON.Size(m)
-}
-func (m *ParamsJSON) XXX_DiscardUnknown() {
-	xxx_messageInfo_ParamsJSON.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ParamsJSON proto.InternalMessageInfo
-
-func (m *ParamsJSON) GetHeader() map[string]*ParamJSON {
-	if m != nil {
-		return m.Header
-	}
-	return nil
-}
-
-func (m *ParamsJSON) GetPath() map[string]*ParamJSON {
-	if m != nil {
-		return m.Path
-	}
-	return nil
-}
-
-func (m *ParamsJSON) GetBody() map[string]*ParamJSON {
-	if m != nil {
-		return m.Body
-	}
-	return nil
-}
-
-func (m *ParamsJSON) GetQuery() map[string]*ParamJSON {
-	if m != nil {
-		return m.Query
-	}
-	return nil
-}
-
-type ParamJSON struct {
-	SchemaOrPtr *PtrOrSchemaJSON `protobuf:"bytes,1,opt,name=schema_or_ptr,json=schemaOrPtr,proto3" json:"schema_or_ptr,omitempty"`
-	// Whether this param was explicitly $ref'd or was it us.
-	Connected bool `protobuf:"varint,2,opt,name=connected,proto3" json:"connected,omitempty"`
-	// Whether this param is required to be present
-	Required             bool     `protobuf:"varint,3,opt,name=required,proto3" json:"required,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ParamJSON) Reset()         { *m = ParamJSON{} }
-func (m *ParamJSON) String() string { return proto.CompactTextString(m) }
-func (*ParamJSON) ProtoMessage()    {}
-func (*ParamJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{8}
-}
-func (m *ParamJSON) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ParamJSON.Unmarshal(m, b)
-}
-func (m *ParamJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ParamJSON.Marshal(b, m, deterministic)
-}
-func (dst *ParamJSON) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ParamJSON.Merge(dst, src)
-}
-func (m *ParamJSON) XXX_Size() int {
-	return xxx_messageInfo_ParamJSON.Size(m)
-}
-func (m *ParamJSON) XXX_DiscardUnknown() {
-	xxx_messageInfo_ParamJSON.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ParamJSON proto.InternalMessageInfo
-
-func (m *ParamJSON) GetSchemaOrPtr() *PtrOrSchemaJSON {
-	if m != nil {
-		return m.SchemaOrPtr
-	}
-	return nil
-}
-
-func (m *ParamJSON) GetConnected() bool {
-	if m != nil {
-		return m.Connected
-	}
-	return false
-}
-
-func (m *ParamJSON) GetRequired() bool {
-	if m != nil {
-		return m.Required
-	}
-	return false
-}
-
-// FIXME: make em all pointers!
-type PtrOrSchemaJSON struct {
-	// Types that are valid to be assigned to PtrOrSchema_JSON:
-	//	*PtrOrSchemaJSON_Ptr
-	//	*PtrOrSchemaJSON_Schema
-	PtrOrSchema_JSON     isPtrOrSchemaJSON_PtrOrSchema_JSON `protobuf_oneof:"ptr_or_schema_JSON"`
-	XXX_NoUnkeyedLiteral struct{}                           `json:"-"`
-	XXX_unrecognized     []byte                             `json:"-"`
-	XXX_sizecache        int32                              `json:"-"`
-}
-
-func (m *PtrOrSchemaJSON) Reset()         { *m = PtrOrSchemaJSON{} }
-func (m *PtrOrSchemaJSON) String() string { return proto.CompactTextString(m) }
-func (*PtrOrSchemaJSON) ProtoMessage()    {}
-func (*PtrOrSchemaJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{9}
-}
-func (m *PtrOrSchemaJSON) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PtrOrSchemaJSON.Unmarshal(m, b)
-}
-func (m *PtrOrSchemaJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PtrOrSchemaJSON.Marshal(b, m, deterministic)
-}
-func (dst *PtrOrSchemaJSON) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PtrOrSchemaJSON.Merge(dst, src)
-}
-func (m *PtrOrSchemaJSON) XXX_Size() int {
-	return xxx_messageInfo_PtrOrSchemaJSON.Size(m)
-}
-func (m *PtrOrSchemaJSON) XXX_DiscardUnknown() {
-	xxx_messageInfo_PtrOrSchemaJSON.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PtrOrSchemaJSON proto.InternalMessageInfo
-
-type isPtrOrSchemaJSON_PtrOrSchema_JSON interface {
-	isPtrOrSchemaJSON_PtrOrSchema_JSON()
-}
-
-type PtrOrSchemaJSON_Ptr struct {
-	Ptr string `protobuf:"bytes,1,opt,name=ptr,proto3,oneof"`
-}
-type PtrOrSchemaJSON_Schema struct {
-	Schema *Schema_JSON `protobuf:"bytes,2,opt,name=schema,proto3,oneof"`
-}
-
-func (*PtrOrSchemaJSON_Ptr) isPtrOrSchemaJSON_PtrOrSchema_JSON()    {}
-func (*PtrOrSchemaJSON_Schema) isPtrOrSchemaJSON_PtrOrSchema_JSON() {}
-
-func (m *PtrOrSchemaJSON) GetPtrOrSchema_JSON() isPtrOrSchemaJSON_PtrOrSchema_JSON {
-	if m != nil {
-		return m.PtrOrSchema_JSON
-	}
-	return nil
-}
-
-func (m *PtrOrSchemaJSON) GetPtr() string {
-	if x, ok := m.GetPtrOrSchema_JSON().(*PtrOrSchemaJSON_Ptr); ok {
-		return x.Ptr
-	}
-	return ""
-}
-
-func (m *PtrOrSchemaJSON) GetSchema() *Schema_JSON {
-	if x, ok := m.GetPtrOrSchema_JSON().(*PtrOrSchemaJSON_Schema); ok {
-		return x.Schema
-	}
-	return nil
-}
-
-// XXX_OneofFuncs is for the internal use of the proto package.
-func (*PtrOrSchemaJSON) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _PtrOrSchemaJSON_OneofMarshaler, _PtrOrSchemaJSON_OneofUnmarshaler, _PtrOrSchemaJSON_OneofSizer, []interface{}{
-		(*PtrOrSchemaJSON_Ptr)(nil),
-		(*PtrOrSchemaJSON_Schema)(nil),
-	}
-}
-
-func _PtrOrSchemaJSON_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*PtrOrSchemaJSON)
-	// ptr_or_schema_JSON
-	switch x := m.PtrOrSchema_JSON.(type) {
-	case *PtrOrSchemaJSON_Ptr:
-		b.EncodeVarint(1<<3 | proto.WireBytes)
-		b.EncodeStringBytes(x.Ptr)
-	case *PtrOrSchemaJSON_Schema:
-		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.Schema); err != nil {
-			return err
-		}
-	case nil:
-	default:
-		return fmt.Errorf("PtrOrSchemaJSON.PtrOrSchema_JSON has unexpected type %T", x)
-	}
-	return nil
-}
-
-func _PtrOrSchemaJSON_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*PtrOrSchemaJSON)
-	switch tag {
-	case 1: // ptr_or_schema_JSON.ptr
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		x, err := b.DecodeStringBytes()
-		m.PtrOrSchema_JSON = &PtrOrSchemaJSON_Ptr{x}
-		return true, err
-	case 2: // ptr_or_schema_JSON.schema
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Schema_JSON)
-		err := b.DecodeMessage(msg)
-		m.PtrOrSchema_JSON = &PtrOrSchemaJSON_Schema{msg}
-		return true, err
-	default:
-		return false, nil
-	}
-}
-
-func _PtrOrSchemaJSON_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*PtrOrSchemaJSON)
-	// ptr_or_schema_JSON
-	switch x := m.PtrOrSchema_JSON.(type) {
-	case *PtrOrSchemaJSON_Ptr:
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(len(x.Ptr)))
-		n += len(x.Ptr)
-	case *PtrOrSchemaJSON_Schema:
-		s := proto.Size(x.Schema)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case nil:
-	default:
-		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
-	}
-	return n
-}
-
 type Schema struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1082,7 +1111,7 @@ func (m *Schema) Reset()         { *m = Schema{} }
 func (m *Schema) String() string { return proto.CompactTextString(m) }
 func (*Schema) ProtoMessage()    {}
 func (*Schema) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{10}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{11}
 }
 func (m *Schema) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema.Unmarshal(m, b)
@@ -1120,23 +1149,23 @@ type Schema_JSON struct {
 	ExclusiveMinimum     bool    `protobuf:"varint,13,opt,name=exclusive_minimum,json=exclusiveMinimum,proto3" json:"exclusive_minimum,omitempty"`
 	ExclusiveMaximum     bool    `protobuf:"varint,14,opt,name=exclusive_maximum,json=exclusiveMaximum,proto3" json:"exclusive_maximum,omitempty"`
 	// type: array
-	Items       []*PtrOrSchemaJSON `protobuf:"bytes,15,rep,name=items,proto3" json:"items,omitempty"`
-	UniqueItems bool               `protobuf:"varint,16,opt,name=unique_items,json=uniqueItems,proto3" json:"unique_items,omitempty"`
-	MinItems    uint64             `protobuf:"varint,17,opt,name=min_items,json=minItems,proto3" json:"min_items,omitempty"`
-	MaxItems    uint64             `protobuf:"varint,18,opt,name=max_items,json=maxItems,proto3" json:"max_items,omitempty"`
-	HasMaxItems bool               `protobuf:"varint,19,opt,name=has_max_items,json=hasMaxItems,proto3" json:"has_max_items,omitempty"`
+	Items       []*SchemaPtr `protobuf:"bytes,15,rep,name=items,proto3" json:"items,omitempty"`
+	UniqueItems bool         `protobuf:"varint,16,opt,name=unique_items,json=uniqueItems,proto3" json:"unique_items,omitempty"`
+	MinItems    uint64       `protobuf:"varint,17,opt,name=min_items,json=minItems,proto3" json:"min_items,omitempty"`
+	MaxItems    uint64       `protobuf:"varint,18,opt,name=max_items,json=maxItems,proto3" json:"max_items,omitempty"`
+	HasMaxItems bool         `protobuf:"varint,19,opt,name=has_max_items,json=hasMaxItems,proto3" json:"has_max_items,omitempty"`
 	// type: object
-	Properties              map[string]*PtrOrSchemaJSON       `protobuf:"bytes,20,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Properties              map[string]*SchemaPtr             `protobuf:"bytes,20,rep,name=properties,proto3" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	Required                []string                          `protobuf:"bytes,21,rep,name=required,proto3" json:"required,omitempty"`
 	MinProperties           uint64                            `protobuf:"varint,22,opt,name=min_properties,json=minProperties,proto3" json:"min_properties,omitempty"`
 	MaxProperties           uint64                            `protobuf:"varint,23,opt,name=max_properties,json=maxProperties,proto3" json:"max_properties,omitempty"`
 	HasMaxProperties        bool                              `protobuf:"varint,24,opt,name=has_max_properties,json=hasMaxProperties,proto3" json:"has_max_properties,omitempty"`
 	AdditionalProperties    *Schema_JSON_AdditionalProperties `protobuf:"bytes,25,opt,name=additional_properties,json=additionalProperties,proto3" json:"additional_properties,omitempty"`
 	HasAdditionalProperties bool                              `protobuf:"varint,26,opt,name=has_additional_properties,json=hasAdditionalProperties,proto3" json:"has_additional_properties,omitempty"`
-	AllOf                   []*PtrOrSchemaJSON                `protobuf:"bytes,27,rep,name=all_of,json=allOf,proto3" json:"all_of,omitempty"`
-	AnyOf                   []*PtrOrSchemaJSON                `protobuf:"bytes,28,rep,name=any_of,json=anyOf,proto3" json:"any_of,omitempty"`
-	OneOf                   []*PtrOrSchemaJSON                `protobuf:"bytes,29,rep,name=one_of,json=oneOf,proto3" json:"one_of,omitempty"`
-	Not                     *PtrOrSchemaJSON                  `protobuf:"bytes,30,opt,name=not,proto3" json:"not,omitempty"`
+	AllOf                   []*SchemaPtr                      `protobuf:"bytes,27,rep,name=all_of,json=allOf,proto3" json:"all_of,omitempty"`
+	AnyOf                   []*SchemaPtr                      `protobuf:"bytes,28,rep,name=any_of,json=anyOf,proto3" json:"any_of,omitempty"`
+	OneOf                   []*SchemaPtr                      `protobuf:"bytes,29,rep,name=one_of,json=oneOf,proto3" json:"one_of,omitempty"`
+	Not                     *SchemaPtr                        `protobuf:"bytes,30,opt,name=not,proto3" json:"not,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{}                          `json:"-"`
 	XXX_unrecognized        []byte                            `json:"-"`
 	XXX_sizecache           int32                             `json:"-"`
@@ -1146,7 +1175,7 @@ func (m *Schema_JSON) Reset()         { *m = Schema_JSON{} }
 func (m *Schema_JSON) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON) ProtoMessage()    {}
 func (*Schema_JSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{10, 0}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{11, 0}
 }
 func (m *Schema_JSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSON.Unmarshal(m, b)
@@ -1264,7 +1293,7 @@ func (m *Schema_JSON) GetExclusiveMaximum() bool {
 	return false
 }
 
-func (m *Schema_JSON) GetItems() []*PtrOrSchemaJSON {
+func (m *Schema_JSON) GetItems() []*SchemaPtr {
 	if m != nil {
 		return m.Items
 	}
@@ -1299,7 +1328,7 @@ func (m *Schema_JSON) GetHasMaxItems() bool {
 	return false
 }
 
-func (m *Schema_JSON) GetProperties() map[string]*PtrOrSchemaJSON {
+func (m *Schema_JSON) GetProperties() map[string]*SchemaPtr {
 	if m != nil {
 		return m.Properties
 	}
@@ -1348,38 +1377,39 @@ func (m *Schema_JSON) GetHasAdditionalProperties() bool {
 	return false
 }
 
-func (m *Schema_JSON) GetAllOf() []*PtrOrSchemaJSON {
+func (m *Schema_JSON) GetAllOf() []*SchemaPtr {
 	if m != nil {
 		return m.AllOf
 	}
 	return nil
 }
 
-func (m *Schema_JSON) GetAnyOf() []*PtrOrSchemaJSON {
+func (m *Schema_JSON) GetAnyOf() []*SchemaPtr {
 	if m != nil {
 		return m.AnyOf
 	}
 	return nil
 }
 
-func (m *Schema_JSON) GetOneOf() []*PtrOrSchemaJSON {
+func (m *Schema_JSON) GetOneOf() []*SchemaPtr {
 	if m != nil {
 		return m.OneOf
 	}
 	return nil
 }
 
-func (m *Schema_JSON) GetNot() *PtrOrSchemaJSON {
+func (m *Schema_JSON) GetNot() *SchemaPtr {
 	if m != nil {
 		return m.Not
 	}
 	return nil
 }
 
+// /FIXME true is equivalent to {}, false is equivalent to {"not": {}}
 type Schema_JSON_AdditionalProperties struct {
 	// Types that are valid to be assigned to AddProps:
 	//	*Schema_JSON_AdditionalProperties_AlwaysSucceed
-	//	*Schema_JSON_AdditionalProperties_SchemaOrPtr
+	//	*Schema_JSON_AdditionalProperties_Ref
 	AddProps             isSchema_JSON_AdditionalProperties_AddProps `protobuf_oneof:"add_props"`
 	XXX_NoUnkeyedLiteral struct{}                                    `json:"-"`
 	XXX_unrecognized     []byte                                      `json:"-"`
@@ -1390,7 +1420,7 @@ func (m *Schema_JSON_AdditionalProperties) Reset()         { *m = Schema_JSON_Ad
 func (m *Schema_JSON_AdditionalProperties) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON_AdditionalProperties) ProtoMessage()    {}
 func (*Schema_JSON_AdditionalProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_7fa30e426f47d8a7, []int{10, 0, 1}
+	return fileDescriptor_messages_e3cf1d397ce766f1, []int{11, 0, 1}
 }
 func (m *Schema_JSON_AdditionalProperties) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSON_AdditionalProperties.Unmarshal(m, b)
@@ -1417,12 +1447,12 @@ type isSchema_JSON_AdditionalProperties_AddProps interface {
 type Schema_JSON_AdditionalProperties_AlwaysSucceed struct {
 	AlwaysSucceed bool `protobuf:"varint,1,opt,name=always_succeed,json=alwaysSucceed,proto3,oneof"`
 }
-type Schema_JSON_AdditionalProperties_SchemaOrPtr struct {
-	SchemaOrPtr *PtrOrSchemaJSON `protobuf:"bytes,2,opt,name=schema_or_ptr,json=schemaOrPtr,proto3,oneof"`
+type Schema_JSON_AdditionalProperties_Ref struct {
+	Ref *SchemaPtr `protobuf:"bytes,2,opt,name=ref,proto3,oneof"`
 }
 
 func (*Schema_JSON_AdditionalProperties_AlwaysSucceed) isSchema_JSON_AdditionalProperties_AddProps() {}
-func (*Schema_JSON_AdditionalProperties_SchemaOrPtr) isSchema_JSON_AdditionalProperties_AddProps()   {}
+func (*Schema_JSON_AdditionalProperties_Ref) isSchema_JSON_AdditionalProperties_AddProps()           {}
 
 func (m *Schema_JSON_AdditionalProperties) GetAddProps() isSchema_JSON_AdditionalProperties_AddProps {
 	if m != nil {
@@ -1438,9 +1468,9 @@ func (m *Schema_JSON_AdditionalProperties) GetAlwaysSucceed() bool {
 	return false
 }
 
-func (m *Schema_JSON_AdditionalProperties) GetSchemaOrPtr() *PtrOrSchemaJSON {
-	if x, ok := m.GetAddProps().(*Schema_JSON_AdditionalProperties_SchemaOrPtr); ok {
-		return x.SchemaOrPtr
+func (m *Schema_JSON_AdditionalProperties) GetRef() *SchemaPtr {
+	if x, ok := m.GetAddProps().(*Schema_JSON_AdditionalProperties_Ref); ok {
+		return x.Ref
 	}
 	return nil
 }
@@ -1449,7 +1479,7 @@ func (m *Schema_JSON_AdditionalProperties) GetSchemaOrPtr() *PtrOrSchemaJSON {
 func (*Schema_JSON_AdditionalProperties) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _Schema_JSON_AdditionalProperties_OneofMarshaler, _Schema_JSON_AdditionalProperties_OneofUnmarshaler, _Schema_JSON_AdditionalProperties_OneofSizer, []interface{}{
 		(*Schema_JSON_AdditionalProperties_AlwaysSucceed)(nil),
-		(*Schema_JSON_AdditionalProperties_SchemaOrPtr)(nil),
+		(*Schema_JSON_AdditionalProperties_Ref)(nil),
 	}
 }
 
@@ -1464,9 +1494,9 @@ func _Schema_JSON_AdditionalProperties_OneofMarshaler(msg proto.Message, b *prot
 		}
 		b.EncodeVarint(1<<3 | proto.WireVarint)
 		b.EncodeVarint(t)
-	case *Schema_JSON_AdditionalProperties_SchemaOrPtr:
+	case *Schema_JSON_AdditionalProperties_Ref:
 		b.EncodeVarint(2<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.SchemaOrPtr); err != nil {
+		if err := b.EncodeMessage(x.Ref); err != nil {
 			return err
 		}
 	case nil:
@@ -1486,13 +1516,13 @@ func _Schema_JSON_AdditionalProperties_OneofUnmarshaler(msg proto.Message, tag, 
 		x, err := b.DecodeVarint()
 		m.AddProps = &Schema_JSON_AdditionalProperties_AlwaysSucceed{x != 0}
 		return true, err
-	case 2: // add_props.schema_or_ptr
+	case 2: // add_props.ref
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(PtrOrSchemaJSON)
+		msg := new(SchemaPtr)
 		err := b.DecodeMessage(msg)
-		m.AddProps = &Schema_JSON_AdditionalProperties_SchemaOrPtr{msg}
+		m.AddProps = &Schema_JSON_AdditionalProperties_Ref{msg}
 		return true, err
 	default:
 		return false, nil
@@ -1506,8 +1536,8 @@ func _Schema_JSON_AdditionalProperties_OneofSizer(msg proto.Message) (n int) {
 	case *Schema_JSON_AdditionalProperties_AlwaysSucceed:
 		n += 1 // tag and wire
 		n += 1
-	case *Schema_JSON_AdditionalProperties_SchemaOrPtr:
-		s := proto.Size(x.SchemaOrPtr)
+	case *Schema_JSON_AdditionalProperties_Ref:
+		s := proto.Size(x.Ref)
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
@@ -1525,127 +1555,126 @@ func init() {
 	proto.RegisterType((*FuzzCfg)(nil), "main.FuzzCfg")
 	proto.RegisterType((*SpecIR)(nil), "main.SpecIR")
 	proto.RegisterType((*Schemas)(nil), "main.Schemas")
-	proto.RegisterMapType((map[string]*PtrOrSchemaJSON)(nil), "main.Schemas.JsonEntry")
+	proto.RegisterMapType((map[uint32]*RefOrSchemaJSON)(nil), "main.Schemas.JsonEntry")
+	proto.RegisterType((*RefOrSchemaJSON)(nil), "main.RefOrSchemaJSON")
+	proto.RegisterType((*SchemaPtr)(nil), "main.SchemaPtr")
 	proto.RegisterType((*Endpoint)(nil), "main.Endpoint")
 	proto.RegisterType((*EndpointJSON)(nil), "main.EndpointJSON")
-	proto.RegisterMapType((map[uint32]*PtrOrSchemaJSON)(nil), "main.EndpointJSON.OutputsEntry")
-	proto.RegisterType((*Path)(nil), "main.Path")
-	proto.RegisterType((*Path_PathPartial)(nil), "main.Path.PathPartial")
+	proto.RegisterMapType((map[uint32]*SchemaPtr)(nil), "main.EndpointJSON.OutputsEntry")
 	proto.RegisterType((*ParamsJSON)(nil), "main.ParamsJSON")
-	proto.RegisterMapType((map[string]*ParamJSON)(nil), "main.ParamsJSON.BodyEntry")
 	proto.RegisterMapType((map[string]*ParamJSON)(nil), "main.ParamsJSON.HeaderEntry")
 	proto.RegisterMapType((map[string]*ParamJSON)(nil), "main.ParamsJSON.PathEntry")
 	proto.RegisterMapType((map[string]*ParamJSON)(nil), "main.ParamsJSON.QueryEntry")
 	proto.RegisterType((*ParamJSON)(nil), "main.ParamJSON")
-	proto.RegisterType((*PtrOrSchemaJSON)(nil), "main.PtrOrSchemaJSON")
+	proto.RegisterType((*Path)(nil), "main.Path")
+	proto.RegisterType((*Path_PathPartial)(nil), "main.Path.PathPartial")
 	proto.RegisterType((*Schema)(nil), "main.Schema")
 	proto.RegisterType((*Schema_JSON)(nil), "main.Schema.JSON")
-	proto.RegisterMapType((map[string]*PtrOrSchemaJSON)(nil), "main.Schema.JSON.PropertiesEntry")
+	proto.RegisterMapType((map[string]*SchemaPtr)(nil), "main.Schema.JSON.PropertiesEntry")
 	proto.RegisterType((*Schema_JSON_AdditionalProperties)(nil), "main.Schema.JSON.AdditionalProperties")
 	proto.RegisterEnum("main.Method", Method_name, Method_value)
 	proto.RegisterEnum("main.YmlCfg_Kind", YmlCfg_Kind_name, YmlCfg_Kind_value)
 	proto.RegisterEnum("main.Schema_JSON_Type", Schema_JSON_Type_name, Schema_JSON_Type_value)
 }
 
-func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_7fa30e426f47d8a7) }
+func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_e3cf1d397ce766f1) }
 
-var fileDescriptor_messages_7fa30e426f47d8a7 = []byte{
-	// 1539 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0x4f, 0x6f, 0xdb, 0xc8,
-	0x15, 0x37, 0x2d, 0x8a, 0x92, 0x9e, 0x2c, 0x99, 0x99, 0x3a, 0x09, 0x57, 0xc9, 0xee, 0x7a, 0x85,
-	0xa4, 0x11, 0xd6, 0x81, 0xd0, 0x7a, 0xf7, 0xd0, 0xdd, 0xa2, 0x40, 0x6d, 0xaf, 0xb6, 0x72, 0x76,
-	0x23, 0x29, 0xb4, 0x16, 0x45, 0xd1, 0x83, 0x30, 0x96, 0x46, 0x16, 0x13, 0x72, 0xc8, 0x0c, 0x87,
-	0x5e, 0x69, 0x4f, 0x39, 0x15, 0x28, 0x50, 0xa0, 0xf7, 0x7e, 0x8a, 0x7e, 0xc4, 0x62, 0xde, 0x0c,
-	0x25, 0xca, 0x76, 0x7d, 0x68, 0x7a, 0x11, 0xe6, 0xbd, 0xdf, 0xef, 0xfd, 0x7f, 0x1c, 0x52, 0xd0,
-	0x8c, 0x58, 0x9a, 0xd2, 0x2b, 0x96, 0x76, 0x13, 0x11, 0xcb, 0x98, 0xd8, 0x11, 0x0d, 0x78, 0x6b,
-	0x7f, 0x46, 0x25, 0x9d, 0xbc, 0x4d, 0x63, 0xae, 0xd5, 0xed, 0x7f, 0x97, 0xc0, 0xf9, 0x4b, 0x14,
-	0x9e, 0xcd, 0xaf, 0x88, 0x07, 0x95, 0x6b, 0x26, 0xd2, 0x20, 0xe6, 0x9e, 0x75, 0x68, 0x75, 0x1a,
-	0x7e, 0x2e, 0x92, 0x4f, 0x01, 0x68, 0x26, 0x17, 0x13, 0x19, 0xbf, 0x63, 0xdc, 0xdb, 0x3d, 0xb4,
-	0x3a, 0x35, 0xbf, 0xa6, 0x34, 0x63, 0xa5, 0x20, 0xcf, 0xc1, 0x7e, 0x17, 0xf0, 0x99, 0x57, 0x3a,
-	0xb4, 0x3a, 0xcd, 0xe3, 0x07, 0x5d, 0x15, 0xa9, 0xab, 0x9d, 0x76, 0x7f, 0x08, 0xf8, 0xcc, 0x47,
-	0x98, 0x10, 0xb0, 0xe7, 0x41, 0xc8, 0x3c, 0x1b, 0xed, 0xf1, 0x4c, 0xba, 0x50, 0x11, 0x19, 0x97,
-	0x41, 0xc4, 0xbc, 0xf2, 0xa1, 0xd5, 0xa9, 0x1f, 0x1f, 0x6c, 0x59, 0xfb, 0x1a, 0xf3, 0x73, 0x92,
-	0x0a, 0xc5, 0x96, 0x6c, 0xea, 0x39, 0x48, 0xde, 0x0e, 0xd5, 0x5b, 0xb2, 0xa9, 0x8f, 0x70, 0x2b,
-	0x86, 0x8a, 0x31, 0x55, 0x51, 0x17, 0x71, 0x2a, 0xb1, 0xa4, 0x9a, 0x8f, 0x67, 0xa5, 0x4b, 0x62,
-	0x21, 0x4d, 0x25, 0x78, 0x56, 0x35, 0xce, 0x03, 0x4e, 0xc3, 0x09, 0xb2, 0x4b, 0xba, 0x46, 0xd4,
-	0xf4, 0x95, 0xc9, 0x1a, 0x46, 0x43, 0xbb, 0x00, 0x8f, 0x62, 0x21, 0x5b, 0xdf, 0x83, 0xad, 0xc2,
-	0x93, 0x03, 0x28, 0xa7, 0x92, 0x0a, 0x15, 0xae, 0xd4, 0xa9, 0xf9, 0x5a, 0x50, 0x5a, 0xc1, 0x52,
-	0xa6, 0x02, 0xa2, 0x16, 0x05, 0x95, 0x45, 0x2a, 0xe3, 0xc4, 0x2b, 0xa1, 0x12, 0xcf, 0xed, 0x36,
-	0xd8, 0xaa, 0x63, 0xa4, 0x0e, 0x95, 0x9f, 0x06, 0x3f, 0x0c, 0x86, 0x7f, 0x1e, 0xb8, 0x3b, 0xa4,
-	0x01, 0xb5, 0x61, 0xc2, 0xf8, 0xc9, 0xe8, 0xfc, 0xfa, 0x2b, 0xd7, 0x6a, 0xbf, 0x81, 0xca, 0xf7,
-	0xd9, 0x2f, 0xbf, 0xa8, 0x91, 0x3d, 0x03, 0x67, 0x1a, 0xf3, 0x79, 0x70, 0x85, 0xe5, 0xd5, 0x8f,
-	0xf7, 0x8a, 0x0d, 0xf1, 0x0d, 0x46, 0x0e, 0xc1, 0x4e, 0x13, 0x36, 0xc5, 0x72, 0xd7, 0x9c, 0x8b,
-	0x84, 0x4d, 0xcf, 0x7d, 0x1f, 0x91, 0x76, 0x0a, 0x8e, 0x96, 0xb1, 0x35, 0x52, 0xa4, 0x26, 0x7f,
-	0x3c, 0x93, 0x17, 0x50, 0x49, 0xa7, 0x0b, 0x16, 0xd1, 0xd4, 0xb8, 0x68, 0x18, 0x17, 0x5a, 0xe9,
-	0xe7, 0x28, 0x79, 0x09, 0x35, 0xc6, 0x67, 0x49, 0x1c, 0x70, 0x99, 0x62, 0x59, 0xf5, 0xe3, 0xa6,
-	0xa6, 0xf6, 0x8c, 0xda, 0xdf, 0x10, 0xda, 0x7f, 0xb3, 0xa0, 0x62, 0x5c, 0x90, 0x23, 0xb0, 0xd5,
-	0x52, 0x62, 0xd8, 0xfa, 0xf1, 0xe3, 0x2d, 0xff, 0xdd, 0x57, 0x69, 0xcc, 0x7b, 0x5c, 0x8a, 0x95,
-	0x8f, 0xa4, 0xd6, 0x00, 0x6a, 0x6b, 0x15, 0x71, 0xa1, 0xf4, 0x8e, 0xad, 0xcc, 0x78, 0xd5, 0x91,
-	0x1c, 0x41, 0xf9, 0x9a, 0x86, 0x19, 0x33, 0xc9, 0x3e, 0xd4, 0xce, 0x46, 0x52, 0x0c, 0x85, 0xf6,
-	0xf8, 0xea, 0x62, 0x38, 0xf0, 0x35, 0xe7, 0xdb, 0xdd, 0xdf, 0x59, 0xed, 0x3f, 0x42, 0x35, 0xcf,
-	0x8f, 0x74, 0xd6, 0x89, 0x28, 0x5b, 0xb2, 0x9d, 0xbd, 0x32, 0xec, 0xef, 0xe8, 0x2c, 0x4e, 0x01,
-	0xaa, 0x79, 0x2d, 0xed, 0x7f, 0xec, 0xc2, 0x5e, 0x91, 0xa4, 0x06, 0x13, 0x31, 0xb9, 0x88, 0x67,
-	0xe8, 0xa8, 0x99, 0x37, 0xfd, 0x35, 0xea, 0x7c, 0x83, 0x91, 0xcf, 0xc0, 0x4e, 0xa8, 0x5c, 0x98,
-	0x44, 0xc1, 0x24, 0x4a, 0xe5, 0xc2, 0x47, 0x3d, 0xe9, 0x80, 0x93, 0x50, 0x41, 0xa3, 0x14, 0xf7,
-	0xb1, 0x7e, 0xec, 0xe6, 0x0c, 0xa5, 0xc3, 0x2a, 0x0c, 0x4e, 0xbe, 0x81, 0x4a, 0x9c, 0xc9, 0x24,
-	0x93, 0xa9, 0x67, 0x63, 0x0b, 0x3f, 0xbf, 0x9d, 0x79, 0x77, 0xa8, 0x19, 0xba, 0x95, 0x39, 0xbf,
-	0xf5, 0x06, 0xf6, 0x8a, 0x40, 0xb1, 0xa1, 0x8d, 0xff, 0xb1, 0xa1, 0x3f, 0x83, 0xad, 0xaa, 0x20,
-	0xbf, 0x81, 0x4a, 0x42, 0x85, 0x0c, 0x68, 0x68, 0x06, 0xfb, 0x68, 0x53, 0x22, 0xfe, 0x8c, 0x34,
-	0xea, 0xe7, 0xb4, 0xd6, 0x1f, 0xa0, 0x5e, 0xd0, 0x93, 0x03, 0xd5, 0x20, 0x61, 0x1e, 0x5e, 0xd5,
-	0x79, 0x25, 0x11, 0x02, 0xa5, 0x44, 0x0a, 0xfd, 0xf4, 0xf6, 0x77, 0x7c, 0x25, 0x9c, 0xda, 0xb0,
-	0x9b, 0x24, 0xed, 0x0f, 0x36, 0xc0, 0xa6, 0x3b, 0xe4, 0x6b, 0x70, 0x16, 0x8c, 0xce, 0x98, 0x30,
-	0xe1, 0x9f, 0xde, 0xec, 0x5f, 0xb7, 0x8f, 0xb0, 0xee, 0x88, 0xe1, 0x92, 0xee, 0x7a, 0x2a, 0xca,
-	0xa6, 0x75, 0xcb, 0x46, 0x25, 0x68, 0xd6, 0x11, 0xa7, 0xd4, 0x05, 0xfb, 0x32, 0x9e, 0xad, 0xcc,
-	0xc2, 0xdf, 0xe6, 0x9f, 0xc6, 0xb3, 0x95, 0xe1, 0x2b, 0x1e, 0xf9, 0x2d, 0x94, 0xdf, 0x67, 0x4c,
-	0xac, 0xcc, 0xa4, 0x9e, 0xdc, 0x32, 0x78, 0xa3, 0x50, 0x6d, 0xa1, 0x99, 0xad, 0x57, 0x50, 0x2f,
-	0x64, 0x7a, 0xc7, 0xce, 0x3f, 0xdf, 0x1e, 0xd1, 0x7e, 0xc1, 0xe7, 0x8d, 0xe1, 0xb4, 0xfa, 0x50,
-	0x5b, 0x57, 0xf0, 0xd1, 0x9e, 0xd6, 0xb5, 0x7d, 0x9c, 0xa7, 0x73, 0x80, 0x4d, 0xd1, 0x1f, 0xe5,
-	0xaa, 0xfd, 0xc1, 0x52, 0xf5, 0x19, 0x80, 0x7c, 0x03, 0x0d, 0x7d, 0x39, 0x4d, 0x62, 0x31, 0x51,
-	0x4b, 0x63, 0xdd, 0xb7, 0xc2, 0x75, 0xcd, 0x1d, 0x8a, 0x91, 0x14, 0xe4, 0x29, 0xd4, 0xa6, 0x31,
-	0xe7, 0x6c, 0x2a, 0xd9, 0x0c, 0xe3, 0x56, 0xfd, 0x8d, 0x82, 0xb4, 0xa0, 0x2a, 0xd8, 0xfb, 0x2c,
-	0x10, 0x4c, 0xbf, 0xf7, 0xaa, 0xfe, 0x5a, 0x6e, 0x2f, 0x60, 0xff, 0x86, 0xe7, 0x7c, 0x65, 0xad,
-	0xc2, 0xca, 0x92, 0x23, 0x70, 0x74, 0x3c, 0x53, 0xd5, 0x83, 0xe2, 0xad, 0xd7, 0x35, 0x77, 0x8d,
-	0xa1, 0x9c, 0x1e, 0x00, 0x49, 0xa4, 0x50, 0x55, 0x98, 0x7a, 0x14, 0xde, 0xfe, 0xd7, 0x1e, 0x38,
-	0x9a, 0xdf, 0xfa, 0xe7, 0x1e, 0xd8, 0x18, 0xea, 0x4b, 0xb0, 0xe5, 0x2a, 0x61, 0xb8, 0xf2, 0xcd,
-	0xfc, 0x89, 0x2b, 0x38, 0xed, 0x8e, 0x57, 0x09, 0xf3, 0x91, 0x43, 0x9e, 0x81, 0xcd, 0x78, 0x16,
-	0x99, 0x04, 0xcc, 0xf5, 0x82, 0xa4, 0x13, 0x21, 0xe8, 0xca, 0x47, 0x94, 0x3c, 0x02, 0x67, 0x1e,
-	0x8b, 0x88, 0xe6, 0xaf, 0x45, 0x23, 0xa9, 0x77, 0x62, 0x14, 0xf0, 0x49, 0xc8, 0xf8, 0x95, 0x5c,
-	0xe0, 0x3b, 0xd1, 0xf6, 0x6b, 0x51, 0xc0, 0x7f, 0x44, 0x05, 0xc2, 0x74, 0x99, 0xc3, 0x65, 0x03,
-	0xd3, 0xa5, 0x81, 0x9f, 0x41, 0x73, 0x41, 0xd3, 0x49, 0x81, 0xe2, 0x60, 0x1f, 0xf7, 0x16, 0x34,
-	0x7d, 0xbd, 0x66, 0x79, 0xea, 0x0a, 0x91, 0x92, 0x09, 0xee, 0x55, 0x30, 0x78, 0x2e, 0x2a, 0x24,
-	0x0a, 0x78, 0x10, 0x65, 0x91, 0x57, 0x3d, 0xb4, 0x3a, 0x96, 0x9f, 0x8b, 0x88, 0xd0, 0x25, 0x22,
-	0x35, 0x83, 0x68, 0x91, 0x7c, 0x0e, 0x75, 0x8c, 0x69, 0xec, 0x00, 0x03, 0x82, 0x0a, 0x68, 0x4c,
-	0x73, 0x82, 0x31, 0xaf, 0x6f, 0x08, 0xc6, 0xc3, 0xd7, 0xf0, 0x48, 0x0a, 0xca, 0xd3, 0x90, 0x4a,
-	0x36, 0x9b, 0x44, 0x59, 0x28, 0x83, 0x24, 0x64, 0x93, 0x78, 0xee, 0xed, 0x61, 0xa8, 0x83, 0x0d,
-	0xfa, 0xda, 0x80, 0xc3, 0x39, 0x39, 0x82, 0x07, 0x6c, 0x39, 0x0d, 0xb3, 0x34, 0xb8, 0x66, 0xeb,
-	0xe8, 0x0d, 0x74, 0xee, 0xae, 0x81, 0x3c, 0x87, 0x6d, 0xb2, 0xc9, 0xa4, 0x79, 0x93, 0x6c, 0xf2,
-	0x39, 0x82, 0x72, 0x20, 0x59, 0x94, 0x7a, 0xfb, 0x78, 0x99, 0xfc, 0xb7, 0xbb, 0x19, 0x39, 0xe4,
-	0x0b, 0xd8, 0xcb, 0x78, 0xf0, 0x3e, 0x63, 0x13, 0x6d, 0xe3, 0xa2, 0xd3, 0xba, 0xd6, 0x9d, 0x23,
-	0xe5, 0x09, 0xa8, 0x09, 0x1a, 0xfc, 0x01, 0xce, 0xac, 0x1a, 0x05, 0x7c, 0x03, 0xd2, 0xa5, 0x01,
-	0x89, 0x01, 0xe9, 0x52, 0x83, 0x6d, 0x68, 0xe4, 0xf3, 0xd4, 0x84, 0x5f, 0x69, 0xef, 0xba, 0x79,
-	0x9a, 0x73, 0x02, 0x90, 0x88, 0x38, 0x61, 0x42, 0x06, 0x2c, 0xf5, 0x0e, 0x30, 0xe5, 0x2f, 0x6e,
-	0x6f, 0xe8, 0x68, 0xcd, 0xd1, 0xb7, 0x60, 0xc1, 0x68, 0xeb, 0xc1, 0x7b, 0x88, 0x1f, 0x29, 0x6b,
-	0x99, 0x3c, 0x87, 0xa6, 0x4a, 0xbe, 0x10, 0xe2, 0x11, 0x26, 0xd9, 0x88, 0x02, 0xbe, 0xf1, 0x89,
-	0x34, 0xba, 0x2c, 0xd2, 0x1e, 0x1b, 0x1a, 0x5d, 0x16, 0x68, 0x2f, 0x81, 0xe4, 0x05, 0x15, 0xa8,
-	0x9e, 0x1e, 0x84, 0xae, 0xaa, 0xc0, 0xfe, 0x2b, 0x3c, 0xa4, 0xb3, 0x59, 0x20, 0x83, 0x18, 0xbf,
-	0x12, 0x37, 0x06, 0x9f, 0xe0, 0xb3, 0xf5, 0xeb, 0xdb, 0x55, 0x9e, 0xac, 0xe9, 0x1b, 0x37, 0xfe,
-	0x01, 0xbd, 0x43, 0x4b, 0xbe, 0x85, 0x4f, 0x54, 0x2a, 0x77, 0x07, 0x68, 0x61, 0x46, 0x8f, 0x17,
-	0x34, 0xbd, 0xcb, 0x23, 0x79, 0x09, 0x0e, 0x0d, 0x43, 0xb5, 0xa1, 0x4f, 0xee, 0x5d, 0x11, 0x1a,
-	0x86, 0xc3, 0x39, 0xb2, 0xf9, 0x4a, 0xb1, 0x9f, 0xde, 0xcf, 0xe6, 0x2b, 0xcd, 0x8e, 0x39, 0x6e,
-	0xff, 0xa7, 0xf7, 0xb2, 0x63, 0xae, 0x9e, 0x82, 0x17, 0x50, 0xe2, 0xb1, 0xf4, 0x3e, 0xbb, 0xef,
-	0x0a, 0x56, 0x8c, 0xd6, 0x18, 0xf6, 0x6f, 0xac, 0xc0, 0xff, 0xe1, 0x33, 0xaf, 0xf5, 0x77, 0x0b,
-	0x0e, 0xee, 0xec, 0xd0, 0x0b, 0x68, 0xd2, 0xf0, 0x67, 0xba, 0x4a, 0x27, 0x69, 0x36, 0x9d, 0x32,
-	0xa6, 0x3f, 0xda, 0xaa, 0xfd, 0x1d, 0xbf, 0xa1, 0xf5, 0x17, 0x5a, 0x4d, 0x7e, 0x7f, 0xf3, 0x6d,
-	0x72, 0x5f, 0xe8, 0xfe, 0xce, 0xd6, 0xfb, 0xe4, 0xb4, 0x0e, 0x35, 0x3a, 0x9b, 0xe1, 0xe0, 0xd2,
-	0xf6, 0x25, 0xd8, 0xea, 0x1a, 0x26, 0x15, 0x28, 0x51, 0xbe, 0x72, 0x77, 0x48, 0x15, 0x6c, 0x9e,
-	0x85, 0xa1, 0x6b, 0xa9, 0x4f, 0xff, 0xcb, 0x38, 0x0e, 0x19, 0xe5, 0xee, 0xae, 0x12, 0x02, 0x2e,
-	0xd9, 0x15, 0x13, 0x6e, 0x89, 0x00, 0x38, 0x3c, 0x8b, 0x2e, 0x99, 0x70, 0x6d, 0x52, 0x83, 0x32,
-	0x55, 0x57, 0xb4, 0x5b, 0x56, 0xea, 0x54, 0x8a, 0x80, 0x5f, 0xb9, 0x8e, 0x3a, 0xc7, 0x97, 0x6f,
-	0xd9, 0x54, 0xba, 0x95, 0x2f, 0xdf, 0x82, 0xa3, 0xbf, 0x37, 0x55, 0x94, 0x3f, 0xf5, 0xc6, 0x3a,
-	0x4a, 0xbf, 0x77, 0xf2, 0x9d, 0x6b, 0xa9, 0xd3, 0x68, 0x78, 0x31, 0x76, 0x77, 0x15, 0x38, 0xfa,
-	0x69, 0xec, 0x96, 0x94, 0xcb, 0xd1, 0xc9, 0xf8, 0xac, 0xef, 0xda, 0xca, 0xcd, 0x77, 0xbd, 0x1f,
-	0x7b, 0xe3, 0x9e, 0x5b, 0x56, 0x29, 0x9c, 0x0d, 0x07, 0x83, 0xde, 0xd9, 0xd8, 0x75, 0x94, 0x30,
-	0x1c, 0x8d, 0xcf, 0x87, 0x83, 0x0b, 0xb7, 0xa2, 0x0c, 0xc6, 0xfe, 0xc9, 0x59, 0xcf, 0xad, 0x5e,
-	0x3a, 0xf8, 0x6f, 0xf2, 0xab, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0xf3, 0xd1, 0xae, 0x1b, 0x76,
-	0x0e, 0x00, 0x00,
+var fileDescriptor_messages_e3cf1d397ce766f1 = []byte{
+	// 1525 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x57, 0xdd, 0x72, 0x22, 0xc7,
+	0x15, 0x16, 0x62, 0x18, 0xe0, 0x20, 0xd0, 0x6c, 0x47, 0xbb, 0x3b, 0x66, 0xfd, 0xa3, 0xc5, 0x2b,
+	0x9b, 0xb2, 0x5c, 0x24, 0x91, 0x7d, 0x91, 0xb8, 0x2a, 0x55, 0xd1, 0x0f, 0x0e, 0xd2, 0x7a, 0x01,
+	0x8f, 0x50, 0xa5, 0x52, 0xb9, 0xa0, 0x5a, 0xd0, 0x88, 0xd9, 0x9d, 0xe9, 0x19, 0xf5, 0xf4, 0xc8,
+	0xe0, 0x07, 0xf0, 0xcb, 0xe4, 0x26, 0xcf, 0x92, 0xfb, 0xbc, 0x4b, 0xaa, 0x4f, 0xf7, 0xc0, 0xa0,
+	0x9f, 0x94, 0xab, 0x7c, 0x43, 0x75, 0x9f, 0xef, 0x3b, 0xff, 0xa7, 0x7b, 0x1a, 0x68, 0x84, 0x2c,
+	0x49, 0xe8, 0x0d, 0x4b, 0x3a, 0xb1, 0x88, 0x64, 0x44, 0xac, 0x90, 0xfa, 0xbc, 0xb9, 0x3b, 0xa5,
+	0x92, 0x8e, 0xdf, 0x27, 0x11, 0xd7, 0xe2, 0xd6, 0xbf, 0x8b, 0x60, 0xff, 0x23, 0x0c, 0x4e, 0x67,
+	0x37, 0xc4, 0x85, 0xf2, 0x1d, 0x13, 0x89, 0x1f, 0x71, 0xb7, 0xb0, 0x5f, 0x68, 0xd7, 0xbd, 0x6c,
+	0x4b, 0x3e, 0x01, 0xa0, 0xa9, 0x9c, 0x8f, 0x65, 0xf4, 0x81, 0x71, 0x77, 0x7b, 0xbf, 0xd0, 0xae,
+	0x7a, 0x55, 0x25, 0x19, 0x29, 0x01, 0x39, 0x00, 0xeb, 0x83, 0xcf, 0xa7, 0x6e, 0x71, 0xbf, 0xd0,
+	0x6e, 0x1c, 0x3d, 0xeb, 0x28, 0x4f, 0x1d, 0x6d, 0xb4, 0xf3, 0xd6, 0xe7, 0x53, 0x0f, 0x61, 0x42,
+	0xc0, 0x9a, 0xf9, 0x01, 0x73, 0x2d, 0xd4, 0xc7, 0x35, 0xe9, 0x40, 0x59, 0xa4, 0x5c, 0xfa, 0x21,
+	0x73, 0x4b, 0xfb, 0x85, 0x76, 0xed, 0x68, 0x6f, 0x43, 0xdb, 0xd3, 0x98, 0x97, 0x91, 0x94, 0x2b,
+	0xb6, 0x60, 0x13, 0xd7, 0x46, 0xf2, 0xa6, 0xab, 0xee, 0x82, 0x4d, 0x3c, 0x84, 0x9b, 0x11, 0x94,
+	0x8d, 0xaa, 0xf2, 0x3a, 0x8f, 0x12, 0x89, 0x29, 0x55, 0x3d, 0x5c, 0x2b, 0x59, 0x1c, 0x09, 0x69,
+	0x32, 0xc1, 0xb5, 0xca, 0x71, 0xe6, 0x73, 0x1a, 0x8c, 0x91, 0x5d, 0xd4, 0x39, 0xa2, 0xa4, 0xa7,
+	0x54, 0x56, 0x30, 0x2a, 0x5a, 0x39, 0x78, 0x18, 0x09, 0xd9, 0xfc, 0x1e, 0x2c, 0xe5, 0x9e, 0xec,
+	0x41, 0x29, 0x91, 0x54, 0x28, 0x77, 0xc5, 0x76, 0xd5, 0xd3, 0x1b, 0x25, 0x15, 0x2c, 0x61, 0xca,
+	0x21, 0x4a, 0x71, 0xa3, 0xa2, 0x48, 0x64, 0x14, 0xbb, 0x45, 0x14, 0xe2, 0xba, 0xd5, 0x02, 0x4b,
+	0x55, 0x8c, 0xd4, 0xa0, 0x7c, 0xd5, 0x7f, 0xdb, 0x1f, 0xfc, 0xbd, 0xef, 0x6c, 0x91, 0x3a, 0x54,
+	0x07, 0x31, 0xe3, 0xc7, 0xc3, 0xf3, 0xbb, 0x6f, 0x9c, 0x42, 0xeb, 0x47, 0x28, 0x7f, 0x9f, 0xfe,
+	0xfc, 0xb3, 0x6a, 0xd9, 0x1b, 0xb0, 0x27, 0x11, 0x9f, 0xf9, 0x37, 0x98, 0x5e, 0xed, 0x68, 0x27,
+	0x5f, 0x10, 0xcf, 0x60, 0x64, 0x1f, 0xac, 0x24, 0x66, 0x13, 0x4c, 0x77, 0xc5, 0xb9, 0x8c, 0xd9,
+	0xe4, 0xdc, 0xf3, 0x10, 0x69, 0x8d, 0xc1, 0xd6, 0x7b, 0xf2, 0x25, 0x94, 0x93, 0xc9, 0x9c, 0x85,
+	0x34, 0x31, 0x26, 0xeb, 0x86, 0xae, 0x85, 0x5e, 0x86, 0x92, 0xaf, 0xa1, 0xca, 0xf8, 0x34, 0x8e,
+	0x7c, 0x2e, 0x13, 0xcc, 0xab, 0x76, 0xd4, 0xd0, 0xd4, 0xae, 0x11, 0x7b, 0x6b, 0x42, 0xeb, 0x97,
+	0x02, 0x94, 0x8d, 0x09, 0x72, 0x08, 0x96, 0x1a, 0x40, 0x2c, 0x51, 0xed, 0xe8, 0xe5, 0x86, 0xfd,
+	0xce, 0x45, 0x12, 0xf1, 0x2e, 0x97, 0x62, 0xe9, 0x21, 0xa9, 0xd9, 0x87, 0xea, 0x4a, 0x44, 0x1c,
+	0x28, 0x7e, 0x60, 0x4b, 0x33, 0x9d, 0x6a, 0x49, 0x0e, 0xa1, 0x74, 0x47, 0x83, 0x94, 0x99, 0xdc,
+	0x9e, 0x6b, 0x63, 0x1e, 0x9b, 0x0d, 0x84, 0xb6, 0x78, 0x71, 0x39, 0xe8, 0x7b, 0x9a, 0xf3, 0xdd,
+	0xf6, 0x9f, 0x0a, 0x2d, 0x09, 0xbb, 0xf7, 0x50, 0xf2, 0x39, 0x14, 0x63, 0x29, 0x4c, 0xba, 0xbb,
+	0xf9, 0x70, 0x86, 0x52, 0xf4, 0xb6, 0x3c, 0x85, 0x92, 0x43, 0xb0, 0x75, 0xe6, 0xc6, 0xd3, 0xb3,
+	0x3c, 0xaf, 0xa3, 0xec, 0xf4, 0xb6, 0x3c, 0x43, 0x39, 0xd9, 0x85, 0x7a, 0x2c, 0xc5, 0x38, 0x12,
+	0x63, 0x2d, 0x68, 0xfd, 0x1e, 0xaa, 0x2b, 0x8b, 0x2a, 0x8b, 0xab, 0xf3, 0xb3, 0x2c, 0x8b, 0xab,
+	0xf3, 0x33, 0x25, 0x11, 0x6c, 0x66, 0xc6, 0x51, 0x2d, 0x5b, 0x7f, 0x85, 0x4a, 0x56, 0x46, 0xd2,
+	0x5e, 0xd5, 0x4b, 0x39, 0x26, 0x9b, 0x45, 0x36, 0x9e, 0x91, 0x71, 0x02, 0x50, 0xc9, 0x4a, 0xde,
+	0xfa, 0x65, 0x1b, 0x76, 0xf2, 0x24, 0x35, 0x2b, 0x21, 0x93, 0xf3, 0x68, 0x8a, 0x86, 0x1a, 0xd9,
+	0x1c, 0xbc, 0x43, 0x99, 0x67, 0x30, 0xf2, 0x29, 0x58, 0x31, 0x95, 0x73, 0x93, 0x25, 0x68, 0xce,
+	0x90, 0xca, 0xb9, 0x87, 0x72, 0xd2, 0x06, 0xdb, 0xe7, 0x71, 0x2a, 0x13, 0x3c, 0x22, 0xb5, 0x23,
+	0x27, 0x63, 0x08, 0x1a, 0x26, 0x58, 0x6c, 0x83, 0x93, 0x3f, 0x43, 0x39, 0x4a, 0x25, 0x52, 0x2d,
+	0xec, 0xf4, 0x67, 0x0f, 0x23, 0xef, 0x0c, 0x34, 0x43, 0x77, 0x3c, 0xe3, 0x37, 0xdf, 0xc2, 0x4e,
+	0x1e, 0x78, 0xa4, 0xef, 0x07, 0x9b, 0x7d, 0xbf, 0xdf, 0xb5, 0x7c, 0xc7, 0xff, 0x55, 0x04, 0x58,
+	0x87, 0x47, 0x3e, 0x07, 0xeb, 0x3a, 0x9a, 0x2e, 0x37, 0xdb, 0x8d, 0x38, 0x46, 0x8f, 0x20, 0xf9,
+	0x16, 0xec, 0x39, 0xa3, 0x53, 0x26, 0xcc, 0x64, 0x7f, 0x7c, 0x3f, 0xcb, 0x4e, 0x0f, 0x61, 0x1d,
+	0xb7, 0xe1, 0x92, 0x8e, 0xa9, 0x5d, 0x11, 0x75, 0x9a, 0x0f, 0x74, 0x54, 0x19, 0xcd, 0x6c, 0x63,
+	0x2d, 0xff, 0x08, 0xa5, 0xdb, 0x94, 0x89, 0xa5, 0xa9, 0xcf, 0xab, 0x07, 0x0a, 0x3f, 0x2a, 0x54,
+	0x6b, 0x68, 0x66, 0xf3, 0x02, 0x6a, 0x39, 0xcf, 0xf9, 0xc2, 0x54, 0xff, 0x5f, 0x61, 0xd6, 0xf9,
+	0xad, 0x0b, 0xd3, 0xec, 0x41, 0x75, 0x15, 0xd1, 0x6f, 0xb3, 0x74, 0x0e, 0xb0, 0x0e, 0xf5, 0x37,
+	0x99, 0x6a, 0x5d, 0xa8, 0xa0, 0x8c, 0x9c, 0x34, 0xa1, 0x22, 0xd8, 0x6d, 0xea, 0x0b, 0xa6, 0x87,
+	0xb6, 0xe2, 0xad, 0xf6, 0xe4, 0xb5, 0x3e, 0xb5, 0x4f, 0xf4, 0x5f, 0x61, 0xad, 0x9f, 0xc0, 0x52,
+	0x09, 0x92, 0x3f, 0x40, 0x39, 0xa6, 0x42, 0xfa, 0x34, 0x30, 0x77, 0xce, 0x8b, 0xf5, 0x58, 0xe3,
+	0xcf, 0x50, 0xa3, 0x5e, 0x46, 0x6b, 0xfe, 0x05, 0x6a, 0x39, 0x39, 0xd9, 0x53, 0x8d, 0x15, 0xe6,
+	0x1b, 0xa2, 0x4e, 0x9b, 0xda, 0x11, 0xb2, 0x8e, 0xa0, 0x6a, 0xae, 0x89, 0x13, 0x0b, 0xb6, 0xe3,
+	0xb8, 0xf5, 0xdf, 0x1a, 0xd8, 0x3a, 0x96, 0xe6, 0x7f, 0x6a, 0x60, 0x61, 0x2e, 0x5f, 0x81, 0x25,
+	0x97, 0x31, 0xc3, 0x08, 0x1a, 0x59, 0x04, 0xb9, 0xeb, 0xa3, 0x33, 0x5a, 0xc6, 0xcc, 0x43, 0x0e,
+	0x79, 0x03, 0x16, 0xe3, 0x69, 0x68, 0x92, 0x33, 0x47, 0x0c, 0x49, 0xc7, 0x42, 0xd0, 0xa5, 0x87,
+	0x28, 0x79, 0x01, 0xf6, 0x2c, 0x12, 0x21, 0xcd, 0xbe, 0x56, 0x66, 0xa7, 0x3e, 0x55, 0xa1, 0xcf,
+	0xc7, 0x01, 0xe3, 0x37, 0x72, 0x8e, 0x9f, 0x2a, 0xcb, 0xab, 0x86, 0x3e, 0xff, 0x01, 0x05, 0x08,
+	0xd3, 0x45, 0x06, 0x97, 0x0c, 0x4c, 0x17, 0x06, 0x7e, 0x03, 0x8d, 0x39, 0x4d, 0xc6, 0x39, 0x8a,
+	0x8d, 0x95, 0xdf, 0x99, 0xd3, 0xe4, 0xdd, 0x8a, 0xe5, 0xaa, 0x92, 0x4a, 0xc9, 0x04, 0x77, 0xcb,
+	0xe8, 0x3c, 0xdb, 0x2a, 0x24, 0xf4, 0xb9, 0x1f, 0xa6, 0xa1, 0x5b, 0xd9, 0x2f, 0xb4, 0x0b, 0x5e,
+	0xb6, 0x45, 0x84, 0x2e, 0x10, 0xa9, 0x1a, 0x44, 0x6f, 0xc9, 0x67, 0x50, 0x43, 0x9f, 0x46, 0x0f,
+	0xd0, 0x21, 0x28, 0x87, 0x46, 0x35, 0x23, 0x18, 0xf5, 0xda, 0x9a, 0x60, 0x2c, 0x7c, 0x0b, 0x2f,
+	0xa4, 0xa0, 0x3c, 0x09, 0xa8, 0x64, 0xd3, 0x71, 0x98, 0x06, 0xd2, 0x8f, 0x03, 0x36, 0x8e, 0x66,
+	0xee, 0x0e, 0xba, 0xda, 0x5b, 0xa3, 0xef, 0x0c, 0x38, 0x98, 0x91, 0x43, 0x78, 0xc6, 0x16, 0x93,
+	0x20, 0x4d, 0xfc, 0x3b, 0xb6, 0xf2, 0x5e, 0x47, 0xe3, 0xce, 0x0a, 0xc8, 0x62, 0xd8, 0x24, 0x9b,
+	0x48, 0x1a, 0xf7, 0xc9, 0x26, 0x9e, 0x03, 0x28, 0xf9, 0x92, 0x85, 0x89, 0xbb, 0x8b, 0x03, 0xf7,
+	0xf0, 0x7e, 0x42, 0x94, 0xbc, 0x86, 0x9d, 0x94, 0xfb, 0xb7, 0x29, 0x1b, 0x6b, 0xb6, 0x83, 0xe6,
+	0x6a, 0x5a, 0x76, 0x8e, 0x94, 0x57, 0xa0, 0x7a, 0x67, 0xf0, 0x67, 0xd8, 0xad, 0x4a, 0xe8, 0xf3,
+	0x35, 0x48, 0x17, 0x06, 0x24, 0x06, 0xa4, 0x0b, 0x0d, 0xb6, 0xa0, 0x9e, 0x75, 0x52, 0x13, 0x7e,
+	0xa7, 0xad, 0xeb, 0xb2, 0x69, 0xce, 0x31, 0x40, 0x2c, 0xa2, 0x98, 0x09, 0xe9, 0xb3, 0xc4, 0xdd,
+	0xc3, 0x60, 0x5f, 0x3f, 0x9c, 0xcd, 0xe1, 0x8a, 0xa3, 0x6f, 0xa3, 0x9c, 0xd2, 0xc6, 0x21, 0x7d,
+	0x8e, 0x4f, 0x99, 0xf5, 0x21, 0x3d, 0x80, 0x86, 0x0a, 0x3e, 0xe7, 0xe2, 0x05, 0x06, 0x59, 0x0f,
+	0x7d, 0xbe, 0xb6, 0x89, 0x34, 0xba, 0xc8, 0xd3, 0x5e, 0x1a, 0x1a, 0x5d, 0xe4, 0x68, 0x5f, 0x03,
+	0xc9, 0x12, 0xca, 0x51, 0x5d, 0xdd, 0x02, 0x9d, 0x55, 0x8e, 0xfd, 0x4f, 0x78, 0x4e, 0xa7, 0x53,
+	0x5f, 0xfa, 0x11, 0x3e, 0xdb, 0xd6, 0x0a, 0x1f, 0xe1, 0xa9, 0xfa, 0xe2, 0x61, 0x96, 0xc7, 0x2b,
+	0xfa, 0xda, 0x8c, 0xb7, 0x47, 0x1f, 0x91, 0x92, 0xef, 0xe0, 0x23, 0x15, 0xca, 0xe3, 0x0e, 0x9a,
+	0x18, 0xd1, 0xcb, 0x39, 0x4d, 0x1e, 0xb3, 0x48, 0xbe, 0x00, 0x9b, 0x06, 0x81, 0x9a, 0xcd, 0x57,
+	0x4f, 0x0c, 0x07, 0x0d, 0x82, 0xc1, 0x0c, 0x79, 0x7c, 0xa9, 0x78, 0x1f, 0x3f, 0xc5, 0xe3, 0x4b,
+	0xcd, 0x8b, 0x38, 0xce, 0xfa, 0x27, 0x4f, 0xf0, 0x22, 0xae, 0xa6, 0xfd, 0x35, 0x14, 0x79, 0x24,
+	0xdd, 0x4f, 0x9f, 0xb8, 0x31, 0x79, 0x24, 0x9b, 0x7d, 0xd8, 0xbd, 0xd7, 0xea, 0x5f, 0x7d, 0x9b,
+	0x3f, 0xf6, 0xed, 0x6d, 0xde, 0xc2, 0xde, 0xa3, 0x25, 0xf8, 0x12, 0x1a, 0x34, 0xf8, 0x89, 0x2e,
+	0x93, 0x71, 0x92, 0x4e, 0x26, 0x2c, 0xbb, 0xde, 0x7b, 0x5b, 0x5e, 0x5d, 0xcb, 0x2f, 0xb5, 0x58,
+	0xbd, 0xcd, 0xb2, 0x97, 0xd1, 0xe3, 0x6f, 0x33, 0xc1, 0x66, 0x27, 0x35, 0xa8, 0xd2, 0xe9, 0x14,
+	0x3b, 0x90, 0xb4, 0xae, 0xc1, 0x52, 0x37, 0x29, 0x29, 0x43, 0x91, 0xf2, 0xa5, 0xb3, 0x45, 0x2a,
+	0x60, 0xf1, 0x34, 0x08, 0x9c, 0x82, 0x7a, 0x54, 0x5f, 0x47, 0x51, 0xc0, 0x28, 0x77, 0xb6, 0xd5,
+	0xc6, 0xe7, 0x92, 0xdd, 0x30, 0xe1, 0x14, 0x09, 0x80, 0xcd, 0xd3, 0xf0, 0x9a, 0x09, 0xc7, 0x22,
+	0x55, 0x28, 0x51, 0x75, 0xcb, 0x3a, 0x25, 0x25, 0x4e, 0xa4, 0xf0, 0xf9, 0x8d, 0x63, 0xab, 0x75,
+	0x74, 0xfd, 0x9e, 0x4d, 0xa4, 0x53, 0xfe, 0xea, 0x3d, 0xd8, 0xfa, 0xd9, 0xa4, 0xbc, 0xfc, 0xad,
+	0x3b, 0xd2, 0x5e, 0x7a, 0xdd, 0xe3, 0x33, 0xa7, 0xa0, 0x56, 0xc3, 0xc1, 0xe5, 0xc8, 0xd9, 0x56,
+	0xe0, 0xf0, 0x6a, 0xe4, 0x14, 0x95, 0xc9, 0xe1, 0xf1, 0xe8, 0xb4, 0xe7, 0x58, 0xca, 0xcc, 0x59,
+	0xf7, 0x87, 0xee, 0xa8, 0xeb, 0x94, 0x54, 0x08, 0xa7, 0x83, 0x7e, 0xbf, 0x7b, 0x3a, 0x72, 0x6c,
+	0xb5, 0x19, 0x0c, 0x47, 0xe7, 0x83, 0xfe, 0xa5, 0x53, 0x56, 0x0a, 0x23, 0xef, 0xf8, 0xb4, 0xeb,
+	0x54, 0xae, 0x6d, 0xfc, 0x9f, 0xf6, 0xcd, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x6f, 0xb1, 0x2e,
+	0xfc, 0xd0, 0x0d, 0x00, 0x00,
 }
