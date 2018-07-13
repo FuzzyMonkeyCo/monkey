@@ -33,9 +33,7 @@ func (sm schemap) seed(ref string, schema *Schema_JSON) {
 func (sm schemap) ensureMapped(ref string, schema *Schema_JSON) *SchemaPtr {
 	if ref == "" {
 		for UID, schPtr := range sm {
-			//TODO: try loop & search for schema to save on space
-			if s := schPtr.GetSchema(); s != nil && schema.equal(s) {
-				log.Printf(">>> yay!")
+			if s := schPtr.GetSchema(); s != nil && reflect.DeepEqual(schema, s) {
 				return &SchemaPtr{UID: UID}
 			}
 		}
@@ -81,9 +79,7 @@ func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) *SchemaPtr {
 func (sm schemap) addOA3Schemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) {
 	for name, schemaRef := range docSchemas {
 		ref := baseRef + name
-		colorERR.Printf(">>> %#v\n", ref)
 		schema := sm.schemaFromOA3(schemaRef.Value)
-		colorERR.Printf(">>> %#v --> %#v\n", schemaRef.Value, schema)
 		sm.seed(ref, schema)
 	}
 }
@@ -102,10 +98,10 @@ func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
-						Method:  method,
-						Path:    path,
-						Inputs:  inputs,
-						Outputs: outputs,
+						Method:       method,
+						PathPartials: path,
+						Inputs:       inputs,
+						Outputs:      outputs,
 					},
 				},
 			}
@@ -150,6 +146,7 @@ func (sm schemap) inputsFromOA3(
 		}
 
 		switch docParam.In {
+		//FIXME: handle others
 		case openapi3.ParameterInPath:
 			params.Path[docParam.Name] = param
 		}
@@ -165,8 +162,8 @@ func (sm schemap) outputsFromOA3(docResponses openapi3.Responses) (
 		//FIXME: handle .Ref
 		for mime, ct := range responseRef.Value.Content {
 			if mime == mimeJSON {
-				schemaPtr := sm.ensureMappedOA3SchemaRef(ct.Schema)
-				outputs[makeXXXFromOA3(code)] = schemaPtr
+				xxx := makeXXXFromOA3(code)
+				outputs[xxx] = sm.ensureMappedOA3SchemaRef(ct.Schema)
 			}
 		}
 	}
@@ -192,8 +189,8 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	// "minLength"
 	schema.MinLength = s.MinLength
 	// "maxLength"
-	if nil != s.MaxLength {
-		schema.MaxLength = *s.MaxLength
+	if sMaxLength := s.MaxLength; nil != sMaxLength {
+		schema.MaxLength = *sMaxLength
 		schema.HasMaxLength = true
 	}
 	// "pattern"
@@ -257,8 +254,7 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
 		schema.AllOf = make([]*SchemaPtr, len(sAllOf))
 		for i, sOf := range sAllOf {
-			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
-			schema.AllOf[i] = schemaPtr
+			schema.AllOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
 		}
 	}
 
@@ -266,8 +262,7 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
 		schema.AnyOf = make([]*SchemaPtr, len(sAnyOf))
 		for i, sOf := range sAnyOf {
-			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
-			schema.AnyOf[i] = schemaPtr
+			schema.AnyOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
 		}
 	}
 
@@ -275,22 +270,16 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	if sOneOf := s.OneOf; len(sOneOf) != 0 {
 		schema.OneOf = make([]*SchemaPtr, len(sOneOf))
 		for i, sOf := range sOneOf {
-			schemaPtr := sm.ensureMappedOA3SchemaRef(sOf)
-			schema.OneOf[i] = schemaPtr
+			schema.OneOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
 		}
 	}
 
 	// "not"
 	if sNot := s.Not; nil != sNot {
-		schemaPtr := sm.ensureMappedOA3SchemaRef(sNot)
-		schema.Not = schemaPtr
+		schema.Not = sm.ensureMappedOA3SchemaRef(sNot)
 	}
 
 	return
-}
-
-func (s *Schema_JSON) equal(ss *Schema_JSON) bool {
-	return reflect.DeepEqual(s, ss)
 }
 
 func ensureSchemaType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
@@ -320,31 +309,33 @@ func newSpecFromOA3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
 		Endpoints: endpoints,
 		Schemas:   &Schemas{Json: sm},
 	}
-	log.Printf("\n basePath:%#v\n spec: %v\n ", basePath, spec)
 
-	stringified, err := new(jsonpb.Marshaler).MarshalToString(spec)
+	jsoner := &jsonpb.Marshaler{
+		// Indent: "\t",
+		// EmitDefaults: true,
+	}
+	stringified, err := jsoner.MarshalToString(spec)
 	log.Println("[DBG]", err, stringified)
 	return
 }
 
-func pathFromOA3(basePath, parameterizedPath string) *Path {
-	var partials []*Path_PathPartial
+func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 	if basePath != "/" {
-		p := &Path_PathPartial{Pp: &Path_PathPartial_Part{basePath}}
+		p := &PathPartial{Pp: &PathPartial_Part{basePath}}
 		partials = append(partials, p)
 	}
 	onCurly := func(r rune) bool { return r == '{' || r == '}' }
-	isCurly := '{' == parameterizedPath[0]
-	for i, part := range strings.FieldsFunc(parameterizedPath, onCurly) {
-		var p Path_PathPartial
+	isCurly := '{' == path[0]
+	for i, part := range strings.FieldsFunc(path, onCurly) {
+		var p PathPartial
 		if isCurly || i%2 != 0 {
-			p.Pp = &Path_PathPartial_Ptr{part}
+			p.Pp = &PathPartial_Ptr{part}
 		} else {
-			p.Pp = &Path_PathPartial_Part{part}
+			p.Pp = &PathPartial_Part{part}
 		}
 		partials = append(partials, &p)
 	}
-	return &Path{Partial: partials}
+	return
 }
 
 func makeXXXFromOA3(code string) uint32 {

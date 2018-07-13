@@ -73,7 +73,7 @@ message Endpoint {
 
 message EndpointJSON {
     Method method = 1;
-    Path path = 2;
+    repeated PathPartial path_partials = 2;
     ParamsJSON inputs = 3;
     // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
     map<uint32,SchemaPtr> outputs = 4;
@@ -95,25 +95,23 @@ message ParamJSON {
 }
 
 enum Method {
-    GET = 0;
-    HEAD = 1;
-    POST = 2;
-    PUT = 3;
-    PATCH = 4;
-    DELETE = 5;
-    CONNECT = 6;
-    OPTIONS = 7;
-    TRACE = 8;
+    UNKNOWN = 0;
+    GET = 1;
+    HEAD = 2;
+    POST = 3;
+    PUT = 4;
+    PATCH = 5;
+    DELETE = 6;
+    CONNECT = 7;
+    OPTIONS = 8;
+    TRACE = 9;
 }
 
-message Path {
-    message PathPartial {
-        oneof pp {
-            string part = 1;
-            string ptr = 2; //FIXME? uint32 ptr = 2;
-        }
+message PathPartial {
+    oneof pp {
+        string part = 1;
+        string ptr = 2; //FIXME? uint32 ptr = 2;
     }
-    repeated PathPartial partial = 1;
 }
 
 /// https://swagger.io/docs/specification/data-models/keywords/
@@ -130,14 +128,15 @@ message Schema {
         //   so just lay things out flat...
 
         enum Type {
-            any = 0;
-            null = 1;
-            boolean = 2;
-            integer = 3;
-            number = 4;
-            array = 5;
-            string = 6;
-            object = 7;
+            UNKNOWN = 0;
+            any = 1;
+            null = 2;
+            boolean = 3;
+            integer = 4;
+            number = 5;
+            array = 6;
+            string = 7;
+            object = 8;
         }
         repeated Type type = 1; // default: []
 

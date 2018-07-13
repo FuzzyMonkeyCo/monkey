@@ -38,7 +38,7 @@
     "jsoninfo",
     "openapi3"
   ]
-  revision = "e51b9873e75b4f5d8e9e877f7512723604b82bdf"
+  revision = "60e95f1b88c48a8c98824f41ea5cc3c8f2d54e82"
 
 [[projects]]
   name = "github.com/ghodss/yaml"
@@ -70,7 +70,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "9eb2c01ac278a5d89ce4b2be68fe4500955d8179"
+  revision = "70b3af33377e7aa25ae42977bed93cc6b90f0373"
 
 [[projects]]
   branch = "master"
@@ -211,7 +211,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "ce36f3865eeb42541ce3f87f32f8462c5687befa"
+  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
 
 [[projects]]
   branch = "master"
@@ -225,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "16f8f9bb720111f0b7b5c750acc28768620bb0c7"
+  revision = "2087f8c10712366cfc2f4fcb1bf99eeef61ab21e"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -253,7 +253,7 @@
     "unused",
     "version"
   ]
-  revision = "85dde8b51d3a07710001c1571ac759ebdd9b0106"
+  revision = "3ac6a802416d2efd6654491fe47f693e56d8eb4e"
 
 [solve-meta]
   analyzer-name = "dep"

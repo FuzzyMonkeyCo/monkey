@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -12,6 +13,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/stretchr/testify/require"
 )
+
+type Schemap struct {
+	M schemap
+}
 
 var xxx2uint32 = map[string]uint32{
 	"default": 0,
@@ -22,23 +27,21 @@ var xxx2uint32 = map[string]uint32{
 	"5XX":     5,
 }
 
-func TestSpecXXX(t *testing.T) {
+func TestMakeXXXFromOA3(t *testing.T) {
 	for k, v := range xxx2uint32 {
-		got, err := specXXX(k)
-		require.NoError(t, err)
+		got := makeXXXFromOA3(k)
 		require.Equal(t, v, got)
 	}
 
 	for i := 100; i < 600; i++ {
 		k, v := strconv.Itoa(i), uint32(i)
-		got, err := specXXX(k)
-		require.NoError(t, err)
+		got := makeXXXFromOA3(k)
 		require.Equal(t, v, got)
 	}
 }
 
 func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
-	log.Println("ignore me")
+	jsoner := &jsonpb.Marshaler{Indent: "\t"}
 	for _, docPath := range []string{
 		"./misc/openapiv3.0.0_petstore.yaml",
 		"./misc/openapiv3.0.0_petstore.json",
@@ -54,7 +57,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			bin0, err := proto.Marshal(spec0)
 			require.NoError(t, err)
 			require.NotNil(t, bin0)
-			jsn0, err := new(jsonpb.Marshaler).MarshalToString(spec0)
+			jsn0, err := jsoner.MarshalToString(spec0)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn0)
 
@@ -62,7 +65,8 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			err = proto.Unmarshal(bin0, &spec1)
 			require.NoError(t, err)
 			require.NotNil(t, &spec1)
-			doc := specToOpenAPIv3(&spec1)
+			log.Println("here we go again")
+			doc := specToOA3(&spec1)
 			blob1, err := json.MarshalIndent(doc, "", "  ")
 			require.NoError(t, err)
 			t.Logf("blob1 = %s\n", blob1)
@@ -70,7 +74,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, spec2)
 			require.IsType(t, &SpecIR{}, spec2)
-			jsn1, err := new(jsonpb.Marshaler).MarshalToString(spec2)
+			jsn1, err := jsoner.MarshalToString(spec2)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn1)
 
@@ -81,18 +85,31 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	}
 }
 
-func specToOpenAPIv3(spec *SpecIR) (doc openapi3.Swagger) {
+func specToOA3(spec *SpecIR) (doc openapi3.Swagger) {
 	doc.OpenAPI = "3.0.0"
 	doc.Info = openapi3.Info{
 		Title:   "title",
 		Version: "1.2.3",
 	}
 
-	specEndpoints := spec.Endpoints
-	doc.Paths = make(openapi3.Paths, len(specEndpoints))
-	for _, e := range specEndpoints {
+	sm := &Schemap{M: spec.GetSchemas().GetJson()}
+	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm.M))
+	for _, refOrSchema := range sm.M {
+		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
+			if ref := schemaPtr.GetRef(); ref != "" {
+				name := strings.TrimPrefix(ref, "#/components/schemas/")
+				refd := sm.M[schemaPtr.GetUID()]
+				seededSchemas[name] = sm.schemaToOA3(refd.GetSchema())
+			}
+		}
+	}
+	doc.Components.Schemas = seededSchemas
+
+	endpoints := spec.GetEndpoints()
+	doc.Paths = make(openapi3.Paths, len(endpoints))
+	for _, e := range endpoints {
 		endpoint := e.GetJson()
-		url := parameterizePath(endpoint.GetPath())
+		url := pathToOA3(endpoint.GetPathPartials())
 		path := &openapi3.PathItem{
 			// Parameters:
 		}
@@ -100,80 +117,160 @@ func specToOpenAPIv3(spec *SpecIR) (doc openapi3.Swagger) {
 		op := &openapi3.Operation{
 			// Parameters:
 			// RequestBody:
-			Responses: responses(endpoint.GetOutputs()),
+			Responses: sm.outputsToOA3(endpoint.GetOutputs()),
 		}
-		setMethod(endpoint.GetMethod(), path, op)
+		methodToOA3(endpoint.GetMethod(), path, op)
 		doc.Paths[url] = path
 	}
-
 	return
 }
 
-func responses(outs mapXXXToPtrOrSchema) openapi3.Responses {
+func (sm *Schemap) outputsToOA3(outs map[uint32]*SchemaPtr) openapi3.Responses {
 	responses := make(openapi3.Responses, len(outs))
 	for xxx, schema := range outs {
 		XXX := xxx2XXX(xxx)
 		responses[XXX] = &openapi3.ResponseRef{
 			Value: &openapi3.Response{
 				Description: "placeholder",
-				Content:     jsonContent(schema),
+				Content:     sm.contentToOA3(schema),
 			},
 		}
 	}
 	return responses
 }
 
-func jsonSchema(s *Schema_JSON) *openapi3.Schema {
-	schema := openapi3.NewSchema()
-
-	// enum
-	//FIXME
-
-	// type, nullable, types
-	sTypes := s.GetType()
-	if len(sTypes) == 1 {
-		sType := sTypes[0]
-		if sType == Schema_JSON_null {
-			schema.Nullable = true
-		} else {
-			schema.Type = Schema_JSON_Type_name[int32(sType)]
-		}
-	} else {
-		schema.Types = make([]string, len(sTypes))
-		for i, t := range sTypes {
-			schema.Types[i] = Schema_JSON_Type_name[int32(t)]
-		}
-	}
-
-	// format
-	schema.Format = s.GetFormat()
-
-	// required, properties
-	schema.Required = s.GetRequired()
-	schema.Properties = make(map[string]*openapi3.SchemaRef)
-	for propName, propSchema := range s.GetProperties() {
-		var subSchema openapi3.SchemaRef
-		if ptr := propSchema.GetPtr(); ptr != "" {
-			subSchema.Ref = ptr
-		} else {
-			subSchema.Value = jsonSchema(propSchema.GetSchema())
-		}
-		schema.Properties[propName] = &subSchema
-	}
-
-	// allOf
-	//FIXME
-
-	return schema
+func (sm *Schemap) contentToOA3(schemaPtr *SchemaPtr) openapi3.Content {
+	schemaRef := sm.derefSchemaPtr(schemaPtr)
+	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
-func jsonContent(ps *PtrOrSchemaJSON) openapi3.Content {
-	if ptr := ps.GetPtr(); ptr != "" {
-		ref := openapi3.NewSchemaRef(ptr, nil)
-		return openapi3.NewContentWithJSONSchemaRef(ref)
+func (sm *Schemap) derefSchemaPtr(schemaPtr *SchemaPtr) *openapi3.SchemaRef {
+	s, ok := sm.M[schemaPtr.GetUID()]
+	if !ok {
+		panic(`schemaptr's UID must be in schemap`)
 	}
-	schema := jsonSchema(ps.GetSchema())
-	return openapi3.NewContentWithJSONSchema(schema)
+
+	if ss := s.GetSchema(); ss != nil {
+		if sp := s.GetPtr(); sp != nil {
+			panic(`sub schemaptr must not be set`)
+		}
+		schema := sm.schemaToOA3(ss)
+		schema.Ref = schemaPtr.GetRef()
+		return schema
+	}
+	return sm.derefSchemaPtr(s.GetPtr())
+}
+
+func (sm *Schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
+	schema := openapi3.NewSchema()
+
+	// "enum"
+	//FIXME
+
+	// "type", "nullable"
+	for _, t := range s.GetType() {
+		if t == Schema_JSON_UNKNOWN {
+			panic(`no way this is ever zero`)
+		}
+		if t == Schema_JSON_null {
+			schema.Nullable = true
+		} else {
+			schema.Type = Schema_JSON_Type_name[int32(t)]
+		}
+	}
+
+	// "format"
+	schema.Format = s.GetFormat()
+	// "minLength"
+	schema.MinLength = s.GetMinLength()
+	// "maxLength"
+	if s.GetHasMaxLength() {
+		v := s.GetMaxLength()
+		schema.MaxLength = &v
+	}
+	// "pattern"
+	schema.Pattern = s.GetPattern()
+
+	// "minimum"
+	if s.GetHasMinimum() {
+		v := s.GetMinimum()
+		schema.Min = &v
+	}
+	// "maximum"
+	if s.GetHasMaximum() {
+		v := s.GetMaximum()
+		schema.Max = &v
+	}
+	// "exclusiveMinimum", "exclusiveMaximum"
+	schema.ExclusiveMin = s.GetExclusiveMinimum()
+	schema.ExclusiveMax = s.GetExclusiveMaximum()
+	// "multipleOf"
+	if mulOf := s.GetTranslatedMultipleOf(); mulOf != 0.0 {
+		v := mulOf + 1.0
+		schema.MultipleOf = &v
+	}
+
+	// "uniqueItems"
+	schema.UniqueItems = s.GetUniqueItems()
+	// "minItems"
+	schema.MinItems = s.GetMinItems()
+	// "maxItems"
+	if s.GetHasMaxItems() {
+		v := s.GetMaxItems()
+		schema.MaxItems = &v
+	}
+	// "items"
+	if sItems := s.GetItems(); len(sItems) == 1 {
+		schema.Items = sm.derefSchemaPtr(sItems[0])
+	}
+
+	// "minProperties"
+	schema.MinProps = s.GetMinProperties()
+	// "maxProperties"
+	if s.GetHasMaxProperties() {
+		v := s.GetMaxProperties()
+		schema.MaxProps = &v
+	}
+	// "required"
+	schema.Required = s.GetRequired()
+	// "properties"
+	if sProps := s.GetProperties(); len(sProps) != 0 {
+		schema.Properties = make(map[string]*openapi3.SchemaRef, len(sProps))
+		for propName, propSchema := range sProps {
+			schema.Properties[propName] = sm.derefSchemaPtr(propSchema)
+		}
+	}
+
+	// "allOf"
+	if sAllOf := s.GetAllOf(); len(sAllOf) != 0 {
+		schema.AllOf = make([]*openapi3.SchemaRef, len(sAllOf))
+		for i, sOf := range sAllOf {
+			schema.AllOf[i] = sm.derefSchemaPtr(sOf)
+		}
+	}
+
+	// "AnyOf"
+	if sAnyOf := s.GetAnyOf(); len(sAnyOf) != 0 {
+		schema.AnyOf = make([]*openapi3.SchemaRef, len(sAnyOf))
+		for i, sOf := range sAnyOf {
+			schema.AnyOf[i] = sm.derefSchemaPtr(sOf)
+		}
+	}
+
+	// "OneOf"
+	if sOneOf := s.GetOneOf(); len(sOneOf) != 0 {
+		schema.OneOf = make([]*openapi3.SchemaRef, len(sOneOf))
+		for i, sOf := range sOneOf {
+			schema.OneOf[i] = sm.derefSchemaPtr(sOf)
+		}
+	}
+
+	// "Not"
+	if sNot := s.GetNot(); nil != sNot {
+		schema.Not = sm.derefSchemaPtr(sNot)
+	}
+
+	return schema.NewRef()
 }
 
 func xxx2XXX(xxx uint32) string {
@@ -185,8 +282,8 @@ func xxx2XXX(xxx uint32) string {
 	return strconv.FormatUint(uint64(xxx), 10)
 }
 
-func parameterizePath(path *Path) (s string) {
-	for _, p := range path.GetPartial() {
+func pathToOA3(partials []*PathPartial) (s string) {
+	for _, p := range partials {
 		part := p.GetPart()
 		if part != "" {
 			s += part
@@ -197,12 +294,14 @@ func parameterizePath(path *Path) (s string) {
 	return
 }
 
-func setMethod(m Method, p *openapi3.PathItem, op *openapi3.Operation) {
+func methodToOA3(m Method, p *openapi3.PathItem, op *openapi3.Operation) {
 	switch m {
-	//https://github.com/getkin/kin-openapi/pull/13
-	// case Method_CONNECT : p.Connect = op
+	case Method_CONNECT:
+		p.Connect = op
 	case Method_DELETE:
 		p.Delete = op
+	case Method_GET:
+		p.Get = op
 	case Method_HEAD:
 		p.Head = op
 	case Method_OPTIONS:
@@ -215,7 +314,5 @@ func setMethod(m Method, p *openapi3.PathItem, op *openapi3.Operation) {
 		p.Put = op
 	case Method_TRACE:
 		p.Trace = op
-	default:
-		p.Get = op
 	}
 }
