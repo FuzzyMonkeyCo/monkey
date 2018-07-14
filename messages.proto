@@ -6,16 +6,17 @@ syntax = "proto3";
 package main;
 import "data_json.proto";
 
-message YmlCfg {
+message UserCfg {
     uint32 version = 1;
     string auth_token = 2;
+    bytes seed = 3;
 
     enum Kind {
         UNKNOWN = 0;
         OpenAPIv3 = 1;
     }
-    Kind kind = 3;
-    string file = 4;
+    Kind kind = 4;
+    string file = 5;
 
     message Runtime {
         string host = 1;
@@ -23,18 +24,18 @@ message YmlCfg {
         string final_host = 3;
         string final_port = 4;
     }
-    Runtime runtime = 5;
+    Runtime runtime = 6;
 
     message Exec {
         repeated string start = 1;
         repeated string reset = 2;
         repeated string stop = 3;
     }
-    Exec exec = 6;
+    Exec exec = 7;
 }
 
 message FuzzCfg {
-    YmlCfg config = 1;
+    UserCfg cfg = 1;
     SpecIR spec = 2;
 }
 

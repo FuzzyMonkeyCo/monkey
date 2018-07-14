@@ -23,8 +23,8 @@ const (
 
 func newFuzz(cfg *UserCfg, spec *SpecIR) (cmd someCmd, err error) {
 	initer := &FuzzCfg{
-		Config: cfg,
-		Spec:   spec,
+		Cfg:  cfg,
+		Spec: spec,
 	}
 	payload, err := proto.Marshal(initer)
 	if err != nil {

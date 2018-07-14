@@ -19,18 +19,14 @@ func doAuth(cfg *UserCfg, apiKey string, N uint) (err error) {
 	}
 
 	type options struct {
-		Tests uint   `json:"num_tests"`
-		Seed  string `json:"seed,omitempty"`
+		Tests uint `json:"t"`
 	}
-
 	payload := struct {
-		V       uint    `json:"v"`
-		YML     uint32  `json:"version"`
-		Client  string  `json:"client"`
-		Options options `json:"options"`
+		VSN     uint32  `json:"v"`
+		Client  string  `json:"c"`
+		Options options `json:"o"`
 	}{
-		V:      v,
-		YML:    cfg.Version,
+		VSN:    cfg.Version,
 		Client: binTitle,
 		Options: options{
 			Tests: N,

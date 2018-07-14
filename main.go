@@ -142,11 +142,11 @@ func actualMain() int {
 		return doUpdate()
 	}
 
-	yml, err := readYML()
+	config, err := readCfg()
 	if err != nil {
 		return retryOrReport()
 	}
-	cfg, err := newCfg(yml, args.Lint && !args.HideConfig)
+	cfg, err := newCfg(config, args.Lint && !args.HideConfig)
 	if err != nil || cfg == nil {
 		return retryOrReport()
 	}

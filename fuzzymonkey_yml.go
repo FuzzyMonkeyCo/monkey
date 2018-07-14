@@ -17,19 +17,19 @@ import (
 )
 
 const (
-	localYML       = ".fuzzymonkey.yml"
-	lastYMLVersion = 1
-	defaultYMLHost = "localhost"
-	defaultYMLPort = "3000"
+	localCfg       = ".fuzzymonkey.yml"
+	lastCfgVersion = 1
+	defaultCfgHost = "localhost"
+	defaultCfgPort = "3000"
 )
 
-func newCfg(yml []byte, showCfg bool) (cfg *UserCfg, err error) {
+func newCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	var vsn struct {
 		V interface{} `yaml:"version"`
 	}
-	if vsnErr := yaml.Unmarshal(yml, &vsn); vsnErr != nil {
-		err = fmt.Errorf("field 'version' missing! Try `version: %d`",
-			lastYMLVersion)
+	if vsnErr := yaml.Unmarshal(config, &vsn); vsnErr != nil {
+		const errFmt = "field 'version' missing! Try `version: %d`"
+		err = fmt.Errorf(errFmt, lastCfgVersion)
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
@@ -43,39 +43,39 @@ func newCfg(yml []byte, showCfg bool) (cfg *UserCfg, err error) {
 		return
 	}
 
-	type cfgParser func(yml []byte, showCfg bool) (cfg *UserCfg, err error)
+	type cfgParser func(config []byte, showCfg bool) (cfg *UserCfg, err error)
 	cfgParsers := []cfgParser{
 		newCfgV001,
 	}
 
-	return cfgParsers[version-1](yml, showCfg)
+	return cfgParsers[version-1](config, showCfg)
 }
 
 func knownVersion(v int) bool {
-	if 0 < v && v <= lastYMLVersion {
+	if 0 < v && v <= lastCfgVersion {
 		return true
 	}
 	return false
 }
 
-func newCfgV001(yml []byte, showCfg bool) (cfg *UserCfg, err error) {
-	var ymlConf struct {
+func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+	var userConf struct {
 		Version uint32   `yaml:"version"`
 		Start   []string `yaml:"start"`
 		Reset   []string `yaml:"reset"`
 		Stop    []string `yaml:"stop"`
 		Spec    struct {
-			File           string      `yaml:"file"`
-			Kind           string      `yaml:"kind"`
+			File           string       `yaml:"file"`
+			Kind           string       `yaml:"kind"`
 			KindIdentified UserCfg_Kind `yaml:"-"`
-			Host           string      `yaml:"host"`
-			Port           string      `yaml:"port"`
+			Host           string       `yaml:"host"`
+			Port           string       `yaml:"port"`
 		} `yaml:"spec"`
 	}
 
-	if err = yaml.UnmarshalStrict(yml, &ymlConf); err != nil {
+	if err = yaml.UnmarshalStrict(config, &userConf); err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println("Failed to parse", localYML)
+		colorERR.Println("Failed to parse", localCfg)
 		r := strings.NewReplacer("not found", "unknown")
 		for _, e := range strings.Split(err.Error(), "\n") {
 			if end := strings.Index(e, " in type struct"); end != -1 {
@@ -86,49 +86,49 @@ func newCfgV001(yml []byte, showCfg bool) (cfg *UserCfg, err error) {
 	}
 
 	expectedKind := UserCfg_OpenAPIv3
-	if ymlConf.Spec.Kind != UserCfg_Kind_name[int32(expectedKind)] {
+	if userConf.Spec.Kind != UserCfg_Kind_name[int32(expectedKind)] {
 		err = errors.New("spec's kind must be set to OpenAPIv3")
 		log.Println("[ERR]", err)
 		colorERR.Println(err)
 		return
 	}
-	ymlConf.Spec.KindIdentified = expectedKind
+	userConf.Spec.KindIdentified = expectedKind
 
-	if ymlConf.Spec.Host == "" {
-		def := defaultYMLHost
+	if userConf.Spec.Host == "" {
+		def := defaultCfgHost
 		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
-		ymlConf.Spec.Host = def
+		userConf.Spec.Host = def
 	}
 
-	if ymlConf.Spec.Port == "" {
-		def := defaultYMLPort
+	if userConf.Spec.Port == "" {
+		def := defaultCfgPort
 		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
-		ymlConf.Spec.Port = def
+		userConf.Spec.Port = def
 	}
 
 	if showCfg {
 		colorNFO.Println("Config:")
 		enc := yaml.NewEncoder(os.Stderr)
 		defer enc.Close()
-		if err = enc.Encode(ymlConf); err != nil {
+		if err = enc.Encode(userConf); err != nil {
 			log.Println("[ERR]", err)
-			colorERR.Printf("Failed to pretty-print %s: %#v\n", localYML, err)
+			colorERR.Printf("Failed to pretty-print %s: %#v\n", localCfg, err)
 			return
 		}
 	}
 
 	cfg = &UserCfg{
-		Version: ymlConf.Version,
-		File:    ymlConf.Spec.File,
-		Kind:    ymlConf.Spec.KindIdentified,
+		Version: userConf.Version,
+		File:    userConf.Spec.File,
+		Kind:    userConf.Spec.KindIdentified,
 		Runtime: &UserCfg_Runtime{
-			Host: ymlConf.Spec.Host,
-			Port: ymlConf.Spec.Port,
+			Host: userConf.Spec.Host,
+			Port: userConf.Spec.Port,
 		},
 		Exec: &UserCfg_Exec{
-			Start:  ymlConf.Start,
-			Reset_: ymlConf.Reset,
-			Stop:   ymlConf.Stop,
+			Start:  userConf.Start,
+			Reset_: userConf.Reset,
+			Stop:   userConf.Stop,
 		},
 	}
 	return
@@ -160,16 +160,17 @@ func (cfg *UserCfg) findThenReadBlob() (docPath string, blob []byte, err error) 
 	return
 }
 
-func readYML() (yml []byte, err error) {
-	fd, err := os.Open(localYML)
+func readCfg() (config []byte, err error) {
+	fd, err := os.Open(localCfg)
 	if err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Printf("You must provide a readable %s file in the current directory.\n", localYML)
+		errFmt := "You must provide a readable %s file in the current directory.\n"
+		colorERR.Printf(errFmt, localCfg)
 		return
 	}
 	defer fd.Close()
 
-	if yml, err = ioutil.ReadAll(fd); err != nil {
+	if config, err = ioutil.ReadAll(fd); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return

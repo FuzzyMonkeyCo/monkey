@@ -7,7 +7,7 @@ import (
 )
 
 func TestReadBadVersions(t *testing.T) {
-	for name, yml := range map[string][]byte{
+	for name, config := range map[string][]byte{
 		"empty":                     []byte(``),
 		"typo in key":               []byte(`verion: 4`),
 		"unsupported version":       []byte(`version: 42`),
@@ -19,7 +19,7 @@ func TestReadBadVersions(t *testing.T) {
 		"duplicate key":             []byte(`{version: 1, port: 80, port: 443}`),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(yml, false)
+			cfg, err := newCfg(config, false)
 			require.Error(t, err)
 			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
@@ -27,7 +27,7 @@ func TestReadBadVersions(t *testing.T) {
 }
 
 func TestV1ReadErrors(t *testing.T) {
-	for name, yml := range map[string][]byte{
+	for name, config := range map[string][]byte{
 		"duplicate key": []byte(`
 version: 1
 spec:
@@ -52,7 +52,7 @@ blabla: blbl
 `),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(yml, false)
+			cfg, err := newCfg(config, false)
 			require.Error(t, err)
 			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
@@ -60,7 +60,7 @@ blabla: blbl
 }
 
 func TestV1ReadAllSet(t *testing.T) {
-	yml := []byte(`
+	config := []byte(`
 version: 1
 spec:
   host: app.vcap.me
@@ -75,7 +75,7 @@ stop:
 - make service-kill
 `)
 
-	cfg, err := newCfg(yml, false)
+	cfg, err := newCfg(config, false)
 	require.NoError(t, err)
 	require.Equal(t, "app.vcap.me", cfg.Runtime.Host)
 	require.Equal(t, "8000", cfg.Runtime.Port)
@@ -88,7 +88,7 @@ stop:
 }
 
 func TestV1ReadDefaults(t *testing.T) {
-	for name, yml := range map[string][]byte{
+	for name, config := range map[string][]byte{
 		"bare minimum": []byte(`
 version: 1
 spec:
@@ -108,7 +108,7 @@ spec:
 `),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(yml, false)
+			cfg, err := newCfg(config, false)
 			require.NoError(t, err)
 			require.Equal(t, "localhost", cfg.Runtime.Host)
 			require.Equal(t, "3000", cfg.Runtime.Port)
