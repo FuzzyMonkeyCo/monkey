@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func doAuth(cfg *YmlCfg, apiKey string, N uint) (err error) {
+func doAuth(cfg *UserCfg, apiKey string, N uint) (err error) {
 	if apiKey == "" {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)

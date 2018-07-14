@@ -47,7 +47,7 @@ func (cmd *rstCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *rstCmd) Exec(cfg *YmlCfg) (rep []byte, err error) {
+func (cmd *rstCmd) Exec(cfg *UserCfg) (rep []byte, err error) {
 	if isHARReady() {
 		progress(cmd)
 		clearHAR()
@@ -60,7 +60,7 @@ func (cmd *rstCmd) Exec(cfg *YmlCfg) (rep []byte, err error) {
 	return
 }
 
-func (cmd *rstCmd) pickScriptThenExec(cfg *YmlCfg) (cmdRep *rstCmdRep) {
+func (cmd *rstCmd) pickScriptThenExec(cfg *UserCfg) (cmdRep *rstCmdRep) {
 	if !isRunning {
 		if len(cfg.script(kindStart)) != 0 {
 			return executeScript(cfg, kindStart)
@@ -81,7 +81,7 @@ func (cmd *rstCmd) pickScriptThenExec(cfg *YmlCfg) (cmdRep *rstCmdRep) {
 	return
 }
 
-func maybePreStart(cfg *YmlCfg) (err error) {
+func maybePreStart(cfg *UserCfg) (err error) {
 	if len(cfg.Exec.Reset_) == 0 {
 		return
 	}
@@ -93,7 +93,7 @@ func maybePreStart(cfg *YmlCfg) (err error) {
 	return
 }
 
-func maybePostStop(cfg *YmlCfg) {
+func maybePostStop(cfg *UserCfg) {
 	if !wasStopped {
 		executeScript(cfg, kindStop)
 	}
@@ -118,7 +118,7 @@ func progress(cmd *rstCmd) {
 	fmt.Print(str)
 }
 
-func executeScript(cfg *YmlCfg, kind cmdKind) (cmdRep *rstCmdRep) {
+func executeScript(cfg *UserCfg, kind cmdKind) (cmdRep *rstCmdRep) {
 	cmdRep = &rstCmdRep{V: v, Cmd: kind, Failed: false}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
@@ -290,7 +290,7 @@ func unstache(field string) string {
 	return buffer.String()
 }
 
-func maybeFinalizeConf(cfg *YmlCfg, kind cmdKind) {
+func maybeFinalizeConf(cfg *UserCfg, kind cmdKind) {
 	if kind == kindStop {
 		return
 	}

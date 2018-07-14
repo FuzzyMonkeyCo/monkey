@@ -65,26 +65,26 @@ func (Method) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{0}
 }
 
-type YmlCfg_Kind int32
+type UserCfg_Kind int32
 
 const (
-	YmlCfg_UNKNOWN   YmlCfg_Kind = 0
-	YmlCfg_OpenAPIv3 YmlCfg_Kind = 1
+	UserCfg_UNKNOWN   UserCfg_Kind = 0
+	UserCfg_OpenAPIv3 UserCfg_Kind = 1
 )
 
-var YmlCfg_Kind_name = map[int32]string{
+var UserCfg_Kind_name = map[int32]string{
 	0: "UNKNOWN",
 	1: "OpenAPIv3",
 }
-var YmlCfg_Kind_value = map[string]int32{
+var UserCfg_Kind_value = map[string]int32{
 	"UNKNOWN":   0,
 	"OpenAPIv3": 1,
 }
 
-func (x YmlCfg_Kind) String() string {
-	return proto.EnumName(YmlCfg_Kind_name, int32(x))
+func (x UserCfg_Kind) String() string {
+	return proto.EnumName(UserCfg_Kind_name, int32(x))
 }
-func (YmlCfg_Kind) EnumDescriptor() ([]byte, []int) {
+func (UserCfg_Kind) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{0, 0}
 }
 
@@ -132,85 +132,85 @@ func (Schema_JSON_Type) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{11, 0, 0}
 }
 
-type YmlCfg struct {
+type UserCfg struct {
 	Version              uint32          `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
 	AuthToken            string          `protobuf:"bytes,2,opt,name=auth_token,json=authToken,proto3" json:"auth_token,omitempty"`
-	Kind                 YmlCfg_Kind     `protobuf:"varint,3,opt,name=kind,proto3,enum=main.YmlCfg_Kind" json:"kind,omitempty"`
+	Kind                 UserCfg_Kind     `protobuf:"varint,3,opt,name=kind,proto3,enum=main.UserCfg_Kind" json:"kind,omitempty"`
 	File                 string          `protobuf:"bytes,4,opt,name=file,proto3" json:"file,omitempty"`
-	Runtime              *YmlCfg_Runtime `protobuf:"bytes,5,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	Exec                 *YmlCfg_Exec    `protobuf:"bytes,6,opt,name=exec,proto3" json:"exec,omitempty"`
+	Runtime              *UserCfg_Runtime `protobuf:"bytes,5,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	Exec                 *UserCfg_Exec    `protobuf:"bytes,6,opt,name=exec,proto3" json:"exec,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
 	XXX_sizecache        int32           `json:"-"`
 }
 
-func (m *YmlCfg) Reset()         { *m = YmlCfg{} }
-func (m *YmlCfg) String() string { return proto.CompactTextString(m) }
-func (*YmlCfg) ProtoMessage()    {}
-func (*YmlCfg) Descriptor() ([]byte, []int) {
+func (m *UserCfg) Reset()         { *m = UserCfg{} }
+func (m *UserCfg) String() string { return proto.CompactTextString(m) }
+func (*UserCfg) ProtoMessage()    {}
+func (*UserCfg) Descriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{0}
 }
-func (m *YmlCfg) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_YmlCfg.Unmarshal(m, b)
+func (m *UserCfg) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UserCfg.Unmarshal(m, b)
 }
-func (m *YmlCfg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_YmlCfg.Marshal(b, m, deterministic)
+func (m *UserCfg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UserCfg.Marshal(b, m, deterministic)
 }
-func (dst *YmlCfg) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_YmlCfg.Merge(dst, src)
+func (dst *UserCfg) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserCfg.Merge(dst, src)
 }
-func (m *YmlCfg) XXX_Size() int {
-	return xxx_messageInfo_YmlCfg.Size(m)
+func (m *UserCfg) XXX_Size() int {
+	return xxx_messageInfo_UserCfg.Size(m)
 }
-func (m *YmlCfg) XXX_DiscardUnknown() {
-	xxx_messageInfo_YmlCfg.DiscardUnknown(m)
+func (m *UserCfg) XXX_DiscardUnknown() {
+	xxx_messageInfo_UserCfg.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_YmlCfg proto.InternalMessageInfo
+var xxx_messageInfo_UserCfg proto.InternalMessageInfo
 
-func (m *YmlCfg) GetVersion() uint32 {
+func (m *UserCfg) GetVersion() uint32 {
 	if m != nil {
 		return m.Version
 	}
 	return 0
 }
 
-func (m *YmlCfg) GetAuthToken() string {
+func (m *UserCfg) GetAuthToken() string {
 	if m != nil {
 		return m.AuthToken
 	}
 	return ""
 }
 
-func (m *YmlCfg) GetKind() YmlCfg_Kind {
+func (m *UserCfg) GetKind() UserCfg_Kind {
 	if m != nil {
 		return m.Kind
 	}
-	return YmlCfg_UNKNOWN
+	return UserCfg_UNKNOWN
 }
 
-func (m *YmlCfg) GetFile() string {
+func (m *UserCfg) GetFile() string {
 	if m != nil {
 		return m.File
 	}
 	return ""
 }
 
-func (m *YmlCfg) GetRuntime() *YmlCfg_Runtime {
+func (m *UserCfg) GetRuntime() *UserCfg_Runtime {
 	if m != nil {
 		return m.Runtime
 	}
 	return nil
 }
 
-func (m *YmlCfg) GetExec() *YmlCfg_Exec {
+func (m *UserCfg) GetExec() *UserCfg_Exec {
 	if m != nil {
 		return m.Exec
 	}
 	return nil
 }
 
-type YmlCfg_Runtime struct {
+type UserCfg_Runtime struct {
 	Host                 string   `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
 	Port                 string   `protobuf:"bytes,2,opt,name=port,proto3" json:"port,omitempty"`
 	FinalHost            string   `protobuf:"bytes,3,opt,name=final_host,json=finalHost,proto3" json:"final_host,omitempty"`
@@ -220,59 +220,59 @@ type YmlCfg_Runtime struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *YmlCfg_Runtime) Reset()         { *m = YmlCfg_Runtime{} }
-func (m *YmlCfg_Runtime) String() string { return proto.CompactTextString(m) }
-func (*YmlCfg_Runtime) ProtoMessage()    {}
-func (*YmlCfg_Runtime) Descriptor() ([]byte, []int) {
+func (m *UserCfg_Runtime) Reset()         { *m = UserCfg_Runtime{} }
+func (m *UserCfg_Runtime) String() string { return proto.CompactTextString(m) }
+func (*UserCfg_Runtime) ProtoMessage()    {}
+func (*UserCfg_Runtime) Descriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{0, 0}
 }
-func (m *YmlCfg_Runtime) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_YmlCfg_Runtime.Unmarshal(m, b)
+func (m *UserCfg_Runtime) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UserCfg_Runtime.Unmarshal(m, b)
 }
-func (m *YmlCfg_Runtime) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_YmlCfg_Runtime.Marshal(b, m, deterministic)
+func (m *UserCfg_Runtime) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UserCfg_Runtime.Marshal(b, m, deterministic)
 }
-func (dst *YmlCfg_Runtime) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_YmlCfg_Runtime.Merge(dst, src)
+func (dst *UserCfg_Runtime) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserCfg_Runtime.Merge(dst, src)
 }
-func (m *YmlCfg_Runtime) XXX_Size() int {
-	return xxx_messageInfo_YmlCfg_Runtime.Size(m)
+func (m *UserCfg_Runtime) XXX_Size() int {
+	return xxx_messageInfo_UserCfg_Runtime.Size(m)
 }
-func (m *YmlCfg_Runtime) XXX_DiscardUnknown() {
-	xxx_messageInfo_YmlCfg_Runtime.DiscardUnknown(m)
+func (m *UserCfg_Runtime) XXX_DiscardUnknown() {
+	xxx_messageInfo_UserCfg_Runtime.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_YmlCfg_Runtime proto.InternalMessageInfo
+var xxx_messageInfo_UserCfg_Runtime proto.InternalMessageInfo
 
-func (m *YmlCfg_Runtime) GetHost() string {
+func (m *UserCfg_Runtime) GetHost() string {
 	if m != nil {
 		return m.Host
 	}
 	return ""
 }
 
-func (m *YmlCfg_Runtime) GetPort() string {
+func (m *UserCfg_Runtime) GetPort() string {
 	if m != nil {
 		return m.Port
 	}
 	return ""
 }
 
-func (m *YmlCfg_Runtime) GetFinalHost() string {
+func (m *UserCfg_Runtime) GetFinalHost() string {
 	if m != nil {
 		return m.FinalHost
 	}
 	return ""
 }
 
-func (m *YmlCfg_Runtime) GetFinalPort() string {
+func (m *UserCfg_Runtime) GetFinalPort() string {
 	if m != nil {
 		return m.FinalPort
 	}
 	return ""
 }
 
-type YmlCfg_Exec struct {
+type UserCfg_Exec struct {
 	Start                []string `protobuf:"bytes,1,rep,name=start,proto3" json:"start,omitempty"`
 	Reset_               []string `protobuf:"bytes,2,rep,name=reset,proto3" json:"reset,omitempty"`
 	Stop                 []string `protobuf:"bytes,3,rep,name=stop,proto3" json:"stop,omitempty"`
@@ -281,45 +281,45 @@ type YmlCfg_Exec struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *YmlCfg_Exec) Reset()         { *m = YmlCfg_Exec{} }
-func (m *YmlCfg_Exec) String() string { return proto.CompactTextString(m) }
-func (*YmlCfg_Exec) ProtoMessage()    {}
-func (*YmlCfg_Exec) Descriptor() ([]byte, []int) {
+func (m *UserCfg_Exec) Reset()         { *m = UserCfg_Exec{} }
+func (m *UserCfg_Exec) String() string { return proto.CompactTextString(m) }
+func (*UserCfg_Exec) ProtoMessage()    {}
+func (*UserCfg_Exec) Descriptor() ([]byte, []int) {
 	return fileDescriptor_messages_373f9fab1673e6f4, []int{0, 1}
 }
-func (m *YmlCfg_Exec) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_YmlCfg_Exec.Unmarshal(m, b)
+func (m *UserCfg_Exec) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UserCfg_Exec.Unmarshal(m, b)
 }
-func (m *YmlCfg_Exec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_YmlCfg_Exec.Marshal(b, m, deterministic)
+func (m *UserCfg_Exec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UserCfg_Exec.Marshal(b, m, deterministic)
 }
-func (dst *YmlCfg_Exec) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_YmlCfg_Exec.Merge(dst, src)
+func (dst *UserCfg_Exec) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UserCfg_Exec.Merge(dst, src)
 }
-func (m *YmlCfg_Exec) XXX_Size() int {
-	return xxx_messageInfo_YmlCfg_Exec.Size(m)
+func (m *UserCfg_Exec) XXX_Size() int {
+	return xxx_messageInfo_UserCfg_Exec.Size(m)
 }
-func (m *YmlCfg_Exec) XXX_DiscardUnknown() {
-	xxx_messageInfo_YmlCfg_Exec.DiscardUnknown(m)
+func (m *UserCfg_Exec) XXX_DiscardUnknown() {
+	xxx_messageInfo_UserCfg_Exec.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_YmlCfg_Exec proto.InternalMessageInfo
+var xxx_messageInfo_UserCfg_Exec proto.InternalMessageInfo
 
-func (m *YmlCfg_Exec) GetStart() []string {
+func (m *UserCfg_Exec) GetStart() []string {
 	if m != nil {
 		return m.Start
 	}
 	return nil
 }
 
-func (m *YmlCfg_Exec) GetReset_() []string {
+func (m *UserCfg_Exec) GetReset_() []string {
 	if m != nil {
 		return m.Reset_
 	}
 	return nil
 }
 
-func (m *YmlCfg_Exec) GetStop() []string {
+func (m *UserCfg_Exec) GetStop() []string {
 	if m != nil {
 		return m.Stop
 	}
@@ -327,7 +327,7 @@ func (m *YmlCfg_Exec) GetStop() []string {
 }
 
 type FuzzCfg struct {
-	Config               *YmlCfg  `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	Config               *UserCfg  `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 	Spec                 *SpecIR  `protobuf:"bytes,2,opt,name=spec,proto3" json:"spec,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -358,7 +358,7 @@ func (m *FuzzCfg) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_FuzzCfg proto.InternalMessageInfo
 
-func (m *FuzzCfg) GetConfig() *YmlCfg {
+func (m *FuzzCfg) GetConfig() *UserCfg {
 	if m != nil {
 		return m.Config
 	}
@@ -1517,9 +1517,9 @@ func _Schema_JSON_AdditionalProperties_OneofSizer(msg proto.Message) (n int) {
 }
 
 func init() {
-	proto.RegisterType((*YmlCfg)(nil), "main.YmlCfg")
-	proto.RegisterType((*YmlCfg_Runtime)(nil), "main.YmlCfg.Runtime")
-	proto.RegisterType((*YmlCfg_Exec)(nil), "main.YmlCfg.Exec")
+	proto.RegisterType((*UserCfg)(nil), "main.UserCfg")
+	proto.RegisterType((*UserCfg_Runtime)(nil), "main.UserCfg.Runtime")
+	proto.RegisterType((*UserCfg_Exec)(nil), "main.UserCfg.Exec")
 	proto.RegisterType((*FuzzCfg)(nil), "main.FuzzCfg")
 	proto.RegisterType((*SpecIR)(nil), "main.SpecIR")
 	proto.RegisterType((*Schemas)(nil), "main.Schemas")
@@ -1540,7 +1540,7 @@ func init() {
 	proto.RegisterMapType((map[string]*SchemaPtr)(nil), "main.Schema.JSON.PropertiesEntry")
 	proto.RegisterType((*Schema_JSON_AdditionalProperties)(nil), "main.Schema.JSON.AdditionalProperties")
 	proto.RegisterEnum("main.Method", Method_name, Method_value)
-	proto.RegisterEnum("main.YmlCfg_Kind", YmlCfg_Kind_name, YmlCfg_Kind_value)
+	proto.RegisterEnum("main.UserCfg_Kind", UserCfg_Kind_name, UserCfg_Kind_value)
 	proto.RegisterEnum("main.Schema_JSON_Type", Schema_JSON_Type_name, Schema_JSON_Type_value)
 }
 

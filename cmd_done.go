@@ -15,7 +15,7 @@ func (cmd *doneCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *doneCmd) Exec(cfg *YmlCfg) ([]byte, error) {
+func (cmd *doneCmd) Exec(cfg *UserCfg) ([]byte, error) {
 	return nil, nil
 }
 

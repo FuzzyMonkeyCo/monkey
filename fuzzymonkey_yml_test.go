@@ -21,7 +21,7 @@ func TestReadBadVersions(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			cfg, err := newCfg(yml, false)
 			require.Error(t, err)
-			require.Equal(t, (*YmlCfg)(nil), cfg)
+			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
 	}
 }
@@ -54,7 +54,7 @@ blabla: blbl
 		t.Run(name, func(t *testing.T) {
 			cfg, err := newCfg(yml, false)
 			require.Error(t, err)
-			require.Equal(t, (*YmlCfg)(nil), cfg)
+			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
 	}
 }
@@ -80,7 +80,7 @@ stop:
 	require.Equal(t, "app.vcap.me", cfg.Runtime.Host)
 	require.Equal(t, "8000", cfg.Runtime.Port)
 	require.Equal(t, "./spec.yml", cfg.File)
-	require.Equal(t, YmlCfg_OpenAPIv3, cfg.Kind)
+	require.Equal(t, UserCfg_OpenAPIv3, cfg.Kind)
 	require.Equal(t, "OpenAPIv3", cfg.Kind.String())
 	require.Equal(t, []string{"make service-start"}, cfg.Exec.Start)
 	require.Equal(t, []string{"make service-restart"}, cfg.Exec.Reset_)

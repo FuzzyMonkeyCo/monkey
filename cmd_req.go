@@ -33,7 +33,7 @@ func (cmd *reqCmd) Kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *reqCmd) Exec(cfg *YmlCfg) (rep []byte, err error) {
+func (cmd *reqCmd) Exec(cfg *UserCfg) (rep []byte, err error) {
 	lastLane = cmd.Lane
 	if !isHARReady() {
 		newHARTransport()
@@ -90,7 +90,7 @@ func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
 	return
 }
 
-func (cmd *reqCmd) updateURL(cfg *YmlCfg) (err error) {
+func (cmd *reqCmd) updateURL(cfg *UserCfg) (err error) {
 	URL, err := url.Parse(cmd.HARRequest.URL)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -114,7 +114,7 @@ func (cmd *reqCmd) updateUserAgentHeader() {
 	}
 }
 
-func (cmd *reqCmd) updateHostHeader(cfg *YmlCfg) {
+func (cmd *reqCmd) updateHostHeader(cfg *UserCfg) {
 	for i := range cmd.HARRequest.Headers {
 		if cmd.HARRequest.Headers[i].Name == "Host" {
 			cmd.HARRequest.Headers[i].Value = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort

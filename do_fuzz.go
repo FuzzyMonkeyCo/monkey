@@ -21,7 +21,7 @@ const (
 	headerXAuthToken  = "X-Auth-Token"
 )
 
-func newFuzz(cfg *YmlCfg, spec *SpecIR) (cmd someCmd, err error) {
+func newFuzz(cfg *UserCfg, spec *SpecIR) (cmd someCmd, err error) {
 	initer := &FuzzCfg{
 		Config: cfg,
 		Spec:   spec,
@@ -45,7 +45,7 @@ func newFuzz(cfg *YmlCfg, spec *SpecIR) (cmd someCmd, err error) {
 	return
 }
 
-func fuzzNext(cfg *YmlCfg, cmd someCmd) (someCmd someCmd, err error) {
+func fuzzNext(cfg *UserCfg, cmd someCmd) (someCmd someCmd, err error) {
 	// Sometimes sets cfg.Runtime.Final* fields
 	rep, err := cmd.Exec(cfg)
 	if err != nil {
@@ -61,7 +61,7 @@ func fuzzNext(cfg *YmlCfg, cmd someCmd) (someCmd someCmd, err error) {
 	return
 }
 
-func fuzzNew(cfg *YmlCfg, payload []byte) (rep []byte, err error) {
+func fuzzNew(cfg *UserCfg, payload []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPut, apiFuzzNew, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -100,7 +100,7 @@ func fuzzNew(cfg *YmlCfg, payload []byte) (rep []byte, err error) {
 	return
 }
 
-func nextPOST(cfg *YmlCfg, payload []byte) (rep []byte, err error) {
+func nextPOST(cfg *UserCfg, payload []byte) (rep []byte, err error) {
 	r, err := http.NewRequest(http.MethodPost, apiFuzzNext, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
