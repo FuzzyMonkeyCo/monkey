@@ -225,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "2087f8c10712366cfc2f4fcb1bf99eeef61ab21e"
+  revision = "18e9dfbf20567d5156dd6f1dd987092c021f7fa6"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
