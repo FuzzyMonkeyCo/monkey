@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/url"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -76,30 +77,52 @@ func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) *SchemaPtr {
 	panic("both schema and ref are empty")
 }
 
-func (sm schemap) addOA3Schemas(baseRef string, docSchemas map[string]*openapi3.SchemaRef) {
-	for name, schemaRef := range docSchemas {
-		ref := baseRef + name
-		schema := sm.schemaFromOA3(schemaRef.Value)
-		sm.seed(ref, schema)
+func (sm schemap) schemasFromOA3(baseRef string, docSchemas map[string]*openapi3.SchemaRef) {
+	i, names := 0, make([]string, len(docSchemas))
+	for name := range docSchemas {
+		names[i] = name
+		i++
+	}
+	sort.Strings(names)
+
+	for j := 0; j != i; j++ {
+		name := names[j]
+		schema := sm.schemaFromOA3(docSchemas[name].Value)
+		sm.seed(baseRef+name, schema)
 	}
 }
 
 func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
 	endpoints []*Endpoint,
 ) {
-	for parameterizedPath, docPathItem := range docPaths {
-		path := pathFromOA3(basePath, parameterizedPath)
+	i, paths := 0, make([]string, len(docPaths))
+	for path := range docPaths {
+		paths[i] = path
+		i++
+	}
+	sort.Strings(paths)
 
-		for docMethod, docOp := range docPathItem.Operations() {
-			method := Method(Method_value[docMethod])
+	for j := 0; j != i; j++ {
+		path := paths[j]
+		partials := pathFromOA3(basePath, path)
+		docOps := docPaths[path].Operations()
+		k, methods := 0, make([]string, len(docOps))
+		for docMethod := range docOps {
+			methods[k] = docMethod
+			k++
+		}
+		sort.Strings(methods)
+
+		for l := 0; l != k; l++ {
+			docMethod := methods[l]
+			docOp := docOps[docMethod]
 			inputs := sm.inputsFromOA3(docOp.Parameters, docOp.RequestBody)
 			outputs := sm.outputsFromOA3(docOp.Responses)
-
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
-						Method:       method,
-						PathPartials: path,
+						Method:       Method(Method_value[docMethod]),
+						PathPartials: partials,
 						Inputs:       inputs,
 						Outputs:      outputs,
 					},
@@ -137,7 +160,20 @@ func (sm schemap) inputsFromOA3(
 		}
 	}
 
+	paramsCount := len(docParams)
+	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
+	i, names := 0, make([]string, paramsCount)
 	for _, docParamRef := range docParams {
+		docParam := docParamRef.Value
+		name := docParam.In + docParam.Name
+		names[i] = name
+		paramap[name] = docParamRef
+		i++
+	}
+	sort.Strings(names)
+
+	for j := 0; j != i; j++ {
+		docParamRef := paramap[names[j]]
 		//FIXME: handle .Ref
 		docParam := docParamRef.Value
 		param := &ParamJSON{
@@ -146,8 +182,12 @@ func (sm schemap) inputsFromOA3(
 		}
 
 		switch docParam.In {
-		//FIXME: handle others
+		//FIXME: handle ParameterInCookie
+		case openapi3.ParameterInHeader:
+			params.Path[docParam.Name] = param
 		case openapi3.ParameterInPath:
+			params.Path[docParam.Name] = param
+		case openapi3.ParameterInQuery:
 			params.Path[docParam.Name] = param
 		}
 	}
@@ -240,11 +280,19 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	// "required"
 	schema.Required = s.Required
 	// "properties"
-	if sProperties := s.Properties; len(sProperties) != 0 {
+	if count := len(s.Properties); count != 0 {
 		ensureSchemaType(Schema_JSON_object, &schema.Type)
-		schema.Properties = make(map[string]*SchemaPtr, len(sProperties))
-		for propName, propSchemaRef := range sProperties {
-			schemaPtr := sm.ensureMappedOA3SchemaRef(propSchemaRef)
+		schema.Properties = make(map[string]*SchemaPtr, count)
+		i, props := 0, make([]string, count)
+		for propName := range s.Properties {
+			props[i] = propName
+			i++
+		}
+		sort.Strings(props)
+
+		for j := 0; j != i; j++ {
+			propName := props[j]
+			schemaPtr := sm.ensureMappedOA3SchemaRef(s.Properties[propName])
 			schema.Properties[propName] = schemaPtr
 		}
 	}
@@ -297,16 +345,14 @@ func newSpecFromOA3(doc *openapi3.Swagger) (spec *SpecIR, err error) {
 
 	docSchemas := doc.Components.Schemas
 	sm := newSchemap(len(docSchemas))
-	sm.addOA3Schemas("#/components/schemas/", docSchemas)
+	sm.schemasFromOA3("#/components/schemas/", docSchemas)
 
 	basePath, err := basePathFromOA3(doc.Servers)
 	if err != nil {
 		return
 	}
-	endpoints := sm.endpointsFromOA3(basePath, doc.Paths)
-
 	spec = &SpecIR{
-		Endpoints: endpoints,
+		Endpoints: sm.endpointsFromOA3(basePath, doc.Paths),
 		Schemas:   &Schemas{Json: sm},
 	}
 
@@ -324,6 +370,7 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 		p := &PathPartial{Pp: &PathPartial_Part{basePath}}
 		partials = append(partials, p)
 	}
+
 	onCurly := func(r rune) bool { return r == '{' || r == '}' }
 	isCurly := '{' == path[0]
 	for i, part := range strings.FieldsFunc(path, onCurly) {
@@ -334,6 +381,16 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 			p.Pp = &PathPartial_Part{part}
 		}
 		partials = append(partials, &p)
+	}
+
+	if length := len(partials); length > 1 {
+		part1 := partials[0].GetPart()
+		part2 := partials[1].GetPart()
+		if part1 != "" && part2 != "" {
+			partials = partials[1:]
+			partials[0] = &PathPartial{Pp: &PathPartial_Part{part1 + part2}}
+			return
+		}
 	}
 	return
 }

@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const someText = "some text"
+
 type Schemap struct {
 	M schemap
 }
@@ -65,11 +67,10 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			err = proto.Unmarshal(bin0, &spec1)
 			require.NoError(t, err)
 			require.NotNil(t, &spec1)
-			log.Println("here we go again")
 			doc := specToOA3(&spec1)
 			blob1, err := json.MarshalIndent(doc, "", "  ")
 			require.NoError(t, err)
-			t.Logf("blob1 = %s\n", blob1)
+			log.Println("here we go again")
 			spec2, err := doLint("bla.json", blob1, false)
 			require.NoError(t, err)
 			require.NotNil(t, spec2)
@@ -79,8 +80,6 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NotEmpty(t, jsn1)
 
 			require.JSONEq(t, jsn0, jsn1)
-			require.Equal(t, spec0, spec1)
-			require.Equal(t, spec0, spec2)
 		})
 	}
 }
@@ -88,11 +87,16 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 func specToOA3(spec *SpecIR) (doc openapi3.Swagger) {
 	doc.OpenAPI = "3.0.0"
 	doc.Info = openapi3.Info{
-		Title:   "title",
-		Version: "1.2.3",
+		Title:   someText,
+		Version: "1.42.3",
 	}
-
 	sm := &Schemap{M: spec.GetSchemas().GetJson()}
+	sm.schemasToOA3(&doc)
+	sm.endpointsToOA3(&doc, spec.GetEndpoints())
+	return
+}
+
+func (sm *Schemap) schemasToOA3(doc *openapi3.Swagger) {
 	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm.M))
 	for _, refOrSchema := range sm.M {
 		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
@@ -104,23 +108,68 @@ func specToOA3(spec *SpecIR) (doc openapi3.Swagger) {
 		}
 	}
 	doc.Components.Schemas = seededSchemas
+}
 
-	endpoints := spec.GetEndpoints()
-	doc.Paths = make(openapi3.Paths, len(endpoints))
-	for _, e := range endpoints {
+func (sm *Schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
+	doc.Paths = make(openapi3.Paths, len(es))
+	for _, e := range es {
 		endpoint := e.GetJson()
 		url := pathToOA3(endpoint.GetPathPartials())
-		path := &openapi3.PathItem{
-			// Parameters:
-		}
-
+		reqBody, params := sm.inputsToOA3(endpoint.GetInputs())
 		op := &openapi3.Operation{
-			// Parameters:
-			// RequestBody:
-			Responses: sm.outputsToOA3(endpoint.GetOutputs()),
+			RequestBody: reqBody,
+			Parameters:  params,
+			Responses:   sm.outputsToOA3(endpoint.GetOutputs()),
 		}
-		methodToOA3(endpoint.GetMethod(), path, op)
-		doc.Paths[url] = path
+		if doc.Paths[url] == nil {
+			doc.Paths[url] = &openapi3.PathItem{}
+		}
+		methodToOA3(endpoint.GetMethod(), op, doc.Paths[url])
+	}
+}
+
+func (sm *Schemap) inputsToOA3(inputs *ParamsJSON) (
+	reqBodyRef *openapi3.RequestBodyRef,
+	params openapi3.Parameters,
+) {
+	if body := inputs.GetBody(); body != nil {
+		reqBody := &openapi3.RequestBody{
+			Content:     sm.contentToOA3(body.GetPtr()),
+			Required:    body.GetRequired(),
+			Description: someText,
+		}
+		reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
+	}
+	for name, input := range inputs.GetHeader() {
+		//FIXME: handle ParameterInCookie
+		param := &openapi3.Parameter{
+			Name:        name,
+			Required:    input.GetRequired(),
+			In:          openapi3.ParameterInHeader,
+			Description: someText,
+			Schema:      sm.derefSchemaPtr(input.GetPtr()),
+		}
+		params = append(params, &openapi3.ParameterRef{Value: param})
+	}
+	for name, input := range inputs.GetPath() {
+		param := &openapi3.Parameter{
+			Name:        name,
+			Required:    input.GetRequired(),
+			In:          openapi3.ParameterInPath,
+			Description: someText,
+			Schema:      sm.derefSchemaPtr(input.GetPtr()),
+		}
+		params = append(params, &openapi3.ParameterRef{Value: param})
+	}
+	for name, input := range inputs.GetQuery() {
+		param := &openapi3.Parameter{
+			Name:        name,
+			Required:    input.GetRequired(),
+			In:          openapi3.ParameterInQuery,
+			Description: someText,
+			Schema:      sm.derefSchemaPtr(input.GetPtr()),
+		}
+		params = append(params, &openapi3.ParameterRef{Value: param})
 	}
 	return
 }
@@ -131,7 +180,7 @@ func (sm *Schemap) outputsToOA3(outs map[uint32]*SchemaPtr) openapi3.Responses {
 		XXX := xxx2XXX(xxx)
 		responses[XXX] = &openapi3.ResponseRef{
 			Value: &openapi3.Response{
-				Description: "placeholder",
+				Description: someText,
 				Content:     sm.contentToOA3(schema),
 			},
 		}
@@ -294,7 +343,7 @@ func pathToOA3(partials []*PathPartial) (s string) {
 	return
 }
 
-func methodToOA3(m Method, p *openapi3.PathItem, op *openapi3.Operation) {
+func methodToOA3(m Method, op *openapi3.Operation, p *openapi3.PathItem) {
 	switch m {
 	case Method_CONNECT:
 		p.Connect = op
@@ -314,5 +363,7 @@ func methodToOA3(m Method, p *openapi3.PathItem, op *openapi3.Operation) {
 		p.Put = op
 	case Method_TRACE:
 		p.Trace = op
+	default:
+		panic(`no such method`)
 	}
 }
