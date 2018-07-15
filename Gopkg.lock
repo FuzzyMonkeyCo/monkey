@@ -70,7 +70,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "70b3af33377e7aa25ae42977bed93cc6b90f0373"
+  revision = "14aad3d5ea4c323bcd7a2137e735da24a76e814c"
 
 [[projects]]
   branch = "master"
@@ -86,7 +86,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
-  revision = "23480c0665776210b5fbbac6eaaee40e3e6a96b7"
+  revision = "78879f5e1be14bb4812abd0bb547a923b5aeac23"
 
 [[projects]]
   branch = "master"
@@ -142,7 +142,7 @@
   branch = "master"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
-  revision = "bb74f1db0675b241733089d5a1faa5dd8b0ef57b"
+  revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
 
 [[projects]]
   branch = "master"
@@ -211,7 +211,7 @@
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "1b2967e3c290b7c545b3db0deeda16e9be4f98a2"
+  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
 
 [[projects]]
   branch = "master"
@@ -225,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "18e9dfbf20567d5156dd6f1dd987092c021f7fa6"
+  revision = "fd2d2c45eb2dff7b87eab4303a1016b4dbf95e81"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
