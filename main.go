@@ -53,11 +53,11 @@ func main() {
 type params struct {
 	Init, Login, Fuzz, Shrink, Lint bool
 	Exec, Start, Reset, Stop        bool
-	Update                          bool `mapstructure:"--update"`
-	HideConfig                      bool `mapstructure:"--hide-config"`
-	ShowSpec                        bool `mapstructure:"--show-spec"`
-	N                               uint `mapstructure:"--tests"`
-	Verbosity                       uint `mapstructure:"-v"`
+	Update                          bool   `mapstructure:"--update"`
+	HideConfig                      bool   `mapstructure:"--hide-config"`
+	ShowSpec                        bool   `mapstructure:"--show-spec"`
+	N                               uint32 `mapstructure:"--tests"`
+	Verbosity                       uint   `mapstructure:"-v"`
 }
 
 func usage() (args *params, ret int) {

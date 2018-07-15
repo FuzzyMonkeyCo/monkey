@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func doAuth(cfg *UserCfg, apiKey string, N uint) (err error) {
+func doAuth(cfg *UserCfg, apiKey string, N uint32) (err error) {
 	if apiKey == "" {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
@@ -18,17 +18,10 @@ func doAuth(cfg *UserCfg, apiKey string, N uint) (err error) {
 		return
 	}
 
-	type options struct {
-		Tests uint `json:"t"`
-	}
-	payload := struct {
-		VSN     uint32  `json:"v"`
-		Client  string  `json:"c"`
-		Options options `json:"o"`
-	}{
+	payload := ClientAuth{
 		VSN:    cfg.Version,
 		Client: binTitle,
-		Options: options{
+		Options: ClientAuthOptions{
 			Tests: N,
 		},
 	}
