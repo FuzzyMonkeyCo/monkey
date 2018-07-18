@@ -4,7 +4,6 @@
 
 syntax = "proto3";
 package main;
-import "data_json.proto";
 
 message UserCfg {
     uint32 version = 1;
@@ -141,7 +140,7 @@ message Schema {
         }
         repeated Type type = 1; // default: []
 
-        main.JSON.Array enum = 2; // default: []
+        PlainJSON.Array enum = 2; // default: []
 
         // type: string
         string format = 3; // default: ""
@@ -204,5 +203,48 @@ message Schema {
         //  if, then, else
         //  (readOnly, writeOnly, contentMediaType, contentEncoding)
         //  some formats
+    }
+}
+
+
+message PlainJSON {
+    message Object {
+        map<string,Value> object = 1;
+        bool is_object = 2;
+    }
+
+    message Array {
+        repeated Value array = 1;
+        bool is_array = 2;
+    }
+
+    message Text {
+        string text = 1;
+        bool is_text = 2;
+    }
+
+    message Number {
+        double number = 1;
+        bool is_number = 2;
+    }
+
+    message Boolean {
+        bool boolean = 1;
+        bool is_boolean = 2;
+    }
+
+    message Null {
+        bool is_null = 1;
+    }
+
+    message Value {
+        oneof value {
+            Null z = 1;
+            Boolean b = 2;
+            Number n = 3;
+            Text t = 4;
+            Array a = 5;
+            Object o = 6;
+        }
     }
 }
