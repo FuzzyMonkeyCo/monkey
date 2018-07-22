@@ -70,7 +70,7 @@
     "ptypes/struct",
     "ptypes/timestamp"
   ]
-  revision = "14aad3d5ea4c323bcd7a2137e735da24a76e814c"
+  revision = "427e165155e0a4ff5993a36657c1f733f5b0f782"
 
 [[projects]]
   branch = "master"
@@ -86,7 +86,7 @@
   branch = "master"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
-  revision = "78879f5e1be14bb4812abd0bb547a923b5aeac23"
+  revision = "270f2f71b1ee587f3b609f00f422b76a6b28f348"
 
 [[projects]]
   branch = "master"
@@ -199,7 +199,7 @@
   branch = "master"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
-  revision = "1d523034197ff1f222f6429836dd36a2457a1874"
+  revision = "b84684d0e066369f2a7a8a525f3080909ed4ea6b"
 
 [[projects]]
   branch = "master"
@@ -225,7 +225,7 @@
     "go/loader",
     "go/types/typeutil"
   ]
-  revision = "fd2d2c45eb2dff7b87eab4303a1016b4dbf95e81"
+  revision = "60ffea201e66e0d9375dc5bec85245d7b416710f"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
