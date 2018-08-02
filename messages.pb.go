@@ -507,11 +507,13 @@ type isRefOrSchemaJSON_PtrOrSchema interface {
 type RefOrSchemaJSON_Ptr struct {
 	Ptr *SchemaPtr `protobuf:"bytes,1,opt,name=ptr,proto3,oneof"`
 }
+
 type RefOrSchemaJSON_Schema struct {
 	Schema *Schema_JSON `protobuf:"bytes,2,opt,name=schema,proto3,oneof"`
 }
 
-func (*RefOrSchemaJSON_Ptr) isRefOrSchemaJSON_PtrOrSchema()    {}
+func (*RefOrSchemaJSON_Ptr) isRefOrSchemaJSON_PtrOrSchema() {}
+
 func (*RefOrSchemaJSON_Schema) isRefOrSchemaJSON_PtrOrSchema() {}
 
 func (m *RefOrSchemaJSON) GetPtrOrSchema() isRefOrSchemaJSON_PtrOrSchema {
@@ -983,12 +985,14 @@ type isPathPartial_Pp interface {
 type PathPartial_Part struct {
 	Part string `protobuf:"bytes,1,opt,name=part,proto3,oneof"`
 }
+
 type PathPartial_Ptr struct {
 	Ptr string `protobuf:"bytes,2,opt,name=ptr,proto3,oneof"`
 }
 
 func (*PathPartial_Part) isPathPartial_Pp() {}
-func (*PathPartial_Ptr) isPathPartial_Pp()  {}
+
+func (*PathPartial_Ptr) isPathPartial_Pp() {}
 
 func (m *PathPartial) GetPp() isPathPartial_Pp {
 	if m != nil {
@@ -1423,12 +1427,14 @@ type isSchema_JSON_AdditionalProperties_AddProps interface {
 type Schema_JSON_AdditionalProperties_AlwaysSucceed struct {
 	AlwaysSucceed bool `protobuf:"varint,1,opt,name=always_succeed,json=alwaysSucceed,proto3,oneof"`
 }
+
 type Schema_JSON_AdditionalProperties_Ref struct {
 	Ref *SchemaPtr `protobuf:"bytes,2,opt,name=ref,proto3,oneof"`
 }
 
 func (*Schema_JSON_AdditionalProperties_AlwaysSucceed) isSchema_JSON_AdditionalProperties_AddProps() {}
-func (*Schema_JSON_AdditionalProperties_Ref) isSchema_JSON_AdditionalProperties_AddProps()           {}
+
+func (*Schema_JSON_AdditionalProperties_Ref) isSchema_JSON_AdditionalProperties_AddProps() {}
 
 func (m *Schema_JSON_AdditionalProperties) GetAddProps() isSchema_JSON_AdditionalProperties_AddProps {
 	if m != nil {
@@ -1867,27 +1873,37 @@ type isPlainJSON_Value_Value interface {
 type PlainJSON_Value_Z struct {
 	Z *PlainJSON_Null `protobuf:"bytes,1,opt,name=z,proto3,oneof"`
 }
+
 type PlainJSON_Value_B struct {
 	B *PlainJSON_Boolean `protobuf:"bytes,2,opt,name=b,proto3,oneof"`
 }
+
 type PlainJSON_Value_N struct {
 	N *PlainJSON_Number `protobuf:"bytes,3,opt,name=n,proto3,oneof"`
 }
+
 type PlainJSON_Value_T struct {
 	T *PlainJSON_Text `protobuf:"bytes,4,opt,name=t,proto3,oneof"`
 }
+
 type PlainJSON_Value_A struct {
 	A *PlainJSON_Array `protobuf:"bytes,5,opt,name=a,proto3,oneof"`
 }
+
 type PlainJSON_Value_O struct {
 	O *PlainJSON_Object `protobuf:"bytes,6,opt,name=o,proto3,oneof"`
 }
 
 func (*PlainJSON_Value_Z) isPlainJSON_Value_Value() {}
+
 func (*PlainJSON_Value_B) isPlainJSON_Value_Value() {}
+
 func (*PlainJSON_Value_N) isPlainJSON_Value_Value() {}
+
 func (*PlainJSON_Value_T) isPlainJSON_Value_Value() {}
+
 func (*PlainJSON_Value_A) isPlainJSON_Value_Value() {}
+
 func (*PlainJSON_Value_O) isPlainJSON_Value_Value() {}
 
 func (m *PlainJSON_Value) GetValue() isPlainJSON_Value_Value {

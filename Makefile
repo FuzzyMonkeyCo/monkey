@@ -16,8 +16,8 @@ LNX = $(EXE)-Linux-x86_64
 DST ?= .
 
 DEP ?= dep-linux-amd64
-GODEP = v0.4.1
-GPB   = v3.6.0
+GODEP = v0.5.0
+GPB   = v3.6.1
 
 all: lint vendor
 	protoc --go_out=. *.proto

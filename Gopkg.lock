@@ -3,57 +3,74 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:f197dd423f4675be375715f3890c9a85f7e40d2c8dd277fdfe6b85428760aa87"
   name = "github.com/cardigann/harhar"
   packages = ["."]
+  pruneopts = "NT"
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
+  digest = "1:bc4aca7160cb2b28276850ff96acabaf834402a7edcf59bf82c31fbe7916f906"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
+  pruneopts = "NT"
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
   version = "v1.1.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:7c50b1e849c5ac1617dd6ace17f8e07d098ca0ff33f06b3f91767ada3662176b"
   name = "github.com/docopt/docopt-go"
   packages = ["."]
+  pruneopts = "NT"
   revision = "ee0de3bc6815ee19d4a46c7eb90f829db0e014b1"
 
 [[projects]]
   branch = "master"
+  digest = "1:ade392a843b2035effb4b4a2efa2c3bab3eb29b992e98bacf9c898b0ecb54e45"
   name = "github.com/fatih/color"
   packages = ["."]
+  pruneopts = "NT"
   revision = "2d684516a8861da43017284349b7e303e809ac21"
 
 [[projects]]
   branch = "uname-it"
+  digest = "1:8ecbd9c6aff1d4f8af261a3492ac9055377a7d7f073b4820ba724e5b057ae934"
   name = "github.com/fenollp/gox"
   packages = ["."]
+  pruneopts = "NT"
   revision = "8f9d0bdfdd0371d0d118d1e43d135f04391ba6fa"
 
 [[projects]]
   branch = "master"
+  digest = "1:8ea46e7270ded44697c92ebfd42a51cb11bc95ec6aea275f34e06313422ec537"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
-    "openapi3"
+    "openapi3",
   ]
-  revision = "60e95f1b88c48a8c98824f41ea5cc3c8f2d54e82"
+  pruneopts = "NT"
+  revision = "8fb20d0e77e5f8b91f24f57fedd3af2bee40697d"
 
 [[projects]]
+  digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
   name = "github.com/ghodss/yaml"
   packages = ["."]
+  pruneopts = "NT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:8b9bec0ee3fce65c9128033d1f21a89f81aa1f9fffd2e3f1f1c9f530884b6088"
   name = "github.com/golang/lint"
   packages = ["golint"]
+  pruneopts = "NT"
   revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
 
 [[projects]]
   branch = "master"
+  digest = "1:35eed4b1df2a0cfbe8d0b9d451918ab591d649270db43050ee0d43e99136bf63"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -68,153 +85,197 @@
     "ptypes/any",
     "ptypes/duration",
     "ptypes/struct",
-    "ptypes/timestamp"
+    "ptypes/timestamp",
   ]
-  revision = "427e165155e0a4ff5993a36657c1f733f5b0f782"
+  pruneopts = "NT"
+  revision = "f5983d50c82d70eaa88c17080245cc871558081f"
 
 [[projects]]
   branch = "master"
+  digest = "1:61a31dca839f2f0543751013fa56db79085f1fef52196a31b1b59904eb14b042"
   name = "github.com/googleapis/gnostic"
   packages = [
     "OpenAPIv3",
     "compiler",
-    "extensions"
+    "extensions",
   ]
+  pruneopts = "NT"
   revision = "48a0ecefe2e4190c7a2d63b477875854a2f993b3"
 
 [[projects]]
   branch = "master"
+  digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
+  pruneopts = "NT"
   revision = "270f2f71b1ee587f3b609f00f422b76a6b28f348"
 
 [[projects]]
   branch = "master"
+  digest = "1:9e12c5649c4b1a47e113593d61acf2eb131dad59fea70a05111a89fa4aead0ee"
   name = "github.com/hashicorp/logutils"
   packages = ["."]
+  pruneopts = "NT"
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
+  digest = "1:04eb2b1e456031d95dbc76c9a42fa8a2da0d61ae5111d6aa277cbefba53c7e8f"
   name = "github.com/kisielk/gotool"
   packages = [
     ".",
-    "internal/load"
+    "internal/load",
   ]
+  pruneopts = "NT"
   revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:a2c844693d0f86ff1cfd86ca9e10832c01dd815568ce0541e7d78ca978094820"
   name = "github.com/kyoh86/richgo"
   packages = [
     ".",
     "config",
     "editor",
-    "editor/test"
+    "editor/test",
   ]
+  pruneopts = "NT"
   revision = "906501ce46a1aeba810c142a15fa6ac2d6f67424"
 
 [[projects]]
   branch = "master"
+  digest = "1:84002c59f8a9b1af27c9a37c5f1807c9eec7925d0ef81acf1df6fceca8f84bc7"
   name = "github.com/kyoh86/xdg"
   packages = ["."]
+  pruneopts = "NT"
   revision = "fcdc7e7a466bd4a15ee12d462a6582ff35f90e81"
 
 [[projects]]
+  digest = "1:e0a9ecd540b69f570f96c593b713268aad428e4a25a98f23467c59e6f69ab880"
   name = "github.com/mattn/go-colorable"
   packages = ["."]
+  pruneopts = "NT"
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
   version = "v0.0.9"
 
 [[projects]]
+  digest = "1:bc4f7eec3b7be8c6cb1f0af6c1e3333d5bb71072951aaaae2f05067b0803f287"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
+  pruneopts = "NT"
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
 
 [[projects]]
   branch = "master"
+  digest = "1:bd418de31f64429ae8cb5d02676fc9de2557fd19077f4fb55a2577187c7fbbe7"
   name = "github.com/mitchellh/iochan"
   packages = ["."]
+  pruneopts = "NT"
   revision = "87b45ffd0e9581375c491fef3d32130bb15c5bd7"
 
 [[projects]]
   branch = "master"
+  digest = "1:5fe20cfe4ef484c237cec9f947b2a6fa90bad4b8610fd014f0e4211e13d82d5d"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
+  pruneopts = "NT"
   revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
 
 [[projects]]
   branch = "master"
+  digest = "1:8c33af6454f65c8b754aa02cc6f9da19612b190898bcd415f5fcd558f8b13050"
   name = "github.com/morikuni/aec"
   packages = ["."]
+  pruneopts = "NT"
   revision = "39771216ff4c63d11f5e604076f9c45e8be1067b"
 
 [[projects]]
+  digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
+  pruneopts = "NT"
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
   version = "v1.0.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:2d0fb234eb43b36d321b04d56854cb5e55f6ef793044abf0241fe0bb8683ab8b"
   name = "github.com/sebcat/har"
   packages = ["."]
+  pruneopts = "NT"
   revision = "e5490f454e487f004446592803b2b37f0db1054a"
 
 [[projects]]
+  branch = "master"
+  digest = "1:4af061277c04a7660e082acc2020f4c66d2c21dfc62e0242ffa1d2120cdfb4ec"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
-    "require"
+    "require",
   ]
+  pruneopts = "NT"
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
-  version = "v1.2.2"
 
 [[projects]]
   branch = "master"
+  digest = "1:e0ad6b7ada0a11c0bf8f8e184257bff7ec46c53e19ecfd05e6c9f5e75083c2c4"
   name = "github.com/wacul/ptr"
   packages = ["."]
+  pruneopts = "NT"
   revision = "91632201dfc876021121963a76f103bbe1756b09"
 
 [[projects]]
   branch = "master"
+  digest = "1:b70423ea2ca23eb78d7729c3c98fbdf33a22059ce9ea06640066cddbbeb0006d"
   name = "github.com/wadey/gocovmerge"
   packages = ["."]
+  pruneopts = "NT"
   revision = "b5bfa59ec0adc420475f97f89b58045c721d761c"
 
 [[projects]]
   branch = "master"
+  digest = "1:f15121220068fb01e71ad08b0fdbd1bfaa926be774e7634e8e332c82134079b0"
   name = "github.com/xeipuuv/gojsonpointer"
   packages = ["."]
+  pruneopts = "NT"
   revision = "4e3ac2762d5f479393488629ee9370b50873b3a6"
 
 [[projects]]
   branch = "master"
+  digest = "1:131db546a264d76defd7a4ce233796316b2ab856991cb4b7d6ced2a3c7294ad3"
   name = "github.com/xeipuuv/gojsonreference"
   packages = ["."]
+  pruneopts = "NT"
   revision = "bd5ef7bd5415a7ac448318e64f11a24cd21e594b"
 
 [[projects]]
   branch = "master"
+  digest = "1:12257ab6948108de3526f30d6e50513cca5b354c21827e6974645619142071bd"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
+  pruneopts = "NT"
   revision = "b84684d0e066369f2a7a8a525f3080909ed4ea6b"
 
 [[projects]]
   branch = "master"
+  digest = "1:8b9bec0ee3fce65c9128033d1f21a89f81aa1f9fffd2e3f1f1c9f530884b6088"
   name = "golang.org/x/lint"
   packages = ["."]
+  pruneopts = "NT"
   revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
 
 [[projects]]
   branch = "master"
+  digest = "1:5bbe45f75b3e6dbedbcf33b6030852818a8ad44b9395b6e95c894dee40e75d1b"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "ac767d655b305d4e9612f5f6e33120b9176c4ad4"
+  pruneopts = "NT"
+  revision = "0ffbfd41fbef8ffcf9b62b0b0aa3a5873ed7a4fe"
 
 [[projects]]
   branch = "master"
+  digest = "1:b06e257f660ddc938e9be05290d04ae275f2a1139e1d8d819aacefd1f95e8d15"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -223,18 +284,22 @@
     "go/gcexportdata",
     "go/internal/gcimporter",
     "go/loader",
-    "go/types/typeutil"
+    "go/types/typeutil",
   ]
-  revision = "60ffea201e66e0d9375dc5bec85245d7b416710f"
+  pruneopts = "NT"
+  revision = "82515cf89538b3e8a206be74377c01dee420b76d"
 
 [[projects]]
+  branch = "v2"
+  digest = "1:7c95b35057a0ff2e19f707173cc1a947fa43a6eb5c4d300d196ece0334046082"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
+  pruneopts = "NT"
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
 
 [[projects]]
   branch = "master"
+  digest = "1:159bfea1834c8c776198858315e64b908378fe3811fa2150187c76da115d186a"
   name = "honnef.co/go/tools"
   packages = [
     "callgraph",
@@ -244,6 +309,7 @@
     "functions",
     "internal/sharedcheck",
     "lint",
+    "lint/lintdsl",
     "lint/lintutil",
     "simple",
     "ssa",
@@ -251,13 +317,35 @@
     "staticcheck",
     "staticcheck/vrp",
     "unused",
-    "version"
+    "version",
   ]
-  revision = "3ac6a802416d2efd6654491fe47f693e56d8eb4e"
+  pruneopts = "NT"
+  revision = "88497007e8588ea5b6baee991f74a1607e809487"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "3d0449f0d499e814b9de7d51591a6f77656a9cffed1f2ceb984f3b06455997ae"
+  input-imports = [
+    "github.com/cardigann/harhar",
+    "github.com/docopt/docopt-go",
+    "github.com/fatih/color",
+    "github.com/fenollp/gox",
+    "github.com/getkin/kin-openapi/openapi3",
+    "github.com/golang/lint/golint",
+    "github.com/golang/protobuf/jsonpb",
+    "github.com/golang/protobuf/proto",
+    "github.com/golang/protobuf/protoc-gen-go",
+    "github.com/googleapis/gnostic/OpenAPIv3",
+    "github.com/googleapis/gnostic/compiler",
+    "github.com/hashicorp/logutils",
+    "github.com/kyoh86/richgo",
+    "github.com/mitchellh/mapstructure",
+    "github.com/sebcat/har",
+    "github.com/stretchr/testify/require",
+    "github.com/wadey/gocovmerge",
+    "github.com/xeipuuv/gojsonschema",
+    "gopkg.in/yaml.v2",
+    "honnef.co/go/tools/cmd/megacheck",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
