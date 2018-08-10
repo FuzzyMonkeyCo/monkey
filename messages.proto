@@ -146,7 +146,7 @@ message Schema {
         }
         repeated Type type = 1; // default: []
 
-        PlainJSON.Array enum = 2; // default: []
+        repeated PlainJSON.Value enum = 2; // default: []
 
         // type: string
         enum Format {
