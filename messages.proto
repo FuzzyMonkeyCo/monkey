@@ -74,16 +74,9 @@ message Endpoint {
 message EndpointJSON {
     Method method = 1;
     repeated PathPartial path_partials = 2;
-    ParamsJSON inputs = 3;
+    repeated ParamJSON inputs = 3;
     // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
     map<uint32,SchemaPtr> outputs = 4;
-}
-
-message ParamsJSON {
-    ParamJSON body = 1;
-    map<string,ParamJSON> header = 2;
-    map<string,ParamJSON> path = 3;
-    map<string,ParamJSON> query = 4;
 }
 
 message ParamJSON {
@@ -91,6 +84,19 @@ message ParamJSON {
     bool required = 1;
     // Pointer to Schemas message
     SchemaPtr ptr = 2;
+    // Note: bodies have an empty name
+    string name = 3;
+
+    enum Kind {
+        UNKNOWN = 0;
+        body = 1;
+        path = 2;
+        query = 3;
+        header = 4;
+        cookie = 5;
+    }
+    Kind kind = 4;
+
     //TODO: repeated Example examples
 }
 

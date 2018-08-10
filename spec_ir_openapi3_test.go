@@ -115,7 +115,9 @@ func (sm *Schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
 	for _, e := range es {
 		endpoint := e.GetJson()
 		url := pathToOA3(endpoint.GetPathPartials())
-		reqBody, params := sm.inputsToOA3(endpoint.GetInputs())
+		inputs := endpoint.GetInputs()
+		reqBody := sm.inputBodyToOA3(inputs)
+		params := sm.inputsToOA3(inputs)
 		op := &openapi3.Operation{
 			RequestBody: reqBody,
 			Parameters:  params,
@@ -128,47 +130,47 @@ func (sm *Schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
 	}
 }
 
-func (sm *Schemap) inputsToOA3(inputs *ParamsJSON) (
-	reqBodyRef *openapi3.RequestBodyRef,
-	params openapi3.Parameters,
-) {
-	if body := inputs.GetBody(); body != nil {
-		reqBody := &openapi3.RequestBody{
-			Content:     sm.contentToOA3(body.GetPtr()),
-			Required:    body.GetRequired(),
-			Description: someText,
+func (sm *Schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
+	if len(inputs) > 0 {
+		body := inputs[0]
+		if body != nil && body.GetName() == "" && body.GetKind() == ParamJSON_body {
+			reqBody := &openapi3.RequestBody{
+				Content:     sm.contentToOA3(body.GetPtr()),
+				Required:    body.GetRequired(),
+				Description: someText,
+			}
+			reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
 		}
-		reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
 	}
-	for name, input := range inputs.GetHeader() {
-		//FIXME: handle ParameterInCookie
+	return
+}
+
+func (sm *Schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) {
+	for _, input := range inputs {
+		if input.GetName() == "" && input.GetKind() == ParamJSON_body {
+			continue
+		}
+
+		var in string
+		switch input.GetKind() {
+		case ParamJSON_path:
+			in = openapi3.ParameterInPath
+		case ParamJSON_query:
+			in = openapi3.ParameterInQuery
+		case ParamJSON_header:
+			in = openapi3.ParameterInHeader
+		case ParamJSON_cookie:
+			in = openapi3.ParameterInCookie
+		}
+
 		param := &openapi3.Parameter{
-			Name:        name,
+			Name:        input.GetName(),
 			Required:    input.GetRequired(),
-			In:          openapi3.ParameterInHeader,
+			In:          in,
 			Description: someText,
 			Schema:      sm.derefSchemaPtr(input.GetPtr()),
 		}
-		params = append(params, &openapi3.ParameterRef{Value: param})
-	}
-	for name, input := range inputs.GetPath() {
-		param := &openapi3.Parameter{
-			Name:        name,
-			Required:    input.GetRequired(),
-			In:          openapi3.ParameterInPath,
-			Description: someText,
-			Schema:      sm.derefSchemaPtr(input.GetPtr()),
-		}
-		params = append(params, &openapi3.ParameterRef{Value: param})
-	}
-	for name, input := range inputs.GetQuery() {
-		param := &openapi3.Parameter{
-			Name:        name,
-			Required:    input.GetRequired(),
-			In:          openapi3.ParameterInQuery,
-			Description: someText,
-			Schema:      sm.derefSchemaPtr(input.GetPtr()),
-		}
+
 		params = append(params, &openapi3.ParameterRef{Value: param})
 	}
 	return

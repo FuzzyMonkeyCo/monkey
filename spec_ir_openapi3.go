@@ -116,7 +116,9 @@ func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
 		for l := 0; l != k; l++ {
 			docMethod := methods[l]
 			docOp := docOps[docMethod]
-			inputs := sm.inputsFromOA3(docOp.Parameters, docOp.RequestBody)
+			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
+			sm.inputBodyFromOA3(&inputs, docOp.RequestBody)
+			sm.inputsFromOA3(&inputs, docOp.Parameters)
 			outputs := sm.outputsFromOA3(docOp.Responses)
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
@@ -134,32 +136,26 @@ func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
 	return
 }
 
-func (sm schemap) inputsFromOA3(
-	docParams openapi3.Parameters,
-	docReqBody *openapi3.RequestBodyRef,
-) (
-	params *ParamsJSON,
-) {
-	type paramsJSON map[string]*ParamJSON
-	params = &ParamsJSON{
-		Header: make(paramsJSON),
-		Path:   make(paramsJSON),
-		Query:  make(paramsJSON),
-	}
-
+func (sm schemap) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
 	if docReqBody != nil {
 		//FIXME: handle .Ref
 		docBody := docReqBody.Value
 		for mime, ct := range docBody.Content {
 			if mime == mimeJSON {
-				params.Body = &ParamJSON{
+				param := &ParamJSON{
 					Required: docBody.Required,
 					Ptr:      sm.ensureMappedOA3SchemaRef(ct.Schema),
+					Name:     "",
+					Kind:     ParamJSON_body,
 				}
+				*inputs = append(*inputs, param)
+				return
 			}
 		}
 	}
+}
 
+func (sm schemap) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
 	i, names := 0, make([]string, paramsCount)
@@ -176,22 +172,25 @@ func (sm schemap) inputsFromOA3(
 		docParamRef := paramap[names[j]]
 		//FIXME: handle .Ref
 		docParam := docParamRef.Value
+		kind := ParamJSON_UNKNOWN
+		switch docParam.In {
+		case openapi3.ParameterInPath:
+			kind = ParamJSON_path
+		case openapi3.ParameterInQuery:
+			kind = ParamJSON_query
+		case openapi3.ParameterInHeader:
+			kind = ParamJSON_header
+		case openapi3.ParameterInCookie:
+			kind = ParamJSON_cookie
+		}
 		param := &ParamJSON{
 			Required: docParam.Required,
 			Ptr:      sm.ensureMappedOA3SchemaRef(docParam.Schema),
+			Name:     docParam.Name,
+			Kind:     kind,
 		}
-
-		switch docParam.In {
-		//FIXME: handle ParameterInCookie
-		case openapi3.ParameterInHeader:
-			params.Path[docParam.Name] = param
-		case openapi3.ParameterInPath:
-			params.Path[docParam.Name] = param
-		case openapi3.ParameterInQuery:
-			params.Path[docParam.Name] = param
-		}
+		*inputs = append(*inputs, param)
 	}
-	return
 }
 
 func (sm schemap) outputsFromOA3(docResponses openapi3.Responses) (
