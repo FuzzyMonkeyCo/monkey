@@ -50,7 +50,7 @@
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "8fb20d0e77e5f8b91f24f57fedd3af2bee40697d"
+  revision = "ca3dd9ba35b5b82c6df2abb5e3f97774954e9284"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -88,7 +88,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "f5983d50c82d70eaa88c17080245cc871558081f"
+  revision = "89a0c16f4dc2a70c0ed864d8ef64878f24fdaa51"
 
 [[projects]]
   branch = "master"
@@ -251,11 +251,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:12257ab6948108de3526f30d6e50513cca5b354c21827e6974645619142071bd"
+  digest = "1:1c802c86fa2b3bb62bf908bc9b641b44ad77b2e34f67f85949a6ac9c413cf777"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   pruneopts = "NT"
-  revision = "b84684d0e066369f2a7a8a525f3080909ed4ea6b"
+  revision = "6cd6dcbc9e7514bea255a9241665a6c2d0b37fb4"
 
 [[projects]]
   branch = "master"
@@ -267,27 +267,28 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5bbe45f75b3e6dbedbcf33b6030852818a8ad44b9395b6e95c894dee40e75d1b"
+  digest = "1:f274b107987424d02d2dc56ae884ab9012d3b4b4a6a231cc57dfed626c05da03"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "0ffbfd41fbef8ffcf9b62b0b0aa3a5873ed7a4fe"
+  revision = "f0d5e33068cb57c22a181f5df0ffda885309eb5a"
 
 [[projects]]
   branch = "master"
-  digest = "1:b06e257f660ddc938e9be05290d04ae275f2a1139e1d8d819aacefd1f95e8d15"
+  digest = "1:b06e130e81b1e862dbf0c1450b468ad66d528d7c539c0f683c750f58c7ab6522"
   name = "golang.org/x/tools"
   packages = [
     "cover",
     "go/ast/astutil",
     "go/buildutil",
     "go/gcexportdata",
+    "go/internal/cgo",
     "go/internal/gcimporter",
     "go/loader",
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "82515cf89538b3e8a206be74377c01dee420b76d"
+  revision = "4432cd1c27c82c87fe2507a05a1a940f794b617f"
 
 [[projects]]
   branch = "v2"
