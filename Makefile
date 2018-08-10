@@ -57,6 +57,7 @@ dep.GODEP:
 	mkdir -p release
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP) -o release/$(DEP)
 	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP).sha256 -o release/$(DEP).sha256
+	sed -i 's%/Users/travis/gopath/src/github.com/golang/dep/%%' release/$(DEP).sha256
 	sha256sum --check --strict release/$(DEP).sha256
 	chmod +x release/$(DEP)
 	mv -v release/$(DEP) $$GOPATH/bin/dep
