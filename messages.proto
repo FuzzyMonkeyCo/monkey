@@ -149,7 +149,34 @@ message Schema {
         PlainJSON.Array enum = 2; // default: []
 
         // type: string
-        string format = 3; // default: ""
+        enum Format {
+             NONE = 0;
+             date_time = 1;
+             date = 2;
+          // time = 3;
+             email = 4;
+          // idn-email = 5;
+             hostname = 6;
+          // idn_hostname = 7;
+             ipv4 = 8;
+             ipv6 = 9;
+             uri = 10;
+             uri_reference = 11;
+          // iri = 12;
+          // iri_reference = 13;
+          // uri_template = 14;
+          // json_pointer = 15;
+          // relative_json_pointer = 16;
+             regex = 17;
+             int32 = 18;
+             int64 = 19;
+             float = 20;
+             double = 21;
+             byte = 22;
+             binary = 23;
+             password = 24;
+        }
+        Format format = 3; // default: NONE
         uint64 min_length = 4; // default: 0
         uint64 max_length = 5;
         bool has_max_length = 6;

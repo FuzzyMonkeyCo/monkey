@@ -224,7 +224,7 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	}
 
 	// "format"
-	schema.Format = s.Format
+	schema.Format = formatFromOA3(s.Format)
 	// "minLength"
 	schema.MinLength = s.MinLength
 	// "maxLength"
@@ -327,6 +327,21 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	}
 
 	return
+}
+
+func formatFromOA3(format string) Schema_JSON_Format {
+	switch format {
+	case "date-time":
+		return Schema_JSON_date_time
+	case "uriref", "uri-reference":
+		return Schema_JSON_uri_reference
+	default:
+		v, ok := Schema_JSON_Format_value[format]
+		if ok {
+			return Schema_JSON_Format(v)
+		}
+		return Schema_JSON_NONE
+	}
 }
 
 func ensureSchemaType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
