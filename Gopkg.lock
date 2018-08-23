@@ -10,12 +10,12 @@
   revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
 
 [[projects]]
-  digest = "1:bc4aca7160cb2b28276850ff96acabaf834402a7edcf59bf82c31fbe7916f906"
+  digest = "1:4b8b5811da6970495e04d1f4e98bb89518cc3cfc3b3f456bdb876ed7b6c74049"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   pruneopts = "NT"
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
 
 [[projects]]
   branch = "master"
@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8ea46e7270ded44697c92ebfd42a51cb11bc95ec6aea275f34e06313422ec537"
+  digest = "1:96e1fefc946cad29fa1c0e1433032de530560dc020e0f489643315e9ed21ba81"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "ca3dd9ba35b5b82c6df2abb5e3f97774954e9284"
+  revision = "e1956e8013e5183f5f237673fb4341492773b284"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -70,7 +70,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:35eed4b1df2a0cfbe8d0b9d451918ab591d649270db43050ee0d43e99136bf63"
+  digest = "1:57fd4b1480d3b3e4f95d928baa879da38944b1d993a6db9845f81db7d6b37ada"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -88,7 +88,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "89a0c16f4dc2a70c0ed864d8ef64878f24fdaa51"
+  revision = "b27b920f9e71b439b873b17bf99f56467623814a"
 
 [[projects]]
   branch = "master"
@@ -251,11 +251,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1c802c86fa2b3bb62bf908bc9b641b44ad77b2e34f67f85949a6ac9c413cf777"
+  digest = "1:55d89c767205cf255907b632bfb0fa5795bc8b1682d1acd31e138af6c4f6e176"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   pruneopts = "NT"
-  revision = "6cd6dcbc9e7514bea255a9241665a6c2d0b37fb4"
+  revision = "da425ebb7609ba06a0f395fc8a254d1c303364a0"
 
 [[projects]]
   branch = "master"
@@ -267,15 +267,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f274b107987424d02d2dc56ae884ab9012d3b4b4a6a231cc57dfed626c05da03"
+  digest = "1:684e292c56e224b8d86c1af75b3a480594329eedee4ef8b4bfa908546f21c940"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "f0d5e33068cb57c22a181f5df0ffda885309eb5a"
+  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
 
 [[projects]]
   branch = "master"
-  digest = "1:b06e130e81b1e862dbf0c1450b468ad66d528d7c539c0f683c750f58c7ab6522"
+  digest = "1:2f6a3bf8b8875d4c46ff2ee38de3c7887f2bc4c743424ce352ce644b64cf925f"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +288,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "4432cd1c27c82c87fe2507a05a1a940f794b617f"
+  revision = "447b503c8ba6e20bc730585499fc01c81a78c621"
 
 [[projects]]
   branch = "v2"
