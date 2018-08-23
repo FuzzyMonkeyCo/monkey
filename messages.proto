@@ -146,7 +146,7 @@ message Schema {
         }
         repeated Type type = 1; // default: []
 
-        repeated PlainJSON.Value enum = 2; // default: []
+        repeated ValueJSON enum = 2; // default: []
 
         // type: string
         enum Format {
@@ -239,45 +239,21 @@ message Schema {
     }
 }
 
+message ArrayJSON {
+    repeated ValueJSON value = 1;
+}
 
-message PlainJSON {
-    message Object {
-        map<string,Value> object = 1;
-        bool is_object = 2;
-    }
+message ObjectJSON {
+    map<string,ValueJSON> values = 1;
+}
 
-    message Array {
-        repeated Value array = 1;
-        bool is_array = 2;
-    }
-
-    message Text {
-        string text = 1;
-        bool is_text = 2;
-    }
-
-    message Number {
-        double number = 1;
-        bool is_number = 2;
-    }
-
-    message Boolean {
-        bool boolean = 1;
-        bool is_boolean = 2;
-    }
-
-    message Null {
+message ValueJSON {
+    oneof value {
         bool is_null = 1;
-    }
-
-    message Value {
-        oneof value {
-            Null z = 1;
-            Boolean b = 2;
-            Number n = 3;
-            Text t = 4;
-            Array a = 5;
-            Object o = 6;
-        }
+        bool boolean = 2;
+        double number = 3;
+        string text = 4;
+        ArrayJSON array = 5;
+        ObjectJSON object = 6;
     }
 }
