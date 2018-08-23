@@ -265,8 +265,12 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	// "items"
 	if sItems := s.Items; nil != sItems {
 		ensureSchemaType(Schema_JSON_array, &schema.Type)
-		schemaPtr := sm.ensureMappedOA3SchemaRef(sItems)
-		schema.Items = []*SchemaPtr{schemaPtr}
+		if sItems.Value.IsEmpty() {
+			schema.Items = []*SchemaPtr{}
+		} else {
+			schemaPtr := sm.ensureMappedOA3SchemaRef(sItems)
+			schema.Items = []*SchemaPtr{schemaPtr}
+		}
 	}
 
 	// "minProperties"
