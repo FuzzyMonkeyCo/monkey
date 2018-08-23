@@ -1,7 +1,7 @@
 language: go
 go_import_path: github.com/FuzzyMonkeyCo/monkey
 go: 1.10.2
-sudo: required # to install GPB
+services: [docker]
 
 os:
 - linux
@@ -31,8 +31,6 @@ after_script: set +e
 #     - $GOPATH/pkg
 
 install:
-- make dep.GPB
-- protoc --version
 - make deps
 - go version
 - shellcheck --version

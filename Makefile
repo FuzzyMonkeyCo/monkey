@@ -17,10 +17,9 @@ DST ?= .
 
 DEP ?= dep-linux-amd64
 GODEP = v0.5.0
-GPB   = v3.6.1
+GPB ?= znly/protoc:0.3.0
 
-all: lint vendor
-	protoc --go_out=. *.proto
+all: lint vendor gpb
 	go generate
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
@@ -35,7 +34,6 @@ x: vendor
 update: SHELL := /bin/bash
 update:
 	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
-	[[ $(GPB)   = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/google/protobuf/releases/latest))" ]]
 	go generate
 	dep ensure -v -update
 
@@ -63,18 +61,9 @@ dep.GODEP:
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
 
-dep.GPB: bin = protoc
-dep.GPB: url = https://github.com/google/protobuf/releases
-dep.GPB: pre = /usr/local
-dep.GPB:
-	( cd /tmp \
-	  && lat=$(GPB) \
-	  && curl -#fSLo protoc.zip $(url)/download/$$lat/$(bin)-$${lat##v}-linux-$$(uname -m).zip \
-	  && unzip protoc.zip -d protoc \
-	  && sudo mv -v protoc/bin/* $(pre)/bin/ \
-	  && sudo mv -v protoc/include/* $(pre)/include/ \
-	  && sudo chown -R $$USER:$$USER $(pre)/bin $(pre)/include \
-	)
+gpb: messages.proto
+	docker run --rm $(GPB) --version
+	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB) --go_out=. -I. $^
 
 lint:
 	gofmt -s -w *.go misc/*.go
