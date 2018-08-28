@@ -52,6 +52,7 @@ message Schemas {
 message RefOrSchemaJSON {
     oneof ptr_or_schema {
         // Probably most often from a $ref
+        //TODO: use uint32 instead of SchemaPtr everywhere else than here!
         SchemaPtr ptr = 1;
         // Actual schema when not a $ref
         Schema.JSON schema = 2;

@@ -62,7 +62,7 @@ func (x Method) String() string {
 	return proto.EnumName(Method_name, int32(x))
 }
 func (Method) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{0}
+	return fileDescriptor_messages_093db647017d86a5, []int{0}
 }
 
 type UserCfg_Kind int32
@@ -85,7 +85,7 @@ func (x UserCfg_Kind) String() string {
 	return proto.EnumName(UserCfg_Kind_name, int32(x))
 }
 func (UserCfg_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{0, 0}
+	return fileDescriptor_messages_093db647017d86a5, []int{0, 0}
 }
 
 type ParamJSON_Kind int32
@@ -120,7 +120,7 @@ func (x ParamJSON_Kind) String() string {
 	return proto.EnumName(ParamJSON_Kind_name, int32(x))
 }
 func (ParamJSON_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{8, 0}
+	return fileDescriptor_messages_093db647017d86a5, []int{8, 0}
 }
 
 type Schema_JSON_Type int32
@@ -164,7 +164,7 @@ func (x Schema_JSON_Type) String() string {
 	return proto.EnumName(Schema_JSON_Type_name, int32(x))
 }
 func (Schema_JSON_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{10, 0, 0}
+	return fileDescriptor_messages_093db647017d86a5, []int{10, 0, 0}
 }
 
 // type: string
@@ -241,7 +241,7 @@ func (x Schema_JSON_Format) String() string {
 	return proto.EnumName(Schema_JSON_Format_name, int32(x))
 }
 func (Schema_JSON_Format) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{10, 0, 1}
+	return fileDescriptor_messages_093db647017d86a5, []int{10, 0, 1}
 }
 
 type UserCfg struct {
@@ -261,7 +261,7 @@ func (m *UserCfg) Reset()         { *m = UserCfg{} }
 func (m *UserCfg) String() string { return proto.CompactTextString(m) }
 func (*UserCfg) ProtoMessage()    {}
 func (*UserCfg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{0}
+	return fileDescriptor_messages_093db647017d86a5, []int{0}
 }
 func (m *UserCfg) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserCfg.Unmarshal(m, b)
@@ -344,7 +344,7 @@ func (m *UserCfg_Runtime) Reset()         { *m = UserCfg_Runtime{} }
 func (m *UserCfg_Runtime) String() string { return proto.CompactTextString(m) }
 func (*UserCfg_Runtime) ProtoMessage()    {}
 func (*UserCfg_Runtime) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{0, 0}
+	return fileDescriptor_messages_093db647017d86a5, []int{0, 0}
 }
 func (m *UserCfg_Runtime) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserCfg_Runtime.Unmarshal(m, b)
@@ -405,7 +405,7 @@ func (m *UserCfg_Exec) Reset()         { *m = UserCfg_Exec{} }
 func (m *UserCfg_Exec) String() string { return proto.CompactTextString(m) }
 func (*UserCfg_Exec) ProtoMessage()    {}
 func (*UserCfg_Exec) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{0, 1}
+	return fileDescriptor_messages_093db647017d86a5, []int{0, 1}
 }
 func (m *UserCfg_Exec) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UserCfg_Exec.Unmarshal(m, b)
@@ -458,7 +458,7 @@ func (m *FuzzCfg) Reset()         { *m = FuzzCfg{} }
 func (m *FuzzCfg) String() string { return proto.CompactTextString(m) }
 func (*FuzzCfg) ProtoMessage()    {}
 func (*FuzzCfg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{1}
+	return fileDescriptor_messages_093db647017d86a5, []int{1}
 }
 func (m *FuzzCfg) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FuzzCfg.Unmarshal(m, b)
@@ -504,7 +504,7 @@ func (m *SpecIR) Reset()         { *m = SpecIR{} }
 func (m *SpecIR) String() string { return proto.CompactTextString(m) }
 func (*SpecIR) ProtoMessage()    {}
 func (*SpecIR) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{2}
+	return fileDescriptor_messages_093db647017d86a5, []int{2}
 }
 func (m *SpecIR) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecIR.Unmarshal(m, b)
@@ -551,7 +551,7 @@ func (m *Schemas) Reset()         { *m = Schemas{} }
 func (m *Schemas) String() string { return proto.CompactTextString(m) }
 func (*Schemas) ProtoMessage()    {}
 func (*Schemas) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{3}
+	return fileDescriptor_messages_093db647017d86a5, []int{3}
 }
 func (m *Schemas) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schemas.Unmarshal(m, b)
@@ -592,7 +592,7 @@ func (m *RefOrSchemaJSON) Reset()         { *m = RefOrSchemaJSON{} }
 func (m *RefOrSchemaJSON) String() string { return proto.CompactTextString(m) }
 func (*RefOrSchemaJSON) ProtoMessage()    {}
 func (*RefOrSchemaJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{4}
+	return fileDescriptor_messages_093db647017d86a5, []int{4}
 }
 func (m *RefOrSchemaJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_RefOrSchemaJSON.Unmarshal(m, b)
@@ -735,7 +735,7 @@ func (m *SchemaPtr) Reset()         { *m = SchemaPtr{} }
 func (m *SchemaPtr) String() string { return proto.CompactTextString(m) }
 func (*SchemaPtr) ProtoMessage()    {}
 func (*SchemaPtr) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{5}
+	return fileDescriptor_messages_093db647017d86a5, []int{5}
 }
 func (m *SchemaPtr) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SchemaPtr.Unmarshal(m, b)
@@ -782,7 +782,7 @@ func (m *Endpoint) Reset()         { *m = Endpoint{} }
 func (m *Endpoint) String() string { return proto.CompactTextString(m) }
 func (*Endpoint) ProtoMessage()    {}
 func (*Endpoint) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{6}
+	return fileDescriptor_messages_093db647017d86a5, []int{6}
 }
 func (m *Endpoint) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Endpoint.Unmarshal(m, b)
@@ -896,7 +896,7 @@ func (m *EndpointJSON) Reset()         { *m = EndpointJSON{} }
 func (m *EndpointJSON) String() string { return proto.CompactTextString(m) }
 func (*EndpointJSON) ProtoMessage()    {}
 func (*EndpointJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{7}
+	return fileDescriptor_messages_093db647017d86a5, []int{7}
 }
 func (m *EndpointJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_EndpointJSON.Unmarshal(m, b)
@@ -961,7 +961,7 @@ func (m *ParamJSON) Reset()         { *m = ParamJSON{} }
 func (m *ParamJSON) String() string { return proto.CompactTextString(m) }
 func (*ParamJSON) ProtoMessage()    {}
 func (*ParamJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{8}
+	return fileDescriptor_messages_093db647017d86a5, []int{8}
 }
 func (m *ParamJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ParamJSON.Unmarshal(m, b)
@@ -1023,7 +1023,7 @@ func (m *PathPartial) Reset()         { *m = PathPartial{} }
 func (m *PathPartial) String() string { return proto.CompactTextString(m) }
 func (*PathPartial) ProtoMessage()    {}
 func (*PathPartial) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{9}
+	return fileDescriptor_messages_093db647017d86a5, []int{9}
 }
 func (m *PathPartial) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PathPartial.Unmarshal(m, b)
@@ -1154,7 +1154,7 @@ func (m *Schema) Reset()         { *m = Schema{} }
 func (m *Schema) String() string { return proto.CompactTextString(m) }
 func (*Schema) ProtoMessage()    {}
 func (*Schema) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{10}
+	return fileDescriptor_messages_093db647017d86a5, []int{10}
 }
 func (m *Schema) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema.Unmarshal(m, b)
@@ -1217,7 +1217,7 @@ func (m *Schema_JSON) Reset()         { *m = Schema_JSON{} }
 func (m *Schema_JSON) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON) ProtoMessage()    {}
 func (*Schema_JSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{10, 0}
+	return fileDescriptor_messages_093db647017d86a5, []int{10, 0}
 }
 func (m *Schema_JSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSON.Unmarshal(m, b)
@@ -1462,7 +1462,7 @@ func (m *Schema_JSON_AdditionalProperties) Reset()         { *m = Schema_JSON_Ad
 func (m *Schema_JSON_AdditionalProperties) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON_AdditionalProperties) ProtoMessage()    {}
 func (*Schema_JSON_AdditionalProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{10, 0, 1}
+	return fileDescriptor_messages_093db647017d86a5, []int{10, 0, 1}
 }
 func (m *Schema_JSON_AdditionalProperties) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Schema_JSON_AdditionalProperties.Unmarshal(m, b)
@@ -1601,7 +1601,7 @@ func (m *ArrayJSON) Reset()         { *m = ArrayJSON{} }
 func (m *ArrayJSON) String() string { return proto.CompactTextString(m) }
 func (*ArrayJSON) ProtoMessage()    {}
 func (*ArrayJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{11}
+	return fileDescriptor_messages_093db647017d86a5, []int{11}
 }
 func (m *ArrayJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ArrayJSON.Unmarshal(m, b)
@@ -1639,7 +1639,7 @@ func (m *ObjectJSON) Reset()         { *m = ObjectJSON{} }
 func (m *ObjectJSON) String() string { return proto.CompactTextString(m) }
 func (*ObjectJSON) ProtoMessage()    {}
 func (*ObjectJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{12}
+	return fileDescriptor_messages_093db647017d86a5, []int{12}
 }
 func (m *ObjectJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ObjectJSON.Unmarshal(m, b)
@@ -1684,7 +1684,7 @@ func (m *ValueJSON) Reset()         { *m = ValueJSON{} }
 func (m *ValueJSON) String() string { return proto.CompactTextString(m) }
 func (*ValueJSON) ProtoMessage()    {}
 func (*ValueJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_messages_fe35661e40689c95, []int{13}
+	return fileDescriptor_messages_093db647017d86a5, []int{13}
 }
 func (m *ValueJSON) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ValueJSON.Unmarshal(m, b)
@@ -1952,9 +1952,9 @@ func init() {
 	proto.RegisterEnum("main.Schema_JSON_Format", Schema_JSON_Format_name, Schema_JSON_Format_value)
 }
 
-func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_fe35661e40689c95) }
+func init() { proto.RegisterFile("messages.proto", fileDescriptor_messages_093db647017d86a5) }
 
-var fileDescriptor_messages_fe35661e40689c95 = []byte{
+var fileDescriptor_messages_093db647017d86a5 = []byte{
 	// 1743 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0xcd, 0x6e, 0x1b, 0xc9,
 	0x11, 0x16, 0xc5, 0x11, 0xc9, 0x29, 0x8a, 0x54, 0xab, 0x57, 0xb6, 0xc7, 0xdc, 0xdd, 0x58, 0xe6,
