@@ -140,7 +140,7 @@ components:
         name:
           type: string
         tag:
-          type: string    
+          enum: [null, false, 42.42, {a: [good]}]
 
     Error:
       required:

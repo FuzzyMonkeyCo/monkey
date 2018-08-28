@@ -216,7 +216,12 @@ func (sm *Schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
 	schema := openapi3.NewSchema()
 
 	// "enum"
-	//FIXME
+	if sEnum := s.GetEnum(); len(sEnum) != 0 {
+		schema.Enum = make([]interface{}, len(sEnum))
+		for i, v := range sEnum {
+			schema.Enum[i] = enumToOA3(v)
+		}
+	}
 
 	// "type", "nullable"
 	for _, t := range s.GetType() {
@@ -334,6 +339,36 @@ func formatToOA3(format Schema_JSON_Format) string {
 		return "uri-reference"
 	default:
 		return Schema_JSON_Format_name[int32(format)]
+	}
+}
+
+func enumToOA3(value *ValueJSON) interface{} {
+	if value.GetIsNull() {
+		return nil
+	}
+	switch value.GetValue().(type) {
+	case *ValueJSON_Boolean:
+		return value.GetBoolean()
+	case *ValueJSON_Number:
+		return value.GetNumber()
+	case *ValueJSON_Text:
+		return value.GetText()
+	case *ValueJSON_Array:
+		val := value.GetArray().GetValues()
+		vs := make([]interface{}, len(val))
+		for i, v := range val {
+			vs[i] = enumToOA3(v)
+		}
+		return vs
+	case *ValueJSON_Object:
+		val := value.GetObject().GetValues()
+		vs := make(map[string]interface{}, len(val))
+		for n, v := range val {
+			vs[n] = enumToOA3(v)
+		}
+		return vs
+	default:
+		panic("unreachable")
 	}
 }
 

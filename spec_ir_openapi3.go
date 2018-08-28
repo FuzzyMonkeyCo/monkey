@@ -211,7 +211,14 @@ func (sm schemap) outputsFromOA3(docResponses openapi3.Responses) (
 
 func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	schema = &Schema_JSON{}
-	// "enum" FIXME
+
+	// "enum"
+	if sEnum := s.Enum; len(sEnum) != 0 {
+		schema.Enum = make([]*ValueJSON, len(sEnum))
+		for i, v := range sEnum {
+			schema.Enum[i] = enumFromOA3(v)
+		}
+	}
 
 	// "nullable"
 	if s.Nullable {
@@ -331,6 +338,36 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema *Schema_JSON) {
 	}
 
 	return
+}
+
+func enumFromOA3(value interface{}) *ValueJSON {
+	if value == nil {
+		return &ValueJSON{Value: &ValueJSON_IsNull{true}}
+	}
+	switch value.(type) {
+	case bool:
+		return &ValueJSON{Value: &ValueJSON_Boolean{value.(bool)}}
+	case float64:
+		return &ValueJSON{Value: &ValueJSON_Number{value.(float64)}}
+	case string:
+		return &ValueJSON{Value: &ValueJSON_Text{value.(string)}}
+	case []interface{}:
+		val := value.([]interface{})
+		vs := make([]*ValueJSON, len(val))
+		for i, v := range val {
+			vs[i] = enumFromOA3(v)
+		}
+		return &ValueJSON{Value: &ValueJSON_Array{&ArrayJSON{Values: vs}}}
+	case map[string]interface{}:
+		val := value.(map[string]interface{})
+		vs := make(map[string]*ValueJSON, len(val))
+		for n, v := range val {
+			vs[n] = enumFromOA3(v)
+		}
+		return &ValueJSON{Value: &ValueJSON_Object{&ObjectJSON{Values: vs}}}
+	default:
+		panic("unreachable")
+	}
 }
 
 func formatFromOA3(format string) Schema_JSON_Format {

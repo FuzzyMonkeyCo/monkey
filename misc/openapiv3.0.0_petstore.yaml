@@ -99,7 +99,7 @@ components:
         name:
           type: string
         tag:
-          type: string
+          enum: [null, false, 42.42, {a: [good]}]
     Pets:
       type: array
       items:

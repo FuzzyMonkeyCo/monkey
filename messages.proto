@@ -241,7 +241,7 @@ message Schema {
 }
 
 message ArrayJSON {
-    repeated ValueJSON value = 1;
+    repeated ValueJSON values = 1;
 }
 
 message ObjectJSON {
