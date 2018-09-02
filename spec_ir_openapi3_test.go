@@ -16,6 +16,7 @@ import (
 
 const someText = "some text"
 
+// Schemap ...
 type Schemap struct {
 	M schemap
 }

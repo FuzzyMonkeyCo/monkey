@@ -41,7 +41,7 @@ func init() {
 
 	colorERR = color.New(color.FgRed)
 	colorWRN = color.New(color.FgYellow)
-	colorNFO = color.New(color.FgWhite, color.Bold)
+	colorNFO = color.New(color.Bold)
 
 	loadSchemas()
 }
@@ -51,47 +51,54 @@ func main() {
 }
 
 type params struct {
-	Init, Login, Fuzz, Shrink, Lint bool
-	Exec, Start, Reset, Stop        bool
-	Update                          bool   `mapstructure:"--update"`
-	HideConfig                      bool   `mapstructure:"--hide-config"`
-	ShowSpec                        bool   `mapstructure:"--show-spec"`
-	N                               uint32 `mapstructure:"--tests"`
-	Verbosity                       uint   `mapstructure:"-v"`
+	Fuzz, Shrink             bool
+	Lint, Schema             bool
+	Init, Login              bool
+	Exec, Start, Reset, Stop bool
+	Update                   bool   `mapstructure:"--update"`
+	HideConfig               bool   `mapstructure:"--hide-config"`
+	ShowSpec                 bool   `mapstructure:"--show-spec"`
+	N                        uint32 `mapstructure:"--tests"`
+	Verbosity                uint8  `mapstructure:"-v"`
+	ValidateAgainst          string `mapstructure:"--validate-against"`
 }
 
 func usage() (args *params, ret int) {
-	usage := binName + "\tv" + binVersion + "\t" + binDescribe + "\t" + runtime.Version() + `
+	B, V, D := colorNFO.Sprintf(binName), binVersion, binDescribe
+	usage := B + "\tv" + V + "\t" + D + "\t" + runtime.Version() + `
 
 Usage:
-  ` + binName + ` [-vvv] init [--with-magic]
-  ` + binName + ` [-vvv] login --user=USER
-  ` + binName + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
-  ` + binName + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
-  ` + binName + ` [-vvv] lint [--show-spec] [--hide-config]
-  ` + binName + ` [-vvv] exec (start | reset | stop)
-  ` + binName + ` [-vvv] -h | --help
-  ` + binName + ` [-vvv]      --update
-  ` + binName + ` [-vvv] -V | --version
+  ` + B + ` [-vvv] init [--with-magic]
+  ` + B + ` [-vvv] login --user=USER
+  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+  ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
+  ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
+  ` + B + ` [-vvv] schema [--validate-against=REF]
+  ` + B + ` [-vvv] exec (start | reset | stop)
+  ` + B + ` [-vvv] -h | --help
+  ` + B + ` [-vvv]      --update
+  ` + B + ` [-vvv] -V | --version
 
 Options:
-  -v, -vv, -vvv  Debug verbosity level
-  -h, --help     Show this screen
-  -U, --update   Ensures ` + binName + ` is latest
-  -V, --version  Show version
-  --hide-config  Do not show YAML configuration while linting
-  --seed=SEED    Use specific parameters for the RNG
-  --tag=TAG      Labels that can help classification
-  --test=ID      Which test to shrink
-  --tests=N      Number of tests to run [default: 100]
-  --user=USER    Authenticate on fuzzymonkey.co as USER
-  --with-magic   Auto fill in schemas from random API calls
+  -v, -vv, -vvv           Debug verbosity level
+  -h, --help              Show this screen
+  -U, --update            Ensures ` + B + ` is current
+  -V, --version           Show version
+  --hide-config           Do not show YAML configuration while linting
+  --seed=SEED             Use specific parameters for the RNG
+  --validate-against=REF  Schema $ref to validate STDIN against
+  --tag=TAG               Labels that can help classification
+  --test=ID               Which test to shrink
+  --tests=N               Number of tests to run [default: 100]
+  --user=USER             Authenticate on fuzzymonkey.co as USER
+  --with-magic            Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
-  ` + binName + ` --update
-  ` + binName + ` init --with-magic
-  ` + binName + ` fuzz`
+  ` + B + ` --update
+  ` + B + ` init --with-magic
+  ` + B + ` fuzz
+  echo '"kitty"' | ` + B + ` schema --validate-against '#/components/schemas/PetKind'`
 
 	// https://github.com/docopt/docopt.go/issues/59
 	opts, err := docopt.ParseDoc(usage)
@@ -171,7 +178,7 @@ func actualMain() int {
 	}
 
 	// Always lint before fuzzing
-	validSpec, err := doLint(docPath, blob, args.ShowSpec)
+	spec, vald, err := doLint(docPath, blob, args.ShowSpec)
 	if err != nil {
 		return 2
 	}
@@ -181,12 +188,16 @@ func actualMain() int {
 		return 0
 	}
 
+	if args.Schema {
+		return doSchema(vald, args.ValidateAgainst)
+	}
+
 	apiKey := os.Getenv(envAPIKey)
 	if err := doAuth(cfg, apiKey, args.N); err != nil {
 		return retryOrReport()
 	}
 
-	return doFuzz(cfg, validSpec)
+	return doFuzz(cfg, spec, vald)
 }
 
 func ensureDeleted(path string) {
@@ -197,8 +208,8 @@ func ensureDeleted(path string) {
 	}
 }
 
-func logLevel(verbosity uint) logutils.LogLevel {
-	lvl := map[uint]string{
+func logLevel(verbosity uint8) logutils.LogLevel {
+	lvl := map[uint8]string{
 		0: "NOP",
 		1: "ERR",
 		2: "NFO",
@@ -214,10 +225,9 @@ func doUpdate() int {
 	}
 
 	// assumes not v-prefixed
-	// assumes never patching old-minor releases
+	// assumes never re-tagging releases
 	if latest != binVersion {
-		fmt.Printf("A newer version of %s is out: %s (you have %s)\n",
-			binName, latest, binVersion)
+		fmt.Println("A version newer than", binVersion, "is out:", latest)
 		if err := replaceCurrentRelease(latest); err != nil {
 			fmt.Println("The update failed 🙈 please try again")
 			return 3
@@ -226,9 +236,31 @@ func doUpdate() int {
 	return 0
 }
 
+func doSchema(vald *validator, ref string) int {
+	schemas := vald.Schemas
+	if ref == "" {
+		schemasCount := len(schemas)
+		log.Printf("[NFO] found %d refs\n", schemasCount)
+		colorNFO.Printf("Found %d refs\n", schemasCount)
+		for absRef := range schemas {
+			fmt.Println(absRef)
+		}
+		return 0
+	}
+
+	if err := validateAgainstSchema(schemas, ref); err != nil {
+		if err != errInvalidPayload {
+			colorERR.Println(err)
+		}
+		return 9
+	}
+	colorNFO.Println("Payload is valid")
+	return 0
+}
+
 func doExec(cfg *UserCfg, kind cmdKind) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Printf("%s is required\n", shell())
+		log.Println(shell(), "is required")
 		return 5
 	}
 	if err := snapEnv(envID()); err != nil {
@@ -241,9 +273,9 @@ func doExec(cfg *UserCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *UserCfg, spec *SpecIR) int {
+func doFuzz(cfg *UserCfg, spec *SpecIR, vald *validator) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Printf("%s is required\n", shell())
+		log.Printf("[ERR] %s is required\n", shell())
 		return 5
 	}
 
