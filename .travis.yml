@@ -1,6 +1,6 @@
 language: go
 go_import_path: github.com/FuzzyMonkeyCo/monkey
-go: 1.10.2
+go: 1.11
 services: [docker]
 
 os:
