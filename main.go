@@ -150,6 +150,10 @@ func actualMain() int {
 	if err != nil || cfg == nil {
 		return retryOrReport()
 	}
+	if args.Lint {
+		log.Printf("[NFO] %s is a valid v%d configuration\n", localCfg, cfg.Version)
+		colorNFO.Printf("%s is a valid v%d configuration.\n", localCfg, cfg.Version)
+	}
 
 	if args.Exec {
 		switch {
@@ -171,9 +175,9 @@ func actualMain() int {
 	if err != nil {
 		return 2
 	}
-	log.Println("[NFO] No validation errors found.")
-	colorNFO.Println("No validation errors found.")
 	if args.Lint {
+		log.Println("[NFO]", docPath, "is a valid", cfg.Kind, "specification")
+		colorNFO.Println(docPath, "is a valid", cfg.Kind, "specification.")
 		return 0
 	}
 

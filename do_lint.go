@@ -47,8 +47,7 @@ func doLint(docPath string, blob []byte, showSpec bool) (spec *SpecIR, err error
 		return
 	}
 
-	spec, err = newSpecFromOA3(doc)
-	return
+	return newSpecFromOA3(doc)
 }
 
 func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {

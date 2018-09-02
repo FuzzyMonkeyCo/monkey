@@ -52,10 +52,7 @@ func newCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 }
 
 func knownVersion(v int) bool {
-	if 0 < v && v <= lastCfgVersion {
-		return true
-	}
-	return false
+	return 0 < v && v <= lastCfgVersion
 }
 
 func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
