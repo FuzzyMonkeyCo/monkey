@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:96e1fefc946cad29fa1c0e1433032de530560dc020e0f489643315e9ed21ba81"
+  digest = "1:bcf0829d9d1c0446b41a6162ffca4fed15407d64cd3de613fbc3ef7862786740"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "e1956e8013e5183f5f237673fb4341492773b284"
+  revision = "11d1c01c053b0bc8688e894cfc7fab680eff8dcf"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -103,12 +103,12 @@
   revision = "48a0ecefe2e4190c7a2d63b477875854a2f993b3"
 
 [[projects]]
-  branch = "master"
   digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
   name = "github.com/hashicorp/go-version"
   packages = ["."]
   pruneopts = "NT"
-  revision = "270f2f71b1ee587f3b609f00f422b76a6b28f348"
+  revision = "b5a281d3160aa11950a6182bd9a9dc2cb1e02d50"
+  version = "v1.0.0"
 
 [[projects]]
   branch = "master"
@@ -116,7 +116,7 @@
   name = "github.com/hashicorp/logutils"
   packages = ["."]
   pruneopts = "NT"
-  revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
+  revision = "a335183dfd075f638afcc820c90591ca3c97eba6"
 
 [[projects]]
   digest = "1:04eb2b1e456031d95dbc76c9a42fa8a2da0d61ae5111d6aa277cbefba53c7e8f"
@@ -159,12 +159,12 @@
   version = "v0.0.9"
 
 [[projects]]
-  digest = "1:bc4f7eec3b7be8c6cb1f0af6c1e3333d5bb71072951aaaae2f05067b0803f287"
+  digest = "1:bffa444ca07c69c599ae5876bc18b25bfd5fa85b297ca10a25594d284a7e9c5d"
   name = "github.com/mattn/go-isatty"
   packages = ["."]
   pruneopts = "NT"
-  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
-  version = "v0.0.3"
+  revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
+  version = "v0.0.4"
 
 [[projects]]
   branch = "master"
@@ -172,7 +172,7 @@
   name = "github.com/mitchellh/iochan"
   packages = ["."]
   pruneopts = "NT"
-  revision = "87b45ffd0e9581375c491fef3d32130bb15c5bd7"
+  revision = "b6e3aadd28864e14dae41ff5c7261455b1242d24"
 
 [[projects]]
   branch = "master"
@@ -180,7 +180,7 @@
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "NT"
-  revision = "f15292f7a699fcc1a38a80977f80a046874ba8ac"
+  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
 
 [[projects]]
   branch = "master"
@@ -267,15 +267,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:684e292c56e224b8d86c1af75b3a480594329eedee4ef8b4bfa908546f21c940"
+  digest = "1:ac387089a0a84f6f92d69b25f39c5bf8187bd14c99aa97a780bc842f517703f5"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
+  revision = "fa5fdf94c78965f1aa8423f0cc50b8b8d728b05a"
 
 [[projects]]
   branch = "master"
-  digest = "1:2f6a3bf8b8875d4c46ff2ee38de3c7887f2bc4c743424ce352ce644b64cf925f"
+  digest = "1:4859303bc0141785c3885c3f117e97a406da9bb38cef19dba203d7dc7264944e"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +288,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "447b503c8ba6e20bc730585499fc01c81a78c621"
+  revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
 
 [[projects]]
   branch = "v2"
