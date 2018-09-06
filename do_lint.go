@@ -46,11 +46,14 @@ func doLint(docPath string, blob []byte, showSpec bool) (
 		return
 	}
 
+	log.Println("[NFO] first validation pass")
 	if err = doc.Validate(loader.Context); err != nil {
 		log.Println("[ERR]", err)
+		colorERR.Println(err)
 		return
 	}
 
+	log.Println("[NFO] last validation pass")
 	if spec, vald, err = newSpecFromOA3(doc); err != nil {
 		return
 	}

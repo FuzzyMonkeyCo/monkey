@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bcf0829d9d1c0446b41a6162ffca4fed15407d64cd3de613fbc3ef7862786740"
+  digest = "1:ca0cecb04885ed3c872a902e59f02fe2c644731177579ff2478bae402844ab9f"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "11d1c01c053b0bc8688e894cfc7fab680eff8dcf"
+  revision = "8d12cf66a916995143ae5cbbd4c58e0d691f3ae0"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -267,15 +267,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ac387089a0a84f6f92d69b25f39c5bf8187bd14c99aa97a780bc842f517703f5"
+  digest = "1:70304662ab6da9c3daf2a8b0cb9051e6a55f47a334488c1bf77b2ed9f56ddcea"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "2b024373dcd9800f0cae693839fac6ede8d64a8c"
+  revision = "8cf3aee429924738c56c34bb819c4ea8273fc434"
 
 [[projects]]
   branch = "master"
-  digest = "1:4859303bc0141785c3885c3f117e97a406da9bb38cef19dba203d7dc7264944e"
+  digest = "1:9f0f29900a87ada791a3a28e74c6f7131a9a9b34aa07138dd6d9402a211eed3e"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +288,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "7ca132754999accbaa5c1735eda29e7ce0f3bf03"
+  revision = "0aa4b8830f481fed77b73cf7cea2bc3129e05148"
 
 [[projects]]
   branch = "v2"

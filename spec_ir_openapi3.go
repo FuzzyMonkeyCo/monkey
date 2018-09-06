@@ -24,12 +24,14 @@ func newSpecFromOA3(doc *openapi3.Swagger) (
 
 	docSchemas := doc.Components.Schemas
 	sm := newSchemap(len(docSchemas))
+	log.Println("[DBG] seeding schemas")
 	sm.schemasFromOA3(docSchemas)
 
 	basePath, err := basePathFromOA3(doc.Servers)
 	if err != nil {
 		return
 	}
+	log.Println("[DBG] going through endpoints")
 	spec = &SpecIR{
 		Endpoints: sm.endpointsFromOA3(basePath, doc.Paths),
 		Schemas:   &Schemas{Json: sm.SIDs},
@@ -37,12 +39,13 @@ func newSpecFromOA3(doc *openapi3.Swagger) (
 	//TODO: use docPath as root
 	vald = &validator{Schemas: sm.Schemas}
 
+	log.Println("[DBG] serializing the protobuf")
 	jsoner := &jsonpb.Marshaler{
 		// Indent: "\t",
 		// EmitDefaults: true,
 	}
 	stringified, err := jsoner.MarshalToString(spec)
-	log.Println("[DBG]", err, stringified)
+	log.Println("[DBG]", err, stringified[:37])
 	return
 }
 
