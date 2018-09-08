@@ -11,6 +11,7 @@ import (
 )
 
 var errInvalidPayload = errors.New("invalid JSON payload")
+var errNoSuchRef = errors.New("no such $ref")
 
 type sid = uint32
 type schemaJSON = map[string]interface{}
@@ -76,9 +77,15 @@ func useSpecSchemas(spec *SpecIR, vald *validator) (err error) {
 	return
 }
 
+func printSchemaRefs(schemas schemasJSON) {
+	for absRef := range schemas {
+		fmt.Println(absRef)
+	}
+}
+
 func validateAgainstSchema(schemas schemasJSON, absRef string) (err error) {
 	if _, ok := schemas[absRef]; !ok {
-		err = fmt.Errorf("no such ref: '%s'", absRef)
+		err = errNoSuchRef
 		return
 	}
 

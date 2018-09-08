@@ -238,18 +238,24 @@ func doUpdate() int {
 
 func doSchema(vald *validator, ref string) int {
 	schemas := vald.Schemas
+	schemasCount := len(schemas)
 	if ref == "" {
-		schemasCount := len(schemas)
 		log.Printf("[NFO] found %d refs\n", schemasCount)
 		colorNFO.Printf("Found %d refs\n", schemasCount)
-		for absRef := range schemas {
-			fmt.Println(absRef)
-		}
+		printSchemaRefs(schemas)
 		return 0
 	}
 
 	if err := validateAgainstSchema(schemas, ref); err != nil {
-		if err != errInvalidPayload {
+		switch err {
+		case errInvalidPayload:
+		case errNoSuchRef:
+			colorERR.Printf("No such $ref '%s'\n", ref)
+			if schemasCount > 0 {
+				fmt.Println("Try one of:")
+				printSchemaRefs(schemas)
+			}
+		default:
 			colorERR.Println(err)
 		}
 		return 9
