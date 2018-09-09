@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
@@ -66,16 +65,8 @@ func (sm *schemap) newSID() sid {
 }
 
 func (sm *schemap) seed(ref string, schema *openapi3.Schema) {
-	str, err := json.Marshal(schema)
-	if err != nil {
-		panic(err)
-	}
-	var rawSchema schemaJSON
-	if err := json.Unmarshal(str, &rawSchema); err != nil {
-		panic(err)
-	}
 	absRef := "#/components/schemas/" + ref
-	sm.Schemas[absRef] = rawSchema
+	sm.Schemas[absRef] = schema.ExtensionProps.Extensions
 
 	SID := sm.ensureMapped("", sm.schemaFromOA3(schema))
 	schemaPtr := &SchemaPtr{Ref: absRef, SID: SID}
