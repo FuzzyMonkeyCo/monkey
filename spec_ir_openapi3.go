@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log"
 	"net/url"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,102 +12,38 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-// https://swagger.io/docs/specification/data-models/data-types/
-func newSpecFromOA3(doc *openapi3.Swagger) (
-	spec *SpecIR,
-	vald *validator,
-	err error,
-) {
+func newSpecFromOA3(doc *openapi3.Swagger) (val *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
-	docSchemas := doc.Components.Schemas
-	sm := newSchemap(len(docSchemas))
+	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
+	vald := newValidator(len(docPaths), len(docSchemas))
 	log.Println("[DBG] seeding schemas")
-	sm.schemasFromOA3(docSchemas)
+	//TODO: use docPath as root
+	vald.schemasFromOA3(docSchemas)
 
 	basePath, err := basePathFromOA3(doc.Servers)
 	if err != nil {
 		return
 	}
 	log.Println("[DBG] going through endpoints")
-	spec = &SpecIR{
-		Endpoints: sm.endpointsFromOA3(basePath, doc.Paths),
-		Schemas:   &Schemas{Json: sm.SIDs},
-	}
-	//TODO: use docPath as root
-	vald = &validator{Schemas: sm.Schemas}
+	vald.endpointsFromOA3(basePath, docPaths)
 
 	log.Println("[DBG] serializing the protobuf")
 	jsoner := &jsonpb.Marshaler{
 		// Indent: "\t",
 		// EmitDefaults: true,
 	}
-	stringified, err := jsoner.MarshalToString(spec)
+	stringified, err := jsoner.MarshalToString(vald.Spec)
 	log.Println("[DBG]", err, stringified[:37])
 	return
 }
 
-type schemap struct {
-	SIDs    map[sid]*RefOrSchemaJSON
-	Schemas map[string]schemaJSON
-}
-
-func newSchemap(capa int) *schemap {
-	return &schemap{
-		SIDs:    make(map[sid]*RefOrSchemaJSON, capa),
-		Schemas: make(map[string]schemaJSON, capa),
+func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) error {
+	schemas := make(schemasJSON, len(docSchemas))
+	for name, docSchema := range docSchemas {
+		schemas[name] = vald.schemaFromOA3(docSchema.Value)
 	}
-}
-
-func (sm *schemap) newSID() sid {
-	return sid(1 + len(sm.SIDs))
-}
-
-func (sm *schemap) seed(ref string, schema *openapi3.Schema) {
-	absRef := "#/components/schemas/" + ref
-	sm.Schemas[absRef] = schema.ExtensionProps.Extensions
-
-	SID := sm.ensureMapped("", sm.schemaFromOA3(schema))
-	schemaPtr := &SchemaPtr{Ref: absRef, SID: SID}
-	sm.SIDs[sm.newSID()] = &RefOrSchemaJSON{
-		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
-	}
-}
-
-func (sm schemap) ensureMapped(ref string, schema Schema_JSON) sid {
-	if ref == "" {
-		for SID, schPtr := range sm.SIDs {
-			if s := schPtr.GetSchema(); s != nil && reflect.DeepEqual(schema, s) {
-				return SID
-			}
-		}
-		SID := sm.newSID()
-		sm.SIDs[SID] = &RefOrSchemaJSON{
-			PtrOrSchema: &RefOrSchemaJSON_Schema{&schema},
-		}
-		return SID
-	}
-
-	mappedSID := sid(0)
-	for SID, schPtr := range sm.SIDs {
-		if ptr := schPtr.GetPtr(); ptr != nil && ref == ptr.GetRef() {
-			mappedSID = SID
-			break
-		}
-	}
-	schemaPtr := &SchemaPtr{
-		Ref: ref,
-		SID: mappedSID,
-	}
-	// sm[sm.newUID()] = &RefOrSchemaJSON{
-	// 	PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
-	// }
-	// return schemaPtr
-	SID := sm.newSID()
-	sm.SIDs[SID] = &RefOrSchemaJSON{
-		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
-	}
-	return SID
+	return vald.seed("#/components/schemas/", schemas)
 }
 
 func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) sid {
@@ -122,23 +57,7 @@ func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) sid {
 	panic("both schema and ref are empty")
 }
 
-func (sm schemap) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) {
-	i, names := 0, make([]string, len(docSchemas))
-	for name := range docSchemas {
-		names[i] = name
-		i++
-	}
-	sort.Strings(names)
-
-	for j := 0; j != i; j++ {
-		name := names[j]
-		sm.seed(name, docSchemas[name].Value)
-	}
-}
-
-func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
-	endpoints []*Endpoint,
-) {
+func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
 	i, paths := 0, make([]string, len(docPaths))
 	for path := range docPaths {
 		paths[i] = path
@@ -174,7 +93,7 @@ func (sm schemap) endpointsFromOA3(basePath string, docPaths openapi3.Paths) (
 					},
 				},
 			}
-			endpoints = append(endpoints, endpoint)
+			vald.Spec.Endpoints = append(vald.Spec.Endpoints, endpoint)
 		}
 	}
 	return

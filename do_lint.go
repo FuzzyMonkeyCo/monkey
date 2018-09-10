@@ -14,11 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func doLint(docPath string, blob []byte, showSpec bool) (
-	spec *SpecIR,
-	vald *validator,
-	err error,
-) {
+func doLint(docPath string, blob []byte, showSpec bool) (vald *validator, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
 		return
@@ -54,10 +50,7 @@ func doLint(docPath string, blob []byte, showSpec bool) (
 	}
 
 	log.Println("[NFO] last validation pass")
-	if spec, vald, err = newSpecFromOA3(doc); err != nil {
-		return
-	}
-	err = useSpecSchemas(spec, vald)
+	vald, err = newSpecFromOA3(doc)
 	return
 }
 

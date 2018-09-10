@@ -21,10 +21,10 @@ const (
 	headerXAuthToken  = "X-Auth-Token"
 )
 
-func newFuzz(cfg *UserCfg, spec *SpecIR) (cmd someCmd, err error) {
+func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
 	initer := &FuzzCfg{
 		Cfg:  cfg,
-		Spec: spec,
+		Spec: vald.Spec,
 	}
 	payload, err := proto.Marshal(initer)
 	if err != nil {

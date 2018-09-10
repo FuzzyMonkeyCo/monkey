@@ -178,7 +178,7 @@ func actualMain() int {
 	}
 
 	// Always lint before fuzzing
-	spec, vald, err := doLint(docPath, blob, args.ShowSpec)
+	vald, err := doLint(docPath, blob, args.ShowSpec)
 	if err != nil {
 		return 2
 	}
@@ -197,7 +197,7 @@ func actualMain() int {
 		return retryOrReport()
 	}
 
-	return doFuzz(cfg, spec, vald)
+	return doFuzz(cfg, vald)
 }
 
 func ensureDeleted(path string) {
@@ -237,23 +237,28 @@ func doUpdate() int {
 }
 
 func doSchema(vald *validator, ref string) int {
-	schemas := vald.Schemas
-	schemasCount := len(schemas)
+	refs := vald.Refs
+	refsCount := len(refs)
+	showRefs := func() {
+		for absRef := range refs {
+			fmt.Println(absRef)
+		}
+	}
 	if ref == "" {
-		log.Printf("[NFO] found %d refs\n", schemasCount)
-		colorNFO.Printf("Found %d refs\n", schemasCount)
-		printSchemaRefs(schemas)
+		log.Printf("[NFO] found %d refs\n", refsCount)
+		colorNFO.Printf("Found %d refs\n", refsCount)
+		showRefs()
 		return 0
 	}
 
-	if err := validateAgainstSchema(schemas, ref); err != nil {
+	if err := vald.validateAgainstSchema(ref); err != nil {
 		switch err {
 		case errInvalidPayload:
 		case errNoSuchRef:
 			colorERR.Printf("No such $ref '%s'\n", ref)
-			if schemasCount > 0 {
+			if refsCount > 0 {
 				fmt.Println("Try one of:")
-				printSchemaRefs(schemas)
+				showRefs()
 			}
 		default:
 			colorERR.Println(err)
@@ -279,7 +284,7 @@ func doExec(cfg *UserCfg, kind cmdKind) int {
 	return 0
 }
 
-func doFuzz(cfg *UserCfg, spec *SpecIR, vald *validator) int {
+func doFuzz(cfg *UserCfg, vald *validator) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Printf("[ERR] %s is required\n", shell())
 		return 5
@@ -289,7 +294,7 @@ func doFuzz(cfg *UserCfg, spec *SpecIR, vald *validator) int {
 		return retryOrReport()
 	}
 
-	cmd, err := newFuzz(cfg, spec)
+	cmd, err := newFuzz(cfg, vald)
 	if err != nil {
 		return retryOrReportThenCleanup(cfg, err)
 	}

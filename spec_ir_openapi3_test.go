@@ -16,6 +16,7 @@ import (
 
 const someText = "some text"
 
+//FIXME: use unrmarshalling to schemaref?
 // Schemap ...
 type Schemap struct {
 	M schemap
