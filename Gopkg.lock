@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ca0cecb04885ed3c872a902e59f02fe2c644731177579ff2478bae402844ab9f"
+  digest = "1:8cd7def47f02eeadcd4944592d95072a522fb6c834d85a2a9bd654788f0759b9"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "8d12cf66a916995143ae5cbbd4c58e0d691f3ae0"
+  revision = "ee0592e0597619ce5e95954d1f71cde81be0f0b5"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -70,7 +70,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:57fd4b1480d3b3e4f95d928baa879da38944b1d993a6db9845f81db7d6b37ada"
+  digest = "1:b47445f5179790694dbc5a2a3258439facd800b22c70e25db25d1ef38cbf23a2"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -88,7 +88,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "b27b920f9e71b439b873b17bf99f56467623814a"
+  revision = "acc501353c133fa62a2750ef0a37e5c8c971c2a4"
 
 [[projects]]
   branch = "master"
@@ -267,15 +267,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f8e06d12bb322abcea432d8509748a4b716b578665fe11f91eb61870965282c1"
+  digest = "1:265345a1eb061d0e8f7dcffc47cb4ec91d19a43ef44f494714ed71f47acd0492"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "917fdcba135dcbaccd57425db91723541b4427c8"
+  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
 
 [[projects]]
   branch = "master"
-  digest = "1:9f0f29900a87ada791a3a28e74c6f7131a9a9b34aa07138dd6d9402a211eed3e"
+  digest = "1:b4a715f1821e0fbb29b18736a8981dac6e6ccc46e3f57f2440a7ac27f785aaca"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +288,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "0aa4b8830f481fed77b73cf7cea2bc3129e05148"
+  revision = "677d2ff680c188ddb7dcd2bfa6bc7d3f2f2f75b2"
 
 [[projects]]
   branch = "v2"
