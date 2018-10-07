@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/golang/protobuf/jsonpb"
 )
 
 func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
@@ -18,7 +17,7 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
 	vald = newValidator(len(docPaths), len(docSchemas))
 	log.Println("[DBG] seeding schemas")
-	//TODO: use docPath as root
+	//TODO: use docPath as root of base
 	vald.schemasFromOA3(docSchemas)
 
 	basePath, err := basePathFromOA3(doc.Servers)
@@ -27,14 +26,6 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	}
 	log.Println("[DBG] going through endpoints")
 	vald.endpointsFromOA3(basePath, docPaths)
-
-	log.Println("[DBG] serializing the protobuf")
-	jsoner := &jsonpb.Marshaler{
-		// Indent: "\t",
-		// EmitDefaults: true,
-	}
-	stringified, err := jsoner.MarshalToString(vald.Spec)
-	log.Println("[DBG]", err, stringified[:37])
 	return
 }
 

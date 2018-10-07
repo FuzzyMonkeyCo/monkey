@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
 	"gopkg.in/yaml.v2"
@@ -50,7 +51,17 @@ func doLint(docPath string, blob []byte, showSpec bool) (vald *validator, err er
 	}
 
 	log.Println("[NFO] last validation pass")
-	vald, err = newSpecFromOA3(doc)
+	if vald, err = newSpecFromOA3(doc); err != nil {
+		return
+	}
+
+	log.Println("[DBG] serializing the protobuf")
+	jsoner := &jsonpb.Marshaler{
+		// Indent: "\t",
+		// EmitDefaults: true,
+	}
+	stringified, err := jsoner.MarshalToString(vald.Spec)
+	log.Println("[DBG]", err, stringified[:37])
 	return
 }
 
