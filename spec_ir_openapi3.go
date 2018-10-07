@@ -46,17 +46,6 @@ func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	return vald.seed("#/components/schemas/", schemas)
 }
 
-func (sm schemap) ensureMappedOA3SchemaRef(s *openapi3.SchemaRef) sid {
-	if docSchema := s.Value; docSchema != nil {
-		schema := sm.schemaFromOA3(docSchema)
-		return sm.ensureMapped("", schema)
-	}
-	// if s.Ref != "" {
-	// 	return sm.ensureMapped(s.Ref, nil)
-	// }
-	panic("both schema and ref are empty")
-}
-
 func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
 	i, paths := 0, make([]string, len(docPaths))
 	for path := range docPaths {
@@ -80,9 +69,9 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			docMethod := methods[l]
 			docOp := docOps[docMethod]
 			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
-			sm.inputBodyFromOA3(&inputs, docOp.RequestBody)
-			sm.inputsFromOA3(&inputs, docOp.Parameters)
-			outputs := sm.outputsFromOA3(docOp.Responses)
+			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
+			vald.inputsFromOA3(&inputs, docOp.Parameters)
+			outputs := vald.outputsFromOA3(docOp.Responses)
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
@@ -99,15 +88,17 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 	return
 }
 
-func (sm schemap) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
+func (vald *validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
 	if docReqBody != nil {
 		//FIXME: handle .Ref
 		docBody := docReqBody.Value
 		for mime, ct := range docBody.Content {
 			if mime == mimeJSON {
+				docSchema := ct.Schema
+				schema := vald.schemaOrRefFromOA3(docSchema)
 				param := &ParamJSON{
 					Required: docBody.Required,
-					SID:      sm.ensureMappedOA3SchemaRef(ct.Schema),
+					SID:      vald.ensureMapped(docSchema.Ref, schema),
 					Name:     "",
 					Kind:     ParamJSON_body,
 				}
@@ -118,7 +109,7 @@ func (sm schemap) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.Re
 	}
 }
 
-func (sm schemap) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
+func (vald *validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
 	i, names := 0, make([]string, paramsCount)
@@ -146,9 +137,11 @@ func (sm schemap) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Paramet
 		case openapi3.ParameterInCookie:
 			kind = ParamJSON_cookie
 		}
+		docSchema := docParam.Schema
+		schema := vald.schemaOrRefFromOA3(docSchema)
 		param := &ParamJSON{
 			Required: docParam.Required,
-			SID:      sm.ensureMappedOA3SchemaRef(docParam.Schema),
+			SID:      vald.ensureMapped(docSchema.Ref, schema),
 			Name:     docParam.Name,
 			Kind:     kind,
 		}
@@ -156,7 +149,7 @@ func (sm schemap) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Paramet
 	}
 }
 
-func (sm *schemap) outputsFromOA3(docResponses openapi3.Responses) (
+func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
@@ -165,95 +158,118 @@ func (sm *schemap) outputsFromOA3(docResponses openapi3.Responses) (
 		for mime, ct := range responseRef.Value.Content {
 			if mime == mimeJSON {
 				xxx := makeXXXFromOA3(code)
-				outputs[xxx] = sm.ensureMappedOA3SchemaRef(ct.Schema)
+				docSchema := ct.Schema
+				schema := vald.schemaOrRefFromOA3(docSchema)
+				outputs[xxx] = vald.ensureMapped(docSchema.Ref, schema)
 			}
 		}
 	}
 	return
 }
 
-func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema Schema_JSON) {
+func (vald *validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
+	if ref := s.Ref; ref != "" {
+		return schemaJSON{"$ref": ref}
+	}
+	return vald.schemaFromOA3(s.Value)
+}
+
+func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
+	schema = make(schemaJSON)
+
 	// "enum"
 	if sEnum := s.Enum; len(sEnum) != 0 {
-		schema.Enum = make([]*ValueJSON, len(sEnum))
+		enum := make([]interface{}, len(sEnum))
 		for i, v := range sEnum {
-			schema.Enum[i] = enumFromOA3(v)
+			enum[i] = v
 		}
+		schema["enum"] = enum
 	}
 
 	// "nullable"
 	if s.Nullable {
-		schema.Type = []Schema_JSON_Type{Schema_JSON_null}
+		schema["type"] = []string{"null"}
 	}
 	// "type"
 	if sType := s.Type; sType != "" {
-		t := Schema_JSON_Type(Schema_JSON_Type_value[sType])
-		ensureSchemaType(t, &schema.Type)
+		schema["type"] = ensureSchemaType(schema["type"], sType)
 	}
 
 	// "format"
-	schema.Format = formatFromOA3(s.Format)
+	if sFormat := s.Format; sFormat != "" {
+		schema["format"] = sFormat
+	}
 	// "minLength"
-	schema.MinLength = s.MinLength
+	if sMinLength := s.MinLength; sMinLength != 0 {
+		schema["minLength"] = sMinLength
+	}
 	// "maxLength"
 	if sMaxLength := s.MaxLength; nil != sMaxLength {
-		schema.MaxLength = *sMaxLength
-		schema.HasMaxLength = true
+		schema["maxLength"] = *sMaxLength
 	}
 	// "pattern"
-	schema.Pattern = s.Pattern
+	if sPattern := s.Pattern; sPattern != "" {
+		schema["pattern"] = sPattern
+	}
 
 	// "minimum"
 	if nil != s.Min {
-		schema.Minimum = *s.Min
-		schema.HasMinimum = true
+		schema["minimum"] = *s.Min
 	}
 	// "maximum"
 	if nil != s.Max {
-		schema.Maximum = *s.Max
-		schema.HasMaximum = true
+		schema["maximum"] = *s.Max
 	}
 	// "exclusiveMinimum", "exclusiveMaximum"
-	schema.ExclusiveMinimum = s.ExclusiveMin
-	schema.ExclusiveMaximum = s.ExclusiveMax
+	if sExMin := s.ExclusiveMin; sExMin {
+		schema["exclusiveMinimum"] = sExMin
+	}
+	if sExMax := s.ExclusiveMax; sExMax {
+		schema["exclusiveMaximum"] = sExMax
+	}
 	// "multipleOf"
 	if nil != s.MultipleOf {
-		schema.TranslatedMultipleOf = *s.MultipleOf - 1.0
+		schema["multipleOf"] = *s.MultipleOf
 	}
 
 	// "uniqueItems"
-	schema.UniqueItems = s.UniqueItems
+	if sUniq := s.UniqueItems; sUniq {
+		schema["uniqueItems"] = sUniq
+	}
 	// "minItems"
-	schema.MinItems = s.MinItems
+	if sMinItems := s.MinItems; sMinItems != 0 {
+		schema["minItems"] = sMinItems
+	}
 	// "maxItems"
 	if nil != s.MaxItems {
-		schema.MaxItems = *s.MaxItems
-		schema.HasMaxItems = true
+		schema["maxItems"] = *s.MaxItems
 	}
 	// "items"
 	if sItems := s.Items; nil != sItems {
-		ensureSchemaType(Schema_JSON_array, &schema.Type)
+		schema["type"] = ensureSchemaType(schema["type"], "array")
 		if sItems.Value.IsEmpty() {
-			schema.Items = []sid{}
+			schema["items"] = []schemaJSON{}
 		} else {
-			SID := sm.ensureMappedOA3SchemaRef(sItems)
-			schema.Items = []sid{SID}
+			schema["items"] = []schemaJSON{vald.schemaOrRefFromOA3(sItems)}
 		}
 	}
 
 	// "minProperties"
-	schema.MinProperties = s.MinProps
+	if sMinProps := s.MinProps; sMinProps != 0 {
+		schema["minProperties"] = sMinProps
+	}
 	// "maxProperties"
 	if nil != s.MaxProps {
-		schema.MaxProperties = *s.MaxProps
-		schema.HasMaxProperties = true
+		schema["maxProperties"] = *s.MaxProps
 	}
 	// "required"
-	schema.Required = s.Required
+	if sRequired := s.Required; len(sRequired) != 0 {
+		schema["required"] = sRequired
+	}
 	// "properties"
 	if count := len(s.Properties); count != 0 {
-		ensureSchemaType(Schema_JSON_object, &schema.Type)
-		schema.Properties = make(map[string]sid, count)
+		schema["type"] = ensureSchemaType(schema["type"], "object")
+		properties := make(schemasJSON, count)
 		i, props := 0, make([]string, count)
 		for propName := range s.Properties {
 			props[i] = propName
@@ -263,96 +279,58 @@ func (sm schemap) schemaFromOA3(s *openapi3.Schema) (schema Schema_JSON) {
 
 		for j := 0; j != i; j++ {
 			propName := props[j]
-			SID := sm.ensureMappedOA3SchemaRef(s.Properties[propName])
-			schema.Properties[propName] = SID
+			properties[propName] = vald.schemaOrRefFromOA3(s.Properties[propName])
 		}
+		schema["properties"] = properties
 	}
 	//FIXME: "additionalProperties"
 
 	// "allOf"
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
-		schema.AllOf = make([]sid, len(sAllOf))
+		allOf := make([]schemaJSON, len(sAllOf))
 		for i, sOf := range sAllOf {
-			schema.AllOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
+			allOf[i] = vald.schemaOrRefFromOA3(sOf)
 		}
+		schema["allOf"] = allOf
 	}
 
 	// "anyOf"
 	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
-		schema.AnyOf = make([]sid, len(sAnyOf))
+		anyOf := make([]schemaJSON, len(sAnyOf))
 		for i, sOf := range sAnyOf {
-			schema.AnyOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
+			anyOf[i] = vald.schemaOrRefFromOA3(sOf)
 		}
+		schema["anyOf"] = anyOf
 	}
 
 	// "oneOf"
 	if sOneOf := s.OneOf; len(sOneOf) != 0 {
-		schema.OneOf = make([]sid, len(sOneOf))
+		oneOf := make([]schemaJSON, len(sOneOf))
 		for i, sOf := range sOneOf {
-			schema.OneOf[i] = sm.ensureMappedOA3SchemaRef(sOf)
+			oneOf[i] = vald.schemaOrRefFromOA3(sOf)
 		}
+		schema["oneOf"] = oneOf
 	}
 
 	// "not"
 	if sNot := s.Not; nil != sNot {
-		schema.Not = sm.ensureMappedOA3SchemaRef(sNot)
+		schema["not"] = vald.schemaOrRefFromOA3(sNot)
 	}
 
 	return
 }
 
-func enumFromOA3(value interface{}) *ValueJSON {
-	if value == nil {
-		return &ValueJSON{Value: &ValueJSON_IsNull{true}}
+func ensureSchemaType(types interface{}, t string) []string {
+	if types == nil {
+		return []string{t}
 	}
-	switch value.(type) {
-	case bool:
-		return &ValueJSON{Value: &ValueJSON_Boolean{value.(bool)}}
-	case float64:
-		return &ValueJSON{Value: &ValueJSON_Number{value.(float64)}}
-	case string:
-		return &ValueJSON{Value: &ValueJSON_Text{value.(string)}}
-	case []interface{}:
-		val := value.([]interface{})
-		vs := make([]*ValueJSON, len(val))
-		for i, v := range val {
-			vs[i] = enumFromOA3(v)
-		}
-		return &ValueJSON{Value: &ValueJSON_Array{&ArrayJSON{Values: vs}}}
-	case map[string]interface{}:
-		val := value.(map[string]interface{})
-		vs := make(map[string]*ValueJSON, len(val))
-		for n, v := range val {
-			vs[n] = enumFromOA3(v)
-		}
-		return &ValueJSON{Value: &ValueJSON_Object{&ObjectJSON{Values: vs}}}
-	default:
-		panic("unreachable")
-	}
-}
-
-func formatFromOA3(format string) Schema_JSON_Format {
-	switch format {
-	case "date-time":
-		return Schema_JSON_date_time
-	case "uriref", "uri-reference":
-		return Schema_JSON_uri_reference
-	default:
-		v, ok := Schema_JSON_Format_value[format]
-		if ok {
-			return Schema_JSON_Format(v)
-		}
-		return Schema_JSON_NONE
-	}
-}
-
-func ensureSchemaType(t Schema_JSON_Type, ts *[]Schema_JSON_Type) {
-	for _, aT := range *ts {
+	ts := types.([]string)
+	for _, aT := range ts {
 		if t == aT {
-			return
+			return ts
 		}
 	}
-	*ts = append(*ts, t)
+	return append(ts, t)
 }
 
 func pathFromOA3(basePath, path string) (partials []*PathPartial) {

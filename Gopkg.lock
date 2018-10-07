@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8cd7def47f02eeadcd4944592d95072a522fb6c834d85a2a9bd654788f0759b9"
+  digest = "1:bd30610ecc021686ce8a64fff9d8326bd08b85c5ca97551dd6b207f0965d9f47"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "ee0592e0597619ce5e95954d1f71cde81be0f0b5"
+  revision = "44c981756c70d8724edaea8b7662bbb5245088bb"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -70,7 +70,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b47445f5179790694dbc5a2a3258439facd800b22c70e25db25d1ef38cbf23a2"
+  digest = "1:c12e7c39c19be1b623ad3d9b02ab0469f15cfff59ed3eac50d24649d011fa117"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -88,7 +88,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "acc501353c133fa62a2750ef0a37e5c8c971c2a4"
+  revision = "ddf22928ea3c56eb4292a0adbbf5001b1e8e7d0d"
 
 [[projects]]
   branch = "master"
@@ -176,11 +176,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5fe20cfe4ef484c237cec9f947b2a6fa90bad4b8610fd014f0e4211e13d82d5d"
+  digest = "1:a45ae66dea4c899d79fceb116accfa1892105c251f0dcd9a217ddc276b42ec68"
   name = "github.com/mitchellh/mapstructure"
   packages = ["."]
   pruneopts = "NT"
-  revision = "fa473d140ef3c6adf42d6b391fe76707f1f243c8"
+  revision = "3536a929edddb9a5b34bd6861dc4a9647cb459fe"
 
 [[projects]]
   branch = "master"
@@ -208,14 +208,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4af061277c04a7660e082acc2020f4c66d2c21dfc62e0242ffa1d2120cdfb4ec"
+  digest = "1:6a4b40acc1cf352b7bca8c9c3e0079766c0e16612a7faacfcbe7e5acc343da8b"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "NT"
-  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  revision = "2db35c88b92a1631e987089b5485a95e68bc5d3a"
 
 [[projects]]
   branch = "master"
@@ -267,15 +267,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:265345a1eb061d0e8f7dcffc47cb4ec91d19a43ef44f494714ed71f47acd0492"
+  digest = "1:7ca8a3daddbd64bb2cf0bfc621aa0aa12c3a694ace1a0493bf41feaf25d538d9"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "d0be0721c37eeb5299f245a996a483160fc36940"
+  revision = "4497e2df6f9e69048a54498c7affbbec3294ad47"
 
 [[projects]]
   branch = "master"
-  digest = "1:b4a715f1821e0fbb29b18736a8981dac6e6ccc46e3f57f2440a7ac27f785aaca"
+  digest = "1:f4816f70b882d434f45b5882b48aa1ce7f2259a703b277b641d42ebfe145d488"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +288,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "677d2ff680c188ddb7dcd2bfa6bc7d3f2f2f75b2"
+  revision = "f60d9635b16a5a57b06eaa119614ba4df421966a"
 
 [[projects]]
   branch = "v2"
@@ -300,7 +300,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:159bfea1834c8c776198858315e64b908378fe3811fa2150187c76da115d186a"
+  digest = "1:29c1d057798c8d71abee03daf0e43df96313c115b3ade9a7f87f7988442bb659"
   name = "honnef.co/go/tools"
   packages = [
     "callgraph",
@@ -321,7 +321,7 @@
     "version",
   ]
   pruneopts = "NT"
-  revision = "88497007e8588ea5b6baee991f74a1607e809487"
+  revision = "e3ad64cb4ed3e25a30bf42def711f9cb5b004f72"
 
 [solve-meta]
   analyzer-name = "dep"

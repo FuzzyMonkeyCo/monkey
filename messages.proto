@@ -146,7 +146,7 @@ message Schema {
             string = 7;
             object = 8;
         }
-        repeated Type type = 1; // default: []
+        repeated Type types = 1; // default: []
 
         repeated ValueJSON enum = 2; // default: []
 
