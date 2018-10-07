@@ -17,9 +17,8 @@ import (
 const someText = "some text"
 
 //FIXME: use unrmarshalling to schemaref?
-// Schemap ...
-type Schemap struct {
-	M schemap
+type schemap struct {
+	M map[sid]*RefOrSchemaJSON
 }
 
 var xxx2uint32 = map[string]uint32{
@@ -54,14 +53,14 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 		t.Run(docPath, func(t *testing.T) {
 			blob0, err := ioutil.ReadFile(docPath)
 			require.NoError(t, err)
-			spec0, err := doLint(docPath, blob0, false)
+			vald0, err := doLint(docPath, blob0, false)
 			require.NoError(t, err)
-			require.NotNil(t, spec0)
-			require.IsType(t, &SpecIR{}, spec0)
-			bin0, err := proto.Marshal(spec0)
+			require.NotNil(t, vald0.Spec)
+			require.IsType(t, &SpecIR{}, vald0.Spec)
+			bin0, err := proto.Marshal(vald0.Spec)
 			require.NoError(t, err)
 			require.NotNil(t, bin0)
-			jsn0, err := jsoner.MarshalToString(spec0)
+			jsn0, err := jsoner.MarshalToString(vald0.Spec)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn0)
 
@@ -71,13 +70,14 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NotNil(t, &spec1)
 			doc := specToOA3(&spec1)
 			blob1, err := json.MarshalIndent(doc, "", "  ")
+			// log.Printf("%s\n", blob1)
 			require.NoError(t, err)
 			log.Println("here we go again")
-			spec2, err := doLint("bla.json", blob1, false)
+			vald2, err := doLint("bla.json", blob1, false)
 			require.NoError(t, err)
-			require.NotNil(t, spec2)
-			require.IsType(t, &SpecIR{}, spec2)
-			jsn1, err := jsoner.MarshalToString(spec2)
+			require.NotNil(t, vald2.Spec)
+			require.IsType(t, &SpecIR{}, vald2.Spec)
+			jsn1, err := jsoner.MarshalToString(vald2.Spec)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn1)
 
@@ -92,19 +92,19 @@ func specToOA3(spec *SpecIR) (doc openapi3.Swagger) {
 		Title:   someText,
 		Version: "1.42.3",
 	}
-	sm := &Schemap{M: spec.GetSchemas().GetJson()}
+	sm := &schemap{M: spec.GetSchemas().GetJson()}
 	sm.schemasToOA3(&doc)
 	sm.endpointsToOA3(&doc, spec.GetEndpoints())
 	return
 }
 
-func (sm *Schemap) schemasToOA3(doc *openapi3.Swagger) {
+func (sm *schemap) schemasToOA3(doc *openapi3.Swagger) {
 	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm.M))
 	for _, refOrSchema := range sm.M {
 		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
 			if ref := schemaPtr.GetRef(); ref != "" {
 				name := strings.TrimPrefix(ref, "#/components/schemas/")
-				refd := sm.M[schemaPtr.GetUID()]
+				refd := sm.M[schemaPtr.GetSID()]
 				seededSchemas[name] = sm.schemaToOA3(refd.GetSchema())
 			}
 		}
@@ -112,7 +112,7 @@ func (sm *Schemap) schemasToOA3(doc *openapi3.Swagger) {
 	doc.Components.Schemas = seededSchemas
 }
 
-func (sm *Schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
+func (sm *schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
 	doc.Paths = make(openapi3.Paths, len(es))
 	for _, e := range es {
 		endpoint := e.GetJson()
@@ -132,12 +132,16 @@ func (sm *Schemap) endpointsToOA3(doc *openapi3.Swagger, es []*Endpoint) {
 	}
 }
 
-func (sm *Schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
+func isInputBody(input *ParamJSON) bool {
+	return input.GetName() == "" && input.GetKind() == ParamJSON_body
+}
+
+func (sm *schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
 	if len(inputs) > 0 {
 		body := inputs[0]
-		if body != nil && body.GetName() == "" && body.GetKind() == ParamJSON_body {
+		if body != nil && isInputBody(body) {
 			reqBody := &openapi3.RequestBody{
-				Content:     sm.contentToOA3(body.GetPtr()),
+				Content:     sm.contentToOA3(body.GetSID()),
 				Required:    body.GetRequired(),
 				Description: someText,
 			}
@@ -147,9 +151,9 @@ func (sm *Schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.Req
 	return
 }
 
-func (sm *Schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) {
+func (sm *schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) {
 	for _, input := range inputs {
-		if input.GetName() == "" && input.GetKind() == ParamJSON_body {
+		if isInputBody(input) {
 			continue
 		}
 
@@ -170,7 +174,7 @@ func (sm *Schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters)
 			Required:    input.GetRequired(),
 			In:          in,
 			Description: someText,
-			Schema:      sm.derefSchemaPtr(input.GetPtr()),
+			Schema:      sm.derefSchemaPtr(input.GetSID()),
 		}
 
 		params = append(params, &openapi3.ParameterRef{Value: param})
@@ -178,7 +182,7 @@ func (sm *Schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters)
 	return
 }
 
-func (sm *Schemap) outputsToOA3(outs map[uint32]*SchemaPtr) openapi3.Responses {
+func (sm *schemap) outputsToOA3(outs map[uint32]sid) openapi3.Responses {
 	responses := make(openapi3.Responses, len(outs))
 	for xxx, schema := range outs {
 		XXX := xxx2XXX(xxx)
@@ -192,15 +196,15 @@ func (sm *Schemap) outputsToOA3(outs map[uint32]*SchemaPtr) openapi3.Responses {
 	return responses
 }
 
-func (sm *Schemap) contentToOA3(schemaPtr *SchemaPtr) openapi3.Content {
-	schemaRef := sm.derefSchemaPtr(schemaPtr)
+func (sm *schemap) contentToOA3(SID sid) openapi3.Content {
+	schemaRef := sm.derefSchemaPtr(SID)
 	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
-func (sm *Schemap) derefSchemaPtr(schemaPtr *SchemaPtr) *openapi3.SchemaRef {
-	s, ok := sm.M[schemaPtr.GetUID()]
+func (sm *schemap) derefSchemaPtr(SID sid) *openapi3.SchemaRef {
+	s, ok := sm.M[SID]
 	if !ok {
-		panic(`schemaptr's UID must be in schemap`)
+		panic(`schemaptr's SID must be in schemap`)
 	}
 
 	if ss := s.GetSchema(); ss != nil {
@@ -214,7 +218,7 @@ func (sm *Schemap) derefSchemaPtr(schemaPtr *SchemaPtr) *openapi3.SchemaRef {
 	return sm.derefSchemaPtr(s.GetPtr())
 }
 
-func (sm *Schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
+func (sm *schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
 	schema := openapi3.NewSchema()
 
 	// "enum"
@@ -226,7 +230,7 @@ func (sm *Schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
 	}
 
 	// "type", "nullable"
-	for _, t := range s.GetType() {
+	for _, t := range s.GetTypes() {
 		if t == Schema_JSON_UNKNOWN {
 			panic(`no way this is ever zero`)
 		}
@@ -324,7 +328,7 @@ func (sm *Schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
 	}
 
 	// "Not"
-	if sNot := s.GetNot(); nil != sNot {
+	if sNot := s.GetNot(); 0 != sNot {
 		schema.Not = sm.derefSchemaPtr(sNot)
 	}
 

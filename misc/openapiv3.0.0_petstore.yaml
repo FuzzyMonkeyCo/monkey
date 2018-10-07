@@ -35,7 +35,7 @@ paths:
             x-next:
               description: A link to the next page of responses
               schema:
-                type: string
+                format: uri
           content:
             application/json:    
               schema:
