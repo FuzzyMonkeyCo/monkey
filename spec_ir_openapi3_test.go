@@ -212,10 +212,10 @@ func (sm *schemap) derefSchemaPtr(SID sid) *openapi3.SchemaRef {
 			panic(`sub schemaptr must not be set`)
 		}
 		schema := sm.schemaToOA3(ss)
-		schema.Ref = schemaPtr.GetRef()
 		return schema
 	}
-	return sm.derefSchemaPtr(s.GetPtr())
+
+	return openapi3.NewSchemaRef(s.GetPtr().GetRef(), nil)
 }
 
 func (sm *schemap) schemaToOA3(s *Schema_JSON) *openapi3.SchemaRef {
