@@ -41,17 +41,28 @@ func (vald *validator) newSID() sid {
 	return sid(1 + len(vald.Spec.Schemas.Json))
 }
 
-func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
+func (vald *validator) seed(base string, schemas schemasJSON, skipped ...schemasJSON) (err error) {
+	anyQueued := len(skipped) == 1 && len(skipped[0]) != 0
 	i, names := 0, make([]string, len(schemas))
 	for name := range schemas {
 		names[i] = name
 		i++
 	}
+	if anyQueued {
+		for name := range skipped[0] {
+			names[i] = name
+			i++
+		}
+	}
 	sort.Strings(names)
 
 	for j := 0; j != i; j++ {
 		name := names[j]
-		schema, absRef := schemas[name], base+name
+		absRef := base + name
+		schema, ok := schemas[name]
+		if !ok && anyQueued {
+			schema = skipped[0][name]
+		}
 		log.Printf("[DBG] seeding schema '%s'", absRef)
 
 		sl := gojsonschema.NewGoLoader(schema)
@@ -60,12 +71,19 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 			return
 		}
 
-		sid := vald.ensureMapped("", schema)
-		vald.Refs[absRef] = sid
-		schemaPtr := &SchemaPtr{Ref: absRef, SID: sid}
-		vald.Spec.Schemas.Json[vald.newSID()] = &RefOrSchemaJSON{
-			PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
+		if sid := vald.ensureMapped("", schema); sid != 0 {
+			vald.Refs[absRef] = sid
+			schemaPtr := &SchemaPtr{Ref: absRef, SID: sid}
+			vald.Spec.Schemas.Json[vald.newSID()] = &RefOrSchemaJSON{
+				PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
+			}
+		} else {
+			skipped[0][name] = schema
+			anyQueued = true
 		}
+	}
+	if anyQueued {
+		return vald.seed(base, skipped[0])
 	}
 	return
 }
@@ -88,7 +106,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 
 	mappedSID, ok := vald.Refs[ref]
 	if !ok {
-		panic(`no such ref:` + ref)
+		return 0
 	}
 	schemaPtr := &SchemaPtr{Ref: ref, SID: mappedSID}
 	SID := vald.newSID()
