@@ -12,11 +12,11 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 )
 
-func newSpecFromOA3(doc *openapi3.Swagger) (val *validator, err error) {
+func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
-	vald := newValidator(len(docPaths), len(docSchemas))
+	vald = newValidator(len(docPaths), len(docSchemas))
 	log.Println("[DBG] seeding schemas")
 	//TODO: use docPath as root
 	vald.schemasFromOA3(docSchemas)
