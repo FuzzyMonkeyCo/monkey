@@ -76,7 +76,6 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			vald.Spec.Endpoints = append(vald.Spec.Endpoints, endpoint)
 		}
 	}
-	return
 }
 
 func (vald *validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
@@ -170,11 +169,7 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 
 	// "enum"
 	if sEnum := s.Enum; len(sEnum) != 0 {
-		enum := make([]interface{}, len(sEnum))
-		for i, v := range sEnum {
-			enum[i] = v
-		}
-		schema["enum"] = enum
+		schema["enum"] = sEnum
 	}
 
 	// "nullable"

@@ -336,10 +336,10 @@ func enumFromGo(value interface{}) *ValueJSON {
 	}
 }
 
-func (vald *validator) validationErrors(spec *SpecIR, SID sid) (errs []error) {
-	//FIXME: build schemaJSON from SID & SIDs then compile against schemaLoader
-	return
-}
+// //FIXME: build schemaJSON from SID & SIDs then compile against schemaLoader
+// func (vald *validator) validationErrors(spec *SpecIR, SID sid) (errs []error) {
+// 	return
+// }
 
 func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
