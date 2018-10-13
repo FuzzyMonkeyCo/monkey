@@ -143,7 +143,16 @@ func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
-	for code, responseRef := range docResponses {
+	i, codes := 0, make([]string, len(docResponses))
+	for code := range docResponses {
+		codes[i] = code
+		i++
+	}
+	sort.Strings(codes)
+
+	for j := 0; j != i; j++ {
+		code := codes[j]
+		responseRef := docResponses[code]
 		//FIXME: handle .Ref
 		for mime, ct := range responseRef.Value.Content {
 			if mime == mimeJSON {
@@ -364,19 +373,7 @@ func makeXXXFromOA3(code string) uint32 {
 	case code == "5XX":
 		return 5
 
-	case "100" <= code && code <= "199":
-		i, _ := strconv.Atoi(code)
-		return uint32(i)
-	case "200" <= code && code <= "299":
-		i, _ := strconv.Atoi(code)
-		return uint32(i)
-	case "300" <= code && code <= "399":
-		i, _ := strconv.Atoi(code)
-		return uint32(i)
-	case "400" <= code && code <= "499":
-		i, _ := strconv.Atoi(code)
-		return uint32(i)
-	case "500" <= code && code <= "599":
+	case "100" <= code && code <= "599":
 		i, _ := strconv.Atoi(code)
 		return uint32(i)
 
