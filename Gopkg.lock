@@ -31,7 +31,7 @@
   name = "github.com/fatih/color"
   packages = ["."]
   pruneopts = "NT"
-  revision = "2d684516a8861da43017284349b7e303e809ac21"
+  revision = "3f9d52f7176a6927daacff70a3e8d1dc2025c53e"
 
 [[projects]]
   branch = "uname-it"
@@ -59,14 +59,6 @@
   pruneopts = "NT"
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
   version = "v1.0.0"
-
-[[projects]]
-  branch = "master"
-  digest = "1:8b9bec0ee3fce65c9128033d1f21a89f81aa1f9fffd2e3f1f1c9f530884b6088"
-  name = "github.com/golang/lint"
-  packages = ["golint"]
-  pruneopts = "NT"
-  revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
 
 [[projects]]
   branch = "master"
@@ -208,14 +200,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6a4b40acc1cf352b7bca8c9c3e0079766c0e16612a7faacfcbe7e5acc343da8b"
+  digest = "1:8e2a92e64c1af43651410c94ed09da175d952a8bfea4ba2d8e9fcaae9c6f9c6d"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
     "require",
   ]
   pruneopts = "NT"
-  revision = "2db35c88b92a1631e987089b5485a95e68bc5d3a"
+  revision = "04af85275a5c7ac09d16bb3b9b2e751ed45154e5"
 
 [[projects]]
   branch = "master"
@@ -251,31 +243,34 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:55d89c767205cf255907b632bfb0fa5795bc8b1682d1acd31e138af6c4f6e176"
+  digest = "1:668c21d68808380dda67b8d4025c71d3663490cf424568cdbffa94765dcfc284"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   pruneopts = "NT"
-  revision = "da425ebb7609ba06a0f395fc8a254d1c303364a0"
+  revision = "f58b4a9e3d67bfbe3744e3cb0fc0bba167ad253f"
 
 [[projects]]
   branch = "master"
-  digest = "1:8b9bec0ee3fce65c9128033d1f21a89f81aa1f9fffd2e3f1f1c9f530884b6088"
+  digest = "1:34b28f5ad860ecf4b9de5b1933229852352f52c3acd52cfafa0dad9a3ffe4eac"
   name = "golang.org/x/lint"
-  packages = ["."]
+  packages = [
+    ".",
+    "golint",
+  ]
   pruneopts = "NT"
-  revision = "06c8688daad7faa9da5a0c2f163a3d14aac986ca"
+  revision = "5906bd5c48cd840279ace88b165057fbbd7fb35a"
 
 [[projects]]
   branch = "master"
-  digest = "1:7ca8a3daddbd64bb2cf0bfc621aa0aa12c3a694ace1a0493bf41feaf25d538d9"
+  digest = "1:e4f7b4e2a717bd7fc40a191d2994e919d206676e3ba352b2a4e639dc378946d7"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "4497e2df6f9e69048a54498c7affbbec3294ad47"
+  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
 
 [[projects]]
   branch = "master"
-  digest = "1:f4816f70b882d434f45b5882b48aa1ce7f2259a703b277b641d42ebfe145d488"
+  digest = "1:d5d5818d42c993e6f94537c7c4720b220fa56231125deb0d42328cc47bc7e6ea"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -288,7 +283,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "f60d9635b16a5a57b06eaa119614ba4df421966a"
+  revision = "5e66757b835f155f7e50931f54c9f6af8af86f75"
 
 [[projects]]
   branch = "v2"
@@ -332,7 +327,6 @@
     "github.com/fatih/color",
     "github.com/fenollp/gox",
     "github.com/getkin/kin-openapi/openapi3",
-    "github.com/golang/lint/golint",
     "github.com/golang/protobuf/jsonpb",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go",
@@ -345,6 +339,7 @@
     "github.com/stretchr/testify/require",
     "github.com/wadey/gocovmerge",
     "github.com/xeipuuv/gojsonschema",
+    "golang.org/x/lint/golint",
     "gopkg.in/yaml.v2",
     "honnef.co/go/tools/cmd/megacheck",
   ]

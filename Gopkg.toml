@@ -3,7 +3,7 @@
 
 required = [
   "github.com/fenollp/gox",
-  "github.com/golang/lint/golint",
+  "golang.org/x/lint/golint",
   "honnef.co/go/tools/cmd/megacheck",
   "github.com/wadey/gocovmerge",
   "github.com/kyoh86/richgo",
@@ -76,7 +76,7 @@ required = [
 
 [[constraint]]
   branch = "master"
-  name = "github.com/golang/lint"
+  name = "golang.org/x/lint"
 
 [[constraint]]
   branch = "master"
