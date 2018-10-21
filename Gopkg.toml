@@ -16,6 +16,10 @@ required = [
 
 [[constraint]]
   branch = "master"
+  name = "github.com/gorilla/websocket"
+
+[[constraint]]
+  branch = "master"
   name = "github.com/getkin/kin-openapi"
 
 [[constraint]]

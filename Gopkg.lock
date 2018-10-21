@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:bd30610ecc021686ce8a64fff9d8326bd08b85c5ca97551dd6b207f0965d9f47"
+  digest = "1:23976e2ec86bc479613df74987ca2cccb7b6cf6d1178551c445da3bdbfdfe800"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "44c981756c70d8724edaea8b7662bbb5245088bb"
+  revision = "5a2215ab8bbb966a17927ccf0871ef877397fbd3"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -80,11 +80,11 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "ddf22928ea3c56eb4292a0adbbf5001b1e8e7d0d"
+  revision = "5e707b20cbb91bc0be4fe3a4f1725fc565735fbd"
 
 [[projects]]
   branch = "master"
-  digest = "1:61a31dca839f2f0543751013fa56db79085f1fef52196a31b1b59904eb14b042"
+  digest = "1:5de6f731e94b5ea7a701005976372f828847ce4378c97186105a5e9edccbfa7f"
   name = "github.com/googleapis/gnostic"
   packages = [
     "OpenAPIv3",
@@ -92,7 +92,15 @@
     "extensions",
   ]
   pruneopts = "NT"
-  revision = "48a0ecefe2e4190c7a2d63b477875854a2f993b3"
+  revision = "e2aafd60c944e8bd529431c9ce4c3af592b37dde"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1ae11cbb42897d9c49d861168e19fac1e4e1d090e339410003c16c2a379900d0"
+  name = "github.com/gorilla/websocket"
+  packages = ["."]
+  pruneopts = "NT"
+  revision = "76e4896901ef89d253d69b528d3701dd146fe2ae"
 
 [[projects]]
   digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
@@ -243,11 +251,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:668c21d68808380dda67b8d4025c71d3663490cf424568cdbffa94765dcfc284"
+  digest = "1:ab5933fe123839204f24b287323f5007e80bc4dc6d6563837aa0a3644b943f23"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   pruneopts = "NT"
-  revision = "f58b4a9e3d67bfbe3744e3cb0fc0bba167ad253f"
+  revision = "f3a9dae5b19473510a3062802a98815f609ed747"
 
 [[projects]]
   branch = "master"
@@ -262,15 +270,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e4f7b4e2a717bd7fc40a191d2994e919d206676e3ba352b2a4e639dc378946d7"
+  digest = "1:598ef807fcaad906ca6a0179f3c1b140d5a345a8dc214a0b4cfb0d4376f763e4"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "fa43e7bc11baaae89f3f902b2b4d832b68234844"
+  revision = "eda9bb28ed513021f3e6a2a361031adc3d8a6301"
 
 [[projects]]
   branch = "master"
-  digest = "1:d5d5818d42c993e6f94537c7c4720b220fa56231125deb0d42328cc47bc7e6ea"
+  digest = "1:581363f812fc6fd62db9c16e0204110dff59e04ba192e55d010c4bdae3179b2c"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -283,7 +291,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "5e66757b835f155f7e50931f54c9f6af8af86f75"
+  revision = "3e7aa9e59977626dc60433e9aeadf1bb63d28295"
 
 [[projects]]
   branch = "v2"
@@ -332,6 +340,7 @@
     "github.com/golang/protobuf/protoc-gen-go",
     "github.com/googleapis/gnostic/OpenAPIv3",
     "github.com/googleapis/gnostic/compiler",
+    "github.com/gorilla/websocket",
     "github.com/hashicorp/logutils",
     "github.com/kyoh86/richgo",
     "github.com/mitchellh/mapstructure",

@@ -192,6 +192,8 @@ func actualMain() int {
 		return doSchema(vald, args.ValidateAgainst)
 	}
 
+	doDaDING() ///
+
 	apiKey := os.Getenv(envAPIKey)
 	if err := doAuth(cfg, apiKey, args.N); err != nil {
 		return retryOrReport()
