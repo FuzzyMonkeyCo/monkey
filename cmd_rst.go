@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -20,9 +19,7 @@ const (
 )
 
 var (
-	// To not pre-start more than once
-	wasPreStarted = false
-	isRunning     = false
+	isRunning = false
 	// To exit with 7
 	hadExecError = false
 	// To not post-stop after stop
@@ -81,18 +78,6 @@ func (cmd *rstCmd) pickScriptThenExec(cfg *UserCfg) (cmdRep *rstCmdRep) {
 	return
 }
 
-func maybePreStart(cfg *UserCfg) (err error) {
-	if len(cfg.Exec.Reset_) == 0 {
-		return
-	}
-	cmdRep := executeScript(cfg, kindStart)
-	wasPreStarted = true
-	if cmdRep.Failed {
-		err = errors.New("failed during maybePreStart")
-	}
-	return
-}
-
 func maybePostStop(cfg *UserCfg) {
 	if !wasStopped {
 		executeScript(cfg, kindStop)
@@ -126,10 +111,6 @@ func executeScript(cfg *UserCfg, kind cmdKind) (cmdRep *rstCmdRep) {
 	}
 
 	wasStopped = kind == kindStop
-	if kind == kindStart && wasPreStarted {
-		wasPreStarted = false
-		return
-	}
 
 	var stderr bytes.Buffer
 	var err error

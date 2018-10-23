@@ -36,10 +36,6 @@ func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
 		return
 	}
 
-	if err = maybePreStart(cfg); err != nil {
-		return
-	}
-
 	cmdJSON, err := fuzzNew(cfg, payload)
 	if err != nil {
 		return
