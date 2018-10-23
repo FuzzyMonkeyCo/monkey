@@ -26,7 +26,7 @@ const (
 )
 
 func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
-	initer := &FuzzCfg{
+	initer := &MsgFuzz{
 		Cfg:  cfg,
 		Spec: vald.Spec,
 	}
@@ -66,6 +66,9 @@ func fuzzNext(cfg *UserCfg, cmd someCmd) (someCmd someCmd, err error) {
 }
 
 func fuzzNew(cfg *UserCfg, payload []byte) (rep []byte, err error) {
+
+	doDaDING() ///FIXME
+
 	r, err := http.NewRequest(http.MethodPut, apiFuzzNew, bytes.NewBuffer(payload))
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -148,10 +151,11 @@ func doDaDING() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: "localhost:1042", Path: "/my/websocket"}
+	u := url.URL{Scheme: "ws", Host: "localhost:1042", Path: "/fuzz"}
 	log.Printf("connecting to %s", u.String())
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	headers := http.Header{headerUserAgent: {binTitle}, headerXAuthToken: {"bla"}}
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 	if err != nil {
 		log.Fatal("dial:", err)
 	}

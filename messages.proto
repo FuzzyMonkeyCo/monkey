@@ -5,6 +5,16 @@
 syntax = "proto3";
 package main;
 
+message MsgFuzz {
+    UserCfg cfg = 1;
+    SpecIR spec = 2;
+}
+
+message MsgValidateJSONAgainstSchema {
+    uint32 SID = 1;
+    bytes data = 2;
+}
+
 message UserCfg {
     uint32 version = 1;
     string auth_token = 2;
@@ -31,11 +41,6 @@ message UserCfg {
         repeated string stop = 3;
     }
     Exec exec = 7;
-}
-
-message FuzzCfg {
-    UserCfg cfg = 1;
-    SpecIR spec = 2;
 }
 
 message SpecIR {
