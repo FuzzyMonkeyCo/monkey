@@ -279,6 +279,9 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 		schema["properties"] = properties
 	}
 	//FIXME: "additionalProperties"
+	if sAddProps := s.AdditionalPropertiesAllowed; sAddProps != nil {
+		schema["additionalProperties"] = sAddProps
+	}
 
 	// "allOf"
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
