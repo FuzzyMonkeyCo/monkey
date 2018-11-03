@@ -5,12 +5,19 @@
 syntax = "proto3";
 package main;
 
+message Msg {
+    oneof msg {
+        MsgFuzz fuzz = 1;
+        MsgValidateAgainstSID against = 2;
+    }
+}
+
 message MsgFuzz {
     UserCfg cfg = 1;
     SpecIR spec = 2;
 }
 
-message MsgValidateJSONAgainstSchema {
+message MsgValidateAgainstSID {
     uint32 SID = 1;
     bytes data = 2;
 }
