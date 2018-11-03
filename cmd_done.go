@@ -11,6 +11,8 @@ type doneCmd struct {
 	Failure bool    `json:"failure"`
 }
 
+func (cmd *doneCmd) isMsg_Msg() {}
+
 func (cmd *doneCmd) Kind() cmdKind {
 	return cmd.Cmd
 }

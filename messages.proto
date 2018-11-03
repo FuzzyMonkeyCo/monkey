@@ -6,18 +6,39 @@ syntax = "proto3";
 package main;
 
 message Msg {
+    uint64 UID = 1;
     oneof msg {
-        MsgFuzz fuzz = 1;
-        MsgValidateAgainstSID against = 2;
+        RepError500 err500 = 2;
+        RepError400 err400 = 3;
+        RepError401 err401 = 4;
+        RepError403 err403 = 5;
+        ReqFuzz fuzz = 6;
+        RepCmdDone cmdDone = 7;
+        RepCmdReq cmdReq = 8;
+        RepCmdReset cmdReset = 9;
+        RepCmdStart cmdStart = 10;
+        RepCmdStop cmdStop = 11;
+        ReqVAgainstSID against = 12;
     }
 }
 
-message MsgFuzz {
+message RepError400 {}
+message RepError401 {}
+message RepError403 {}
+message RepError500 {}
+
+message ReqFuzz {
     UserCfg cfg = 1;
     SpecIR spec = 2;
 }
 
-message MsgValidateAgainstSID {
+message RepCmdDone {}
+message RepCmdReq {}
+message RepCmdReset {}
+message RepCmdStart {}
+message RepCmdStop {}
+
+message ReqVAgainstSID {
     uint32 SID = 1;
     bytes data = 2;
 }

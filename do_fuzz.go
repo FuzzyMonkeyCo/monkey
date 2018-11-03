@@ -25,23 +25,101 @@ const (
 	headerXAuthToken  = "X-Auth-Token"
 )
 
+var ws *wsState
+var wsMsgUID uint64
+
+type wsState struct {
+	req  chan []byte
+	rep  chan []byte
+	err  chan error
+	ping chan struct{}
+	done chan struct{}
+}
+
+func (ws *wsState) call(req *Msg) (rep *Msg, err error) {
+	// FIXME: take a Writer, return a Reader
+
+	// NOTE: log in caller
+	wsMsgUID++
+	req.UID = wsMsgUID
+	payload, err := proto.Marshal(req)
+	if err != nil {
+		return
+	}
+
+	log.Printf("[DBG] 🡱 PUT %dB\n", len(payload))
+	start := time.Now()
+	ws.req <- payload
+	select {
+	case payload = <-ws.rep:
+		log.Println("[DBG] 🡳", time.Now().Sub(start), payload[:4])
+		var msg Msg
+		if err = proto.Unmarshal(payload, &msg); err != nil {
+			return
+		}
+
+		if msg.GetUID() != req.UID {
+			err = errors.New("bad dialog sequence number")
+			return
+		}
+
+		switch msg.GetMsg().(type) {
+		case *Msg_Err500:
+			err = errors.New("500 Internal Server Error")
+		case *Msg_Err400:
+			err = errors.New("400 Bad Request")
+		case *Msg_Err401:
+			err = errors.New("401 Unauthorized")
+		case *Msg_Err403:
+			err = errors.New("403 Forbidden")
+		default:
+			rep = &msg
+		}
+		return
+	case err = <-ws.err:
+		log.Println("[DBG] 🡳", time.Now().Sub(start), err)
+		return
+	case <-time.After(15 * time.Second):
+		err = errors.New("ws call timeout")
+		return
+	}
+}
+
 func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
-	initer := &MsgFuzz{
+	if err = newWS(cfg); err != nil {
+		return
+	}
+
+	msg := &Msg{Msg: &Msg_Fuzz{Fuzz: &ReqFuzz{
 		Cfg:  cfg,
 		Spec: vald.Spec,
+	}}}
+
+	if msg, err = ws.call(msg); err != nil {
+		log.Println("[ERR]", err)
+		return nil, err
 	}
-	payload, err := proto.Marshal(initer)
-	if err != nil {
+	switch msg.GetMsg().(type) {
+	case *Msg_CmdReset:
+		cmd = msg.GetCmdReset()
+		return
+	case *Msg_CmdStart:
+		cmd = msg.GetCmdReset()
+		return
+	default:
+		err = errors.New("unexpected msg")
 		log.Println("[ERR]", err)
 		return
 	}
+}
 
-	cmdJSON, err := fuzzNew(cfg, payload)
-	if err != nil {
-		return
-	}
+func (cmd *RepCmdReset) isMsg_Msg() {}
 
-	cmd, err = unmarshalCmd(cmdJSON)
+func (cmd *RepCmdReset) Kind() cmdKind {
+	return kindReset
+}
+
+func (cmd *RepCmdReset) Exec(cfg *UserCfg) (rep []byte, err error) {
 	return
 }
 
@@ -58,26 +136,6 @@ func fuzzNext(cfg *UserCfg, cmd someCmd) (someCmd someCmd, err error) {
 	}
 
 	someCmd, err = unmarshalCmd(nextCmdJSON)
-	return
-}
-
-func fuzzNew(cfg *UserCfg, payload []byte) (rep []byte, err error) {
-	if err = newWS(cfg); err != nil { ///FIXME
-		return
-	}
-
-	if rep, err = ws.call(payload); err != nil {
-		// if here probably a HomeConnectionError
-		return
-	}
-
-	// if resp.StatusCode != http.StatusCreated {
-	// 	err = newStatusError(http.StatusCreated, resp.Status)
-	// 	log.Println("[ERR]", err)
-	// 	return
-	// }
-
-	// cfg.AuthToken = resp.Header.Get(headerXAuthToken)
 	return
 }
 
@@ -119,42 +177,12 @@ func nextPOST(cfg *UserCfg, payload []byte) (rep []byte, err error) {
 	return
 }
 
-///////////
-
-var ws *wsState
-
-type wsState struct {
-	req  chan []byte
-	rep  chan []byte
-	err  chan error
-	ping chan struct{}
-	done chan struct{}
-}
-
-func (ws *wsState) call(payload []byte) (rep []byte, err error) {
-	// FIXME: take a Writer, return a Reader
-	log.Printf("[DBG] 🡱 PUT %dB\n", len(payload))
-	start := time.Now()
-	ws.req <- payload
-	select {
-	case rep = <-ws.rep:
-		log.Println("[DBG] 🡳", time.Now().Sub(start), rep[:4])
-		return
-	case err = <-ws.err:
-		log.Println("[DBG] 🡳", time.Now().Sub(start), err)
-		return
-	case <-time.After(15 * time.Second):
-		err = errors.New("ws call timeout")
-		log.Println("[ERR]", err)
-		return
-	}
-}
-
 func newWS(cfg *UserCfg) error {
 	headers := http.Header{
 		headerUserAgent:  {binTitle},
 		headerXAuthToken: {cfg.AuthToken},
 	}
+	//FIXME
 	u := &url.URL{Scheme: "ws", Host: "localhost:1042", Path: "/1/fuzz"}
 
 	log.Printf("connecting to %s", u.String())

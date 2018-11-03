@@ -40,6 +40,8 @@ type rstCmdRep struct {
 	Failed bool    `json:"failed"`
 }
 
+func (cmd *rstCmd) isMsg_Msg() {}
+
 func (cmd *rstCmd) Kind() cmdKind {
 	return cmd.Cmd
 }

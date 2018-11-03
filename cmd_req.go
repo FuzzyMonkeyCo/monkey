@@ -29,6 +29,8 @@ type reqCmdRep struct {
 	Reason   string   `json:"reason,omitempty"`
 }
 
+func (cmd *reqCmd) isMsg_Msg() {}
+
 func (cmd *reqCmd) Kind() cmdKind {
 	return cmd.Cmd
 }

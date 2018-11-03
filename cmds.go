@@ -21,16 +21,18 @@ type lane struct {
 type someCmd interface {
 	Kind() cmdKind
 	Exec(cfg *UserCfg) (rep []byte, err error)
+	// For protobuf Msg union type
+	isMsg_Msg()
 }
 
 type cmdKind int
 
 const (
-	kindStart cmdKind = iota
+	kindDone cmdKind = iota
 	kindReq
 	kindReset
+	kindStart
 	kindStop
-	kindDone
 )
 
 func (k cmdKind) String() string {
