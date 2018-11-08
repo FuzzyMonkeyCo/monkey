@@ -26,7 +26,7 @@ const (
 )
 
 var ws *wsState
-var wsMsgUID uint64
+var wsMsgUID uint32
 
 type wsState struct {
 	req  chan []byte
@@ -85,12 +85,12 @@ func (ws *wsState) call(req *Msg) (rep *Msg, err error) {
 	}
 }
 
-func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
+func newFuzz(cfg *UserCfg, vald *validator) (act action, err error) {
 	if err = newWS(cfg); err != nil {
 		return
 	}
 
-	msg := &Msg{Msg: &Msg_Fuzz{Fuzz: &ReqFuzz{
+	msg := &Msg{Msg: &Msg_Fuzz{Fuzz: &DoFuzz{
 		Cfg:  cfg,
 		Spec: vald.Spec,
 	}}}
@@ -100,11 +100,8 @@ func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
 		return nil, err
 	}
 	switch msg.GetMsg().(type) {
-	case *Msg_CmdReset:
-		cmd = msg.GetCmdReset()
-		return
-	case *Msg_CmdStart:
-		cmd = msg.GetCmdReset()
+	case *Msg_DoReset:
+		act = msg.GetDoReset()
 		return
 	default:
 		err = errors.New("unexpected msg")
@@ -113,30 +110,38 @@ func newFuzz(cfg *UserCfg, vald *validator) (cmd someCmd, err error) {
 	}
 }
 
-func (cmd *RepCmdReset) isMsg_Msg() {}
+// func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
+// 	return
+// }
 
-func (cmd *RepCmdReset) Kind() cmdKind {
-	return kindReset
-}
-
-func (cmd *RepCmdReset) Exec(cfg *UserCfg) (rep []byte, err error) {
-	return
-}
-
-func fuzzNext(cfg *UserCfg, cmd someCmd) (someCmd someCmd, err error) {
+func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 	// Sometimes sets cfg.Runtime.Final* fields
-	rep, err := cmd.Exec(cfg)
-	if err != nil {
+	if nxt, err = curr.exec(cfg); err != nil {
+		return
+	}
+	log.Printf(">>> %+v\n", nxt)
+	if nxt == nil {
 		return
 	}
 
-	nextCmdJSON, err := nextPOST(cfg, rep)
-	if err != nil {
+	msg := &Msg{}
+	switch nxt.(type) {
+	case *RepResetProgress:
+		msg.Msg = &Msg_ResetProgress{ResetProgress: nxt.(*RepResetProgress)}
+	}
+	if msg, err = ws.call(msg); err != nil {
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+	switch msg.GetMsg().(type) {
+	case *Msg_DoReset:
+		// nxt = msg.GetDoReset()
+		return
+	default:
+		err = errors.New("unexpected msg")
+		log.Println("[ERR]", err)
 		return
 	}
-
-	someCmd, err = unmarshalCmd(nextCmdJSON)
-	return
 }
 
 func nextPOST(cfg *UserCfg, payload []byte) (rep []byte, err error) {

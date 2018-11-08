@@ -3,7 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -40,26 +40,34 @@ type rstCmdRep struct {
 	Failed bool    `json:"failed"`
 }
 
-func (cmd *rstCmd) isMsg_Msg() {}
-
-func (cmd *rstCmd) Kind() cmdKind {
-	return cmd.Cmd
-}
-
-func (cmd *rstCmd) Exec(cfg *UserCfg) (rep []byte, err error) {
+func (act *ReqDoReset) exec(cfg *UserCfg) (nxt action, err error) {
 	if isHARReady() {
-		progress(cmd)
+		/// exec of FuzzProgress
+		// var str string
+		// if *cmd.Passed {
+		// 	str = "✓"
+		// } else {
+		// 	if !*cmd.Passed {
+		// 		str = "✗"
+		// 	}
+		// }
+
+		// if cmd.ShrinkingFrom != nil {
+		// 	shrinkingFrom = *cmd.ShrinkingFrom
+		// 	if lastLane.T == cmd.ShrinkingFrom.T {
+		// 		str += "\n"
+		// 	}
+		// }
+		// fmt.Print(str)
+
 		clearHAR()
 	}
 
-	cmdRep := cmd.pickScriptThenExec(cfg)
-	if rep, err = json.Marshal(cmdRep); err != nil {
-		log.Println("[ERR]", err)
-	}
+	nxt = act.pickScriptThenExec(cfg)
 	return
 }
 
-func (cmd *rstCmd) pickScriptThenExec(cfg *UserCfg) (cmdRep *rstCmdRep) {
+func (act *ReqDoReset) pickScriptThenExec(cfg *UserCfg) (nxt *RepResetProgress) {
 	if !isRunning {
 		if len(cfg.script(kindStart)) != 0 {
 			return executeScript(cfg, kindStart)
@@ -71,12 +79,12 @@ func (cmd *rstCmd) pickScriptThenExec(cfg *UserCfg) (cmdRep *rstCmdRep) {
 		return executeScript(cfg, kindReset)
 	}
 
-	cmdStopRep := executeScript(cfg, kindStop)
-	if cmdStopRep.Failed {
-		return cmdStopRep
+	actStop := executeScript(cfg, kindStop)
+	if actStop.Failure {
+		return
 	}
-	cmdRep = executeScript(cfg, kindStart)
-	cmdRep.Us += cmdStopRep.Us
+	nxt = executeScript(cfg, kindStart)
+	nxt.Usec += actStop.Usec
 	return
 }
 
@@ -86,27 +94,20 @@ func maybePostStop(cfg *UserCfg) {
 	}
 }
 
-func progress(cmd *rstCmd) {
-	var str string
-	if *cmd.Passed {
-		str = "✓"
-	} else {
-		if !*cmd.Passed {
-			str = "✗"
-		}
+func executeScript(cfg *UserCfg, kind cmdKind) (nxt *RepResetProgress) {
+	k := RepResetProgress_UNKNOWN
+	switch kind {
+	case kindStart:
+		log.Println("start")
+		k = RepResetProgress_start
+	case kindReset:
+		log.Println("reset")
+		k = RepResetProgress_reset
+	case kindStop:
+		log.Println("stop")
+		k = RepResetProgress_stop
 	}
-
-	if cmd.ShrinkingFrom != nil {
-		shrinkingFrom = *cmd.ShrinkingFrom
-		if lastLane.T == cmd.ShrinkingFrom.T {
-			str += "\n"
-		}
-	}
-	fmt.Print(str)
-}
-
-func executeScript(cfg *UserCfg, kind cmdKind) (cmdRep *rstCmdRep) {
-	cmdRep = &rstCmdRep{V: v, Cmd: kind, Failed: false}
+	nxt = &RepResetProgress{Kind: k}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
 		return
@@ -117,20 +118,21 @@ func executeScript(cfg *UserCfg, kind cmdKind) (cmdRep *rstCmdRep) {
 	var stderr bytes.Buffer
 	var err error
 	for i, shellCmd := range shellCmds {
-		if err = executeCommand(cmdRep, &stderr, shellCmd); err != nil {
+		if err = executeCommand(nxt, &stderr, shellCmd); err != nil {
 			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
 			hadExecError = true
-			cmdRep.Failed = true
+			nxt.Failure = true
 			return
 		}
 	}
+	nxt.Success = true
 
 	isRunning = kind != kindStop
 	maybeFinalizeConf(cfg, kind)
 	return
 }
 
-func executeCommand(cmdRep *rstCmdRep, stderr *bytes.Buffer, shellCmd string) (err error) {
+func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
 	defer cancel()
 
@@ -172,7 +174,7 @@ func executeCommand(cmdRep *rstCmdRep, stderr *bytes.Buffer, shellCmd string) (e
 		log.Println("[DBG] execution error:", error)
 	}()
 	err = <-ch
-	cmdRep.Us += uint64(time.Since(start) / time.Microsecond)
+	nxt.Usec += uint64(time.Since(start) / time.Microsecond)
 
 	if err != nil {
 		log.Println("[ERR]", stderr.String()+"\n"+err.Error())

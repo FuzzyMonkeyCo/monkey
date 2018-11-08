@@ -6,19 +6,29 @@ syntax = "proto3";
 package main;
 
 message Msg {
-    uint64 UID = 1;
-    oneof msg {
-        RepError500 err500 = 2;
-        RepError400 err400 = 3;
-        RepError401 err401 = 4;
-        RepError403 err403 = 5;
-        ReqFuzz fuzz = 6;
-        RepCmdDone cmdDone = 7;
-        RepCmdReq cmdReq = 8;
-        RepCmdReset cmdReset = 9;
-        RepCmdStart cmdStart = 10;
-        RepCmdStop cmdStop = 11;
-        ReqVAgainstSID against = 12;
+  uint32 UID = 1;
+  oneof msg {
+    RepError500 err500 = 2;
+    RepError400 err400 = 3;
+    RepError401 err401 = 4;
+    RepError403 err403 = 5;
+
+    // Begin of testing
+    DoFuzz fuzz = 6;
+    // Progress & end of testing
+    FuzzProgress fuzz_progress = 7;
+
+    // Try call to SUT
+    ReqDoCall do_call = 8;
+    RepCallDone call_done = 9;
+
+    // Reset SUT state
+    ReqDoReset do_reset = 10;
+    RepResetProgress reset_progress = 11;
+
+    // Validation post SUT call
+    ReqDoValidate do_validate = 12;
+    RepValidateProgress validate_progress = 13;
     }
 }
 
@@ -27,20 +37,56 @@ message RepError401 {}
 message RepError403 {}
 message RepError500 {}
 
-message ReqFuzz {
+message DoFuzz {
     UserCfg cfg = 1;
     SpecIR spec = 2;
 }
+message FuzzProgress {
+    bool failure = 1;
+    bool success = 2;
+    bool last_call_failure = 3;
+    bool last_call_success = 4;
+    bool shrinking = 5;
+    // Totals over the run
+    uint32 tests_count = 6;
+    uint32 calls_count = 7;
+    uint32 shrink_amount = 8;
+}
+message ReqDoReset {}
+message RepResetProgress {
+    bool failure = 1;
+    bool success = 2;
+    enum Kind {
+        UNKNOWN = 0;
+        start = 1;
+        reset = 2;
+        stop = 3;
+        stop_then_start = 4;
+    }
+    Kind kind = 3;
+    uint64 usec = 4;
+}
 
-message RepCmdDone {}
-message RepCmdReq {}
-message RepCmdReset {}
-message RepCmdStart {}
-message RepCmdStop {}
+message SUTMetrics {
+    // A log line
+    string log_origin = 2;
+    string log_line = 3;
+}
 
-message ReqVAgainstSID {
+message ReqDoValidate {
     uint32 SID = 1;
     bytes data = 2;
+}
+message RepValidateProgress {
+    bool failure = 1;
+    bool success = 2;
+    // Some info
+    repeated string details = 3;
+}
+
+message ReqDoCall {}
+message RepCallDone {
+    bool crashed = 1;
 }
 
 message UserCfg {

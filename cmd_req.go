@@ -29,13 +29,11 @@ type reqCmdRep struct {
 	Reason   string   `json:"reason,omitempty"`
 }
 
-func (cmd *reqCmd) isMsg_Msg() {}
-
-func (cmd *reqCmd) Kind() cmdKind {
+func (cmd *reqCmd) kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *reqCmd) Exec(cfg *UserCfg) (rep []byte, err error) {
+func (cmd *reqCmd) exec(cfg *UserCfg) (rep []byte, err error) {
 	lastLane = cmd.Lane
 	if !isHARReady() {
 		newHARTransport()

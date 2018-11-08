@@ -16,8 +16,9 @@ LNX = $(EXE)-Linux-x86_64
 DST ?= .
 
 DEP ?= dep-linux-amd64
-GODEP = v0.5.0
-GPB ?= znly/protoc:0.3.0
+GODEP ?= v0.5.0
+GPB ?= 3.5.1
+GPB_IMG ?= znly/protoc:0.3.0
 
 all: lint vendor gpb
 	go generate
@@ -33,6 +34,7 @@ x: vendor
 
 update: SHELL := /bin/bash
 update:
+	[[ $(GPB) = "$$(docker run --rm $(GPB_IMG) --version)" ]]
 	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
 	go generate
 	dep ensure -v -update
@@ -62,8 +64,7 @@ dep.GODEP:
 	rm -r release
 
 gpb: messages.proto
-	docker run --rm $(GPB) --version
-	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB) --go_out=. -I. $^
+	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
 
 lint:
 	gofmt -s -w *.go misc/*.go

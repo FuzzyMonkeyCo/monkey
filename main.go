@@ -279,7 +279,7 @@ func doExec(cfg *UserCfg, kind cmdKind) int {
 		return retryOrReport()
 	}
 
-	if cmdRep := executeScript(cfg, kind); cmdRep.Failed {
+	if act := executeScript(cfg, kind); act.Failure || !act.Success {
 		return 7
 	}
 	return 0
@@ -295,19 +295,19 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 		return retryOrReport()
 	}
 
-	cmd, err := newFuzz(cfg, vald)
+	act, err := newFuzz(cfg, vald)
 	if err != nil {
 		return retryOrReportThenCleanup(cfg, err)
 	}
 
 	for {
-		if cmd.Kind() == kindDone {
+		if act == nil {
 			maybePostStop(cfg)
 			ensureDeleted(envID())
-			return fuzzOutcome(cmd.(*doneCmd))
+			return fuzzOutcome(act)
 		}
 
-		if cmd, err = fuzzNext(cfg, cmd); err != nil {
+		if act, err = fuzzNext(cfg, act); err != nil {
 			return retryOrReportThenCleanup(cfg, err)
 		}
 	}

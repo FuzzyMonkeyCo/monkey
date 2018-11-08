@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
+	// "errors"
 	"fmt"
-	"log"
+	// "log"
 )
 
 var (
@@ -18,11 +18,13 @@ type lane struct {
 	R uint `json:"r"`
 }
 
+type action interface {
+	exec(cfg *UserCfg) (act action, err error)
+}
+
 type someCmd interface {
-	Kind() cmdKind
-	Exec(cfg *UserCfg) (rep []byte, err error)
-	// For protobuf Msg union type
-	isMsg_Msg()
+	kind() cmdKind
+	exec(cfg *UserCfg) (rep []byte, err error)
 }
 
 type cmdKind int
@@ -78,46 +80,46 @@ func (k cmdKind) MarshalJSON() (data []byte, err error) {
 	return
 }
 
-func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
-	var ok bool
+// func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
+// 	var ok bool
 
-	if ok, err = isValidForSchemaREQv1(cmdJSON); err != nil {
-		return
-	}
-	if ok {
-		var cmd reqCmd
-		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Println("[ERR]", err)
-			return nil, err
-		}
-		return &cmd, nil
-	}
+// 	if ok, err = isValidForSchemaREQv1(cmdJSON); err != nil {
+// 		return
+// 	}
+// 	if ok {
+// 		var cmd reqCmd
+// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
+// 			log.Println("[ERR]", err)
+// 			return nil, err
+// 		}
+// 		return &cmd, nil
+// 	}
 
-	if ok, err = isValidForSchemaCMDv1(cmdJSON); err != nil {
-		return
-	}
-	if ok {
-		var cmd rstCmd
-		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Println("[ERR]", err)
-			return nil, err
-		}
-		return &cmd, nil
-	}
+// 	if ok, err = isValidForSchemaCMDv1(cmdJSON); err != nil {
+// 		return
+// 	}
+// 	if ok {
+// 		var cmd rstCmd
+// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
+// 			log.Println("[ERR]", err)
+// 			return nil, err
+// 		}
+// 		return &cmd, nil
+// 	}
 
-	if ok, err = isValidForSchemaCMDDonev1(cmdJSON); err != nil {
-		return
-	}
-	if ok {
-		var cmd doneCmd
-		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-			log.Println("[ERR]", err)
-			return nil, err
-		}
-		return &cmd, nil
-	}
+// 	if ok, err = isValidForSchemaCMDDonev1(cmdJSON); err != nil {
+// 		return
+// 	}
+// 	if ok {
+// 		var cmd doneCmd
+// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
+// 			log.Println("[ERR]", err)
+// 			return nil, err
+// 		}
+// 		return &cmd, nil
+// 	}
 
-	err = errors.New("invalid JSON data received")
-	log.Println("[ERR]", err)
-	return
-}
+// 	err = errors.New("invalid JSON data received")
+// 	log.Println("[ERR]", err)
+// 	return
+// }

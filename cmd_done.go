@@ -11,29 +11,27 @@ type doneCmd struct {
 	Failure bool    `json:"failure"`
 }
 
-func (cmd *doneCmd) isMsg_Msg() {}
-
-func (cmd *doneCmd) Kind() cmdKind {
+func (cmd *doneCmd) kind() cmdKind {
 	return cmd.Cmd
 }
 
-func (cmd *doneCmd) Exec(cfg *UserCfg) ([]byte, error) {
+func (cmd *doneCmd) exec(cfg *UserCfg) ([]byte, error) {
 	return nil, nil
 }
 
-func fuzzOutcome(cmd *doneCmd) int {
+func fuzzOutcome(act action) int {
 	os.Stdout.Write([]byte{'\n'})
 	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
 
-	if cmd.Failure {
-		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
-		if m != 1 {
-			fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
-		} else {
-			fmt.Printf("A bug was detected after %d tests then shrunk once!\n", d)
-		}
-		return 6
-	}
+	// if act.Failure {
+	// 	d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
+	// 	if m != 1 {
+	// 		fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
+	// 	} else {
+	// 		fmt.Printf("A bug was detected after %d tests then shrunk once!\n", d)
+	// 	}
+	// 	return 6
+	// }
 	fmt.Println("No bugs found... yet.")
 	return 0
 }
