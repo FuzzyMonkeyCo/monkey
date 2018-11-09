@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	// "fmt"
 	"log"
 	"net/url"
 	"strings"
-	"time"
+	// "time"
 
 	"github.com/sebcat/har"
 )
@@ -29,69 +28,67 @@ type reqCmdRep struct {
 	Reason   string   `json:"reason,omitempty"`
 }
 
-func (cmd *reqCmd) kind() cmdKind {
-	return cmd.Cmd
+func (act *FuzzProgress) exec(cfg *UserCfg) (nxt action, err error) {
+	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
+	return
 }
 
-func (cmd *reqCmd) exec(cfg *UserCfg) (rep []byte, err error) {
-	lastLane = cmd.Lane
+func (act *RepCallDone) exec(cfg *UserCfg) (nxt action, err error) {
+	return
+}
+
+func (act *ReqDoCall) exec(cfg *UserCfg) (nxt action, err error) {
 	if !isHARReady() {
 		newHARTransport()
 	}
 
-	cmd.updateUserAgentHeader()
-	if err = cmd.updateURL(cfg); err != nil {
+	act.updateUserAgentHeader()
+	if err = act.updateURL(cfg); err != nil {
 		return
 	}
-	cmd.updateHostHeader(cfg)
-	cmdRep, err := cmd.makeRequest()
-	if err != nil {
+	act.updateHostHeader(cfg)
+	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
 	totalR++
-
-	if rep, err = json.Marshal(cmdRep); err != nil {
-		log.Println("[ERR]", err)
-	}
 	return
 }
 
-func (cmd *reqCmd) makeRequest() (rep *reqCmdRep, err error) {
-	r, err := (*cmd.HARRequest).Request()
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
+func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
+	// harReq := act.GetRequest()
+	nxt = &RepCallDone{Usec: 42, Response: &HAR_Entry{}, Failure: true}
+	// r, err := harReq.Request()
+	// if err != nil {
+	// 	log.Println("[ERR]", err)
+	// 	return
+	// }
 
-	log.Printf("[NFO] 🡳\n  ▲  %#v\n", cmd.HARRequest)
-	start := time.Now()
-	_, err = clientReq.Do(r)
-	us := uint64(time.Since(start) / time.Microsecond)
-	log.Printf("[NFO] ❙ %dμs\n", us)
-	rep = &reqCmdRep{
-		V:    v,
-		Cmd:  cmd.Cmd,
-		Us:   us,
-		Lane: cmd.Lane,
-	}
+	// log.Println("[NFO] ▲", harReq)
+	// start := time.Now()
+	// _, err = clientReq.Do(r)
+	// us := time.Now().Sub(start)
+	// log.Println("[NFO] ❙", us)
+	// nxt = &RepCallDone{Usec: uint64(us)}
 
-	if err != nil {
-		//FIXME: is there a way to describe these failures in HAR 1.2?
-		rep.Reason = fmt.Sprintf("%#v", err.Error())
-		log.Printf("[NFO]\n  ▼  %s\n", rep.Reason)
-		err = nil
-		return
-	}
+	// if err != nil {
+	// 	//FIXME: is there a way to describe these failures in HAR 1.2?
+	// 	e := fmt.Sprintf("%#v", err.Error())
+	// 	log.Println("[NFO] ▼", e)
+	// 	nxt.Reason = e
+	// 	err = nil
+	// 	return
+	// }
 
-	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
-	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
-	rep.HAREntry = lastHAR()
-	log.Printf("[NFO]\n  ▼  %#v\n", rep.HAREntry)
+	// //FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
+	// //FIXME: make sure order is preserved github.com/golang/go/issues/21853
+	// resp := lastHAR()
+	// log.Printf("[NFO]\n  ▼  %#v\n", resp)
+	// nxt.Response = resp
 	return
 }
 
-func (cmd *reqCmd) updateURL(cfg *UserCfg) (err error) {
-	URL, err := url.Parse(cmd.HARRequest.URL)
+func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
+	URL, err := url.Parse(act.Request.Url)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -99,25 +96,25 @@ func (cmd *reqCmd) updateURL(cfg *UserCfg) (err error) {
 
 	// TODO: if host is an IPv6 then it has to be braced with []
 	URL.Host = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
-	cmd.HARRequest.URL = URL.String()
+	act.Request.Url = URL.String()
 	return
 }
 
-func (cmd *reqCmd) updateUserAgentHeader() {
-	for i := range cmd.HARRequest.Headers {
-		if cmd.HARRequest.Headers[i].Name == "User-Agent" {
-			if strings.HasPrefix(cmd.HARRequest.Headers[i].Value, "FuzzyMonkey.co/") {
-				cmd.HARRequest.Headers[i].Value = binTitle
+func (act *ReqDoCall) updateUserAgentHeader() {
+	for i := range act.Request.Headers {
+		if act.Request.Headers[i].Name == "User-Agent" {
+			if strings.HasPrefix(act.Request.Headers[i].Value, "FuzzyMonkey.co/") {
+				act.Request.Headers[i].Value = binTitle
 				break
 			}
 		}
 	}
 }
 
-func (cmd *reqCmd) updateHostHeader(cfg *UserCfg) {
-	for i := range cmd.HARRequest.Headers {
-		if cmd.HARRequest.Headers[i].Name == "Host" {
-			cmd.HARRequest.Headers[i].Value = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
+func (act *ReqDoCall) updateHostHeader(cfg *UserCfg) {
+	for i := range act.Request.Headers {
+		if act.Request.Headers[i].Name == "Host" {
+			act.Request.Headers[i].Value = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
 			break
 		}
 	}

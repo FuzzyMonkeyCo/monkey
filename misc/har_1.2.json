@@ -306,8 +306,7 @@
           "type": "string"
         },
         "id": {
-          "type": "string",
-          "unique": true
+          "type": "string"
         },
         "pageTimings": {
           "$ref": "#/definitions/pageTimings"

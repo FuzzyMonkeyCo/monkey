@@ -10,12 +10,12 @@ import (
 var (
 	lastLane      lane
 	shrinkingFrom lane
-	totalR        uint
+	totalR        uint32
 )
 
 type lane struct {
-	T uint `json:"t"`
-	R uint `json:"r"`
+	T uint32
+	R uint32
 }
 
 type action interface {

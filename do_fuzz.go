@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,17 +33,27 @@ type wsState struct {
 	req  chan []byte
 	rep  chan []byte
 	err  chan error
+	err2 chan error
 	ping chan struct{}
 	done chan struct{}
 }
 
-func (ws *wsState) call(req *Msg) (rep *Msg, err error) {
-	// FIXME: take a Writer, return a Reader
-
+func (ws *wsState) call(req action) (rep action, err error) {
 	// NOTE: log in caller
+	// FIXME: use buffers?
+
 	wsMsgUID++
-	req.UID = wsMsgUID
-	payload, err := proto.Marshal(req)
+	reqUID := wsMsgUID
+	msg := &Msg{UID: wsMsgUID}
+
+	switch req.(type) {
+	case *DoFuzz:
+		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
+	case *RepResetProgress:
+		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
+	}
+
+	payload, err := proto.Marshal(msg)
 	if err != nil {
 		return
 	}
@@ -53,12 +64,11 @@ func (ws *wsState) call(req *Msg) (rep *Msg, err error) {
 	select {
 	case payload = <-ws.rep:
 		log.Println("[DBG] 🡳", time.Now().Sub(start), payload[:4])
-		var msg Msg
-		if err = proto.Unmarshal(payload, &msg); err != nil {
+		if err = proto.Unmarshal(payload, msg); err != nil {
 			return
 		}
 
-		if msg.GetUID() != req.UID {
+		if msg.GetUID() != reqUID {
 			err = errors.New("bad dialog sequence number")
 			return
 		}
@@ -72,17 +82,21 @@ func (ws *wsState) call(req *Msg) (rep *Msg, err error) {
 			err = errors.New("401 Unauthorized")
 		case *Msg_Err403:
 			err = errors.New("403 Forbidden")
+		case *Msg_DoReset:
+			rep = msg.GetDoReset()
+		case *Msg_DoCall:
+			rep = msg.GetDoCall()
+		case *Msg_FuzzProgress:
+			rep = msg.GetFuzzProgress()
 		default:
-			rep = &msg
+			err = fmt.Errorf("unexpected msg: %+v", msg)
 		}
-		return
 	case err = <-ws.err:
 		log.Println("[DBG] 🡳", time.Now().Sub(start), err)
-		return
 	case <-time.After(15 * time.Second):
 		err = errors.New("ws call timeout")
-		return
 	}
+	return
 }
 
 func newFuzz(cfg *UserCfg, vald *validator) (act action, err error) {
@@ -90,58 +104,40 @@ func newFuzz(cfg *UserCfg, vald *validator) (act action, err error) {
 		return
 	}
 
-	msg := &Msg{Msg: &Msg_Fuzz{Fuzz: &DoFuzz{
+	msg := &DoFuzz{
 		Cfg:  cfg,
 		Spec: vald.Spec,
-	}}}
+	}
 
-	if msg, err = ws.call(msg); err != nil {
+	if act, err = ws.call(msg); err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
 	}
-	switch msg.GetMsg().(type) {
-	case *Msg_DoReset:
-		act = msg.GetDoReset()
-		return
-	default:
-		err = errors.New("unexpected msg")
-		log.Println("[ERR]", err)
-		return
-	}
+	return
 }
 
-// func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
-// 	return
-// }
+func (act *DoFuzz) exec(cfg *UserCfg) (nxt action, err error) {
+	return
+}
+
+func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
+	return
+}
 
 func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 	// Sometimes sets cfg.Runtime.Final* fields
 	if nxt, err = curr.exec(cfg); err != nil {
+		ws.err2 <- err
 		return
 	}
 	log.Printf(">>> %+v\n", nxt)
-	if nxt == nil {
-		return
-	}
+	// if nxt == nil {
+	// 	return
+	// }
 
-	msg := &Msg{}
-	switch nxt.(type) {
-	case *RepResetProgress:
-		msg.Msg = &Msg_ResetProgress{ResetProgress: nxt.(*RepResetProgress)}
-	}
-	if msg, err = ws.call(msg); err != nil {
+	if nxt, err = ws.call(nxt); err != nil {
 		log.Println("[ERR]", err)
-		return nil, err
 	}
-	switch msg.GetMsg().(type) {
-	case *Msg_DoReset:
-		// nxt = msg.GetDoReset()
-		return
-	default:
-		err = errors.New("unexpected msg")
-		log.Println("[ERR]", err)
-		return
-	}
+	return
 }
 
 func nextPOST(cfg *UserCfg, payload []byte) (rep []byte, err error) {
@@ -201,6 +197,7 @@ func newWS(cfg *UserCfg) error {
 		req:  make(chan []byte, 1),
 		rep:  make(chan []byte, 1),
 		err:  make(chan error, 1),
+		err2: make(chan error, 1),
 		ping: make(chan struct{}, 1),
 		done: make(chan struct{}, 1),
 	}
@@ -232,6 +229,7 @@ func newWS(cfg *UserCfg) error {
 		defer close(ws.req)
 		defer close(ws.rep)
 		defer close(ws.err)
+		defer close(ws.err2)
 		defer close(ws.ping)
 		defer close(ws.done)
 
@@ -254,6 +252,13 @@ func newWS(cfg *UserCfg) error {
 						return
 					}
 					once.Do(func() { pong <- struct{}{} })
+				case err := <-ws.err2:
+					log.Println("ws.err2")
+					data := []byte(err.Error())
+					if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
 				case <-ws.done:
 					log.Println("ws.done")
 					return

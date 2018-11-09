@@ -1,5 +1,6 @@
 // https://developers.google.com/protocol-buffers/docs/proto3
-// See: https://github.com/googleapis/gnostic/blob/48a0ecef/OpenAPIv3/OpenAPIv3.proto
+// See:
+// https://github.com/googleapis/gnostic/blob/48a0ecef/OpenAPIv3/OpenAPIv3.proto
 // See: https://github.com/luckymarmot/API-Flow/blob/24cc71a/src/README.md
 
 syntax = "proto3";
@@ -17,188 +18,201 @@ message Msg {
     DoFuzz fuzz = 6;
     // Progress & end of testing
     FuzzProgress fuzz_progress = 7;
+    // Log lines and things about SUT
+    SUTMetrics sut_metrics = 8;
 
     // Try call to SUT
-    ReqDoCall do_call = 8;
-    RepCallDone call_done = 9;
+    ReqDoCall do_call = 9;
+    RepCallDone call_done = 10;
 
     // Reset SUT state
-    ReqDoReset do_reset = 10;
-    RepResetProgress reset_progress = 11;
+    ReqDoReset do_reset = 11;
+    RepResetProgress reset_progress = 12;
 
     // Validation post SUT call
-    ReqDoValidate do_validate = 12;
-    RepValidateProgress validate_progress = 13;
-    }
+    ReqDoValidate do_validate = 13;
+    RepValidateProgress validate_progress = 14;
+  }
 }
 
-message RepError400 {}
-message RepError401 {}
-message RepError403 {}
-message RepError500 {}
+message RepError400 {
+}
+message RepError401 {
+}
+message RepError403 {
+}
+message RepError500 {
+}
 
 message DoFuzz {
-    UserCfg cfg = 1;
-    SpecIR spec = 2;
+  UserCfg cfg = 1;
+  SpecIR spec = 2;
 }
 message FuzzProgress {
-    bool failure = 1;
-    bool success = 2;
-    bool last_call_failure = 3;
-    bool last_call_success = 4;
-    bool shrinking = 5;
-    // Totals over the run
-    uint32 tests_count = 6;
-    uint32 calls_count = 7;
-    uint32 shrink_amount = 8;
+  bool failure = 1;
+  bool success = 2;
+  bool last_call_failure = 3;
+  bool last_call_success = 4;
+  bool shrinking = 5;
+  uint32 total_tests_count = 6;
+  uint32 total_calls_count = 7;
+  uint32 test_calls_count = 8;
+  uint32 shrink_amount = 9;
 }
-message ReqDoReset {}
+message ReqDoReset {
+}
 message RepResetProgress {
-    bool failure = 1;
-    bool success = 2;
-    enum Kind {
-        UNKNOWN = 0;
-        start = 1;
-        reset = 2;
-        stop = 3;
-        stop_then_start = 4;
-    }
-    Kind kind = 3;
-    uint64 usec = 4;
+  bool failure = 1;
+  bool success = 2;
+  uint64 usec = 3;
+  enum Kind {
+    UNKNOWN = 0;
+    start = 1;
+    reset = 2;
+    stop = 3;
+    stop_then_start = 4;
+  }
+  Kind kind = 4;
 }
 
 message SUTMetrics {
-    // A log line
-    string log_origin = 2;
-    string log_line = 3;
+  // A log line
+  string log_origin = 2;
+  string log_line = 3;
 }
 
 message ReqDoValidate {
-    uint32 SID = 1;
-    bytes data = 2;
+  uint32 SID = 1;
+  bytes data = 2;
 }
 message RepValidateProgress {
-    bool failure = 1;
-    bool success = 2;
-    // Some info
-    repeated string details = 3;
+  bool failure = 1;
+  bool success = 2;
+  // Some info
+  repeated string details = 3;
 }
 
-message ReqDoCall {}
+message ReqDoCall {
+  HAR.Request request = 1;
+}
 message RepCallDone {
-    bool crashed = 1;
+  bool failure = 1;
+  bool success = 2;
+  uint64 usec = 3;
+  string reason = 4;
+  HAR.Entry response = 5;
 }
 
 message UserCfg {
-    uint32 version = 1;
-    string auth_token = 2;
-    bytes seed = 3;
+  uint32 version = 1;
+  string auth_token = 2;
+  bytes seed = 3;
 
-    enum Kind {
-        UNKNOWN = 0;
-        OpenAPIv3 = 1;
-    }
-    Kind kind = 4;
-    string file = 5;
+  enum Kind {
+    UNKNOWN = 0;
+    OpenAPIv3 = 1;
+  }
+  Kind kind = 4;
+  string file = 5;
 
-    message Runtime {
-        string host = 1;
-        string port = 2;
-        string final_host = 3;
-        string final_port = 4;
-    }
-    Runtime runtime = 6;
+  message Runtime {
+    string host = 1;
+    string port = 2;
+    string final_host = 3;
+    string final_port = 4;
+  }
+  Runtime runtime = 6;
 
-    message Exec {
-        repeated string start = 1;
-        repeated string reset = 2;
-        repeated string stop = 3;
-    }
-    Exec exec = 7;
+  message Exec {
+    repeated string start = 1;
+    repeated string reset = 2;
+    repeated string stop = 3;
+  }
+  Exec exec = 7;
 }
 
 message SpecIR {
-    Schemas schemas = 1;
-    repeated Endpoint endpoints = 2;
+  Schemas schemas = 1;
+  repeated Endpoint endpoints = 2;
 }
 
 message Schemas {
-    // All schemas are here.
-    // Start at 1. 0 (zero) is reserved for bug finding.
-    map<uint32,RefOrSchemaJSON> json = 1;
+  // All schemas are here.
+  // Start at 1. 0 (zero) is reserved for bug finding.
+  map<uint32, RefOrSchemaJSON> json = 1;
 }
 
 message RefOrSchemaJSON {
-    oneof ptr_or_schema {
-        // Probably most often from a $ref
-        // Only use SchemaPtr here. Everywhere else use SID.
-        SchemaPtr ptr = 1;
-        // Actual schema when not a $ref
-        Schema.JSON schema = 2;
-    }
+  oneof ptr_or_schema {
+    // Probably most often from a $ref
+    // Only use SchemaPtr here. Everywhere else use SID.
+    SchemaPtr ptr = 1;
+    // Actual schema when not a $ref
+    Schema.JSON schema = 2;
+  }
 }
 
 message SchemaPtr {
-    // Pointer to actual schema. i.e. key in Schemas message.
-    uint32 SID = 1;
-    // $ref if was ref'd, in canonical/absolute (#/...-like) format.
-    string ref = 2;
+  // Pointer to actual schema. i.e. key in Schemas message.
+  uint32 SID = 1;
+  // $ref if was ref'd, in canonical/absolute (#/...-like) format.
+  string ref = 2;
 }
 
 message Endpoint {
-    oneof endpoint {
-        EndpointJSON json = 1;
-    }
+  oneof endpoint {
+    EndpointJSON json = 1;
+  }
 }
 
 message EndpointJSON {
-    Method method = 1;
-    repeated PathPartial path_partials = 2;
-    repeated ParamJSON inputs = 3;
-    // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
-    // The uint32 values are SID
-    map<uint32,uint32> outputs = 4;
+  Method method = 1;
+  repeated PathPartial path_partials = 2;
+  repeated ParamJSON inputs = 3;
+  // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+  // The uint32 values are SID
+  map<uint32, uint32> outputs = 4;
 }
 
 message ParamJSON {
-    // Whether this param has to be present
-    bool required = 1;
-    // Pointer to Schemas message
-    uint32 SID = 2;
-    // Note: bodies have an empty name
-    string name = 3;
+  // Whether this param has to be present
+  bool required = 1;
+  // Pointer to Schemas message
+  uint32 SID = 2;
+  // Note: bodies have an empty name
+  string name = 3;
 
-    enum Kind {
-        UNKNOWN = 0;
-        body = 1;
-        path = 2;
-        query = 3;
-        header = 4;
-        cookie = 5;
-    }
-    Kind kind = 4;
+  enum Kind {
+    UNKNOWN = 0;
+    body = 1;
+    path = 2;
+    query = 3;
+    header = 4;
+    cookie = 5;
+  }
+  Kind kind = 4;
 
-    //TODO: repeated Example examples
+  // TODO: repeated Example examples
 }
 
 enum Method {
-    UNKNOWN = 0;
-    GET = 1;
-    HEAD = 2;
-    POST = 3;
-    PUT = 4;
-    PATCH = 5;
-    DELETE = 6;
-    CONNECT = 7;
-    OPTIONS = 8;
-    TRACE = 9;
+  UNKNOWN = 0;
+  GET = 1;
+  HEAD = 2;
+  POST = 3;
+  PUT = 4;
+  PATCH = 5;
+  DELETE = 6;
+  CONNECT = 7;
+  OPTIONS = 8;
+  TRACE = 9;
 }
 
 message PathPartial {
-    oneof pp {
-        string part = 1;
-        string ptr = 2; //FIXME? uint32 ptr = 2;
-    }
+  oneof pp {
+    string part = 1;
+    string ptr = 2;  // FIXME? uint32 ptr = 2;
+  }
 }
 
 /// https://swagger.io/docs/specification/data-models/keywords/
@@ -210,131 +224,287 @@ message PathPartial {
 // https://github.com/garethr/openapi2jsonschema
 
 message Schema {
-    message JSON {
-        // (Some) things can be combined (: enum + type)
-        //   so just lay things out flat...
+  message JSON {
+    // (Some) things can be combined (: enum + type)
+    //   so just lay things out flat...
 
-        enum Type {
-            UNKNOWN = 0;
-            any = 1;
-            null = 2;
-            boolean = 3;
-            integer = 4;
-            number = 5;
-            array = 6;
-            string = 7;
-            object = 8;
-        }
-        repeated Type types = 1; // default: []
-
-        repeated ValueJSON enum = 2; // default: []
-
-        // type: string
-        enum Format {
-             NONE = 0;
-             date_time = 1;
-             date = 2;
-          // time = 3;
-             email = 4;
-          // idn-email = 5;
-             hostname = 6;
-          // idn_hostname = 7;
-             ipv4 = 8;
-             ipv6 = 9;
-             uri = 10;
-             uri_reference = 11;
-          // iri = 12;
-          // iri_reference = 13;
-          // uri_template = 14;
-          // json_pointer = 15;
-          // relative_json_pointer = 16;
-             regex = 17;
-             int32 = 18;
-             int64 = 19;
-             float = 20;
-             double = 21;
-             byte = 22;
-             binary = 23;
-             password = 24;
-        }
-        Format format = 3; // default: NONE
-        uint64 min_length = 4; // default: 0
-        uint64 max_length = 5;
-        bool has_max_length = 6;
-        string pattern = 7; // default: ""
-
-        // type: number | integer
-        double minimum = 8;
-        double maximum = 9;
-        bool has_minimum = 10;
-        bool has_maximum = 11;
-        double translated_multiple_of = 12; // default: 0.0, add +1.0 when reading
-        bool exclusive_minimum = 13; // default: false
-        bool exclusive_maximum = 14; // default: false
-
-        // type: array
-        repeated uint32 items = 15; // default: empty list
-        bool unique_items = 16; // default: false
-        uint64 min_items = 17; // default: 0
-        uint64 max_items = 18;
-        bool has_max_items = 19;
-        //TODO: additionalItems :: bool | SID
-
-        // type: object
-        map<string,uint32> properties = 20; // default {}
-        repeated string required = 21; // default: []
-        uint64 min_properties = 22; // default: 0
-        uint64 max_properties = 23;
-        bool has_max_properties = 24;
-        ///FIXME true is equivalent to {}, false is equivalent to {"not": {}}
-        message AdditionalProperties {
-            oneof add_props {
-                bool always_succeed = 1;
-                uint32 SID = 2;
-            }
-        }
-        AdditionalProperties additional_properties = 25;
-        bool has_additional_properties = 26;
-        //TODO: patternProperties :: SID
-
-        repeated uint32 all_of = 27; // default: []
-        repeated uint32 any_of = 28; // default: []
-        repeated uint32 one_of = 29; // default: []
-
-        uint32 not = 30;
-
-        //TODO: default, examples
-        //TODO: draft-04 but not part of OpenAPIv3.0.0
-        //  $schema
-        //  id, $id
-        //  dependencies
-        //TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
-        //  const
-        //  contains
-        //  propertyNames
-        //  some formats
-        //TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
-        //  if, then, else
-        //  (readOnly, writeOnly, contentMediaType, contentEncoding)
-        //  some formats
+    enum Type {
+      UNKNOWN = 0;
+      any = 1;
+      null = 2;
+      boolean = 3;
+      integer = 4;
+      number = 5;
+      array = 6;
+      string = 7;
+      object = 8;
     }
+    repeated Type types = 1;  // default: []
+
+    repeated ValueJSON enum
+    = 2;  // default: []
+
+    // type: string
+    enum Format {
+      NONE = 0;
+      date_time = 1;
+      date = 2;
+      // time = 3;
+      email = 4;
+      // idn-email = 5;
+      hostname = 6;
+      // idn_hostname = 7;
+      ipv4 = 8;
+      ipv6 = 9;
+      uri = 10;
+      uri_reference = 11;
+      // iri = 12;
+      // iri_reference = 13;
+      // uri_template = 14;
+      // json_pointer = 15;
+      // relative_json_pointer = 16;
+      regex = 17;
+      int32 = 18;
+      int64 = 19;
+      float = 20;
+      double = 21;
+      byte = 22;
+      binary = 23;
+      password = 24;
+    }
+    Format format = 3;      // default: NONE
+    uint64 min_length = 4;  // default: 0
+    uint64 max_length = 5;
+    bool has_max_length = 6;
+    string pattern = 7;  // default: ""
+
+    // type: number | integer
+    double minimum = 8;
+    double maximum = 9;
+    bool has_minimum = 10;
+    bool has_maximum = 11;
+    double translated_multiple_of = 12;  // default: 0.0, add +1.0 when reading
+    bool exclusive_minimum = 13;         // default: false
+    bool exclusive_maximum = 14;         // default: false
+
+    // type: array
+    repeated uint32 items = 15;  // default: empty list
+    bool unique_items = 16;      // default: false
+    uint64 min_items = 17;       // default: 0
+    uint64 max_items = 18;
+    bool has_max_items = 19;
+    // TODO: additionalItems :: bool | SID
+
+    // type: object
+    map<string, uint32> properties = 20;  // default {}
+    repeated string required = 21;        // default: []
+    uint64 min_properties = 22;           // default: 0
+    uint64 max_properties = 23;
+    bool has_max_properties = 24;
+    /// FIXME true is equivalent to {}, false is equivalent to {"not": {}}
+    message AdditionalProperties {
+      oneof add_props {
+        bool always_succeed = 1;
+        uint32 SID = 2;
+      }
+    }
+    AdditionalProperties additional_properties = 25;
+    bool has_additional_properties = 26;
+    // TODO: patternProperties :: SID
+
+    repeated uint32 all_of = 27;  // default: []
+    repeated uint32 any_of = 28;  // default: []
+    repeated uint32 one_of = 29;  // default: []
+
+    uint32 not = 30;
+
+    // TODO: default, examples
+    // TODO: draft-04 but not part of OpenAPIv3.0.0
+    //  $schema
+    //  id, $id
+    //  dependencies
+    // TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
+    //  const
+    //  contains
+    //  propertyNames
+    //  some formats
+    // TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
+    //  if, then, else
+    //  (readOnly, writeOnly, contentMediaType, contentEncoding)
+    //  some formats
+  }
 }
 
 message ArrayJSON {
-    repeated ValueJSON values = 1;
+  repeated ValueJSON values = 1;
 }
 
 message ObjectJSON {
-    map<string,ValueJSON> values = 1;
+  map<string, ValueJSON> values = 1;
 }
 
 message ValueJSON {
-    oneof value {
-        bool is_null = 1;
-        bool boolean = 2;
-        double number = 3;
-        string text = 4;
-        ArrayJSON array = 5;
-        ObjectJSON object = 6;
-    }
+  oneof value {
+    bool is_null = 1;
+    bool boolean = 2;
+    double number = 3;
+    string text = 4;
+    ArrayJSON array = 5;
+    ObjectJSON object = 6;
+  }
+}
+
+// http://www.softwareishard.com/blog/har-12-spec/
+// NOTE: durations are in nanoseconds instead of milliseconds
+message HAR {
+  message Request {
+    string comment = 1;
+    int32 body_size = 2;
+    int32 headers_size = 3;
+    repeated Header headers = 4;
+    repeated Cookie cookies = 5;
+    string http_version = 6;
+    string method = 7;
+    string url = 8;
+    PostData post_data = 9;
+    repeated Query query_string = 10;
+  }
+
+  message Response {
+    string comment = 1;
+    int32 body_size = 2;
+    int32 headers_size = 3;
+    repeated Header headers = 4;
+    repeated Cookie cookies = 5;
+    string http_version = 6;
+    Content content = 7;
+    string redirect_URL = 8;
+    uint32 status = 9;
+    string status_text = 10;
+  }
+
+  message AroundRequest {
+    string comment = 1;
+    string e_tag = 2;
+    // iso8601
+    string expires = 3;
+    uint32 hit_count = 4;
+    // iso8601
+    string last_access = 5;
+  }
+
+  message Browser {
+    string comment = 1;
+    string name = 2;
+    string version = 3;
+  }
+
+  message Cache {
+    string comment = 1;
+    AroundRequest afterRequest = 2;
+    AroundRequest beforeRequest = 3;
+  }
+
+  message Content {
+    string comment = 1;
+    int32 compression = 2;
+    string encoding = 3;
+    string mimeType = 4;
+    int32 size = 5;
+    string text = 6;
+  }
+
+  message Cookie {
+    string comment = 1;
+    string domain = 2;
+    // iso8601
+    string expires = 3;
+    bool http_only = 4;
+    string name = 5;
+    string path = 6;
+    bool secure = 7;
+    string value = 8;
+  }
+
+  message Creator {
+    string comment = 1;
+    string name = 2;
+    string version = 3;
+  }
+
+  message Entry {
+    string comment = 1;
+    Cache cache = 2;
+    string connection = 3;
+    string pageref = 4;
+    Request request = 5;
+    Response response = 6;
+    string server_IP_address = 7;
+    // iso8601
+    string startedDateTime = 8;
+    int64 time = 9;
+    Timings timings = 10;
+  }
+
+  message Header {
+    string comment = 1;
+    string name = 2;
+    string value = 3;
+  }
+
+  message Log {
+    string comment = 1;
+    Browser browser = 2;
+    Creator creator = 3;
+    repeated Entry entries = 4;
+    repeated Page pages = 5;
+    string version = 6;
+  }
+
+  message Page {
+    string comment = 1;
+    string id = 2;
+    PageTimings pageTimings = 3;
+    // iso8601
+    string startedDateTime = 4;
+    string title = 5;
+  }
+
+  message PageTimings {
+    string comment = 1;
+    int64 onContentLoad = 2;
+    int64 onLoad = 3;
+  }
+
+  message PostData {
+    string comment = 1;
+    string mimeType = 2;
+    repeated PostDataParam params = 3;
+    string text = 4;
+  }
+
+  message PostDataParam {
+    string comment = 1;
+    string contentType = 2;
+    string fileName = 3;
+    string name = 4;
+    string value = 5;
+  }
+
+  message Query {
+    string comment = 1;
+    string name = 2;
+    string value = 3;
+  }
+
+  message Timings {
+    string comment = 1;
+    int64 blocked = 2;
+    int64 connect = 3;
+    int64 dns = 4;
+    int64 receive = 5;
+    int64 send = 6;
+    int64 ssl = 7;
+    int64 wait = 8;
+  }
 }
