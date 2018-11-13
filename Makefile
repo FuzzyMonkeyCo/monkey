@@ -34,7 +34,7 @@ x: vendor
 
 update: SHELL := /bin/bash
 update:
-	[[ $(GPB) = "$$(docker run --rm $(GPB_IMG) --version)" ]]
+	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
 	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
 	go generate
 	dep ensure -v -update

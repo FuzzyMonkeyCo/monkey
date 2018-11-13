@@ -43,14 +43,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:23976e2ec86bc479613df74987ca2cccb7b6cf6d1178551c445da3bdbfdfe800"
+  digest = "1:c230543c457197a4922239e2646c62cc4f8da033e230a3e923eda78397350d57"
   name = "github.com/getkin/kin-openapi"
   packages = [
     "jsoninfo",
     "openapi3",
   ]
   pruneopts = "NT"
-  revision = "5a2215ab8bbb966a17927ccf0871ef877397fbd3"
+  revision = "05121dc549adeb0ee0c7759c338d3d4c4da43a27"
 
 [[projects]]
   digest = "1:81466b4218bf6adddac2572a30ac733a9255919bc2f470b4827a317bd4ee1756"
@@ -62,7 +62,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9826373a06c5697aa706564b2d7a790d13cc093428b1e3ff3602257c6a4da488"
+  digest = "1:e479ae09e4bafb763de37df40273caa65909768504dd72fc6e67bd209c33c8cb"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -80,7 +80,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "d7fc20193620986259ffb1f9b9da752114ee14a4"
+  revision = "951a149f90371fb8858c6c979d03bb2583611052"
 
 [[projects]]
   branch = "master"
@@ -96,11 +96,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ae11cbb42897d9c49d861168e19fac1e4e1d090e339410003c16c2a379900d0"
+  digest = "1:0ac044429e29df962368f4a902ec4c23f2964105a62ae39f69ad5ec236115f37"
   name = "github.com/gorilla/websocket"
   packages = ["."]
   pruneopts = "NT"
-  revision = "76e4896901ef89d253d69b528d3701dd146fe2ae"
+  revision = "483fb8d7c32fcb4b5636cd293a92e3935932e2f4"
 
 [[projects]]
   digest = "1:0b06ffe0c0764e413a6738e3f045d6bb14117359aef80a09f8c60fbff2ecad6b"
@@ -251,34 +251,34 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ab5933fe123839204f24b287323f5007e80bc4dc6d6563837aa0a3644b943f23"
+  digest = "1:05b2fc4b3f9b2f3b7897f5db9df6e7c24e7c92d540c9a77f1677c166d9b55747"
   name = "github.com/xeipuuv/gojsonschema"
   packages = ["."]
   pruneopts = "NT"
-  revision = "f3a9dae5b19473510a3062802a98815f609ed747"
+  revision = "ac52e6811b56ee2b7730a88915e956afe2cc0d69"
 
 [[projects]]
   branch = "master"
-  digest = "1:34b28f5ad860ecf4b9de5b1933229852352f52c3acd52cfafa0dad9a3ffe4eac"
+  digest = "1:1b8822f5953b62480cc86ac58ea845f360006f9de4fe5ad103d8cb12b7f2c9e9"
   name = "golang.org/x/lint"
   packages = [
     ".",
     "golint",
   ]
   pruneopts = "NT"
-  revision = "1baf3a9d7d675b3c7e974b7a00ded54b88a88379"
+  revision = "c67002cb31c3a748b7688c27f20d8358b4193582"
 
 [[projects]]
   branch = "master"
-  digest = "1:5ff69dec15263cd7267b5a097f79297f90d8d7556ac3565a3d0bb6e0127c5016"
+  digest = "1:5842bdbec06c1ea8891c369eff3033e9d73c201844b0c34f9ca556b0b8f5063a"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "44b849a8bc13eb42e95e6c6c5e360481b73ec710"
+  revision = "66b7b1311ac80bbafcd2daeef9a5e6e2cd1e2399"
 
 [[projects]]
   branch = "master"
-  digest = "1:232162f03360a09579d1b192de2de5de4561c9cb5d394262c9b978f122ac65d4"
+  digest = "1:2b47a2269d802c26ce5ef7dba0814bd6dc2710aba269f57f815d53275617a101"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -291,7 +291,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "40a48ad93fbe707101afb2099b738471f70594ec"
+  revision = "a8570e12b66263a4d2bc406de590d7651e494615"
 
 [[projects]]
   branch = "v2"
