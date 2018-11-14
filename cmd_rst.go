@@ -63,57 +63,25 @@ func (act *ReqDoReset) exec(cfg *UserCfg) (nxt action, err error) {
 		clearHAR()
 	}
 
-	nxt = act.pickScriptThenExec(cfg)
-	return
-}
-
-func (act *ReqDoReset) pickScriptThenExec(cfg *UserCfg) (nxt *RepResetProgress) {
-	if !isRunning {
-		if len(cfg.script(kindStart)) != 0 {
-			return executeScript(cfg, kindStart)
-		}
-		return executeScript(cfg, kindReset)
-	}
-
-	if len(cfg.script(kindReset)) != 0 {
-		return executeScript(cfg, kindReset)
-	}
-
-	actStop := executeScript(cfg, kindStop)
-	if actStop.Failure {
-		return
-	}
-	nxt = executeScript(cfg, kindStart)
-	nxt.Usec += actStop.Usec
+	nxt = executeScript(cfg, act.GetKind())
 	return
 }
 
 func maybePostStop(cfg *UserCfg) {
 	if !wasStopped {
-		executeScript(cfg, kindStop)
+		executeScript(cfg, ExecKind_stop)
 	}
 }
 
-func executeScript(cfg *UserCfg, kind cmdKind) (nxt *RepResetProgress) {
-	k := ExecKind_UNKNOWN
-	switch kind {
-	case kindStart:
-		log.Println("start")
-		k = ExecKind_start
-	case kindReset:
-		log.Println("reset")
-		k = ExecKind_reset
-	case kindStop:
-		log.Println("stop")
-		k = ExecKind_stop
-	}
-	nxt = &RepResetProgress{Kind: k}
+func executeScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
+	log.Println("exec:", ExecKind_name[int32(kind)])
+	nxt = &RepResetProgress{Kind: kind}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
 		return
 	}
 
-	wasStopped = kind == kindStop
+	wasStopped = kind == ExecKind_stop
 
 	var stderr bytes.Buffer
 	var err error
@@ -127,7 +95,7 @@ func executeScript(cfg *UserCfg, kind cmdKind) (nxt *RepResetProgress) {
 	}
 	nxt.Success = true
 
-	isRunning = kind != kindStop
+	isRunning = kind != ExecKind_stop
 	maybeFinalizeConf(cfg, kind)
 	return
 }
@@ -184,8 +152,9 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 	return
 }
 
-func fmtExecError(k cmdKind, i int, c, e, s string) {
-	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, k.String(), e)
+func fmtExecError(k ExecKind, i int, c, e, s string) {
+	kind := ExecKind_name[int32(k)]
+	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, kind, e)
 	fmt.Printf("Command:\n%s\n", c)
 	fmt.Printf("Stderr:\n%s\n", s)
 	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
@@ -275,13 +244,13 @@ func unstache(field string) string {
 	return buffer.String()
 }
 
-func maybeFinalizeConf(cfg *UserCfg, kind cmdKind) {
-	if kind == kindStop {
+func maybeFinalizeConf(cfg *UserCfg, kind ExecKind) {
+	if kind == ExecKind_stop {
 		return
 	}
 	var wg sync.WaitGroup
 
-	if cfg.Runtime.FinalHost == "" || kind != kindReset {
+	if cfg.Runtime.FinalHost == "" || kind != ExecKind_reset {
 		wg.Add(1)
 		go func() {
 			cfg.Runtime.FinalHost = unstache(cfg.Runtime.Host)
@@ -289,7 +258,7 @@ func maybeFinalizeConf(cfg *UserCfg, kind cmdKind) {
 		}()
 	}
 
-	if cfg.Runtime.FinalPort == "" || kind != kindReset {
+	if cfg.Runtime.FinalPort == "" || kind != ExecKind_reset {
 		wg.Add(1)
 		go func() {
 			cfg.Runtime.FinalPort = unstache(cfg.Runtime.Port)

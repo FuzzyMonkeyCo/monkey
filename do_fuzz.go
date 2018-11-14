@@ -43,7 +43,7 @@ func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
 	// FIXME: use buffers?
 
 	wsMsgUID++
-	reqUID := wsMsgUID
+	// reqUID := wsMsgUID
 	msg := &Msg{UID: wsMsgUID}
 
 	switch req.(type) {
@@ -69,10 +69,10 @@ rcv:
 			return
 		}
 
-		if msg.GetUID() != reqUID {
-			err = errors.New("bad dialog sequence number")
-			return
-		}
+		// if msg.GetUID() != reqUID {
+		// 	err = errors.New("bad dialog sequence number")
+		// 	return
+		// }
 
 		switch msg.GetMsg().(type) {
 		case *Msg_Err500:
@@ -189,7 +189,7 @@ func newWS(cfg *UserCfg) error {
 		headerXAuthToken: {cfg.AuthToken},
 	}
 	//FIXME
-	u := &url.URL{Scheme: "ws", Host: "localhost:1042", Path: "/1/fuzz"}
+	u := &url.URL{Scheme: "ws", Host: "localhost:7077", Path: "/1/fuzz"}
 
 	log.Printf("connecting to %s", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)

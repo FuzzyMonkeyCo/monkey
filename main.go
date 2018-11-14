@@ -165,11 +165,14 @@ func actualMain() int {
 	if args.Exec {
 		switch {
 		case args.Start:
-			return doExec(cfg, kindStart)
+			return doExec(cfg, ExecKind_start)
 		case args.Reset:
-			return doExec(cfg, kindReset)
+			return doExec(cfg, ExecKind_reset)
+		case args.Stop:
+			return doExec(cfg, ExecKind_stop)
+		default:
+			return retryOrReport()
 		}
-		return doExec(cfg, kindStop)
 	}
 
 	docPath, blob, err := cfg.findThenReadBlob()
@@ -270,7 +273,7 @@ func doSchema(vald *validator, ref string) int {
 	return 0
 }
 
-func doExec(cfg *UserCfg, kind cmdKind) int {
+func doExec(cfg *UserCfg, kind ExecKind) int {
 	if _, err := os.Stat(shell()); os.IsNotExist(err) {
 		log.Println(shell(), "is required")
 		return 5

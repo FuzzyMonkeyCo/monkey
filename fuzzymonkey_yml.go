@@ -131,11 +131,11 @@ func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	return
 }
 
-func (cfg *UserCfg) script(kind cmdKind) []string {
-	return map[cmdKind][]string{
-		kindStart: cfg.Exec.Start,
-		kindReset: cfg.Exec.Reset_,
-		kindStop:  cfg.Exec.Stop,
+func (cfg *UserCfg) script(kind ExecKind) []string {
+	return map[ExecKind][]string{
+		ExecKind_start: cfg.Exec.Start,
+		ExecKind_reset: cfg.Exec.Reset_,
+		ExecKind_stop:  cfg.Exec.Stop,
 	}[kind]
 }
 
