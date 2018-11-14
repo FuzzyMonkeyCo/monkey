@@ -38,7 +38,7 @@ type wsState struct {
 	done chan struct{}
 }
 
-func (ws *wsState) call(req action) (rep action, err error) {
+func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
 	// NOTE: log in caller
 	// FIXME: use buffers?
 
@@ -59,8 +59,9 @@ func (ws *wsState) call(req action) (rep action, err error) {
 	}
 
 	log.Printf("[DBG] 🡱 PUT %dB\n", len(payload))
-	start := time.Now()
 	ws.req <- payload
+rcv:
+	start := time.Now()
 	select {
 	case payload = <-ws.rep:
 		log.Println("[DBG] 🡳", time.Now().Sub(start), payload[:4])
@@ -88,9 +89,12 @@ func (ws *wsState) call(req action) (rep action, err error) {
 			rep = msg.GetDoCall()
 		case *Msg_FuzzProgress:
 			rep = msg.GetFuzzProgress()
+			rep.exec(cfg)
+			goto rcv
 		default:
 			err = fmt.Errorf("unexpected msg: %+v", msg)
 		}
+
 	case err = <-ws.err:
 		log.Println("[DBG] 🡳", time.Now().Sub(start), err)
 	case <-time.After(15 * time.Second):
@@ -109,7 +113,7 @@ func newFuzz(cfg *UserCfg, vald *validator) (act action, err error) {
 		Spec: vald.Spec,
 	}
 
-	if act, err = ws.call(msg); err != nil {
+	if act, err = ws.call(msg, cfg); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return
@@ -125,16 +129,17 @@ func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
 
 func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 	// Sometimes sets cfg.Runtime.Final* fields
+	log.Printf(">>> %#v\n", curr)
 	if nxt, err = curr.exec(cfg); err != nil {
 		ws.err2 <- err
 		return
 	}
 	log.Printf(">>> %+v\n", nxt)
-	// if nxt == nil {
-	// 	return
-	// }
+	if nxt == nil {
+		return
+	}
 
-	if nxt, err = ws.call(nxt); err != nil {
+	if nxt, err = ws.call(nxt, cfg); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return

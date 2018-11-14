@@ -1,32 +1,12 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	"log"
 	"net/url"
 	"strings"
-	// "time"
-
-	"github.com/sebcat/har"
+	"time"
 )
-
-type harRequest *har.Request
-
-type reqCmd struct {
-	V          uint       `json:"v"`
-	Cmd        cmdKind    `json:"cmd"`
-	Lane       lane       `json:"lane"`
-	HARRequest harRequest `json:"har_req"`
-}
-
-type reqCmdRep struct {
-	V        uint     `json:"v"`
-	Cmd      cmdKind  `json:"cmd"`
-	Lane     lane     `json:"lane"`
-	Us       uint64   `json:"us"`
-	HAREntry harEntry `json:"har_rep,omitempty"`
-	Reason   string   `json:"reason,omitempty"`
-}
 
 func (act *FuzzProgress) exec(cfg *UserCfg) (nxt action, err error) {
 	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
@@ -55,40 +35,40 @@ func (act *ReqDoCall) exec(cfg *UserCfg) (nxt action, err error) {
 }
 
 func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
-	// harReq := act.GetRequest()
+	harReq := act.GetRequest()
 	nxt = &RepCallDone{Usec: 42, Response: &HAR_Entry{}, Failure: true}
-	// r, err := harReq.Request()
-	// if err != nil {
-	// 	log.Println("[ERR]", err)
-	// 	return
-	// }
+	r, err := harReq.Request()
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 
-	// log.Println("[NFO] ▲", harReq)
-	// start := time.Now()
-	// _, err = clientReq.Do(r)
-	// us := time.Now().Sub(start)
-	// log.Println("[NFO] ❙", us)
-	// nxt = &RepCallDone{Usec: uint64(us)}
+	log.Println("[NFO] ▲", harReq)
+	start := time.Now()
+	_, err = clientReq.Do(r)
+	us := time.Now().Sub(start)
+	log.Println("[NFO] ❙", us)
+	nxt = &RepCallDone{Usec: uint64(us)}
 
-	// if err != nil {
-	// 	//FIXME: is there a way to describe these failures in HAR 1.2?
-	// 	e := fmt.Sprintf("%#v", err.Error())
-	// 	log.Println("[NFO] ▼", e)
-	// 	nxt.Reason = e
-	// 	err = nil
-	// 	return
-	// }
+	if err != nil {
+		//FIXME: is there a way to describe these failures in HAR 1.2?
+		e := fmt.Sprintf("%#v", err.Error())
+		log.Println("[NFO] ▼", e)
+		nxt.Reason = e
+		err = nil
+		return
+	}
 
-	// //FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
-	// //FIXME: make sure order is preserved github.com/golang/go/issues/21853
-	// resp := lastHAR()
-	// log.Printf("[NFO]\n  ▼  %#v\n", resp)
-	// nxt.Response = resp
+	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
+	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
+	resp := lastHAR()
+	log.Printf("[NFO]\n  ▼  %#v\n", resp)
+	nxt.Response = resp
 	return
 }
 
 func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
-	URL, err := url.Parse(act.Request.Url)
+	URL, err := url.Parse(act.Request.URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -96,7 +76,7 @@ func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
 
 	// TODO: if host is an IPv6 then it has to be braced with []
 	URL.Host = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
-	act.Request.Url = URL.String()
+	act.Request.URL = URL.String()
 	return
 }
 

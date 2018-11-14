@@ -301,7 +301,7 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 	}
 
 	for {
-		if act == nil {
+		if done, ok := act.(*FuzzProgress); ok && (done.GetFailure() || done.GetSuccess()) {
 			maybePostStop(cfg)
 			ensureDeleted(envID())
 			return fuzzOutcome(act)

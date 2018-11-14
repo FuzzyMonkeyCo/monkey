@@ -60,19 +60,13 @@ message FuzzProgress {
   uint32 shrink_amount = 9;
 }
 message ReqDoReset {
+  ExecKind kind = 1;
 }
 message RepResetProgress {
   bool failure = 1;
   bool success = 2;
   uint64 usec = 3;
-  enum Kind {
-    UNKNOWN = 0;
-    start = 1;
-    reset = 2;
-    stop = 3;
-    stop_then_start = 4;
-  }
-  Kind kind = 4;
+  ExecKind kind = 4;
 }
 
 message SUTMetrics {
@@ -131,6 +125,14 @@ message UserCfg {
   Exec exec = 7;
 }
 
+enum ExecKind {
+  UNKNOWN = 0;
+  start = 1;
+  reset = 2;
+  stop = 3;
+  stop_then_start = 4;
+}
+
 message SpecIR {
   Schemas schemas = 1;
   repeated Endpoint endpoints = 2;
@@ -166,6 +168,18 @@ message Endpoint {
 }
 
 message EndpointJSON {
+  enum Method {
+    UNKNOWN = 0;
+    GET = 1;
+    HEAD = 2;
+    POST = 3;
+    PUT = 4;
+    PATCH = 5;
+    DELETE = 6;
+    CONNECT = 7;
+    OPTIONS = 8;
+    TRACE = 9;
+  }
   Method method = 1;
   repeated PathPartial path_partials = 2;
   repeated ParamJSON inputs = 3;
@@ -193,19 +207,6 @@ message ParamJSON {
   Kind kind = 4;
 
   // TODO: repeated Example examples
-}
-
-enum Method {
-  UNKNOWN = 0;
-  GET = 1;
-  HEAD = 2;
-  POST = 3;
-  PUT = 4;
-  PATCH = 5;
-  DELETE = 6;
-  CONNECT = 7;
-  OPTIONS = 8;
-  TRACE = 9;
 }
 
 message PathPartial {
@@ -365,7 +366,7 @@ message HAR {
     repeated Cookie cookies = 5;
     string http_version = 6;
     string method = 7;
-    string url = 8;
+    string URL = 8;
     PostData post_data = 9;
     repeated Query query_string = 10;
   }

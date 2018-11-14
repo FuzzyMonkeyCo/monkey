@@ -66,7 +66,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
-						Method:       Method(Method_value[docMethod]),
+						Method:       EndpointJSON_Method(EndpointJSON_Method_value[docMethod]),
 						PathPartials: partials,
 						Inputs:       inputs,
 						Outputs:      outputs,

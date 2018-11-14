@@ -95,17 +95,17 @@ func maybePostStop(cfg *UserCfg) {
 }
 
 func executeScript(cfg *UserCfg, kind cmdKind) (nxt *RepResetProgress) {
-	k := RepResetProgress_UNKNOWN
+	k := ExecKind_UNKNOWN
 	switch kind {
 	case kindStart:
 		log.Println("start")
-		k = RepResetProgress_start
+		k = ExecKind_start
 	case kindReset:
 		log.Println("reset")
-		k = RepResetProgress_reset
+		k = ExecKind_reset
 	case kindStop:
 		log.Println("stop")
-		k = RepResetProgress_stop
+		k = ExecKind_stop
 	}
 	nxt = &RepResetProgress{Kind: k}
 	shellCmds := cfg.script(kind)
