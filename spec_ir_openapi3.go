@@ -47,7 +47,6 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 
 	for j := 0; j != i; j++ {
 		path := paths[j]
-		partials := pathFromOA3(basePath, path)
 		docOps := docPaths[path].Operations()
 		k, methods := 0, make([]string, len(docOps))
 		for docMethod := range docOps {
@@ -62,6 +61,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
 			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
+			partials := pathFromOA3(inputs, basePath, path)
 			outputs := vald.outputsFromOA3(docOp.Responses)
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
@@ -331,7 +331,7 @@ func ensureSchemaType(types interface{}, t string) []string {
 	return append(ts, t)
 }
 
-func pathFromOA3(basePath, path string) (partials []*PathPartial) {
+func pathFromOA3(inputs []*ParamJSON, basePath, path string) (partials []*PathPartial) {
 	if basePath != "/" {
 		p := &PathPartial{Pp: &PathPartial_Part{basePath}}
 		partials = append(partials, p)
@@ -342,7 +342,16 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 	for i, part := range strings.FieldsFunc(path, onCurly) {
 		var p PathPartial
 		if isCurly || i%2 != 0 {
-			p.Pp = &PathPartial_Ptr{part}
+			ptr := sid(0)
+			for _, param := range inputs {
+				if part == param.Name {
+					ptr = param.SID
+				}
+			}
+			if ptr == 0 {
+				panic(`can't find parameter for path param ` + part)
+			}
+			p.Pp = &PathPartial_Ptr{ptr}
 		} else {
 			p.Pp = &PathPartial_Part{part}
 		}

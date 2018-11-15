@@ -212,7 +212,7 @@ message ParamJSON {
 message PathPartial {
   oneof pp {
     string part = 1;
-    string ptr = 2;  // FIXME? uint32 ptr = 2;
+    uint32 ptr = 2;
   }
 }
 
