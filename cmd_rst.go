@@ -67,12 +67,6 @@ func (act *ReqDoReset) exec(cfg *UserCfg) (nxt action, err error) {
 	return
 }
 
-func maybePostStop(cfg *UserCfg) {
-	if !wasStopped {
-		executeScript(cfg, ExecKind_stop)
-	}
-}
-
 func executeScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
 	log.Println("exec:", ExecKind_name[int32(kind)])
 	nxt = &RepResetProgress{Kind: kind}
@@ -248,8 +242,8 @@ func maybeFinalizeConf(cfg *UserCfg, kind ExecKind) {
 	if kind == ExecKind_stop {
 		return
 	}
-	var wg sync.WaitGroup
 
+	var wg sync.WaitGroup
 	if cfg.Runtime.FinalHost == "" || kind != ExecKind_reset {
 		wg.Add(1)
 		go func() {
@@ -265,6 +259,5 @@ func maybeFinalizeConf(cfg *UserCfg, kind ExecKind) {
 			wg.Done()
 		}()
 	}
-
 	wg.Wait()
 }

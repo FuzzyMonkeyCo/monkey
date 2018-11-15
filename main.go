@@ -305,7 +305,6 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 
 	for {
 		if done, ok := act.(*FuzzProgress); ok && (done.GetFailure() || done.GetSuccess()) {
-			maybePostStop(cfg)
 			ensureDeleted(envID())
 			return fuzzOutcome(act)
 		}
@@ -317,7 +316,7 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 }
 
 func retryOrReportThenCleanup(cfg *UserCfg, err error) int {
-	defer maybePostStop(cfg)
+	defer func() { colorWRN.Println("You might want to run $ monkey exec stop") }()
 	if hadExecError {
 		return 7
 	}
