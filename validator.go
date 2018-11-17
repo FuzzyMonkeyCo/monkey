@@ -5,9 +5,9 @@ import (
 	"errors"
 	"log"
 	"os"
-	"reflect"
 	"sort"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -92,8 +92,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
 		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
-			//TODO: drop reflect
-			if s := schemaPtr.GetSchema(); s != nil && reflect.DeepEqual(schema, s) {
+			if s := schemaPtr.GetSchema(); s != nil && proto.Equal(&schema, s) {
 				return SID
 			}
 		}
