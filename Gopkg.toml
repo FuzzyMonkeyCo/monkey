@@ -48,10 +48,6 @@ required = [
 
 [[constraint]]
   branch = "master"
-  name = "github.com/cardigann/harhar"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/docopt/docopt-go"
 
 [[constraint]]
@@ -61,10 +57,6 @@ required = [
 [[constraint]]
   branch = "master"
   name = "github.com/hashicorp/logutils"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/sebcat/har"
 
 [[constraint]]
   branch = "master"

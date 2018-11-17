@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  digest = "1:f197dd423f4675be375715f3890c9a85f7e40d2c8dd277fdfe6b85428760aa87"
-  name = "github.com/cardigann/harhar"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "acb91b7a8682d79853ca817d5f16b0819c83d2f7"
-
-[[projects]]
   digest = "1:4b8b5811da6970495e04d1f4e98bb89518cc3cfc3b3f456bdb876ed7b6c74049"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -200,14 +192,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d0fb234eb43b36d321b04d56854cb5e55f6ef793044abf0241fe0bb8683ab8b"
-  name = "github.com/sebcat/har"
-  packages = ["."]
-  pruneopts = "NT"
-  revision = "e5490f454e487f004446592803b2b37f0db1054a"
-
-[[projects]]
-  branch = "master"
   digest = "1:8e2a92e64c1af43651410c94ed09da175d952a8bfea4ba2d8e9fcaae9c6f9c6d"
   name = "github.com/stretchr/testify"
   packages = [
@@ -330,7 +314,6 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/cardigann/harhar",
     "github.com/docopt/docopt-go",
     "github.com/fatih/color",
     "github.com/fenollp/gox",
@@ -344,7 +327,6 @@
     "github.com/hashicorp/logutils",
     "github.com/kyoh86/richgo",
     "github.com/mitchellh/mapstructure",
-    "github.com/sebcat/har",
     "github.com/stretchr/testify/require",
     "github.com/wadey/gocovmerge",
     "github.com/xeipuuv/gojsonschema",
