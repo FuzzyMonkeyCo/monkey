@@ -61,13 +61,13 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
 			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
-			partials := pathFromOA3(inputs, basePath, path)
 			outputs := vald.outputsFromOA3(docOp.Responses)
+			method := EndpointJSON_Method(EndpointJSON_Method_value[docMethod])
 			endpoint := &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
-						Method:       EndpointJSON_Method(EndpointJSON_Method_value[docMethod]),
-						PathPartials: partials,
+						Method:       method,
+						PathPartials: pathFromOA3(basePath, path),
 						Inputs:       inputs,
 						Outputs:      outputs,
 					},
@@ -87,10 +87,10 @@ func (vald *validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openap
 				docSchema := ct.Schema
 				schema := vald.schemaOrRefFromOA3(docSchema)
 				param := &ParamJSON{
-					Required: docBody.Required,
-					SID:      vald.ensureMapped(docSchema.Ref, schema),
-					Name:     "",
-					Kind:     ParamJSON_body,
+					IsRequired: docBody.Required,
+					SID:        vald.ensureMapped(docSchema.Ref, schema),
+					Name:       "",
+					Kind:       ParamJSON_body,
 				}
 				*inputs = append(*inputs, param)
 				return
@@ -130,10 +130,10 @@ func (vald *validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Pa
 		docSchema := docParam.Schema
 		schema := vald.schemaOrRefFromOA3(docSchema)
 		param := &ParamJSON{
-			Required: docParam.Required,
-			SID:      vald.ensureMapped(docSchema.Ref, schema),
-			Name:     docParam.Name,
-			Kind:     kind,
+			IsRequired: docParam.Required,
+			SID:        vald.ensureMapped(docSchema.Ref, schema),
+			Name:       docParam.Name,
+			Kind:       kind,
 		}
 		*inputs = append(*inputs, param)
 	}
@@ -331,7 +331,7 @@ func ensureSchemaType(types interface{}, t string) []string {
 	return append(ts, t)
 }
 
-func pathFromOA3(inputs []*ParamJSON, basePath, path string) (partials []*PathPartial) {
+func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 	if basePath != "/" {
 		p := &PathPartial{Pp: &PathPartial_Part{basePath}}
 		partials = append(partials, p)

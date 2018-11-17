@@ -189,9 +189,7 @@ message EndpointJSON {
 }
 
 message ParamJSON {
-  // Whether this param has to be present
-  bool required = 1;
-  // Pointer to Schemas message
+  bool is_required = 1;
   uint32 SID = 2;
   // Note: bodies have an empty name
   string name = 3;

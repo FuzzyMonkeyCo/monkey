@@ -142,7 +142,7 @@ func (sm *schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.Req
 		if body != nil && isInputBody(body) {
 			reqBody := &openapi3.RequestBody{
 				Content:     sm.contentToOA3(body.GetSID()),
-				Required:    body.GetRequired(),
+				Required:    body.GetIsRequired(),
 				Description: someText,
 			}
 			reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
@@ -171,7 +171,7 @@ func (sm *schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters)
 
 		param := &openapi3.Parameter{
 			Name:        input.GetName(),
-			Required:    input.GetRequired(),
+			Required:    input.GetIsRequired(),
 			In:          in,
 			Description: someText,
 			Schema:      sm.derefSchemaPtr(input.GetSID()),
