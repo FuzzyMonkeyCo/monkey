@@ -108,7 +108,15 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		return 0
 	}
 	schemaPtr := &SchemaPtr{Ref: ref, SID: mappedSID}
-	SID := vald.newSID()
+	SID := sid(0)
+	for refSID, schemaPtr := range vald.Spec.Schemas.Json {
+		if ptr := schemaPtr.GetPtr(); ptr != nil && ptr.GetRef() == ref {
+			SID = refSID
+		}
+	}
+	if SID == 0 {
+		panic(`impossible`)
+	}
 	vald.Spec.Schemas.Json[SID] = &RefOrSchemaJSON{
 		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
 	}
