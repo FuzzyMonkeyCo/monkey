@@ -342,16 +342,8 @@ func pathFromOA3(inputs []*ParamJSON, basePath, path string) (partials []*PathPa
 	for i, part := range strings.FieldsFunc(path, onCurly) {
 		var p PathPartial
 		if isCurly || i%2 != 0 {
-			ptr := sid(0)
-			for _, param := range inputs {
-				if part == param.Name {
-					ptr = param.SID
-				}
-			}
-			if ptr == 0 {
-				panic(`can't find parameter for path param ` + part)
-			}
-			p.Pp = &PathPartial_Ptr{ptr}
+			// TODO (vendor): ensure path params are part of inputs
+			p.Pp = &PathPartial_Ptr{part}
 		} else {
 			p.Pp = &PathPartial_Part{part}
 		}

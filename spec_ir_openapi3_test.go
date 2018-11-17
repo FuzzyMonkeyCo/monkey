@@ -399,25 +399,25 @@ func pathToOA3(partials []*PathPartial) (s string) {
 	return
 }
 
-func methodToOA3(m Method, op *openapi3.Operation, p *openapi3.PathItem) {
+func methodToOA3(m EndpointJSON_Method, op *openapi3.Operation, p *openapi3.PathItem) {
 	switch m {
-	case Method_CONNECT:
+	case EndpointJSON_CONNECT:
 		p.Connect = op
-	case Method_DELETE:
+	case EndpointJSON_DELETE:
 		p.Delete = op
-	case Method_GET:
+	case EndpointJSON_GET:
 		p.Get = op
-	case Method_HEAD:
+	case EndpointJSON_HEAD:
 		p.Head = op
-	case Method_OPTIONS:
+	case EndpointJSON_OPTIONS:
 		p.Options = op
-	case Method_PATCH:
+	case EndpointJSON_PATCH:
 		p.Patch = op
-	case Method_POST:
+	case EndpointJSON_POST:
 		p.Post = op
-	case Method_PUT:
+	case EndpointJSON_PUT:
 		p.Put = op
-	case Method_TRACE:
+	case EndpointJSON_TRACE:
 		p.Trace = op
 	default:
 		panic(`no such method`)
