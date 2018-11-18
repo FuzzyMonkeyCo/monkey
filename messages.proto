@@ -400,15 +400,15 @@ message HAR {
 
   message Cache {
     string comment = 1;
-    AroundRequest afterRequest = 2;
-    AroundRequest beforeRequest = 3;
+    AroundRequest after_request = 2;
+    AroundRequest before_request = 3;
   }
 
   message Content {
     string comment = 1;
     int32 compression = 2;
     string encoding = 3;
-    string mimeType = 4;
+    string mime_type = 4;
     int32 size = 5;
     string text = 6;
   }
@@ -435,12 +435,12 @@ message HAR {
     string comment = 1;
     Cache cache = 2;
     string connection = 3;
-    string pageref = 4;
+    string page_ref = 4;
     Request request = 5;
     Response response = 6;
     string server_IP_address = 7;
     // iso8601
-    string startedDateTime = 8;
+    string started_date_time = 8;
     int64 time = 9;
     Timings timings = 10;
   }
@@ -463,29 +463,29 @@ message HAR {
   message Page {
     string comment = 1;
     string id = 2;
-    PageTimings pageTimings = 3;
+    PageTimings page_timings = 3;
     // iso8601
-    string startedDateTime = 4;
+    string started_date_time = 4;
     string title = 5;
   }
 
   message PageTimings {
     string comment = 1;
-    int64 onContentLoad = 2;
-    int64 onLoad = 3;
+    int64 on_content_load = 2;
+    int64 on_load = 3;
   }
 
   message PostData {
     string comment = 1;
-    string mimeType = 2;
+    string mime_type = 2;
     repeated PostDataParam params = 3;
     string text = 4;
   }
 
   message PostDataParam {
     string comment = 1;
-    string contentType = 2;
-    string fileName = 3;
+    string content_type = 2;
+    string file_name = 3;
     string name = 4;
     string value = 5;
   }

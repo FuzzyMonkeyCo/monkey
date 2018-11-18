@@ -1,13 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"sync"
 	"time"
 
@@ -51,6 +50,13 @@ func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
 		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
 	case *RepResetProgress:
 		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
+	case *RepCallDone:
+		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
+	default:
+		err = fmt.Errorf("unexpected msg: %#v", req)
+	}
+	if err != nil {
+		return
 	}
 
 	payload, err := proto.Marshal(msg)
@@ -58,7 +64,7 @@ func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
 		return
 	}
 
-	log.Printf("[DBG] 🡱 PUT %dB\n", len(payload))
+	log.Printf("[DBG] 🡱 sending %dB\n", len(payload))
 	ws.req <- payload
 rcv:
 	start := time.Now()
@@ -90,9 +96,11 @@ rcv:
 		case *Msg_FuzzProgress:
 			rep = msg.GetFuzzProgress()
 			rep.exec(cfg)
-			goto rcv
+			if r := rep.(*FuzzProgress); !(r.GetFailure() || r.GetSuccess()) {
+				goto rcv
+			}
 		default:
-			err = fmt.Errorf("unexpected msg: %+v", msg)
+			err = fmt.Errorf("unexpected msg: %#v", msg)
 		}
 
 	case err = <-ws.err:
@@ -129,12 +137,12 @@ func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
 
 func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 	// Sometimes sets cfg.Runtime.Final* fields
-	log.Printf(">>> %#v\n", curr)
+	log.Printf(">>> curr %#v\n", curr)
 	if nxt, err = curr.exec(cfg); err != nil {
 		ws.err2 <- err
 		return
 	}
-	log.Printf(">>> %+v\n", nxt)
+	log.Printf(">>> nxt %#v\n", nxt)
 	if nxt == nil {
 		return
 	}
@@ -145,42 +153,25 @@ func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 	return
 }
 
-func nextPOST(cfg *UserCfg, payload []byte) (rep []byte, err error) {
-	r, err := http.NewRequest(http.MethodPost, apiFuzzNext, bytes.NewBuffer(payload))
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
+func fuzzOutcome(done *FuzzProgress) int {
+	os.Stdout.Write([]byte{'\n'})
+	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
+
+	if done.GetFailure() {
+		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
+		if m != 1 {
+			fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
+		} else {
+			fmt.Printf("A bug was detected after %d tests then shrunk once!\n", d)
+		}
+		return 6
 	}
 
-	r.Header.Set(headerContentType, mimeJSON)
-	r.Header.Set(headerAccept, mimeJSON)
-	r.Header.Set(headerUserAgent, binTitle)
-	r.Header.Set(headerXAuthToken, cfg.AuthToken)
-
-	log.Printf("[DBG] 🡱  POST %s\n  🡱  %s\n", apiFuzzNext, payload)
-	start := time.Now()
-	resp, err := clientUtils.Do(r)
-	log.Printf("[DBG] ❙ %dμs\n", time.Since(start)/time.Microsecond)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
+	if !done.GetSuccess() {
+		log.Fatalln("[ERR] there should be success!")
 	}
-	defer resp.Body.Close()
-
-	if rep, err = ioutil.ReadAll(resp.Body); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	log.Printf("[DBG]\n  🡳  %s\n", rep)
-
-	if resp.StatusCode != http.StatusOK {
-		err = newStatusError(http.StatusOK, resp.Status)
-		log.Println("[ERR]", err)
-		return
-	}
-
-	cfg.AuthToken = resp.Header.Get(headerXAuthToken)
-	return
+	fmt.Println("No bugs found... yet.")
+	return 0
 }
 
 func newWS(cfg *UserCfg) error {

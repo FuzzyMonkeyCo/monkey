@@ -106,6 +106,7 @@ func (c *HARRecorder) RoundTrip(req *http.Request) (resp *http.Response, err err
 		return
 	}
 
+	ent.Timings = &HAR_Timings{}
 	ent.Timings.Wait = int64(time.Now().Sub(startTime))
 	ent.Time = ent.Timings.Wait
 
@@ -218,6 +219,7 @@ func harResponse(hr *http.Response) (*HAR_Response, error) {
 	}
 	hr.Body.Close()
 	hr.Body = ioutil.NopCloser(bytes.NewReader(bodyData))
+	r.Content = &HAR_Content{}
 	r.Content.Text = string(bodyData)
 	r.Content.Size = int32(len(bodyData))
 

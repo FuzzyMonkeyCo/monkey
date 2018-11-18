@@ -9,6 +9,7 @@ import (
 )
 
 func (act *FuzzProgress) exec(cfg *UserCfg) (nxt action, err error) {
+	log.Println(">>> FuzzProgress", act)
 	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
 	return
 }
@@ -43,7 +44,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 		return
 	}
 
-	log.Println("[NFO] ▲", harReq)
+	log.Println("[NFO] ▼", harReq)
 	start := time.Now()
 	_, err = clientReq.Do(r)
 	us := time.Now().Sub(start)
@@ -53,7 +54,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
 		e := fmt.Sprintf("%#v", err.Error())
-		log.Println("[NFO] ▼", e)
+		log.Println("[NFO] ▲", e)
 		nxt.Reason = e
 		err = nil
 		return
@@ -62,7 +63,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
 	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
 	resp := lastHAR()
-	log.Printf("[NFO]\n  ▼  %#v\n", resp)
+	log.Println("[NFO] ▲", resp)
 	nxt.Response = resp
 	return
 }
