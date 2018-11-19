@@ -214,7 +214,6 @@ func newWS(cfg *UserCfg) error {
 				ws.rep <- rep
 			}
 		}
-		log.Println("ws reader ending")
 	}()
 
 	var once sync.Once
