@@ -361,6 +361,7 @@ func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 	}
 
 	// NOTE Compile errs on bad refs only, MUST do this step in `lint`
+	log.Println("[NFO] compiling schema refs")
 	schema, err := vald.Refd.Compile(
 		gojsonschema.NewGoLoader(schemaJSON{"$ref": absRef}))
 	if err != nil {
@@ -368,6 +369,7 @@ func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 		return
 	}
 
+	log.Println("[NFO] validating payload against refs")
 	res, err := schema.Validate(gojsonschema.NewGoLoader(value))
 	if err != nil {
 		log.Println("[ERR]", err)
