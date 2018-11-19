@@ -153,13 +153,21 @@ func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	for j := 0; j != i; j++ {
 		code := codes[j]
 		responseRef := docResponses[code]
+		xxx := makeXXXFromOA3(code)
+		// NOTE: Responses MAY have a schema
+		if len(responseRef.Value.Content) == 0 {
+			outputs[xxx] = 0
+		}
 		//FIXME: handle .Ref
 		for mime, ct := range responseRef.Value.Content {
 			if mime == mimeJSON {
-				xxx := makeXXXFromOA3(code)
 				docSchema := ct.Schema
-				schema := vald.schemaOrRefFromOA3(docSchema)
-				outputs[xxx] = vald.ensureMapped(docSchema.Ref, schema)
+				if docSchema == nil {
+					outputs[xxx] = 0
+				} else {
+					schema := vald.schemaOrRefFromOA3(docSchema)
+					outputs[xxx] = vald.ensureMapped(docSchema.Ref, schema)
+				}
 			}
 		}
 	}
