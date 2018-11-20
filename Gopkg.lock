@@ -54,7 +54,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6cd02c9bc53e77f08881f827a542e19fe6940755b05c7eb4f86749a1fbc1dead"
+  digest = "1:6d69fa4d5cddd8c71419cc6502d36fddd8546502fd921c545f9e812dfd6e4c53"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
@@ -72,7 +72,7 @@
     "ptypes/timestamp",
   ]
   pruneopts = "NT"
-  revision = "52132540909e117f2b98b0694383dc0ab1e1deca"
+  revision = "882cf97a83ad205fd22af574246a3bc647d7a7d2"
 
 [[projects]]
   branch = "master"
@@ -254,15 +254,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7ebf4e1066ef714f700db6da5affc694e7d3ba83272efe7c18533cbac96df050"
+  digest = "1:d2b41dcca28b5db7c449fe9abb931217766959c9c784403be8ecdf156191188e"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "93218def8b18e66adbdab3eca8ec334700329f1f"
+  revision = "ec83556a53fe16b65c452a104ea9d1e86a671852"
 
 [[projects]]
   branch = "master"
-  digest = "1:59532021ea9d7067496b43303df437f837aa5973e400dfa60e79d85da2bc0b49"
+  digest = "1:6b54612b83c2f28e8eab7c17626ff79c3bbc0602ed2a901802e0c05ad7f4e616"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -275,7 +275,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "89e258047f9bd4255fae0d48139e1d5ff0a7b8dd"
+  revision = "fc4f04983f629377122b333bebb16bfd5a5dcfed"
 
 [[projects]]
   branch = "v2"
