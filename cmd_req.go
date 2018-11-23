@@ -8,26 +8,20 @@ import (
 	"time"
 )
 
-func (act *FuzzProgress) exec(cfg *UserCfg) (nxt action, err error) {
-	log.Println(">>> FuzzProgress", act)
-	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
+func (act *RepCallDone) exec(mnk *monkey) (nxt action, err error) {
 	return
 }
 
-func (act *RepCallDone) exec(cfg *UserCfg) (nxt action, err error) {
-	return
-}
-
-func (act *ReqDoCall) exec(cfg *UserCfg) (nxt action, err error) {
+func (act *ReqDoCall) exec(mnk *monkey) (nxt action, err error) {
 	if !isHARReady() {
 		newHARTransport()
 	}
 
 	act.updateUserAgentHeader()
-	if err = act.updateURL(cfg); err != nil {
+	if err = act.updateURL(mnk.cfg); err != nil {
 		return
 	}
-	act.updateHostHeader(cfg)
+	act.updateHostHeader(mnk.cfg)
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}

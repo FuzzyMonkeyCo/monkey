@@ -19,7 +19,7 @@ type lane struct {
 }
 
 type action interface {
-	exec(cfg *UserCfg) (act action, err error)
+	exec(mnk *monkey) (act action, err error)
 }
 
 type someCmd interface {
@@ -79,47 +79,3 @@ func (k cmdKind) MarshalJSON() (data []byte, err error) {
 	err = fmt.Errorf("impossibru %#v", k)
 	return
 }
-
-// func unmarshalCmd(cmdJSON []byte) (cmd someCmd, err error) {
-// 	var ok bool
-
-// 	if ok, err = isValidForSchemaREQv1(cmdJSON); err != nil {
-// 		return
-// 	}
-// 	if ok {
-// 		var cmd reqCmd
-// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-// 			log.Println("[ERR]", err)
-// 			return nil, err
-// 		}
-// 		return &cmd, nil
-// 	}
-
-// 	if ok, err = isValidForSchemaCMDv1(cmdJSON); err != nil {
-// 		return
-// 	}
-// 	if ok {
-// 		var cmd rstCmd
-// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-// 			log.Println("[ERR]", err)
-// 			return nil, err
-// 		}
-// 		return &cmd, nil
-// 	}
-
-// 	if ok, err = isValidForSchemaCMDDonev1(cmdJSON); err != nil {
-// 		return
-// 	}
-// 	if ok {
-// 		var cmd doneCmd
-// 		if err = json.Unmarshal(cmdJSON, &cmd); err != nil {
-// 			log.Println("[ERR]", err)
-// 			return nil, err
-// 		}
-// 		return &cmd, nil
-// 	}
-
-// 	err = errors.New("invalid JSON data received")
-// 	log.Println("[ERR]", err)
-// 	return
-// }

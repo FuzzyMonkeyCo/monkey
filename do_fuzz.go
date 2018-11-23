@@ -37,7 +37,12 @@ type wsState struct {
 	done chan struct{}
 }
 
-func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
+type monkey struct {
+	cfg  *UserCfg
+	vald *validator
+}
+
+func (ws *wsState) call(req action, mnk *monkey) (rep action, err error) {
 	// NOTE: log in caller
 	// FIXME: use buffers?
 
@@ -52,8 +57,10 @@ func (ws *wsState) call(req action, cfg *UserCfg) (rep action, err error) {
 		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
 	case *RepCallDone:
 		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
+	case *RepValidateProgress:
+		msg.Msg = &Msg_ValidateProgress{ValidateProgress: req.(*RepValidateProgress)}
 	default:
-		err = fmt.Errorf("unexpected msg: %#v", req)
+		err = fmt.Errorf("unexpected req: %#v", req)
 	}
 	if err != nil {
 		return
@@ -93,9 +100,11 @@ rcv:
 			rep = msg.GetDoReset()
 		case *Msg_DoCall:
 			rep = msg.GetDoCall()
+		case *Msg_DoValidate:
+			rep = msg.GetDoValidate()
 		case *Msg_FuzzProgress:
 			rep = msg.GetFuzzProgress()
-			rep.exec(cfg)
+			rep.exec(mnk)
 			if r := rep.(*FuzzProgress); !(r.GetFailure() || r.GetSuccess()) {
 				goto rcv
 			}
@@ -111,34 +120,21 @@ rcv:
 	return
 }
 
-func newFuzz(cfg *UserCfg, vald *validator) (act action, err error) {
-	if err = newWS(cfg); err != nil {
-		return
-	}
-
-	msg := &DoFuzz{
-		Cfg:  cfg,
-		Spec: vald.Spec,
-	}
-
-	if act, err = ws.call(msg, cfg); err != nil {
-		log.Println("[ERR]", err)
-	}
+func (act *DoFuzz) exec(mnk *monkey) (nxt action, err error) {
+	act.Cfg = mnk.cfg
+	act.Spec = mnk.vald.Spec
+	nxt = act
 	return
 }
 
-func (act *DoFuzz) exec(cfg *UserCfg) (nxt action, err error) {
+func (act *RepResetProgress) exec(mnk *monkey) (nxt action, err error) {
 	return
 }
 
-func (act *RepResetProgress) exec(cfg *UserCfg) (nxt action, err error) {
-	return
-}
-
-func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
-	// Sometimes sets cfg.Runtime.Final* fields
+func fuzzNext(mnk *monkey, curr action) (nxt action, err error) {
+	// Sometimes sets mnk.cfg.Runtime.Final* fields
 	log.Printf(">>> curr %#v\n", curr)
-	if nxt, err = curr.exec(cfg); err != nil {
+	if nxt, err = curr.exec(mnk); err != nil {
 		ws.err2 <- err
 		return
 	}
@@ -147,9 +143,15 @@ func fuzzNext(cfg *UserCfg, curr action) (nxt action, err error) {
 		return
 	}
 
-	if nxt, err = ws.call(nxt, cfg); err != nil {
+	if nxt, err = ws.call(nxt, mnk); err != nil {
 		log.Println("[ERR]", err)
 	}
+	return
+}
+
+func (act *FuzzProgress) exec(mnk *monkey) (nxt action, err error) {
+	log.Println(">>> FuzzProgress", act)
+	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
 	return
 }
 

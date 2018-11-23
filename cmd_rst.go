@@ -40,7 +40,7 @@ type rstCmdRep struct {
 	Failed bool    `json:"failed"`
 }
 
-func (act *ReqDoReset) exec(cfg *UserCfg) (nxt action, err error) {
+func (act *ReqDoReset) exec(mnk *monkey) (nxt action, err error) {
 	if isHARReady() {
 		/// exec of FuzzProgress
 		// var str string
@@ -63,7 +63,7 @@ func (act *ReqDoReset) exec(cfg *UserCfg) (nxt action, err error) {
 		clearHAR()
 	}
 
-	nxt = executeScript(cfg, act.GetKind())
+	nxt = executeScript(mnk.cfg, act.GetKind())
 	return
 }
 

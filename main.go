@@ -154,12 +154,13 @@ func actualMain() int {
 		return retryOrReport()
 	}
 	cfg, err := newCfg(config, args.Lint && !args.HideConfig)
-	if err != nil || cfg == nil {
+	if err != nil {
 		return retryOrReport()
 	}
 	if args.Lint {
-		log.Printf("[NFO] %s is a valid v%d configuration\n", localCfg, cfg.Version)
-		colorNFO.Printf("%s is a valid v%d configuration.\n", localCfg, cfg.Version)
+		e := fmt.Sprintf("%s is a valid v%d configuration", localCfg, cfg.Version)
+		log.Println("[NFO]", e)
+		colorNFO.Printf(e)
 	}
 
 	if args.Exec {
@@ -186,8 +187,9 @@ func actualMain() int {
 		return 2
 	}
 	if args.Lint {
-		log.Println("[NFO]", docPath, "is a valid", cfg.Kind, "specification")
-		colorNFO.Println(docPath, "is a valid", cfg.Kind, "specification.")
+		err := fmt.Errorf("%s is a valid %v specification", docPath, cfg.Kind)
+		log.Println("[NFO]", err)
+		colorNFO.Println(err)
 		return 0
 	}
 
@@ -298,10 +300,11 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 		return retryOrReport()
 	}
 
-	act, err := newFuzz(cfg, vald)
-	if err != nil {
-		return retryOrReportThenCleanup(cfg, err)
+	if err := newWS(cfg); err != nil {
+		return retryOrReport()
 	}
+	act := action(&DoFuzz{})
+	mnk := &monkey{cfg: cfg, vald: vald}
 
 	for {
 		if done, ok := act.(*FuzzProgress); ok && (done.GetFailure() || done.GetSuccess()) {
@@ -309,13 +312,14 @@ func doFuzz(cfg *UserCfg, vald *validator) int {
 			return fuzzOutcome(done)
 		}
 
-		if act, err = fuzzNext(cfg, act); err != nil {
-			return retryOrReportThenCleanup(cfg, err)
+		var err error
+		if act, err = fuzzNext(mnk, act); err != nil {
+			return retryOrReportThenCleanup(err)
 		}
 	}
 }
 
-func retryOrReportThenCleanup(cfg *UserCfg, err error) int {
+func retryOrReportThenCleanup(err error) int {
 	defer func() { colorWRN.Println("You might want to run $ monkey exec stop") }()
 	if hadExecError {
 		return 7

@@ -343,11 +343,6 @@ func enumFromGo(value interface{}) *ValueJSON {
 	}
 }
 
-// //FIXME: build schemaJSON from SID & SIDs then compile against schemaLoader
-// func (vald *validator) validationErrors(spec *SpecIR, SID sid) (errs []error) {
-// 	return
-// }
-
 func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
 		err = errNoSuchRef
@@ -384,5 +379,15 @@ func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 	if len(errs) > 0 {
 		err = errInvalidPayload
 	}
+	return
+}
+
+func (act *RepValidateProgress) exec(mnk *monkey) (nxt action, err error) {
+	return
+}
+
+func (act *ReqDoValidate) exec(mnk *monkey) (nxt action, err error) {
+	// FIXME: use .Anon?
+	nxt = &RepValidateProgress{Failure: false, Success: true}
 	return
 }
