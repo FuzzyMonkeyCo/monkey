@@ -67,7 +67,7 @@ gpb: messages.proto
 	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
 
 lint:
-	gofmt -s -w *.go misc/*.go
+	gofmt -s -w *.go
 	golint -set_exit_status
 	./misc/goolint.sh
 
@@ -81,7 +81,6 @@ distclean: clean
 	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
 clean:
 	$(if $(wildcard meta.go),rm meta.go)
-	$(if $(wildcard schemas.go),rm schemas.go)
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)
 	$(if $(wildcard *.cov),rm *.cov)

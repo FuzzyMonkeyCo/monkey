@@ -16,7 +16,6 @@ import (
 )
 
 //go:generate echo Let's go bananas!
-//go:generate go run misc/gen_schemas.go
 //go:generate ./misc/gen_meta.sh
 
 const (
@@ -42,8 +41,6 @@ func init() {
 	colorERR = color.New(color.FgRed)
 	colorWRN = color.New(color.FgYellow)
 	colorNFO = color.New(color.Bold)
-
-	loadSchemas()
 }
 
 func main() {

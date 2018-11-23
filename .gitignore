@@ -25,6 +25,5 @@ vendor/
 /monkey.test
 /monkey-*
 /meta.go
-/schemas.go
 /*.cov
 /cov.out
