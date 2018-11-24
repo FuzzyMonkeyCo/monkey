@@ -18,7 +18,9 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	vald = newValidator(len(docPaths), len(docSchemas))
 	log.Println("[DBG] seeding schemas")
 	//TODO: use docPath as root of base
-	vald.schemasFromOA3(docSchemas)
+	if err = vald.schemasFromOA3(docSchemas); err != nil {
+		return
+	}
 
 	basePath, err := basePathFromOA3(doc.Servers)
 	if err != nil {
