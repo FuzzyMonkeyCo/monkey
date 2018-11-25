@@ -70,11 +70,9 @@ func clearHAR() {
 
 // Request converts a HAR Request struct to an net/http.Request struct
 func (r *HAR_Request) Request() (httpreq *http.Request, err error) {
-
 	dstr := r.PostData.data()
 	if len(dstr) > 0 {
-		var body *strings.Reader
-		body = strings.NewReader(dstr)
+		body := strings.NewReader(dstr)
 		httpreq, err = http.NewRequest(r.Method, r.URL, body)
 	} else {
 		httpreq, err = http.NewRequest(r.Method, r.URL, nil)
@@ -107,7 +105,7 @@ func (c *HARRecorder) RoundTrip(req *http.Request) (resp *http.Response, err err
 	}
 
 	ent.Timings = &HAR_Timings{}
-	ent.Timings.Wait = int64(time.Now().Sub(startTime))
+	ent.Timings.Wait = int64(time.Since(startTime))
 	ent.Time = ent.Timings.Wait
 
 	ent.Timings.Send = -1    //TODO

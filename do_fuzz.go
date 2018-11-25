@@ -15,14 +15,10 @@ import (
 )
 
 const (
-	v                 = 1
-	mimeJSON          = "application/json"
-	mimeYAML          = "application/x-yaml"
-	headerContentType = "Content-Type"
-	headerAccept      = "Accept"
-	headerUserAgent   = "User-Agent"
-	headerXAPIKey     = "X-Api-Key"
-	headerXAuthToken  = "X-Auth-Token"
+	mimeJSON        = "application/json"
+	headerAccept    = "Accept"
+	headerUserAgent = "User-Agent"
+	headerXAPIKey   = "X-Api-Key"
 )
 
 var ws *wsState
@@ -77,7 +73,7 @@ rcv:
 	start := time.Now()
 	select {
 	case payload = <-ws.rep:
-		log.Println("[DBG] 🡳", time.Now().Sub(start), payload[:4])
+		log.Println("[DBG] 🡳", time.Since(start), payload[:4])
 		if err = proto.Unmarshal(payload, msg); err != nil {
 			return
 		}
@@ -113,7 +109,7 @@ rcv:
 		}
 
 	case err = <-ws.err:
-		log.Println("[DBG] 🡳", time.Now().Sub(start), err)
+		log.Println("[DBG] 🡳", time.Since(start), err)
 	case <-time.After(15 * time.Second):
 		err = errors.New("ws call timeout")
 	}
@@ -177,14 +173,17 @@ func fuzzOutcome(done *FuzzProgress) int {
 }
 
 func newWS(cfg *UserCfg) error {
-	headers := http.Header{
-		headerUserAgent:  {binTitle},
-		headerXAuthToken: {cfg.AuthToken},
+	u, err := url.Parse(wsURL)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return err
 	}
-	//FIXME
-	u := &url.URL{Scheme: "ws", Host: "localhost:7077", Path: "/1/fuzz"}
+	headers := http.Header{
+		headerUserAgent: {binTitle},
+		headerXAPIKey:   {cfg.ApiKey},
+	}
 
-	log.Printf("connecting to %s", u.String())
+	log.Println("[NFO] connecting to", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 	if err != nil {
 		log.Println("[ERR]", err)

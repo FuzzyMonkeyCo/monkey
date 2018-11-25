@@ -9,15 +9,10 @@ out=meta.go
 echo package main >$out
 
 if [ "$CURRENT_TAG" = $default_tag ]; then
-    { printf 'const apiFuzzNew  = "%s"\n' 'http://fuzz.dev.fuzzymonkey.co/1/new'
-      printf 'const apiFuzzNext = "%s"\n' 'http://fuzz.dev.fuzzymonkey.co/1/next'
-      printf 'const apiAuthURL  = "%s"\n' 'http://hoth.dev.fuzzymonkey.co/1/token'
+    { printf 'const wsURL = "%s"\n' 'ws://api.dev.fuzzymonkey.co:7077/1/fuzz'
     } >>$out
 else
-	# FIXME: use HTTPS
-    { printf 'const apiFuzzNew  = "%s"\n' 'http://fuzz.fuzzymonkey.co/1/new'
-      printf 'const apiFuzzNext = "%s"\n' 'http://fuzz.fuzzymonkey.co/1/next'
-      printf 'const apiAuthURL  = "%s"\n' 'http://hoth.fuzzymonkey.co/1/token'
+    { printf 'const wsURL = "%s"\n' 'wss://api.fuzzymonkey.co:7077/1/fuzz'
     } >>$out
 fi
 

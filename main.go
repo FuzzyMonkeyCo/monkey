@@ -194,12 +194,14 @@ func actualMain() int {
 		return doSchema(vald, args.ValidateAgainst)
 	}
 
-	apiKey := os.Getenv(envAPIKey)
-	// if err := doAuth(cfg, apiKey, args.N); err != nil {
-	// 	return retryOrReport()
-	// }
-	cfg.AuthToken = apiKey // FIXME
+	if cfg.ApiKey = os.Getenv(envAPIKey); cfg.ApiKey == "" {
+		err = fmt.Errorf("$%s is unset", envAPIKey)
+		log.Println("[ERR]", err)
+		colorERR.Println(err)
+		return retryOrReport()
+	}
 
+	cfg.N = args.N
 	return doFuzz(cfg, vald)
 }
 

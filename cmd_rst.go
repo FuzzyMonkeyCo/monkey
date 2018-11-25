@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	// "encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -25,20 +24,6 @@ var (
 	// To not post-stop after stop
 	wasStopped = false
 )
-
-type rstCmd struct {
-	V             uint    `json:"v"`
-	Cmd           cmdKind `json:"cmd"`
-	Passed        *bool   `json:"passed"`
-	ShrinkingFrom *lane   `json:"shrinking_from"`
-}
-
-type rstCmdRep struct {
-	Cmd    cmdKind `json:"cmd"`
-	V      uint    `json:"v"`
-	Us     uint64  `json:"us"`
-	Failed bool    `json:"failed"`
-}
 
 func (act *ReqDoReset) exec(mnk *monkey) (nxt action, err error) {
 	if isHARReady() {

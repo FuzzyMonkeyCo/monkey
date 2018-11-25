@@ -41,7 +41,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	log.Println("[NFO] ▼", harReq)
 	start := time.Now()
 	_, err = clientReq.Do(r)
-	us := time.Now().Sub(start)
+	us := time.Since(start)
 	log.Println("[NFO] ❙", us)
 	nxt = &RepCallDone{Usec: uint64(us)}
 

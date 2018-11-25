@@ -99,15 +99,16 @@ message RepCallDone {
 
 message UserCfg {
   uint32 version = 1;
-  string auth_token = 2;
+  string api_key = 2;
   bytes seed = 3;
+  uint32 n = 4;
 
   enum Kind {
     UNKNOWN = 0;
     OpenAPIv3 = 1;
   }
-  Kind kind = 4;
-  string file = 5;
+  Kind kind = 5;
+  string file = 6;
 
   message Runtime {
     string host = 1;
@@ -115,14 +116,14 @@ message UserCfg {
     string final_host = 3;
     string final_port = 4;
   }
-  Runtime runtime = 6;
+  Runtime runtime = 7;
 
   message Exec {
     repeated string start = 1;
     repeated string reset = 2;
     repeated string stop = 3;
   }
-  Exec exec = 7;
+  Exec exec = 8;
 }
 
 enum ExecKind {

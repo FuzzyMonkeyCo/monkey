@@ -2,9 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	// "errors"
 	"fmt"
-	// "log"
 )
 
 var (
@@ -20,11 +18,6 @@ type lane struct {
 
 type action interface {
 	exec(mnk *monkey) (act action, err error)
-}
-
-type someCmd interface {
-	kind() cmdKind
-	exec(cfg *UserCfg) (rep []byte, err error)
 }
 
 type cmdKind int
