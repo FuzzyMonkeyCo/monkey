@@ -254,15 +254,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d2b41dcca28b5db7c449fe9abb931217766959c9c784403be8ecdf156191188e"
+  digest = "1:478c51e86c9a8a3681d8ab60317e1f9115e805c3288a08d9cecef33a5dda1c94"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "NT"
-  revision = "ec83556a53fe16b65c452a104ea9d1e86a671852"
+  revision = "62eef0e2fa9b2c385f7b2778e763486da6880d37"
 
 [[projects]]
   branch = "master"
-  digest = "1:6b54612b83c2f28e8eab7c17626ff79c3bbc0602ed2a901802e0c05ad7f4e616"
+  digest = "1:47efe3ab270e3717dd484f66108933f799a12c13dd4aa54fc88036d12ccaf957"
   name = "golang.org/x/tools"
   packages = [
     "cover",
@@ -275,7 +275,7 @@
     "go/types/typeutil",
   ]
   pruneopts = "NT"
-  revision = "fc4f04983f629377122b333bebb16bfd5a5dcfed"
+  revision = "04b5d21e00f1f47bd824a6ade581e7189bacde87"
 
 [[projects]]
   branch = "v2"
