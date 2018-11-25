@@ -59,6 +59,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 
 		for l := 0; l != k; l++ {
 			docMethod := methods[l]
+			log.Println("[DBG] through", docMethod, path)
 			docOp := docOps[docMethod]
 			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
 			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)

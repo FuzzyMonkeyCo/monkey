@@ -184,13 +184,12 @@ func (sm *schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters)
 
 func (sm *schemap) outputsToOA3(outs map[uint32]sid) openapi3.Responses {
 	responses := make(openapi3.Responses, len(outs))
-	for xxx, schema := range outs {
+	for xxx, SID := range outs {
 		XXX := xxx2XXX(xxx)
 		responses[XXX] = &openapi3.ResponseRef{
-			Value: &openapi3.Response{
-				Description: someText,
-				Content:     sm.contentToOA3(schema),
-			},
+			Value: &openapi3.Response{Description: someText}}
+		if SID != 0 {
+			responses[XXX].Value.Content = sm.contentToOA3(SID)
 		}
 	}
 	return responses
@@ -211,8 +210,7 @@ func (sm *schemap) derefSchemaPtr(SID sid) *openapi3.SchemaRef {
 		if sp := s.GetPtr(); sp != nil {
 			panic(`sub schemaptr must not be set`)
 		}
-		schema := sm.schemaToOA3(ss)
-		return schema
+		return sm.schemaToOA3(ss)
 	}
 
 	return openapi3.NewSchemaRef(s.GetPtr().GetRef(), nil)

@@ -42,31 +42,28 @@ func (vald *validator) newSID() sid {
 }
 
 func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
-	return vald.seed3(base, schemas, make(schemasJSON))
-}
-
-func (vald *validator) seed3(base string, schemas schemasJSON, skipped schemasJSON) (err error) {
-	anyQueued := len(skipped) != 0
 	i, names := 0, make([]string, len(schemas))
 	for name := range schemas {
 		names[i] = name
 		i++
-	}
-	if anyQueued {
-		for name := range skipped {
-			names[i] = name
-			i++
-		}
 	}
 	sort.Strings(names)
 
 	for j := 0; j != i; j++ {
 		name := names[j]
 		absRef := base + name
-		schema, ok := schemas[name]
-		if !ok && anyQueued {
-			schema = skipped[name]
+		log.Printf("[DBG] pre-seeding ref '%s'", absRef)
+		refSID := vald.newSID()
+		vald.Spec.Schemas.Json[refSID] = &RefOrSchemaJSON{
+			PtrOrSchema: &RefOrSchemaJSON_Ptr{&SchemaPtr{Ref: absRef, SID: 0}},
 		}
+		vald.Refs[absRef] = refSID
+	}
+
+	for j := 0; j != i; j++ {
+		name := names[j]
+		absRef := base + name
+		schema := schemas[name]
 		log.Printf("[DBG] seeding schema '%s'", absRef)
 
 		sl := gojsonschema.NewGoLoader(schema)
@@ -75,37 +72,23 @@ func (vald *validator) seed3(base string, schemas schemasJSON, skipped schemasJS
 			return
 		}
 
-		if sid := vald.ensureMapped("", schema); sid != 0 {
-			vald.Refs[absRef] = sid
-			schemaPtr := &SchemaPtr{Ref: absRef, SID: sid}
-			vald.Spec.Schemas.Json[vald.newSID()] = &RefOrSchemaJSON{
-				PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
-			}
-		} else {
-			// FIXME: handle recursive refs!!!
-			skipped[name] = schema
-			anyQueued = true
+		sid := vald.ensureMapped("", schema)
+		if sid == 0 {
+			// Impossible
+			panic(absRef)
+		}
+		refSID := vald.Refs[absRef]
+		vald.Refs[absRef] = sid
+		vald.Spec.Schemas.Json[refSID] = &RefOrSchemaJSON{
+			PtrOrSchema: &RefOrSchemaJSON_Ptr{&SchemaPtr{Ref: absRef, SID: sid}},
 		}
 	}
-	if anyQueued {
-		return vald.seed(base, skipped)
-	}
-	return
-}
-
-func (vald *validator) ensureMappedEventually(ref string, goSchema schemaJSON) (SID sid, ok bool) {
-	SID = vald.ensureMapped(ref, goSchema)
-	ok = SID != 0
 	return
 }
 
 func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
-		schema, ok := vald.fromGo(goSchema)
-		if !ok {
-			log.Printf(">>> !fromGo %+v", schema)
-			return 0
-		}
+		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
 			if s := schemaPtr.GetSchema(); s != nil && proto.Equal(&schema, s) {
 				return SID
@@ -120,7 +103,8 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 
 	mappedSID, ok := vald.Refs[ref]
 	if !ok {
-		return 0
+		// Every $ref should already be in here
+		panic(ref)
 	}
 	schemaPtr := &SchemaPtr{Ref: ref, SID: mappedSID}
 	SID := sid(0)
@@ -130,7 +114,8 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		}
 	}
 	if SID == 0 {
-		panic(`impossible`)
+		// Impossible not to find that ref
+		panic(ref)
 	}
 	vald.Spec.Schemas.Json[SID] = &RefOrSchemaJSON{
 		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
@@ -138,7 +123,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	return SID
 }
 
-func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
+func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
@@ -215,15 +200,11 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
 		items := v.([]schemaJSON)
 		schema.Items = make([]sid, len(items))
 		for i, ss := range items {
+			var ref string
 			if v, ok := ss["$ref"]; ok {
-				if schema.Items[i], ook = vald.ensureMappedEventually(v.(string), ss); !ook {
-					return
-				}
-			} else {
-				if schema.Items[i], ook = vald.ensureMappedEventually("", ss); !ook {
-					return
-				}
+				ref = v.(string)
 			}
+			schema.Items[i] = vald.ensureMapped(ref, ss)
 		}
 	}
 
@@ -255,15 +236,11 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
 			for j := 0; j != i; j++ {
 				propName := props[j]
 				ss := properties[propName]
+				var ref string
 				if v, ok := ss["$ref"]; ok {
-					if schema.Properties[propName], ook = vald.ensureMappedEventually(v.(string), ss); !ook {
-						return
-					}
-				} else {
-					if schema.Properties[propName], ook = vald.ensureMappedEventually("", ss); !ook {
-						return
-					}
+					ref = v.(string)
 				}
+				schema.Properties[propName] = vald.ensureMapped(ref, ss)
 			}
 		}
 	}
@@ -274,15 +251,11 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
 		of := v.([]schemaJSON)
 		schema.AllOf = make([]sid, len(of))
 		for i, ss := range of {
+			var ref string
 			if v, ok := ss["$ref"]; ok {
-				if schema.AllOf[i], ook = vald.ensureMappedEventually(v.(string), ss); !ook {
-					return
-				}
-			} else {
-				if schema.AllOf[i], ook = vald.ensureMappedEventually("", ss); !ook {
-					return
-				}
+				ref = v.(string)
 			}
+			schema.AllOf[i] = vald.ensureMapped(ref, ss)
 		}
 	}
 
@@ -291,15 +264,11 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
 		of := v.([]schemaJSON)
 		schema.AnyOf = make([]sid, len(of))
 		for i, ss := range of {
+			var ref string
 			if v, ok := ss["$ref"]; ok {
-				if schema.AnyOf[i], ook = vald.ensureMappedEventually(v.(string), ss); !ook {
-					return
-				}
-			} else {
-				if schema.AnyOf[i], ook = vald.ensureMappedEventually("", ss); !ook {
-					return
-				}
+				ref = v.(string)
 			}
+			schema.AnyOf[i] = vald.ensureMapped(ref, ss)
 		}
 	}
 
@@ -308,33 +277,24 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON, ook bool) {
 		of := v.([]schemaJSON)
 		schema.OneOf = make([]sid, len(of))
 		for i, ss := range of {
+			var ref string
 			if v, ok := ss["$ref"]; ok {
-				if schema.OneOf[i], ook = vald.ensureMappedEventually(v.(string), ss); !ook {
-					return
-				}
-			} else {
-				if schema.OneOf[i], ook = vald.ensureMappedEventually("", ss); !ook {
-					return
-				}
+				ref = v.(string)
 			}
+			schema.OneOf[i] = vald.ensureMapped(ref, ss)
 		}
 	}
 
 	// "not"
 	if v, ok := s["not"]; ok {
 		ss := v.(schemaJSON)
-		if vv, ok := ss["$ref"]; ok {
-			if schema.Not, ook = vald.ensureMappedEventually(vv.(string), ss); !ook {
-				return
-			}
-		} else {
-			if schema.Not, ook = vald.ensureMappedEventually("", ss); !ook {
-				return
-			}
+		var ref string
+		if v, ok := ss["$ref"]; ok {
+			ref = v.(string)
 		}
+		schema.Not = vald.ensureMapped(ref, ss)
 	}
 
-	ook = true
 	return
 }
 
