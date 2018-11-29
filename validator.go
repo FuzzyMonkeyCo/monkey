@@ -170,10 +170,11 @@ func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 		schema.Maximum = v.(float64)
 		schema.HasMaximum = true
 	}
-	// "exclusiveMinimum", "exclusiveMaximum"
+	// "exclusiveMinimum"
 	if v, ok := s["exclusiveMinimum"]; ok {
 		schema.ExclusiveMinimum = v.(bool)
 	}
+	// "exclusiveMaximum"
 	if v, ok := s["exclusiveMaximum"]; ok {
 		schema.ExclusiveMaximum = v.(bool)
 	}
@@ -355,7 +356,7 @@ func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 		return
 	}
 
-	// NOTE Compile errs on bad refs only, MUST do this step in `lint`
+	// TODO: Compile errs on bad refs only, MUST do this step in `lint`
 	log.Println("[NFO] compiling schema refs")
 	schema, err := vald.Refd.Compile(
 		gojsonschema.NewGoLoader(schemaJSON{"$ref": absRef}))
