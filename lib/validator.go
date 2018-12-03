@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
 	"os"
 	"sort"
@@ -350,8 +351,13 @@ func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 		return
 	}
 
+	var data []byte
+	if data, err = ioutil.ReadAll(os.Stdin); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 	var value interface{}
-	if err = json.NewDecoder(os.Stdin).Decode(&value); err != nil {
+	if err = json.Unmarshal(data, &value); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
