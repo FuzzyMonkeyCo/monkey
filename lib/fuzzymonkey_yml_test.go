@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"testing"
@@ -19,7 +19,7 @@ func TestReadBadVersions(t *testing.T) {
 		"duplicate key":             []byte(`{version: 1, port: 80, port: 443}`),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(config, false)
+			cfg, err := parseCfg(config, false)
 			require.Error(t, err)
 			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
@@ -52,7 +52,7 @@ blabla: blbl
 `),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(config, false)
+			cfg, err := parseCfg(config, false)
 			require.Error(t, err)
 			require.Equal(t, (*UserCfg)(nil), cfg)
 		})
@@ -75,7 +75,7 @@ stop:
 - make service-kill
 `)
 
-	cfg, err := newCfg(config, false)
+	cfg, err := parseCfg(config, false)
 	require.NoError(t, err)
 	require.Equal(t, "app.vcap.me", cfg.Runtime.Host)
 	require.Equal(t, "8000", cfg.Runtime.Port)
@@ -108,7 +108,7 @@ spec:
 `),
 	} {
 		t.Run(name, func(t *testing.T) {
-			cfg, err := newCfg(config, false)
+			cfg, err := parseCfg(config, false)
 			require.NoError(t, err)
 			require.Equal(t, "localhost", cfg.Runtime.Host)
 			require.Equal(t, "3000", cfg.Runtime.Port)

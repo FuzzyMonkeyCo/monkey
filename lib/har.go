@@ -1,4 +1,4 @@
-package main
+package lib
 
 // HAR 1.2 spec handling with nanoseconds & protobuf
 // https://github.com/cardigann/harhar
@@ -27,27 +27,27 @@ type HARRecorder struct {
 }
 
 // NewHAR is a handy HAR constructor
-func NewHAR() *HAR_Log {
+func NewHAR(name string) *HAR_Log {
 	v := time.Now().Format("20060102150405")
 	return &HAR_Log{
 		Version: HARSpecVersion,
 		Creator: &HAR_Creator{
 			Version: v,
-			Name:    binTitle,
+			Name:    name,
 		},
 	}
 }
 
 // NewRecorder returns a new Recorder object that fulfills the http.RoundTripper interface
-func NewRecorder() *HARRecorder {
+func NewRecorder(name string) *HARRecorder {
 	return &HARRecorder{
 		RoundTripper: http.DefaultTransport,
-		Log:          NewHAR(),
+		Log:          NewHAR(name),
 	}
 }
 
-func newHARTransport() {
-	harCollector = NewRecorder()
+func newHARTransport(name string) {
+	harCollector = NewRecorder(name)
 	clientReq = &http.Client{Transport: harCollector}
 }
 

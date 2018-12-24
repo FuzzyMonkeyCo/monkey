@@ -63,11 +63,11 @@ dep.GODEP:
 	mv -v release/$(DEP) $$GOPATH/bin/dep
 	rm -r release
 
-gpb: messages.proto
+gpb: lib/messages.proto
 	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
 
 lint:
-	gofmt -s -w *.go
+	gofmt -s -w *.go lib/*.go
 	golint -set_exit_status
 	./misc/goolint.sh
 
@@ -88,9 +88,9 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	go test . | richgo testfilter
+	go test ./... | richgo testfilter
 test.ci: all
-	go test -v -race .
+	go test -v -race ./...
 
 ape: $(EXE).test
 	./ape.sh --version

@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"fmt"
@@ -14,19 +14,15 @@ import (
 
 var pwdID string
 
-func envID() string {
+func EnvID() string {
 	return pwdID + ".env"
 }
 
-func logID() string {
+func LogID() string {
 	return pwdID + ".log"
 }
 
-func updateID() string {
-	return pwdID + "_update.bin"
-}
-
-func makePwdID() (err error) {
+func MakePwdID(name string) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -49,7 +45,7 @@ func makePwdID() (err error) {
 		return
 	}
 	id := fmt.Sprintf("%d", h.Sum64())
-	prefix := path.Join(tmp, "."+binName+"_"+id)
+	prefix := path.Join(tmp, "."+name+"_"+id)
 
 	slot, err := findNewIDSlot(prefix)
 	if err != nil {

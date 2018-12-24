@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"errors"
@@ -11,7 +11,11 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
+const (
+	mimeJSON = "application/json"
+)
+
+func newSpecFromOA3(doc *openapi3.Swagger) (vald *Validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
@@ -31,7 +35,7 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	return
 }
 
-func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) error {
+func (vald *Validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) error {
 	schemas := make(schemasJSON, len(docSchemas))
 	for name, docSchema := range docSchemas {
 		schemas[name] = vald.schemaFromOA3(docSchema.Value)
@@ -39,7 +43,7 @@ func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	return vald.seed("#/components/schemas/", schemas)
 }
 
-func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
+func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
 	i, paths := 0, make([]string, len(docPaths))
 	for path := range docPaths {
 		paths[i] = path
@@ -81,7 +85,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 	}
 }
 
-func (vald *validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
+func (vald *Validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
 	if docReqBody != nil {
 		//FIXME: handle .Ref
 		docBody := docReqBody.Value
@@ -102,7 +106,7 @@ func (vald *validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openap
 	}
 }
 
-func (vald *validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
+func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
 	i, names := 0, make([]string, paramsCount)
@@ -142,7 +146,7 @@ func (vald *validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Pa
 	}
 }
 
-func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
+func (vald *Validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
@@ -177,14 +181,14 @@ func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	return
 }
 
-func (vald *validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
+func (vald *Validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
 	if ref := s.Ref; ref != "" {
 		return schemaJSON{"$ref": ref}
 	}
 	return vald.schemaFromOA3(s.Value)
 }
 
-func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
+func (vald *Validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	schema = make(schemaJSON)
 
 	// "enum"
@@ -412,7 +416,7 @@ func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 	u, err := url.Parse(docServers[0].URL)
 	if err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 	basePath = u.Path
@@ -420,7 +424,7 @@ func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 	if basePath == "" || basePath[0] != '/' {
 		err = errors.New(`field 'servers' has no suitable 'url'`)
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 	}
 	return
 }

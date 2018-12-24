@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -11,22 +11,22 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var errInvalidPayload = errors.New("invalid JSON payload")
-var errNoSuchRef = errors.New("no such $ref")
+var ErrInvalidPayload = errors.New("invalid JSON payload")
+var ErrNoSuchRef = errors.New("no such $ref")
 
 type sid = uint32
 type schemaJSON = map[string]interface{}
 type schemasJSON = map[string]schemaJSON
 
-type validator struct {
+type Validator struct {
 	Spec *SpecIR
 	Refs map[string]sid
 	Refd *gojsonschema.SchemaLoader
 	Anon map[sid]schemaJSON
 }
 
-func newValidator(capaEndpoints, capaSchemas int) *validator {
-	return &validator{
+func newValidator(capaEndpoints, capaSchemas int) *Validator {
+	return &Validator{
 		Refs: make(map[string]sid, capaSchemas),
 		Anon: make(map[sid]schemaJSON, capaEndpoints),
 		Spec: &SpecIR{
@@ -37,11 +37,11 @@ func newValidator(capaEndpoints, capaSchemas int) *validator {
 	}
 }
 
-func (vald *validator) newSID() sid {
+func (vald *Validator) newSID() sid {
 	return sid(1 + len(vald.Spec.Schemas.Json))
 }
 
-func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
+func (vald *Validator) seed(base string, schemas schemasJSON) (err error) {
 	i, names := 0, make([]string, len(schemas))
 	for name := range schemas {
 		names[i] = name
@@ -86,7 +86,7 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 	return
 }
 
-func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
+func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
 		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
@@ -123,7 +123,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	return SID
 }
 
-func (vald *validator) fromGo(s schemaJSON) (schema Schema_JSON) {
+func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
@@ -344,9 +344,9 @@ func enumFromGo(value interface{}) *ValueJSON {
 	}
 }
 
-func (vald *validator) validateAgainstSchema(absRef string) (err error) {
+func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
-		err = errNoSuchRef
+		err = ErrNoSuchRef
 		return
 	}
 
@@ -375,20 +375,10 @@ func (vald *validator) validateAgainstSchema(absRef string) (err error) {
 	errs := res.Errors()
 	for _, e := range errs {
 		// ResultError interface
-		colorERR.Println(e)
+		ColorERR.Println(e)
 	}
 	if len(errs) > 0 {
-		err = errInvalidPayload
+		err = ErrInvalidPayload
 	}
-	return
-}
-
-func (act *RepValidateProgress) exec(mnk *monkey) (nxt action, err error) {
-	return
-}
-
-func (act *ReqDoValidate) exec(mnk *monkey) (nxt action, err error) {
-	// FIXME: use .Anon?
-	nxt = &RepValidateProgress{Failure: false, Success: true}
 	return
 }

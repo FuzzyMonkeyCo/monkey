@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"fmt"
@@ -8,20 +8,20 @@ import (
 	"time"
 )
 
-func (act *RepCallDone) exec(mnk *monkey) (nxt action, err error) {
+func (act *RepCallDone) exec(mnk *Monkey) (nxt Action, err error) {
 	return
 }
 
-func (act *ReqDoCall) exec(mnk *monkey) (nxt action, err error) {
+func (act *ReqDoCall) exec(mnk *Monkey) (nxt Action, err error) {
 	if !isHARReady() {
-		newHARTransport()
+		newHARTransport(mnk.Name)
 	}
 
-	act.updateUserAgentHeader()
-	if err = act.updateURL(mnk.cfg); err != nil {
+	act.updateUserAgentHeader(mnk.Name)
+	if err = act.updateURL(mnk.Cfg); err != nil {
 		return
 	}
-	act.updateHostHeader(mnk.cfg)
+	act.updateHostHeader(mnk.Cfg)
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
@@ -75,11 +75,11 @@ func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
 	return
 }
 
-func (act *ReqDoCall) updateUserAgentHeader() {
+func (act *ReqDoCall) updateUserAgentHeader(ua string) {
 	for i := range act.Request.Headers {
 		if act.Request.Headers[i].Name == "User-Agent" {
 			if strings.HasPrefix(act.Request.Headers[i].Value, "FuzzyMonkey.co/") {
-				act.Request.Headers[i].Value = binTitle
+				act.Request.Headers[i].Value = ua
 				break
 			}
 		}

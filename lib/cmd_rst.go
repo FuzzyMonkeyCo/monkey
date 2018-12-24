@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"bytes"
@@ -20,12 +20,12 @@ const (
 var (
 	isRunning = false
 	// To exit with 7
-	hadExecError = false
+	HadExecError = false
 	// To not post-stop after stop
 	wasStopped = false
 )
 
-func (act *ReqDoReset) exec(mnk *monkey) (nxt action, err error) {
+func (act *ReqDoReset) exec(mnk *Monkey) (nxt Action, err error) {
 	if isHARReady() {
 		/// exec of FuzzProgress
 		// var str string
@@ -48,11 +48,11 @@ func (act *ReqDoReset) exec(mnk *monkey) (nxt action, err error) {
 		clearHAR()
 	}
 
-	nxt = executeScript(mnk.cfg, act.GetKind())
+	nxt = ExecuteScript(mnk.Cfg, act.GetKind())
 	return
 }
 
-func executeScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
+func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
 	log.Println("exec:", ExecKind_name[int32(kind)])
 	nxt = &RepResetProgress{Kind: kind}
 	shellCmds := cfg.script(kind)
@@ -67,7 +67,7 @@ func executeScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(nxt, &stderr, shellCmd); err != nil {
 			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
-			hadExecError = true
+			HadExecError = true
 			nxt.Failure = true
 			return
 		}
@@ -84,7 +84,7 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 	defer cancel()
 
 	var script bytes.Buffer
-	fmt.Fprintln(&script, "source", envID(), ">/dev/null 2>&1")
+	fmt.Fprintln(&script, "source", EnvID(), ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
 	fmt.Fprintln(&script, "set -o nounset")
@@ -96,9 +96,9 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 	fmt.Fprintln(&script, "set +o nounset")
 	fmt.Fprintln(&script, "set +o errtrace")
 	fmt.Fprintln(&script, "set +o errexit")
-	fmt.Fprintln(&script, "declare -p >", envID())
+	fmt.Fprintln(&script, "declare -p >", EnvID())
 
-	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
+	exe := exec.CommandContext(ctx, Shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout
 	exe.Stderr = stderr
@@ -136,13 +136,13 @@ func fmtExecError(k ExecKind, i int, c, e, s string) {
 	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, kind, e)
 	fmt.Printf("Command:\n%s\n", c)
 	fmt.Printf("Stderr:\n%s\n", s)
-	fmt.Printf("Note that %s runs your commands with %s", binName, shell())
+	fmt.Printf("Note that your commands are run with %s", Shell())
 	fmt.Println(" along with some shell flags.")
-	fmt.Printf("If you're curious, have a look at %s\n", logID())
-	fmt.Printf("And the dumped environment %s\n", envID())
+	fmt.Printf("If you're curious, have a look at %s\n", LogID())
+	fmt.Printf("And the dumped environment %s\n", EnvID())
 }
 
-func snapEnv(envSerializedPath string) (err error) {
+func SnapEnv(envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -155,7 +155,7 @@ func snapEnv(envSerializedPath string) (err error) {
 
 	var script bytes.Buffer
 	fmt.Fprintln(&script, "declare -p") // bash specific
-	exe := exec.CommandContext(ctx, shell(), "--", "/dev/stdin")
+	exe := exec.CommandContext(ctx, Shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
 	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
@@ -173,11 +173,11 @@ func readEnv(envVar string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
 	defer cancel()
 
-	cmd := "source " + envID() + " >/dev/null 2>&1 " +
+	cmd := "source " + EnvID() + " >/dev/null 2>&1 " +
 		"&& set -o nounset " +
 		"&& printf $" + envVar
 	var stdout bytes.Buffer
-	exe := exec.CommandContext(ctx, shell(), "-c", cmd)
+	exe := exec.CommandContext(ctx, Shell(), "-c", cmd)
 	exe.Stdout = &stdout
 	log.Printf("[DBG] whithin %s $ %s\n", timeoutShort, cmd)
 
@@ -188,7 +188,7 @@ func readEnv(envVar string) string {
 	return stdout.String()
 }
 
-func shell() string {
+func Shell() string {
 	return "/bin/bash"
 }
 

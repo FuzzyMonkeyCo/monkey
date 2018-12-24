@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -16,8 +16,8 @@ type lane struct {
 	R uint32
 }
 
-type action interface {
-	exec(mnk *monkey) (act action, err error)
+type Action interface {
+	exec(mnk *Monkey) (act Action, err error)
 }
 
 type cmdKind int
@@ -70,5 +70,15 @@ func (k cmdKind) MarshalJSON() (data []byte, err error) {
 		return
 	}
 	err = fmt.Errorf("impossibru %#v", k)
+	return
+}
+
+func (act *RepValidateProgress) exec(mnk *Monkey) (nxt Action, err error) {
+	return
+}
+
+func (act *ReqDoValidate) exec(mnk *Monkey) (nxt Action, err error) {
+	// FIXME: use .Anon?
+	nxt = &RepValidateProgress{Failure: false, Success: true}
 	return
 }

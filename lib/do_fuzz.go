@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"errors"
@@ -15,8 +15,6 @@ import (
 )
 
 const (
-	mimeJSON        = "application/json"
-	headerAccept    = "Accept"
 	headerUserAgent = "User-Agent"
 	headerXAPIKey   = "X-Api-Key"
 )
@@ -33,12 +31,13 @@ type wsState struct {
 	done chan struct{}
 }
 
-type monkey struct {
-	cfg  *UserCfg
-	vald *validator
+type Monkey struct {
+	Cfg  *UserCfg
+	Vald *Validator
+	Name string
 }
 
-func (ws *wsState) call(req action, mnk *monkey) (rep action, err error) {
+func (ws *wsState) call(req Action, mnk *Monkey) (rep Action, err error) {
 	// NOTE: log in caller
 	// FIXME: use buffers?
 
@@ -116,18 +115,18 @@ rcv:
 	return
 }
 
-func (act *DoFuzz) exec(mnk *monkey) (nxt action, err error) {
-	act.Cfg = mnk.cfg
-	act.Spec = mnk.vald.Spec
+func (act *DoFuzz) exec(mnk *Monkey) (nxt Action, err error) {
+	act.Cfg = mnk.Cfg
+	act.Spec = mnk.Vald.Spec
 	nxt = act
 	return
 }
 
-func (act *RepResetProgress) exec(mnk *monkey) (nxt action, err error) {
+func (act *RepResetProgress) exec(mnk *Monkey) (nxt Action, err error) {
 	return
 }
 
-func fuzzNext(mnk *monkey, curr action) (nxt action, err error) {
+func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
 	// Sometimes sets mnk.cfg.Runtime.Final* fields
 	log.Printf(">>> curr %#v\n", curr)
 	if nxt, err = curr.exec(mnk); err != nil {
@@ -145,17 +144,17 @@ func fuzzNext(mnk *monkey, curr action) (nxt action, err error) {
 	return
 }
 
-func (act *FuzzProgress) exec(mnk *monkey) (nxt action, err error) {
+func (act *FuzzProgress) exec(mnk *Monkey) (nxt Action, err error) {
 	log.Println(">>> FuzzProgress", act)
 	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
 	return
 }
 
-func fuzzOutcome(done *FuzzProgress) int {
+func (act *FuzzProgress) Outcome() int {
 	os.Stdout.Write([]byte{'\n'})
 	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
 
-	if done.GetFailure() {
+	if act.GetFailure() {
 		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
 		if m != 1 {
 			fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
@@ -165,21 +164,21 @@ func fuzzOutcome(done *FuzzProgress) int {
 		return 6
 	}
 
-	if !done.GetSuccess() {
+	if !act.GetSuccess() {
 		log.Fatalln("[ERR] there should be success!")
 	}
 	fmt.Println("No bugs found... yet.")
 	return 0
 }
 
-func newWS(cfg *UserCfg) error {
-	u, err := url.Parse(wsURL)
+func NewWS(cfg *UserCfg, URL, ua string) error {
+	u, err := url.Parse(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return err
 	}
 	headers := http.Header{
-		headerUserAgent: {binTitle},
+		headerUserAgent: {ua},
 		headerXAPIKey:   {cfg.ApiKey},
 	}
 

@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func doLint(docPath string, blob []byte, showSpec bool) (vald *validator, err error) {
+func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
 		return
@@ -27,26 +27,26 @@ func doLint(docPath string, blob []byte, showSpec bool) (vald *validator, err er
 	case ".yml", ".yaml":
 		if doc, err = loader.LoadSwaggerFromYAMLData(blob); err != nil {
 			log.Println("[ERR]", err)
-			colorERR.Println(err)
+			ColorERR.Println(err)
 			return
 		}
 	case ".json":
 		if doc, err = loader.LoadSwaggerFromData(blob); err != nil {
 			log.Println("[ERR]", err)
-			colorERR.Println(err)
+			ColorERR.Println(err)
 			return
 		}
 	default:
 		err = fmt.Errorf("unsupported file format: %s", docPath)
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 
 	log.Println("[NFO] first validation pass")
 	if err = doc.Validate(loader.Context); err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	if !ok || !strings.HasPrefix(openapi, "3.0") {
 		err = errors.New("format:unsupported")
 		log.Println("[ERR]", err)
-		colorERR.Printf("Format of '%s' is not supported", docPath)
+		ColorERR.Printf("Format of '%s' is not supported", docPath)
 		return
 	}
 
@@ -91,24 +91,24 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	doc, err := openapi_v3.NewDocument(info, compiler.NewContext("$root", nil))
 	if err != nil {
 		log.Println("[ERR]", err)
-		colorWRN.Println("Validation errors:")
+		ColorWRN.Println("Validation errors:")
 		for i, line := range strings.Split(err.Error(), "\n") {
 			e := strings.TrimPrefix(line, "ERROR $root.")
-			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
+			fmt.Printf("%d: %s\n", 1+i, ColorERR.Sprintf(e))
 		}
-		colorERR.Println("Documentation validation failed.")
+		ColorERR.Println("Documentation validation failed.")
 		return
 	}
 
 	log.Println("[NFO] ensuring references are valid")
 	if _, err = doc.ResolveReferences(docPath); err != nil {
 		log.Println("[ERR]", err)
-		colorWRN.Println("Validation errors:")
+		ColorWRN.Println("Validation errors:")
 		for i, line := range strings.Split(err.Error(), "\n") {
 			e := strings.TrimPrefix(line, "ERROR ")
-			fmt.Printf("%d: %s\n", 1+i, colorERR.Sprintf(e))
+			fmt.Printf("%d: %s\n", 1+i, ColorERR.Sprintf(e))
 		}
-		colorERR.Println("Documentation validation failed.")
+		ColorERR.Println("Documentation validation failed.")
 		return
 	}
 
@@ -125,7 +125,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 
 	if showSpec {
 		log.Println("[NFO] serialyzing spec to YAML")
-		colorNFO.Println("Spec:")
+		ColorNFO.Println("Spec:")
 		var pretty []byte
 		if pretty, err = yaml.Marshal(rawInfo); err != nil {
 			log.Println("[ERR]", err)

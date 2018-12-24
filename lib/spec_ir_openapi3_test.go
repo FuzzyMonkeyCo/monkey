@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"encoding/json"
@@ -46,14 +46,14 @@ func TestMakeXXXFromOA3(t *testing.T) {
 func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	jsoner := &jsonpb.Marshaler{Indent: "\t"}
 	for _, docPath := range []string{
-		"./misc/openapiv3.0.0_petstore.yaml",
-		"./misc/openapiv3.0.0_petstore.json",
-		"./misc/openapiv3.0.0_petstore-expanded.yaml",
+		"./testdata/openapiv3.0.0_petstore.yaml",
+		"./testdata/openapiv3.0.0_petstore.json",
+		"./testdata/openapiv3.0.0_petstore-expanded.yaml",
 	} {
 		t.Run(docPath, func(t *testing.T) {
 			blob0, err := ioutil.ReadFile(docPath)
 			require.NoError(t, err)
-			vald0, err := doLint(docPath, blob0, false)
+			vald0, err := DoLint(docPath, blob0, false)
 			require.NoError(t, err)
 			require.NotNil(t, vald0.Spec)
 			require.IsType(t, &SpecIR{}, vald0.Spec)
@@ -73,7 +73,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			// log.Printf("%s\n", blob1)
 			require.NoError(t, err)
 			log.Println("here we go again")
-			vald2, err := doLint("bla.json", blob1, false)
+			vald2, err := DoLint("bla.json", blob1, false)
 			require.NoError(t, err)
 			require.NotNil(t, vald2.Spec)
 			require.IsType(t, &SpecIR{}, vald2.Spec)

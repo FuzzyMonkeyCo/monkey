@@ -1,4 +1,4 @@
-package main
+package lib
 
 //FIXME: switch to TOML?
 // https://github.com/toml-lang/toml
@@ -17,13 +17,33 @@ import (
 )
 
 const (
-	localCfg       = ".fuzzymonkey.yml"
+	LocalCfg       = ".fuzzymonkey.yml"
 	lastCfgVersion = 1
 	defaultCfgHost = "localhost"
 	defaultCfgPort = "3000"
 )
 
-func newCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
+	fd, err := os.Open(LocalCfg)
+	if err != nil {
+		log.Println("[ERR]", err)
+		errFmt := "You must provide a readable %s file in the current directory.\n"
+		ColorERR.Printf(errFmt, LocalCfg)
+		return
+	}
+	defer fd.Close()
+
+	var config []byte
+	if config, err = ioutil.ReadAll(fd); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	cfg, err = parseCfg(config, showCfg)
+	return
+}
+
+func parseCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	var vsn struct {
 		V interface{} `yaml:"version"`
 	}
@@ -31,7 +51,7 @@ func newCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		const errFmt = "field 'version' missing! Try `version: %d`"
 		err = fmt.Errorf(errFmt, lastCfgVersion)
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 
@@ -39,13 +59,13 @@ func newCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	if !ok || !knownVersion(version) {
 		err = fmt.Errorf("bad version: `%#v'", vsn.V)
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 
 	type cfgParser func(config []byte, showCfg bool) (cfg *UserCfg, err error)
 	cfgParsers := []cfgParser{
-		newCfgV001,
+		parseCfgV001,
 	}
 
 	return cfgParsers[version-1](config, showCfg)
@@ -55,7 +75,7 @@ func knownVersion(v int) bool {
 	return 0 < v && v <= lastCfgVersion
 }
 
-func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	var userConf struct {
 		Version uint32   `yaml:"version"`
 		Start   []string `yaml:"start"`
@@ -72,11 +92,11 @@ func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 
 	if err = yaml.UnmarshalStrict(config, &userConf); err != nil {
 		log.Println("[ERR]", err)
-		colorERR.Println("Failed to parse", localCfg)
+		ColorERR.Println("Failed to parse", LocalCfg)
 		r := strings.NewReplacer("not found", "unknown")
 		for _, e := range strings.Split(err.Error(), "\n") {
 			if end := strings.Index(e, " in type struct"); end != -1 {
-				colorERR.Println(r.Replace(e[:end]))
+				ColorERR.Println(r.Replace(e[:end]))
 			}
 		}
 		return
@@ -86,7 +106,7 @@ func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	if userConf.Spec.Kind != UserCfg_Kind_name[int32(expectedKind)] {
 		err = errors.New("spec's kind must be set to OpenAPIv3")
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 	userConf.Spec.KindIdentified = expectedKind
@@ -104,12 +124,12 @@ func newCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	}
 
 	if showCfg {
-		colorNFO.Println("Config:")
+		ColorNFO.Println("Config:")
 		enc := yaml.NewEncoder(os.Stderr)
 		defer enc.Close()
 		if err = enc.Encode(userConf); err != nil {
 			log.Println("[ERR]", err)
-			colorERR.Printf("Failed to pretty-print %s: %#v\n", localCfg, err)
+			ColorERR.Printf("Failed to pretty-print %s: %#v\n", LocalCfg, err)
 			return
 		}
 	}
@@ -139,13 +159,13 @@ func (cfg *UserCfg) script(kind ExecKind) []string {
 	}[kind]
 }
 
-func (cfg *UserCfg) findThenReadBlob() (docPath string, blob []byte, err error) {
+func (cfg *UserCfg) FindThenReadBlob() (docPath string, blob []byte, err error) {
 	//TODO: force relative paths & nested under workdir. Watch out for links
 	docPath = cfg.File
 	if docPath == `` {
 		err = errors.New("Path to spec is empty")
 		log.Println("[ERR]", err)
-		colorERR.Println(err)
+		ColorERR.Println(err)
 		return
 	}
 
@@ -153,22 +173,6 @@ func (cfg *UserCfg) findThenReadBlob() (docPath string, blob []byte, err error) 
 	if blob, err = ioutil.ReadFile(docPath); err != nil {
 		log.Println("[ERR]", err)
 		fmt.Printf("Could not read '%s'\n", docPath)
-	}
-	return
-}
-
-func readCfg() (config []byte, err error) {
-	fd, err := os.Open(localCfg)
-	if err != nil {
-		log.Println("[ERR]", err)
-		errFmt := "You must provide a readable %s file in the current directory.\n"
-		colorERR.Printf(errFmt, localCfg)
-		return
-	}
-	defer fd.Close()
-
-	if config, err = ioutil.ReadAll(fd); err != nil {
-		log.Println("[ERR]", err)
 	}
 	return
 }

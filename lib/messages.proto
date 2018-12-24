@@ -4,7 +4,7 @@
 // See: https://github.com/luckymarmot/API-Flow/blob/24cc71a/src/README.md
 
 syntax = "proto3";
-package main;
+package lib;
 
 message Msg {
   uint32 UID = 1;
