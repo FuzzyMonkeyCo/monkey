@@ -40,12 +40,12 @@ latest:
 
 deps:
 #	Writes to $GOPATH/bin so keep that in mind...
-	go install github.com/fenollp/gox
-	go install golang.org/x/lint/golint
-	go install honnef.co/go/tools/cmd/megacheck
-	go install github.com/wadey/gocovmerge
-	go install github.com/kyoh86/richgo
-	go install github.com/golang/protobuf/protoc-gen-go
+	go install -i github.com/fenollp/gox
+	go install -i golang.org/x/lint/golint
+	go install -i honnef.co/go/tools/cmd/megacheck
+	go install -i github.com/wadey/gocovmerge
+	go install -i github.com/kyoh86/richgo
+	go install -i github.com/golang/protobuf/protoc-gen-go
 
 gpb: lib/messages.proto
 	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
