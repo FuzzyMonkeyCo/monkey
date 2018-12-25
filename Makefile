@@ -34,6 +34,8 @@ update: SHELL := /bin/bash
 update:
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
 	go generate
+	go get -u -a
+	go mod tidy
 
 latest:
 	sh -eux <misc/latest.sh

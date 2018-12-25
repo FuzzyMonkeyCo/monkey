@@ -86,6 +86,11 @@ message RepValidateProgress {
   repeated string details = 3;
 }
 
+message IsValid {
+  RefOrSchemaJSON schema = 1;
+  ValueJSON data = 2;
+}
+
 message ReqDoCall {
   HAR.Request request = 1;
 }
