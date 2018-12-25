@@ -15,17 +15,15 @@ FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 LNX = $(EXE)-Linux-x86_64
 DST ?= .
 
-DEP ?= dep-linux-amd64
-GODEP ?= v0.5.0
 GPB ?= 3.5.1
 GPB_IMG ?= znly/protoc:0.3.0
 
-all: lint vendor gpb
+all: lint gpb
 	go generate
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
 
-x: vendor
+x:
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	go generate
 	CGO_ENABLED=0 gox -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose -osarch "$$(echo $(OSARCH))" .
@@ -35,33 +33,19 @@ x: vendor
 update: SHELL := /bin/bash
 update:
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
-	[[ $(GODEP) = "$$(basename $$(curl -#fSLo /dev/null -w '%{url_effective}' https://github.com/golang/dep/releases/latest))" ]]
 	go generate
-	dep ensure -v -update
 
 latest:
 	sh -eux <misc/latest.sh
 
-vendor:
-	go generate
-	dep ensure -v
-#	Note: workaround to https://github.com/golang/dep/issues/1554
+deps:
 #	Writes to $GOPATH/bin so keep that in mind...
-	for pkg in $$(grep -Eo '"[^"]+",' Gopkg.toml | tr -d '",'); do \
-	  echo $$pkg && cd vendor/$$pkg && go install . && cd - ; \
-	done
-
-deps: dep.GODEP
-
-dep.GODEP:
-	mkdir -p release
-	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP) -o release/$(DEP)
-	curl -#fSL https://github.com/golang/dep/releases/download/$(GODEP)/$(DEP).sha256 -o release/$(DEP).sha256
-	sed -i 's%/Users/travis/gopath/src/github.com/golang/dep/%%' release/$(DEP).sha256
-	sha256sum --check --strict release/$(DEP).sha256
-	chmod +x release/$(DEP)
-	mv -v release/$(DEP) $$GOPATH/bin/dep
-	rm -r release
+	go install github.com/fenollp/gox
+	go install golang.org/x/lint/golint
+	go install honnef.co/go/tools/cmd/megacheck
+	go install github.com/wadey/gocovmerge
+	go install github.com/kyoh86/richgo
+	go install github.com/golang/protobuf/protoc-gen-go
 
 gpb: lib/messages.proto
 	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
@@ -76,7 +60,6 @@ debug: all
 	./$(EXE) -vvv fuzz
 
 distclean: clean
-	$(if $(wildcard vendor/),rm -r vendor/)
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
 clean:
@@ -99,7 +82,7 @@ ape: $(EXE).test
 	rm 0.cov cov.out
 
 # Thanks https://blog.cloudflare.com/go-coverage-with-external-tests
-$(EXE).test: lint vendor
+$(EXE).test: lint
 	$(if $(wildcard *.cov),rm *.cov)
 	go generate
 	go test -covermode=count -c

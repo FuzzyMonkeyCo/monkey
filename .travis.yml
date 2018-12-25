@@ -1,5 +1,4 @@
 language: go
-go_import_path: github.com/FuzzyMonkeyCo/monkey
 go: 1.11
 services: [docker]
 
@@ -25,8 +24,9 @@ after_script: set +e
 
 # before_cache:
 #   - rm -rf $TRAVIS_BUILD_DIR
-# cache:
-#   directories:
+cache:
+  directories:
+  - $GOPATH/pkg/mod
 #     - $GOPATH/src
 #     - $GOPATH/pkg
 
@@ -35,17 +35,19 @@ install:
 - go version
 - shellcheck --version
 - git --version
-- dep version
 
 script:
 - shellcheck $(find . -name '*.sh')
 - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
 - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
 - OSARCH=linux/amd64 make x
-- go fmt && git --no-pager diff
-- '[[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]'
+- go fmt
+- go mod tidy
+- |
+  git --no-pager diff
+  [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 - make lint
-- go vet $(go list ./... | grep -v /vendor/)
+- go vet $(go list ./...)
 - megacheck -show-ignored -unused.exported
 - make test.ci
 - ./monkey-Linux-x86_64 -h | grep monkey
