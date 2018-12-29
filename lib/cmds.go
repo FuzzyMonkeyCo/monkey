@@ -11,6 +11,13 @@ type lane struct {
 	R uint32
 }
 
+type Monkey struct {
+	Cfg  *UserCfg
+	Vald *Validator
+	Name string
+	EID  uint32
+}
+
 type Action interface {
 	exec(mnk *Monkey) (act Action, err error)
 }
@@ -19,8 +26,6 @@ func (act *RepValidateProgress) exec(mnk *Monkey) (nxt Action, err error) {
 	return
 }
 
-func (act *ReqDoValidate) exec(mnk *Monkey) (nxt Action, err error) {
-	// FIXME: use .Anon?
-	nxt = &RepValidateProgress{Failure: false, Success: true}
+func (act *RepCallResult) exec(mnk *Monkey) (nxt Action, err error) {
 	return
 }

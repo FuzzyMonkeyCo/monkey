@@ -23,15 +23,13 @@ type Validator struct {
 	Spec *SpecIR
 	Refs map[string]sid
 	Refd *gojsonschema.SchemaLoader
-	Anon map[sid]schemaJSON
 }
 
 func newValidator(capaEndpoints, capaSchemas int) *Validator {
 	return &Validator{
 		Refs: make(map[string]sid, capaSchemas),
-		Anon: make(map[sid]schemaJSON, capaEndpoints),
 		Spec: &SpecIR{
-			Endpoints: make([]*Endpoint, 0, capaEndpoints),
+			Endpoints: make(map[uint32]*Endpoint, capaEndpoints),
 			Schemas:   &Schemas{Json: make(map[sid]*RefOrSchemaJSON, capaSchemas)},
 		},
 		Refd: gojsonschema.NewSchemaLoader(),
@@ -300,6 +298,160 @@ func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	return
 }
 
+func (vald *Validator) toGo(SID sid) (s schemaJSON) {
+	var sm schemap
+	sm = vald.Spec.Schemas.Json
+	return sm.toGo(SID)
+}
+
+// For testing
+type schemap map[sid]*RefOrSchemaJSON
+
+// For testing
+func (sm schemap) toGo(SID sid) (s schemaJSON) {
+	schemaOrRef, ok := sm[SID]
+	if !ok {
+		log.Fatalf("unknown SID %d", SID)
+	}
+	if sp := schemaOrRef.GetPtr(); sp != nil {
+		return schemaJSON{"$ref": sp.GetRef()}
+	}
+	schema := schemaOrRef.GetSchema()
+	s = make(schemaJSON)
+
+	// "enum"
+	if schemaEnum := schema.GetEnum(); len(schemaEnum) != 0 {
+		enum := make([]interface{}, len(schemaEnum))
+		for i, v := range schemaEnum {
+			enum[i] = enumToGo(v)
+		}
+		s["enum"] = enum
+	}
+
+	// "type"
+	if schemaTypes := schema.GetTypes(); len(schemaTypes) != 0 {
+		types := make([]string, len(schemaTypes))
+		for i, v := range schemaTypes {
+			types[i] = Schema_JSON_Type_name[int32(v)]
+		}
+		s["type"] = types
+	}
+
+	// "format"
+	if schemaFormat := schema.GetFormat(); schemaFormat != Schema_JSON_NONE {
+		s["format"] = formatToGo(schemaFormat)
+	}
+	// "minLength"
+	if schemaMinLength := schema.GetMinLength(); schemaMinLength != 0 {
+		s["minLength"] = schemaMinLength
+	}
+	// "maxLength"
+	if schema.GetHasMaxLength() {
+		s["maxLength"] = schema.GetMaxLength()
+	}
+	// "pattern"
+	if schemaPattern := schema.GetPattern(); schemaPattern != "" {
+		s["pattern"] = schemaPattern
+	}
+
+	// "minimum"
+	if schema.GetHasMinimum() {
+		s["minimum"] = schema.GetMinimum()
+	}
+	// "maximum"
+	if schema.GetHasMaximum() {
+		s["maximum"] = schema.GetMaximum()
+	}
+	// "exclusiveMinimum"
+	if schemaExclusiveMinimum := schema.GetExclusiveMinimum(); schemaExclusiveMinimum {
+		s["exclusiveMin"] = schemaExclusiveMinimum
+	}
+	// "exclusiveMaximum"
+	if schemaExclusiveMaximum := schema.GetExclusiveMaximum(); schemaExclusiveMaximum {
+		s["exclusiveMax"] = schemaExclusiveMaximum
+	}
+	// "multipleOf"
+	if mulOf := schema.GetTranslatedMultipleOf(); mulOf != 0.0 {
+		s["multipleOf"] = mulOf + 1.0
+	}
+
+	// "uniqueItems"
+	if schemaUniqueItems := schema.GetUniqueItems(); schemaUniqueItems {
+		s["uniqueItems"] = schemaUniqueItems
+	}
+	// "minItems"
+	if schemaMinItems := schema.GetMinItems(); schemaMinItems != 0 {
+		s["minItems"] = schemaMinItems
+	}
+	// "maxItems"
+	if schema.GetHasMaxItems() {
+		s["maxItems"] = schema.GetMaxItems()
+	}
+	// "items"
+	if schemaItems := schema.GetItems(); len(schemaItems) > 0 {
+		items := make([]schemaJSON, len(schemaItems))
+		for i, itemSchema := range schemaItems {
+			items[i] = sm.toGo(itemSchema)
+		}
+		s["items"] = items
+	}
+
+	// "minProperties"
+	if schemaMinProps := schema.GetMinProperties(); schemaMinProps != 0 {
+		s["minProps"] = schemaMinProps
+	}
+	// "maxProperties"
+	if schema.GetHasMaxProperties() {
+		s["maxProperties"] = schema.GetMaxProperties()
+	}
+	// "required"
+	if schemaRequired := schema.GetRequired(); len(schemaRequired) != 0 {
+		s["required"] = schemaRequired
+	}
+	// "properties"
+	if schemaProps := schema.GetProperties(); len(schemaProps) != 0 {
+		props := make(schemaJSON, len(schemaProps))
+		for propName, propSchema := range schemaProps {
+			props[propName] = sm.toGo(propSchema)
+		}
+		s["properties"] = props
+	}
+
+	// "allOf"
+	if schemaAllOf := schema.GetAllOf(); len(schemaAllOf) != 0 {
+		allOf := make([]schemaJSON, len(schemaAllOf))
+		for i, schemaOf := range schemaAllOf {
+			allOf[i] = sm.toGo(schemaOf)
+		}
+		s["allOf"] = allOf
+	}
+
+	// "anyOf"
+	if schemaAnyOf := schema.GetAnyOf(); len(schemaAnyOf) != 0 {
+		anyOf := make([]schemaJSON, len(schemaAnyOf))
+		for i, schemaOf := range schemaAnyOf {
+			anyOf[i] = sm.toGo(schemaOf)
+		}
+		s["anyOf"] = anyOf
+	}
+
+	// "oneOf"
+	if schemaOneOf := schema.GetOneOf(); len(schemaOneOf) != 0 {
+		oneOf := make([]schemaJSON, len(schemaOneOf))
+		for i, schemaOf := range schemaOneOf {
+			oneOf[i] = sm.toGo(schemaOf)
+		}
+		s["oneOf"] = oneOf
+	}
+
+	// "not"
+	if schemaNot := schema.GetNot(); 0 != schemaNot {
+		s["not"] = sm.toGo(schemaNot)
+	}
+
+	return
+}
+
 func formatFromGo(format string) Schema_JSON_Format {
 	switch format {
 	case "date-time":
@@ -312,6 +464,19 @@ func formatFromGo(format string) Schema_JSON_Format {
 			return Schema_JSON_Format(v)
 		}
 		return Schema_JSON_NONE
+	}
+}
+
+func formatToGo(format Schema_JSON_Format) string {
+	switch format {
+	case Schema_JSON_NONE:
+		return ""
+	case Schema_JSON_date_time:
+		return "date-time"
+	case Schema_JSON_uri_reference:
+		return "uri-reference"
+	default:
+		return Schema_JSON_Format_name[int32(format)]
 	}
 }
 
@@ -340,6 +505,36 @@ func enumFromGo(value interface{}) *ValueJSON {
 			vs[n] = enumFromGo(v)
 		}
 		return &ValueJSON{Value: &ValueJSON_Object{&ObjectJSON{Values: vs}}}
+	default:
+		panic("unreachable")
+	}
+}
+
+func enumToGo(value *ValueJSON) interface{} {
+	if value.GetIsNull() {
+		return nil
+	}
+	switch value.GetValue().(type) {
+	case *ValueJSON_Boolean:
+		return value.GetBoolean()
+	case *ValueJSON_Number:
+		return value.GetNumber()
+	case *ValueJSON_Text:
+		return value.GetText()
+	case *ValueJSON_Array:
+		val := value.GetArray().GetValues()
+		vs := make([]interface{}, len(val))
+		for i, v := range val {
+			vs[i] = enumToGo(v)
+		}
+		return vs
+	case *ValueJSON_Object:
+		val := value.GetObject().GetValues()
+		vs := make(map[string]interface{}, len(val))
+		for n, v := range val {
+			vs[n] = enumToGo(v)
+		}
+		return vs
 	default:
 		panic("unreachable")
 	}
@@ -387,4 +582,43 @@ func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 		err = ErrInvalidPayload
 	}
 	return
+}
+
+func (vald *Validator) Validate(SID sid, json_data interface{}) []string {
+	s := vald.toGo(SID)
+	// FIXME? turns out Compile does not need an $id set?
+	// id := fmt.Sprintf("file:///schema_%d.json", SID)
+	// s["$id"] = id
+	loader := gojsonschema.NewGoLoader(s)
+
+	log.Println("[NFO] compiling schema refs")
+	// TODO: Clone(vald.Refd) that actually works
+	// ...because Refd.Compile(loader) fails when called more than once:
+	// err.Error() = `Reference already exists: ""`
+	refd := gojsonschema.NewSchemaLoader()
+	for absRef, refSID := range vald.Refs {
+		sl := gojsonschema.NewGoLoader(vald.toGo(refSID))
+		if err := refd.AddSchema(absRef, sl); err != nil {
+			panic(err)
+		}
+	}
+	schema, err := refd.Compile(loader)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return []string{err.Error()}
+	}
+
+	log.Println("[NFO] validating payload against refs")
+	res, err := schema.Validate(gojsonschema.NewGoLoader(json_data))
+	if err != nil {
+		log.Println("[ERR]", err)
+		return []string{err.Error()}
+	}
+
+	errors := res.Errors()
+	errs := make([]string, 0, len(errors))
+	for _, e := range errors {
+		errs = append(errs, e.String())
+	}
+	return errs
 }

@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
@@ -13,7 +14,20 @@ import (
 
 const (
 	mimeJSON = "application/json"
+
+	// For testing
+	someDescription = "some description"
 )
+
+// For testing
+var xxx2uint32 = map[string]uint32{
+	"default": 0,
+	"1XX":     1,
+	"2XX":     2,
+	"3XX":     3,
+	"4XX":     4,
+	"5XX":     5,
+}
 
 func newSpecFromOA3(doc *openapi3.Swagger) (vald *Validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
@@ -43,6 +57,20 @@ func (vald *Validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	return vald.seed("#/components/schemas/", schemas)
 }
 
+// For testing
+func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
+	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm))
+	for _, refOrSchema := range sm {
+		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
+			if ref := schemaPtr.GetRef(); ref != "" {
+				name := strings.TrimPrefix(ref, "#/components/schemas/")
+				seededSchemas[name] = sm.schemaToOA3(schemaPtr.GetSID())
+			}
+		}
+	}
+	doc.Components.Schemas = seededSchemas
+}
+
 func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
 	i, paths := 0, make([]string, len(docPaths))
 	for path := range docPaths {
@@ -69,8 +97,8 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
 			outputs := vald.outputsFromOA3(docOp.Responses)
-			method := EndpointJSON_Method(EndpointJSON_Method_value[docMethod])
-			endpoint := &Endpoint{
+			method := methodFromOA3(docMethod)
+			vald.Spec.Endpoints[uint32(1+j+l)] = &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
 						Method:       method,
@@ -80,8 +108,28 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 					},
 				},
 			}
-			vald.Spec.Endpoints = append(vald.Spec.Endpoints, endpoint)
 		}
+	}
+}
+
+// For testing
+func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[uint32]*Endpoint) {
+	doc.Paths = make(openapi3.Paths, len(es))
+	for _, e := range es {
+		endpoint := e.GetJson()
+		url := pathToOA3(endpoint.GetPathPartials())
+		inputs := endpoint.GetInputs()
+		reqBody := sm.inputBodyToOA3(inputs)
+		params := sm.inputsToOA3(inputs)
+		op := &openapi3.Operation{
+			RequestBody: reqBody,
+			Parameters:  params,
+			Responses:   sm.outputsToOA3(endpoint.GetOutputs()),
+		}
+		if doc.Paths[url] == nil {
+			doc.Paths[url] = &openapi3.PathItem{}
+		}
+		methodToOA3(endpoint.GetMethod(), op, doc.Paths[url])
 	}
 }
 
@@ -104,6 +152,22 @@ func (vald *Validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openap
 			}
 		}
 	}
+}
+
+// For testing
+func (sm schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
+	if len(inputs) > 0 {
+		body := inputs[0]
+		if body != nil && isInputBody(body) {
+			reqBody := &openapi3.RequestBody{
+				Content:     sm.contentToOA3(body.GetSID()),
+				Required:    body.GetIsRequired(),
+				Description: someDescription,
+			}
+			reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
+		}
+	}
+	return
 }
 
 func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
@@ -146,6 +210,38 @@ func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Pa
 	}
 }
 
+// For testing
+func (sm schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) {
+	for _, input := range inputs {
+		if isInputBody(input) {
+			continue
+		}
+
+		var in string
+		switch input.GetKind() {
+		case ParamJSON_path:
+			in = openapi3.ParameterInPath
+		case ParamJSON_query:
+			in = openapi3.ParameterInQuery
+		case ParamJSON_header:
+			in = openapi3.ParameterInHeader
+		case ParamJSON_cookie:
+			in = openapi3.ParameterInCookie
+		}
+
+		param := &openapi3.Parameter{
+			Name:        input.GetName(),
+			Required:    input.GetIsRequired(),
+			In:          in,
+			Description: someDescription,
+			Schema:      sm.schemaToOA3(input.GetSID()),
+		}
+
+		params = append(params, &openapi3.ParameterRef{Value: param})
+	}
+	return
+}
+
 func (vald *Validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
@@ -179,6 +275,26 @@ func (vald *Validator) outputsFromOA3(docResponses openapi3.Responses) (
 		}
 	}
 	return
+}
+
+// For testing
+func (sm schemap) outputsToOA3(outs map[uint32]sid) openapi3.Responses {
+	responses := make(openapi3.Responses, len(outs))
+	for xxx, SID := range outs {
+		XXX := makeXXXToOA3(xxx)
+		responses[XXX] = &openapi3.ResponseRef{
+			Value: &openapi3.Response{Description: someDescription}}
+		if SID != 0 {
+			responses[XXX].Value.Content = sm.contentToOA3(SID)
+		}
+	}
+	return responses
+}
+
+// For testing
+func (sm schemap) contentToOA3(SID sid) openapi3.Content {
+	schemaRef := sm.schemaToOA3(SID)
+	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
 func (vald *Validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
@@ -333,6 +449,93 @@ func (vald *Validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	return
 }
 
+// For testing
+func (sm schemap) schemaToOA3(SID sid) *openapi3.SchemaRef {
+	s := sm.toGo(SID)
+	s = transformSchemaToOA3(s)
+
+	sJSON, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+	schema := openapi3.NewSchema()
+	if err := json.Unmarshal(sJSON, &schema); err != nil {
+		panic(err)
+	}
+
+	return schema.NewRef()
+}
+
+// For testing
+func transformSchemaToOA3(s schemaJSON) schemaJSON {
+	// "type", "nullable"
+	if v, ok := s["type"]; ok {
+		sTypes := v.([]string)
+		sType := ""
+		for _, v := range sTypes {
+			switch v {
+			case "":
+				continue
+			case Schema_JSON_Type_name[int32(Schema_JSON_null)]:
+				s["nullable"] = true
+			default:
+				sType = v
+			}
+		}
+		s["type"] = sType
+	}
+
+	// "items"
+	if v, ok := s["items"]; ok {
+		if vv := v.([]schemaJSON); len(vv) > 0 {
+			s["items"] = transformSchemaToOA3(vv[0])
+		}
+	}
+
+	// "properties"
+	if v, ok := s["properties"]; ok {
+		props := v.(schemaJSON)
+		for propName, propSchema := range props {
+			props[propName] = transformSchemaToOA3(propSchema.(schemaJSON))
+		}
+		s["properties"] = props
+	}
+
+	// "allOf"
+	if v, ok := s["allOf"]; ok {
+		allOf := v.([]schemaJSON)
+		for i, schemaOf := range allOf {
+			allOf[i] = transformSchemaToOA3(schemaOf)
+		}
+		s["allOf"] = allOf
+	}
+
+	// "anyOf"
+	if v, ok := s["anyOf"]; ok {
+		anyOf := v.([]schemaJSON)
+		for i, schemaOf := range anyOf {
+			anyOf[i] = transformSchemaToOA3(schemaOf)
+		}
+		s["anyOf"] = anyOf
+	}
+
+	// "oneOf"
+	if v, ok := s["oneOf"]; ok {
+		oneOf := v.([]schemaJSON)
+		for i, schemaOf := range oneOf {
+			oneOf[i] = transformSchemaToOA3(schemaOf)
+		}
+		s["oneOf"] = oneOf
+	}
+
+	// "not"
+	if v, ok := s["not"]; ok {
+		s["not"] = transformSchemaToOA3(v.(schemaJSON))
+	}
+
+	return s
+}
+
 func ensureSchemaType(types interface{}, t string) []string {
 	if types == nil {
 		return []string{t}
@@ -377,6 +580,18 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 	return
 }
 
+func pathToOA3(partials []*PathPartial) (s string) {
+	for _, p := range partials {
+		part := p.GetPart()
+		if part != "" {
+			s += part
+		} else {
+			s += "{" + p.GetPtr() + "}"
+		}
+	}
+	return
+}
+
 func makeXXXFromOA3(code string) uint32 {
 	switch {
 	case code == "default":
@@ -399,6 +614,15 @@ func makeXXXFromOA3(code string) uint32 {
 	default:
 		panic(code)
 	}
+}
+
+func makeXXXToOA3(xxx uint32) string {
+	for k, v := range xxx2uint32 {
+		if v == xxx {
+			return k
+		}
+	}
+	return strconv.FormatUint(uint64(xxx), 10)
 }
 
 //TODO: support the whole spec on /"servers"
@@ -427,4 +651,37 @@ func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 		ColorERR.Println(err)
 	}
 	return
+}
+
+func isInputBody(input *ParamJSON) bool {
+	return input.GetName() == "" && input.GetKind() == ParamJSON_body
+}
+
+func methodFromOA3(docMethod string) EndpointJSON_Method {
+	return EndpointJSON_Method(EndpointJSON_Method_value[docMethod])
+}
+
+func methodToOA3(m EndpointJSON_Method, op *openapi3.Operation, p *openapi3.PathItem) {
+	switch m {
+	case EndpointJSON_CONNECT:
+		p.Connect = op
+	case EndpointJSON_DELETE:
+		p.Delete = op
+	case EndpointJSON_GET:
+		p.Get = op
+	case EndpointJSON_HEAD:
+		p.Head = op
+	case EndpointJSON_OPTIONS:
+		p.Options = op
+	case EndpointJSON_PATCH:
+		p.Patch = op
+	case EndpointJSON_POST:
+		p.Post = op
+	case EndpointJSON_PUT:
+		p.Put = op
+	case EndpointJSON_TRACE:
+		p.Trace = op
+	default:
+		panic(`no such method`)
+	}
 }

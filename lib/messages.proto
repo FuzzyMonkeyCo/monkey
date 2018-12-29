@@ -24,14 +24,12 @@ message Msg {
     // Try call to SUT
     ReqDoCall do_call = 9;
     RepCallDone call_done = 10;
+    RepValidateProgress validate_progress = 11;
+    RepCallResult call_result = 12;
 
     // Reset SUT state
-    ReqDoReset do_reset = 11;
-    RepResetProgress reset_progress = 12;
-
-    // Validation post SUT call
-    ReqDoValidate do_validate = 13;
-    RepValidateProgress validate_progress = 14;
+    ReqDoReset do_reset = 13;
+    RepResetProgress reset_progress = 14;
   }
 }
 
@@ -75,24 +73,9 @@ message SUTMetrics {
   string log_line = 3;
 }
 
-message ReqDoValidate {
-  uint32 SID = 1;
-  bytes data = 2;
-}
-message RepValidateProgress {
-  bool failure = 1;
-  bool success = 2;
-  // Some info
-  repeated string details = 3;
-}
-
-message IsValid {
-  RefOrSchemaJSON schema = 1;
-  ValueJSON data = 2;
-}
-
 message ReqDoCall {
-  HAR.Request request = 1;
+  uint32 EID = 1;
+  HAR.Request request = 2;
 }
 message RepCallDone {
   bool failure = 1;
@@ -100,6 +83,23 @@ message RepCallDone {
   uint64 usec = 3;
   string reason = 4;
   HAR.Entry response = 5;
+}
+
+message RepValidateProgress {
+  bool failure = 1;
+  bool success = 2;
+  // Some info
+  repeated string details = 3;
+}
+
+message RepCallResult {
+  ValueJSON response = 1;
+}
+
+message IsValid {
+  uint32 SID = 1;
+  ValueJSON data = 2;
+  Schemas vald = 3;
 }
 
 message UserCfg {
@@ -141,7 +141,9 @@ enum ExecKind {
 
 message SpecIR {
   Schemas schemas = 1;
-  repeated Endpoint endpoints = 2;
+  // All endpoints are here.
+  // Start at 1 then increases monotonously. 0 (zero) is reserved for bug finding.
+  map<uint32, Endpoint> endpoints = 2;
 }
 
 message Schemas {

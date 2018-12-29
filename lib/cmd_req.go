@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -12,7 +13,78 @@ func (act *RepCallDone) exec(mnk *Monkey) (nxt Action, err error) {
 	return
 }
 
+func (act *RepCallDone) castPostConditions(mnk *Monkey) {
+	if act.Failure {
+		return
+	}
+
+	// Check #1: HTTP Code
+	check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
+	endpoint := mnk.Vald.Spec.Endpoints[mnk.EID].GetJson()
+	status := act.Response.Response.Status
+	// TODO: handle 1,2,3,4,5,XXX
+	SID, ok := endpoint.Outputs[status]
+	if !ok {
+		check1.Failure = true
+		err := fmt.Sprintf("unexpected HTTP code '%d'", status)
+		check1.Details = append(check1.Details, err)
+		ColorERR.Println("[NFO]", err)
+	} else {
+		check1.Success = true
+	}
+	if err := ws.cast(check1); err != nil {
+		log.Fatalln("[ERR]", err)
+	}
+	check1 = nil
+	if !ok {
+		return
+	}
+
+	// Check #2: valid JSON response
+	check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
+	var json_data interface{}
+	data := []byte(act.Response.Response.Content.Text)
+	if err := json.Unmarshal(data, &json_data); err != nil {
+		check2.Failure = true
+		check2.Details = append(check2.Details, err.Error())
+		ColorERR.Println("[ERR]", err)
+	} else {
+		check2.Success = true
+	}
+	if err := ws.cast(check2); err != nil {
+		log.Fatalln("[ERR]", err)
+	}
+	check2 = nil
+	if json_data == nil {
+		return
+	}
+
+	// Check #3: response validates JSON schema
+	check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
+	if errs := mnk.Vald.Validate(SID, json_data); len(errs) != 0 {
+		check3.Failure = true
+		check3.Details = append(check3.Details, errs...)
+		for _, e := range errs {
+			ColorERR.Println(e)
+		}
+	} else {
+		check3.Success = true
+	}
+	if err := ws.cast(check3); err != nil {
+		log.Fatalln("[ERR]", err)
+	}
+
+	// TODO: user-provided postconditions
+
+	checkN := &RepCallResult{Response: enumFromGo(json_data)}
+	if err := ws.cast(checkN); err != nil {
+		log.Fatalln("[ERR]", err)
+	}
+}
+
 func (act *ReqDoCall) exec(mnk *Monkey) (nxt Action, err error) {
+	mnk.EID = act.EID
+
 	if !isHARReady() {
 		newHARTransport(mnk.Name)
 	}

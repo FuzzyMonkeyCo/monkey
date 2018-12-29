@@ -31,10 +31,33 @@ type wsState struct {
 	done chan struct{}
 }
 
-type Monkey struct {
-	Cfg  *UserCfg
-	Vald *Validator
-	Name string
+func (ws *wsState) cast(req Action) (err error) {
+	// NOTE: log in caller
+	// FIXME: use buffers?
+
+	msg := &Msg{UID: wsMsgUID}
+
+	switch req.(type) {
+	case *RepCallResult:
+		msg.Msg = &Msg_CallResult{CallResult: req.(*RepCallResult)}
+	case *RepValidateProgress:
+		msg.Msg = &Msg_ValidateProgress{ValidateProgress: req.(*RepValidateProgress)}
+	default:
+		err = fmt.Errorf("unexpected req: %#v", req)
+	}
+	if err != nil {
+		return
+	}
+
+	log.Println(">>> about to CAST", msg)
+	payload, err := proto.Marshal(msg)
+	if err != nil {
+		return
+	}
+
+	log.Printf("[DBG] 🡱 sending %dB\n", len(payload))
+	ws.req <- payload
+	return
 }
 
 func (ws *wsState) call(req Action, mnk *Monkey) (rep Action, err error) {
@@ -52,8 +75,6 @@ func (ws *wsState) call(req Action, mnk *Monkey) (rep Action, err error) {
 		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
 	case *RepCallDone:
 		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
-	case *RepValidateProgress:
-		msg.Msg = &Msg_ValidateProgress{ValidateProgress: req.(*RepValidateProgress)}
 	default:
 		err = fmt.Errorf("unexpected req: %#v", req)
 	}
@@ -95,8 +116,6 @@ rcv:
 			rep = msg.GetDoReset()
 		case *Msg_DoCall:
 			rep = msg.GetDoCall()
-		case *Msg_DoValidate:
-			rep = msg.GetDoValidate()
 		case *Msg_FuzzProgress:
 			rep = msg.GetFuzzProgress()
 			rep.exec(mnk)
@@ -134,6 +153,13 @@ func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
 		return
 	}
 	log.Printf(">>> nxt %#v\n", nxt)
+
+	// FIXME: find a better place for this call
+	if called, ok := nxt.(*RepCallDone); ok {
+		called.castPostConditions(mnk)
+		mnk.EID = 0
+	}
+
 	if nxt == nil {
 		return
 	}
