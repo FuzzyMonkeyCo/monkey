@@ -41,7 +41,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, vald0.Spec)
 			require.IsType(t, &SpecIR{}, vald0.Spec)
-			testSomeSchemas(t, vald0)
+			testSomeSchemas(t, vald0.Spec)
 			bin0, err := proto.Marshal(vald0.Spec)
 			require.NoError(t, err)
 			require.NotNil(t, bin0)
@@ -62,7 +62,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, vald2.Spec)
 			require.IsType(t, &SpecIR{}, vald2.Spec)
-			testSomeSchemas(t, vald2)
+			testSomeSchemas(t, vald2.Spec)
 			jsn1, err := jsoner.MarshalToString(vald2.Spec)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn1)
@@ -85,7 +85,8 @@ func specToOA3(spec *SpecIR) (doc openapi3.Swagger) {
 	return
 }
 
-func testSomeSchemas(t *testing.T, vald *Validator) {
-	require.NotEmpty(t, vald.Validate(1, schemaJSON{}))
-	require.Empty(t, vald.Validate(4, 42))
+func testSomeSchemas(t *testing.T, spec *SpecIR) {
+	ss := spec.Schemas
+	require.NotEmpty(t, ss.Validate(1, schemaJSON{}))
+	require.Empty(t, ss.Validate(4, 42))
 }

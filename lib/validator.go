@@ -298,12 +298,6 @@ func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	return
 }
 
-func (vald *Validator) toGo(SID sid) (s schemaJSON) {
-	var sm schemap
-	sm = vald.Spec.Schemas.Json
-	return sm.toGo(SID)
-}
-
 // For testing
 type schemap map[sid]*RefOrSchemaJSON
 
@@ -584,22 +578,23 @@ func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 	return
 }
 
-func (vald *Validator) Validate(SID sid, json_data interface{}) []string {
-	s := vald.toGo(SID)
+func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
+	var sm schemap
+	sm = ss.GetJson()
+	s := sm.toGo(SID)
 	// FIXME? turns out Compile does not need an $id set?
 	// id := fmt.Sprintf("file:///schema_%d.json", SID)
 	// s["$id"] = id
 	loader := gojsonschema.NewGoLoader(s)
 
 	log.Println("[NFO] compiling schema refs")
-	// TODO: Clone(vald.Refd) that actually works
-	// ...because Refd.Compile(loader) fails when called more than once:
-	// err.Error() = `Reference already exists: ""`
 	refd := gojsonschema.NewSchemaLoader()
-	for absRef, refSID := range vald.Refs {
-		sl := gojsonschema.NewGoLoader(vald.toGo(refSID))
-		if err := refd.AddSchema(absRef, sl); err != nil {
-			panic(err)
+	for _, refOrSchema := range sm {
+		if ptr := refOrSchema.GetPtr(); ptr != nil {
+			sl := gojsonschema.NewGoLoader(sm.toGo(ptr.GetSID()))
+			if err := refd.AddSchema(ptr.GetRef(), sl); err != nil {
+				panic(err)
+			}
 		}
 	}
 	schema, err := refd.Compile(loader)

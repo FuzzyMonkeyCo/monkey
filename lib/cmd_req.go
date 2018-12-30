@@ -61,7 +61,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 
 	// Check #3: response validates JSON schema
 	check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
-	if errs := mnk.Vald.Validate(SID, json_data); len(errs) != 0 {
+	if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
 		check3.Failure = true
 		check3.Details = append(check3.Details, errs...)
 		for _, e := range errs {
