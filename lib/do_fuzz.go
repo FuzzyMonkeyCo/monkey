@@ -154,14 +154,14 @@ func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
 	}
 	log.Printf(">>> nxt %#v\n", nxt)
 
+	if nxt == nil {
+		return
+	}
+
 	// FIXME: find a better place for this call
 	if called, ok := nxt.(*RepCallDone); ok {
 		called.castPostConditions(mnk)
 		mnk.EID = 0
-	}
-
-	if nxt == nil {
-		return
 	}
 
 	if nxt, err = ws.call(nxt, mnk); err != nil {

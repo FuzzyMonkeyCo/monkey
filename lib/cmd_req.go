@@ -15,11 +15,13 @@ func (act *RepCallDone) exec(mnk *Monkey) (nxt Action, err error) {
 
 func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	if act.Failure {
+		log.Println("[DBG] call failed, skipping checks")
 		return
 	}
 
 	// Check #1: HTTP Code
 	check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
+	log.Println("[NFO] checking", check1.Details[0])
 	endpoint := mnk.Vald.Spec.Endpoints[mnk.EID].GetJson()
 	status := act.Response.Response.Status
 	// TODO: handle 1,2,3,4,5,XXX
@@ -42,6 +44,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 
 	// Check #2: valid JSON response
 	check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
+	log.Println("[NFO] checking", check2.Details[0])
 	var json_data interface{}
 	data := []byte(act.Response.Response.Content.Text)
 	if err := json.Unmarshal(data, &json_data); err != nil {
@@ -61,6 +64,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 
 	// Check #3: response validates JSON schema
 	check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
+	log.Println("[NFO] checking", check3.Details[0])
 	if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
 		check3.Failure = true
 		check3.Details = append(check3.Details, errs...)
@@ -77,6 +81,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	// TODO: user-provided postconditions
 
 	checkN := &RepCallResult{Response: enumFromGo(json_data)}
+	log.Println("[DBG] checks passed")
 	if err := ws.cast(checkN); err != nil {
 		log.Fatalln("[ERR]", err)
 	}
@@ -103,7 +108,7 @@ func (act *ReqDoCall) exec(mnk *Monkey) (nxt Action, err error) {
 
 func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	harReq := act.GetRequest()
-	nxt = &RepCallDone{Usec: 42, Response: &HAR_Entry{}, Failure: true}
+	nxt = &RepCallDone{}
 	r, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -115,13 +120,14 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	_, err = clientReq.Do(r)
 	us := time.Since(start)
 	log.Println("[NFO] ❙", us)
-	nxt = &RepCallDone{Usec: uint64(us)}
+	nxt.Usec = uint64(us)
 
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
 		e := fmt.Sprintf("%#v", err.Error())
 		log.Println("[NFO] ▲", e)
 		nxt.Reason = e
+		nxt.Failure = true
 		err = nil
 		return
 	}
@@ -131,6 +137,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	resp := lastHAR()
 	log.Println("[NFO] ▲", resp)
 	nxt.Response = resp
+	nxt.Success = true
 	return
 }
 
