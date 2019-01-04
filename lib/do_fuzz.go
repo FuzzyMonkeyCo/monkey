@@ -45,9 +45,6 @@ func newWS(URL *url.URL, c *websocket.Conn) *wsState {
 }
 
 func (ws *wsState) cast(req Action) (err error) {
-	// NOTE: log in caller
-	// FIXME: use buffers?
-
 	ws.msgUID++
 	// reqUID := wsMsgUID
 	msg := &Msg{UID: ws.msgUID}

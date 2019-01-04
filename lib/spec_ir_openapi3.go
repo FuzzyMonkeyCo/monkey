@@ -19,7 +19,6 @@ const (
 	someDescription = "some description"
 )
 
-// For testing
 var xxx2uint32 = map[string]uint32{
 	"default": 0,
 	"1XX":     1,
@@ -593,27 +592,14 @@ func pathToOA3(partials []*PathPartial) (s string) {
 }
 
 func makeXXXFromOA3(code string) uint32 {
-	switch {
-	case code == "default":
-		return 0
-	case code == "1XX":
-		return 1
-	case code == "2XX":
-		return 2
-	case code == "3XX":
-		return 3
-	case code == "4XX":
-		return 4
-	case code == "5XX":
-		return 5
-
-	case "100" <= code && code <= "599":
-		i, _ := strconv.Atoi(code)
-		return uint32(i)
-
-	default:
-		panic(code)
+	if i, ok := xxx2uint32[code]; ok {
+		return i
 	}
+	i, err := strconv.Atoi(code)
+	if err != nil {
+		panic(err)
+	}
+	return uint32(i)
 }
 
 func makeXXXToOA3(xxx uint32) string {

@@ -19,7 +19,7 @@ const (
 
 var (
 	isRunning = false
-	// To exit with 7
+	// To exit with statusFailedExec
 	HadExecError = false
 	// To not post-stop after stop
 	wasStopped = false
