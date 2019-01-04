@@ -19,13 +19,26 @@ type Monkey struct {
 }
 
 type Action interface {
-	exec(mnk *Monkey) (act Action, err error)
+	// TODO: isMsg_Msg() + split into req/rep interfaces
+	exec(mnk *Monkey) (err error)
 }
 
-func (act *RepValidateProgress) exec(mnk *Monkey) (nxt Action, err error) {
+func (act *RepValidateProgress) exec(mnk *Monkey) (err error) {
 	return
 }
 
-func (act *RepCallResult) exec(mnk *Monkey) (nxt Action, err error) {
+func (act *RepCallResult) exec(mnk *Monkey) (err error) {
+	return
+}
+
+func (act *RepResetProgress) exec(mnk *Monkey) (err error) {
+	return
+}
+
+func (act *RepCallDone) exec(mnk *Monkey) (err error) {
+	return
+}
+
+func (act *SUTMetrics) exec(mnk *Monkey) (err error) {
 	return
 }

@@ -35,21 +35,29 @@ func (ws *wsState) cast(req Action) (err error) {
 	// NOTE: log in caller
 	// FIXME: use buffers?
 
+	wsMsgUID++
+	// reqUID := wsMsgUID
 	msg := &Msg{UID: wsMsgUID}
 
 	switch req.(type) {
+	case *DoFuzz:
+		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
+	case *RepCallDone:
+		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
 	case *RepCallResult:
 		msg.Msg = &Msg_CallResult{CallResult: req.(*RepCallResult)}
+	case *RepResetProgress:
+		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
 	case *RepValidateProgress:
 		msg.Msg = &Msg_ValidateProgress{ValidateProgress: req.(*RepValidateProgress)}
+	case *SUTMetrics:
+		msg.Msg = &Msg_Metrics{Metrics: req.(*SUTMetrics)}
 	default:
 		err = fmt.Errorf("unexpected req: %#v", req)
-	}
-	if err != nil {
 		return
 	}
 
-	log.Println(">>> about to CAST", msg)
+	log.Println("[DBG] encoding", msg)
 	payload, err := proto.Marshal(msg)
 	if err != nil {
 		return
@@ -60,41 +68,31 @@ func (ws *wsState) cast(req Action) (err error) {
 	return
 }
 
-func (ws *wsState) call(req Action, mnk *Monkey) (rep Action, err error) {
-	// NOTE: log in caller
-	// FIXME: use buffers?
-
-	wsMsgUID++
-	// reqUID := wsMsgUID
-	msg := &Msg{UID: wsMsgUID}
-
-	switch req.(type) {
-	case *DoFuzz:
-		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
-	case *RepResetProgress:
-		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
-	case *RepCallDone:
-		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
-	default:
-		err = fmt.Errorf("unexpected req: %#v", req)
+func (act *DoFuzz) exec(mnk *Monkey) (err error) {
+	act.Cfg = mnk.Cfg
+	act.Spec = mnk.Vald.Spec
+	if err = ws.cast(act); err != nil {
+		log.Println("[ERR]", err)
 	}
-	if err != nil {
+	return
+}
+
+func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
+	// Sometimes sets mnk.cfg.Runtime.Final* fields
+	log.Printf(">>> curr %#v\n", curr)
+	if err = curr.exec(mnk); err != nil {
+		ws.err2 <- err
 		return
 	}
 
-	payload, err := proto.Marshal(msg)
-	if err != nil {
-		return
-	}
-
-	log.Printf("[DBG] 🡱 sending %dB\n", len(payload))
-	ws.req <- payload
 rcv:
 	start := time.Now()
 	select {
-	case payload = <-ws.rep:
+	case payload := <-ws.rep:
 		log.Println("[DBG] 🡳", time.Since(start), payload[:4])
+		msg := &Msg{}
 		if err = proto.Unmarshal(payload, msg); err != nil {
+			log.Println("[ERR]", err)
 			return
 		}
 
@@ -104,73 +102,49 @@ rcv:
 		// }
 
 		switch msg.GetMsg().(type) {
-		case *Msg_Err500:
-			err = errors.New("500 Internal Server Error")
+		case *Msg_DoReset:
+			nxt = msg.GetDoReset()
+		case *Msg_DoCall:
+			nxt = msg.GetDoCall()
 		case *Msg_Err400:
 			err = errors.New("400 Bad Request")
 		case *Msg_Err401:
 			err = errors.New("401 Unauthorized")
 		case *Msg_Err403:
 			err = errors.New("403 Forbidden")
-		case *Msg_DoReset:
-			rep = msg.GetDoReset()
-		case *Msg_DoCall:
-			rep = msg.GetDoCall()
+		case *Msg_Err500:
+			err = errors.New("500 Internal Server Error")
 		case *Msg_FuzzProgress:
-			rep = msg.GetFuzzProgress()
-			rep.exec(mnk)
-			if r := rep.(*FuzzProgress); !(r.GetFailure() || r.GetSuccess()) {
-				goto rcv
+			nxt = msg.GetFuzzProgress()
+			if err = nxt.exec(mnk); err != nil {
+				return
 			}
+			if r := nxt.(*FuzzProgress); r.GetFailure() || r.GetSuccess() {
+				return
+			}
+			nxt = nil
+			goto rcv
 		default:
 			err = fmt.Errorf("unexpected msg: %#v", msg)
 		}
+		if err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
 
 	case err = <-ws.err:
-		log.Println("[DBG] 🡳", time.Since(start), err)
+		log.Println("[ERR] 🡳", time.Since(start), err)
+		return
 	case <-time.After(15 * time.Second):
 		err = errors.New("ws call timeout")
-	}
-	return
-}
-
-func (act *DoFuzz) exec(mnk *Monkey) (nxt Action, err error) {
-	act.Cfg = mnk.Cfg
-	act.Spec = mnk.Vald.Spec
-	nxt = act
-	return
-}
-
-func (act *RepResetProgress) exec(mnk *Monkey) (nxt Action, err error) {
-	return
-}
-
-func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
-	// Sometimes sets mnk.cfg.Runtime.Final* fields
-	log.Printf(">>> curr %#v\n", curr)
-	if nxt, err = curr.exec(mnk); err != nil {
-		ws.err2 <- err
-		return
-	}
-	log.Printf(">>> nxt %#v\n", nxt)
-
-	if nxt == nil {
-		return
-	}
-
-	// FIXME: find a better place for this call
-	if called, ok := nxt.(*RepCallDone); ok {
-		called.castPostConditions(mnk)
-		mnk.EID = 0
-	}
-
-	if nxt, err = ws.call(nxt, mnk); err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
-	return
+
+	return FuzzNext(mnk, nxt)
 }
 
-func (act *FuzzProgress) exec(mnk *Monkey) (nxt Action, err error) {
+func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Println(">>> FuzzProgress", act)
 	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
 	return
@@ -233,7 +207,7 @@ func NewWS(cfg *UserCfg, URL, ua string) error {
 				ws.err <- err
 				return
 			}
-			log.Printf("recv %dB: %s...\n", len(rep), rep[:4])
+			log.Printf("[DBG] recv %dB: %s...\n", len(rep), rep[:4])
 			if len(rep) == 4 && string(rep) == `PING` {
 				ws.ping <- struct{}{}
 			} else {
@@ -258,14 +232,16 @@ func NewWS(cfg *UserCfg, URL, ua string) error {
 			for {
 				select {
 				case data := <-ws.req:
-					log.Println("ws.req")
+					log.Println("[DBG] <-req", data[:4])
+					start := time.Now()
 					if err := c.WriteMessage(websocket.BinaryMessage, data); err != nil {
 						log.Println("[ERR]", err)
 						ws.err <- err
 						return
 					}
+					log.Println("[DBG] sent", len(data), "in", time.Since(start))
 				case <-ws.ping:
-					log.Println("ws.ping")
+					log.Println("[DBG] <-ping")
 					data := []byte(`PONG`)
 					if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
 						log.Println("[ERR]", err)
@@ -274,22 +250,23 @@ func NewWS(cfg *UserCfg, URL, ua string) error {
 					}
 					once.Do(func() { pong <- struct{}{} })
 				case err := <-ws.err2:
-					log.Println("ws.err2")
+					log.Println("[DBG] <-err2")
 					data := []byte(err.Error())
 					if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
 						log.Println("[ERR]", err)
 						return
 					}
 				case <-ws.done:
-					log.Println("ws.done")
+					log.Println("[DBG] <-done")
 					return
 				case <-time.After(srvTimeout):
+					ColorERR.Println("API server took too long to respond.")
 					log.Fatalln("[ERR] srvTimeout")
 					return
 				}
 			}
 		}()
-		log.Println("ws manager ending")
+		log.Println("[DBG] ws manager ending")
 		if err := c.Close(); err != nil {
 			log.Println("[ERR]", err)
 		}
@@ -297,11 +274,11 @@ func NewWS(cfg *UserCfg, URL, ua string) error {
 
 	select {
 	case <-pong:
-		log.Println("pong!")
+		log.Println("[DBG] <-pong!")
 		close(pong)
 		return nil
 	case err := <-ws.err:
-		log.Println("err!")
+		log.Println("[DBG] <-err!")
 		return err
 	case <-time.After(srvTimeout):
 		err := errors.New("timeout waiting for PING from server")

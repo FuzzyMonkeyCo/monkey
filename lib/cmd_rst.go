@@ -25,7 +25,7 @@ var (
 	wasStopped = false
 )
 
-func (act *ReqDoReset) exec(mnk *Monkey) (nxt Action, err error) {
+func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 	if isHARReady() {
 		/// exec of FuzzProgress
 		// var str string
@@ -48,7 +48,10 @@ func (act *ReqDoReset) exec(mnk *Monkey) (nxt Action, err error) {
 		clearHAR()
 	}
 
-	nxt = ExecuteScript(mnk.Cfg, act.GetKind())
+	nxt := ExecuteScript(mnk.Cfg, act.GetKind())
+	if err = ws.cast(nxt); err != nil {
+		log.Println("[ERR]", err)
+	}
 	return
 }
 

@@ -9,10 +9,6 @@ import (
 	"time"
 )
 
-func (act *RepCallDone) exec(mnk *Monkey) (nxt Action, err error) {
-	return
-}
-
 func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	if act.Failure {
 		log.Println("[DBG] call failed, skipping checks")
@@ -87,7 +83,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	}
 }
 
-func (act *ReqDoCall) exec(mnk *Monkey) (nxt Action, err error) {
+func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	mnk.EID = act.EID
 
 	if !isHARReady() {
@@ -99,10 +95,17 @@ func (act *ReqDoCall) exec(mnk *Monkey) (nxt Action, err error) {
 		return
 	}
 	act.updateHostHeader(mnk.Cfg)
+	var nxt *RepCallDone
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
 	totalR++
+
+	if err = ws.cast(nxt); err != nil {
+		log.Println("[ERR]", err)
+	}
+	nxt.castPostConditions(mnk)
+	mnk.EID = 0
 	return
 }
 

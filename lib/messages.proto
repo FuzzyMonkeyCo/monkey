@@ -19,7 +19,7 @@ message Msg {
     // Progress & end of testing
     FuzzProgress fuzz_progress = 7;
     // Log lines and things about SUT
-    SUTMetrics sut_metrics = 8;
+    SUTMetrics metrics = 8;
 
     // Try call to SUT
     ReqDoCall do_call = 9;
