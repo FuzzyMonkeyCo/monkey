@@ -49,7 +49,7 @@ func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 	}
 
 	nxt := ExecuteScript(mnk.Cfg, act.GetKind())
-	if err = ws.cast(nxt); err != nil {
+	if err = mnk.ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return

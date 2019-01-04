@@ -8,22 +8,9 @@ type Monkey struct {
 	Cfg      *UserCfg
 	Vald     *Validator
 	Name     string
-	EID      uint32
-	Progress *Progress
-}
-
-type Progress struct {
-	Start         time.Time
-	LastLane      Lane
-	ShrinkingFrom Lane
-	TotalR        uint32
-	TotalC        uint32
-}
-
-type Lane struct {
-	T uint32
-	R uint32
-	C uint32
+	ws       *wsState
+	eid      uint32
+	progress *progress
 }
 
 func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
@@ -31,10 +18,27 @@ func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
 		Cfg:  cfg,
 		Vald: vald,
 		Name: name,
-		Progress: &Progress{
-			Start: time.Now(),
-		},
 	}
+}
+
+type progress struct {
+	start         time.Time
+	lastLane      lane
+	shrinkingFrom lane
+	totalR        uint32
+	totalC        uint32
+}
+
+func newProgress() *progress {
+	return &progress{
+		start: time.Now(),
+	}
+}
+
+type lane struct {
+	t uint32
+	r uint32
+	c uint32
 }
 
 type Action interface {

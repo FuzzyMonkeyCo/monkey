@@ -15,29 +15,42 @@ import (
 )
 
 const (
-	headerUserAgent = "User-Agent"
-	headerXAPIKey   = "X-Api-Key"
+	// If no message arrive in `srvTimeout` then fail
+	srvTimeout = 15 * time.Second
 )
 
-var ws *wsState
-var wsMsgUID uint32
-
 type wsState struct {
-	req  chan []byte
-	rep  chan []byte
-	err  chan error
-	err2 chan error
-	ping chan struct{}
-	done chan struct{}
+	URL    *url.URL
+	c      *websocket.Conn
+	msgUID uint32
+	req    chan []byte
+	rep    chan []byte
+	err    chan error
+	err2   chan error
+	ping   chan struct{}
+	done   chan struct{}
+}
+
+func newWS(URL *url.URL, c *websocket.Conn) *wsState {
+	return &wsState{
+		URL:  URL,
+		c:    c,
+		req:  make(chan []byte, 1),
+		rep:  make(chan []byte, 1),
+		err:  make(chan error, 1),
+		err2: make(chan error, 1),
+		ping: make(chan struct{}, 1),
+		done: make(chan struct{}, 1),
+	}
 }
 
 func (ws *wsState) cast(req Action) (err error) {
 	// NOTE: log in caller
 	// FIXME: use buffers?
 
-	wsMsgUID++
+	ws.msgUID++
 	// reqUID := wsMsgUID
-	msg := &Msg{UID: wsMsgUID}
+	msg := &Msg{UID: ws.msgUID}
 
 	switch req.(type) {
 	case *DoFuzz:
@@ -68,133 +81,138 @@ func (ws *wsState) cast(req Action) (err error) {
 	return
 }
 
+func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
+	for {
+		// Sometimes sets mnk.cfg.Runtime.Final* fields
+		log.Printf(">>> act %#v\n", act)
+		if err = act.exec(mnk); err != nil {
+			mnk.ws.err2 <- err
+			return
+		}
+
+	rcv:
+		start := time.Now()
+		select {
+		case payload := <-mnk.ws.rep:
+			log.Println("[DBG] 🡳", time.Since(start), payload[:4])
+			msg := &Msg{}
+			if err = proto.Unmarshal(payload, msg); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+
+			// if msg.GetUID() != reqUID {
+			// 	err = errors.New("bad dialog sequence number")
+			// 	return
+			// }
+
+			switch msg.GetMsg().(type) {
+			case *Msg_DoReset:
+				act = msg.GetDoReset()
+			case *Msg_DoCall:
+				act = msg.GetDoCall()
+			case *Msg_Err400:
+				err = errors.New("400 Bad Request")
+			case *Msg_Err401:
+				err = errors.New("401 Unauthorized")
+			case *Msg_Err403:
+				err = errors.New("403 Forbidden")
+			case *Msg_Err500:
+				err = errors.New("500 Internal Server Error")
+			case *Msg_FuzzProgress:
+				done = msg.GetFuzzProgress()
+				if err = done.exec(mnk); err != nil {
+					return
+				}
+				if done.GetFailure() || done.GetSuccess() {
+					return
+				}
+				done = nil
+				goto rcv
+			default:
+				err = fmt.Errorf("unexpected msg: %#v", msg)
+			}
+			if err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+
+		case err = <-mnk.ws.err:
+			log.Println("[ERR] 🡳", time.Since(start), err)
+			return
+		case <-time.After(15 * time.Second):
+			err = errors.New("ws call timeout")
+			log.Println("[ERR]", err)
+			return
+		}
+	}
+}
+
 func (act *DoFuzz) exec(mnk *Monkey) (err error) {
 	act.Cfg = mnk.Cfg
 	act.Spec = mnk.Vald.Spec
-	if err = ws.cast(act); err != nil {
+	if err = mnk.ws.cast(act); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return
-}
-
-func FuzzNext(mnk *Monkey, curr Action) (nxt Action, err error) {
-	// Sometimes sets mnk.cfg.Runtime.Final* fields
-	log.Printf(">>> curr %#v\n", curr)
-	if err = curr.exec(mnk); err != nil {
-		ws.err2 <- err
-		return
-	}
-
-rcv:
-	start := time.Now()
-	select {
-	case payload := <-ws.rep:
-		log.Println("[DBG] 🡳", time.Since(start), payload[:4])
-		msg := &Msg{}
-		if err = proto.Unmarshal(payload, msg); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-
-		// if msg.GetUID() != reqUID {
-		// 	err = errors.New("bad dialog sequence number")
-		// 	return
-		// }
-
-		switch msg.GetMsg().(type) {
-		case *Msg_DoReset:
-			nxt = msg.GetDoReset()
-		case *Msg_DoCall:
-			nxt = msg.GetDoCall()
-		case *Msg_Err400:
-			err = errors.New("400 Bad Request")
-		case *Msg_Err401:
-			err = errors.New("401 Unauthorized")
-		case *Msg_Err403:
-			err = errors.New("403 Forbidden")
-		case *Msg_Err500:
-			err = errors.New("500 Internal Server Error")
-		case *Msg_FuzzProgress:
-			nxt = msg.GetFuzzProgress()
-			if err = nxt.exec(mnk); err != nil {
-				return
-			}
-			if r := nxt.(*FuzzProgress); r.GetFailure() || r.GetSuccess() {
-				return
-			}
-			nxt = nil
-			goto rcv
-		default:
-			err = fmt.Errorf("unexpected msg: %#v", msg)
-		}
-		if err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-
-	case err = <-ws.err:
-		log.Println("[ERR] 🡳", time.Since(start), err)
-		return
-	case <-time.After(15 * time.Second):
-		err = errors.New("ws call timeout")
-		log.Println("[ERR]", err)
-		return
-	}
-
-	return FuzzNext(mnk, nxt)
 }
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Println(">>> FuzzProgress", act)
-	mnk.Progress.LastLane = Lane{
-		T: act.GetTotalTestsCount(),
-		R: act.GetTestCallsCount(),
-		C: act.GetCallChecksCount(),
+	mnk.progress.lastLane = lane{
+		t: act.GetTotalTestsCount(),
+		r: act.GetTestCallsCount(),
+		c: act.GetCallChecksCount(),
 	}
 	if act.GetFailure() || act.GetSuccess() {
-		mnk.Progress.TotalR = act.GetTotalCallsCount()
-		mnk.Progress.TotalC = act.GetTotalChecksCount()
+		mnk.progress.totalR = act.GetTotalCallsCount()
+		mnk.progress.totalC = act.GetTotalChecksCount()
 	}
 	return
 }
 
-func (act *FuzzProgress) Outcome(mnk *Monkey) int {
-	p := mnk.Progress
+func (mnk *Monkey) Outcome(act *FuzzProgress) (success bool) {
+	p := mnk.progress
 	os.Stdout.Write([]byte{'\n'})
 	ColorWRN.Println(
-		"Ran", p.LastLane.T, "tests",
-		"totalling", p.TotalR, "requests",
-		"and", p.TotalC, "checks",
-		"in", time.Since(p.Start))
+		"Ran", p.lastLane.t, "tests",
+		"totalling", p.totalR, "requests",
+		"and", p.totalC, "checks",
+		"in", time.Since(p.start))
 
-	if act.GetFailure() {
-		d := p.ShrinkingFrom.T
-		m := p.LastLane.T - d
-		ColorERR.Printf("A bug was detected after %d tests then shrunk ", d)
-		if m != 1 {
-			ColorERR.Println(m, "times!")
-		} else {
-			ColorERR.Println("once!")
-		}
-		return 6
+	if act.GetSuccess() {
+		ColorNFO.Println("No bugs found... yet.")
+		success = true
+		return
+	}
+	if !act.GetFailure() {
+		panic(`there should be success!`)
 	}
 
-	if !act.GetSuccess() {
-		log.Fatalln("[ERR] there should be success!")
+	d := p.shrinkingFrom.t
+	m := p.lastLane.t - d
+	ColorERR.Printf("A bug reproducible in %d HTTP requests", p.lastLane.r)
+	ColorERR.Printf(" was detected after %d tests ", d)
+	switch m {
+	case 0:
+		ColorERR.Println("and not yet shrunk.")
+	case 1:
+		ColorERR.Println("then shrunk", "once.")
+	default:
+		ColorERR.Println("then shrunk", m, "times.")
 	}
-	ColorNFO.Println("No bugs found... yet.")
-	return 0
+	return
 }
 
-func NewWS(cfg *UserCfg, URL, ua string) error {
+func (mnk *Monkey) Dial(URL string) error {
 	u, err := url.Parse(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return err
 	}
 	headers := http.Header{
-		headerUserAgent: {ua},
-		headerXAPIKey:   {cfg.ApiKey},
+		"User-Agent": {mnk.Name},
+		"X-Api-Key":  {mnk.Cfg.ApiKey},
 	}
 
 	log.Println("[NFO] connecting to", u.String())
@@ -204,100 +222,100 @@ func NewWS(cfg *UserCfg, URL, ua string) error {
 		return err
 	}
 
-	ws = &wsState{
-		req:  make(chan []byte, 1),
-		rep:  make(chan []byte, 1),
-		err:  make(chan error, 1),
-		err2: make(chan error, 1),
-		ping: make(chan struct{}, 1),
-		done: make(chan struct{}, 1),
-	}
+	mnk.progress = newProgress()
+	mnk.ws = newWS(u, c)
 
-	go func() {
-		defer func() { ws.done <- struct{}{} }()
-		for {
-			_, rep, err := c.ReadMessage()
-			if err != nil {
-				log.Println("[ERR]", err)
-				ws.err <- err
-				return
-			}
-			log.Printf("[DBG] recv %dB: %s...\n", len(rep), rep[:4])
-			if len(rep) == 4 && string(rep) == `PING` {
-				ws.ping <- struct{}{}
-			} else {
-				ws.rep <- rep
-			}
-		}
-	}()
-
-	var once sync.Once
+	go mnk.ws.reader()
 	pong := make(chan struct{}, 1)
-	srvTimeout := 15 * time.Second
-
-	go func() {
-		defer close(ws.req)
-		defer close(ws.rep)
-		defer close(ws.err)
-		defer close(ws.err2)
-		defer close(ws.ping)
-		defer close(ws.done)
-
-		func() {
-			for {
-				select {
-				case data := <-ws.req:
-					log.Println("[DBG] <-req", data[:4])
-					start := time.Now()
-					if err := c.WriteMessage(websocket.BinaryMessage, data); err != nil {
-						log.Println("[ERR]", err)
-						ws.err <- err
-						return
-					}
-					log.Println("[DBG] sent", len(data), "in", time.Since(start))
-				case <-ws.ping:
-					log.Println("[DBG] <-ping")
-					data := []byte(`PONG`)
-					if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
-						log.Println("[ERR]", err)
-						ws.err <- err
-						return
-					}
-					once.Do(func() { pong <- struct{}{} })
-				case err := <-ws.err2:
-					log.Println("[DBG] <-err2")
-					data := []byte(err.Error())
-					if err := c.WriteMessage(websocket.TextMessage, data); err != nil {
-						log.Println("[ERR]", err)
-						return
-					}
-				case <-ws.done:
-					log.Println("[DBG] <-done")
-					return
-				case <-time.After(srvTimeout):
-					ColorERR.Println("API server took too long to respond.")
-					log.Fatalln("[ERR] srvTimeout")
-					return
-				}
-			}
-		}()
-		log.Println("[DBG] ws manager ending")
-		if err := c.Close(); err != nil {
-			log.Println("[ERR]", err)
-		}
-	}()
+	go mnk.ws.writer(pong)
 
 	select {
 	case <-pong:
 		log.Println("[DBG] <-pong!")
 		close(pong)
 		return nil
-	case err := <-ws.err:
+	case err := <-mnk.ws.err:
 		log.Println("[DBG] <-err!")
 		return err
 	case <-time.After(srvTimeout):
 		err := errors.New("timeout waiting for PING from server")
 		log.Println("[ERR]", err)
 		return err
+	}
+}
+
+func (ws *wsState) reader() {
+	defer func() { ws.done <- struct{}{} }()
+
+	for {
+		_, rep, err := ws.c.ReadMessage()
+		if err != nil {
+			log.Println("[ERR]", err)
+			ws.err <- err
+			return
+		}
+		log.Printf("[DBG] recv %dB: %s...\n", len(rep), rep[:4])
+		if len(rep) == 4 && string(rep) == `PING` {
+			ws.ping <- struct{}{}
+		} else {
+			ws.rep <- rep
+		}
+	}
+}
+
+func (ws *wsState) writer(pong chan struct{}) {
+	defer close(ws.req)
+	defer close(ws.rep)
+	defer close(ws.err)
+	defer close(ws.err2)
+	defer close(ws.ping)
+	defer close(ws.done)
+
+	func() {
+		var once sync.Once
+		const binMsg = websocket.BinaryMessage
+		const txtMsg = websocket.TextMessage
+
+		for {
+			select {
+			case data := <-ws.req:
+				log.Println("[DBG] <-req", data[:4])
+				start := time.Now()
+				if err := ws.c.WriteMessage(binMsg, data); err != nil {
+					log.Println("[ERR]", err)
+					ws.err <- err
+					return
+				}
+				log.Println("[DBG] sent", len(data), "in", time.Since(start))
+			case <-ws.ping:
+				log.Println("[DBG] <-ping")
+				data := []byte(`PONG`)
+				if err := ws.c.WriteMessage(txtMsg, data); err != nil {
+					log.Println("[ERR]", err)
+					ws.err <- err
+					return
+				}
+				once.Do(func() { pong <- struct{}{} })
+			case err := <-ws.err2:
+				log.Println("[DBG] <-err2")
+				data := []byte(err.Error())
+				if err := ws.c.WriteMessage(txtMsg, data); err != nil {
+					log.Println("[ERR]", err)
+					return
+				}
+			case <-ws.done:
+				log.Println("[DBG] <-done")
+				return
+			case <-time.After(srvTimeout):
+				ColorERR.Println(ws.URL.Hostname(), "took too long to respond")
+				log.Fatalln("[ERR] srvTimeout")
+				return
+			}
+		}
+	}()
+
+	log.Println("[DBG] ws manager ending")
+	if err := ws.c.Close(); err != nil {
+		log.Println("[ERR]", err)
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func (act *RepCallDone) castPostConditions(mnk *Monkey) {
+func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 	if act.Failure {
 		log.Println("[DBG] call failed, skipping checks")
 		return
@@ -18,7 +18,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	// Check #1: HTTP Code
 	check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
 	log.Println("[NFO] checking", check1.Details[0])
-	endpoint := mnk.Vald.Spec.Endpoints[mnk.EID].GetJson()
+	endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
 	status := act.Response.Response.Status
 	// TODO: handle 1,2,3,4,5,XXX
 	SID, ok := endpoint.Outputs[status]
@@ -30,7 +30,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	} else {
 		check1.Success = true
 	}
-	if err := ws.cast(check1); err != nil {
+	if err := mnk.ws.cast(check1); err != nil {
 		log.Fatalln("[ERR]", err)
 	}
 	check1 = nil
@@ -50,7 +50,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	} else {
 		check2.Success = true
 	}
-	if err := ws.cast(check2); err != nil {
+	if err := mnk.ws.cast(check2); err != nil {
 		log.Fatalln("[ERR]", err)
 	}
 	check2 = nil
@@ -70,7 +70,7 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 	} else {
 		check3.Success = true
 	}
-	if err := ws.cast(check3); err != nil {
+	if err := mnk.ws.cast(check3); err != nil {
 		log.Fatalln("[ERR]", err)
 	}
 
@@ -78,13 +78,13 @@ func (act *RepCallDone) castPostConditions(mnk *Monkey) {
 
 	checkN := &RepCallResult{Response: enumFromGo(json_data)}
 	log.Println("[DBG] checks passed")
-	if err := ws.cast(checkN); err != nil {
+	if err := mnk.ws.cast(checkN); err != nil {
 		log.Fatalln("[ERR]", err)
 	}
 }
 
 func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
-	mnk.EID = act.EID
+	mnk.eid = act.EID
 
 	if !isHARReady() {
 		newHARTransport(mnk.Name)
@@ -99,13 +99,14 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
-	mnk.Progress.TotalR++
+	// FIXME: trust upstream on this
+	mnk.progress.totalR++
 
-	if err = ws.cast(nxt); err != nil {
+	if err = mnk.ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)
 	}
-	nxt.castPostConditions(mnk)
-	mnk.EID = 0
+	mnk.castPostConditions(nxt)
+	mnk.eid = 0
 	return
 }
 

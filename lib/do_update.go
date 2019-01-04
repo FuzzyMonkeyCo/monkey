@@ -64,6 +64,9 @@ func (rel *GithubRelease) PeekLatestRelease() (latest string, err error) {
 	return
 }
 
+// assumes not v-prefixed
+// assumes never re-tagging releases
+// assumes only releasing newer tags
 func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 	exe := rel.Executable()
 	relURL := rel.DownloadURL() + latest + "/" + exe

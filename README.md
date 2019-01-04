@@ -7,8 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-$ monkey --help
-monkey	v0.0.0	0.19.1-25-g85b64e0-dirty	go1.10.2
+monkey	v0.0.0	0.19.1-133-g7719bc5-dirty	go1.11.4
 
 Usage:
   monkey [-vvv] init [--with-magic]
@@ -16,29 +15,32 @@ Usage:
   monkey [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] lint [--show-spec] [--hide-config]
+  monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (start | reset | stop)
   monkey [-vvv] -h | --help
   monkey [-vvv]      --update
   monkey [-vvv] -V | --version
 
 Options:
-  -v, -vv, -vvv  Debug verbosity level
-  -h, --help     Show this screen
-  -U, --update   Ensures monkey is latest
-  -V, --version  Show version
-  --hide-config  Do not show YAML configuration while linting
-  --seed=SEED    Use specific parameters for the RNG
-  --tag=TAG      Labels that can help classification
-  --test=ID      Which test to shrink
-  --tests=N      Number of tests to run [default: 100]
-  --user=USER    Authenticate on fuzzymonkey.co as USER
-  --with-magic   Auto fill in schemas from random API calls
+  -v, -vv, -vvv           Debug verbosity level
+  -h, --help              Show this screen
+  -U, --update            Ensures monkey is current
+  -V, --version           Show version
+  --hide-config           Do not show YAML configuration while linting
+  --seed=SEED             Use specific parameters for the RNG
+  --validate-against=REF  Schema $ref to validate STDIN against
+  --tag=TAG               Labels that can help classification
+  --test=ID               Which test to shrink
+  --tests=N               Number of tests to run [default: 100]
+  --user=USER             Authenticate on fuzzymonkey.co as USER
+  --with-magic            Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   monkey --update
   monkey init --with-magic
   monkey fuzz
+  echo '"kitty"' | monkey schema --validate-against '#/components/schemas/PetKind'
 ```
 
 ### Getting started
