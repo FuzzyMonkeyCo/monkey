@@ -7,10 +7,11 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey	v0.0.0	0.19.1-133-g7719bc5-dirty	go1.11.4
+monkey	v0.0.0	0.19.1-136-gf085414-dirty	go1.11.4
 
 Usage:
   monkey [-vvv] init [--with-magic]
+  monkey [-vvv] env [VAR ...]
   monkey [-vvv] login --user=USER
   monkey [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
@@ -40,7 +41,7 @@ Try:
   monkey --update
   monkey init --with-magic
   monkey fuzz
-  echo '"kitty"' | monkey schema --validate-against '#/components/schemas/PetKind'
+  echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 
 ### Getting started

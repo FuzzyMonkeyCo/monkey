@@ -37,8 +37,10 @@ const (
 
 	binName    = "monkey"
 	binTitle   = binName + "/" + binVersion
-	envAPIKey  = "FUZZYMONKEY_API_KEY"
 	githubSlug = "FuzzyMonkeyCo/" + binName
+
+	// Environment variables used
+	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
 var (
@@ -58,14 +60,15 @@ func main() {
 type params struct {
 	Fuzz, Shrink             bool
 	Lint, Schema             bool
-	Init, Login              bool
+	Init, Env, Login         bool
 	Exec, Start, Reset, Stop bool
-	Update                   bool   `mapstructure:"--update"`
-	HideConfig               bool   `mapstructure:"--hide-config"`
-	ShowSpec                 bool   `mapstructure:"--show-spec"`
-	N                        uint32 `mapstructure:"--tests"`
-	Verbosity                uint8  `mapstructure:"-v"`
-	ValidateAgainst          string `mapstructure:"--validate-against"`
+	Update                   bool     `mapstructure:"--update"`
+	HideConfig               bool     `mapstructure:"--hide-config"`
+	ShowSpec                 bool     `mapstructure:"--show-spec"`
+	N                        uint32   `mapstructure:"--tests"`
+	Verbosity                uint8    `mapstructure:"-v"`
+	ValidateAgainst          string   `mapstructure:"--validate-against"`
+	EnvVars                  []string `mapstructure:"VAR"`
 }
 
 func usage() (args *params, ret int) {
@@ -74,6 +77,7 @@ func usage() (args *params, ret int) {
 
 Usage:
   ` + B + ` [-vvv] init [--with-magic]
+  ` + B + ` [-vvv] env [VAR ...]
   ` + B + ` [-vvv] login --user=USER
   ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
@@ -103,7 +107,7 @@ Try:
   ` + B + ` --update
   ` + B + ` init --with-magic
   ` + B + ` fuzz
-  echo '"kitty"' | ` + B + ` schema --validate-against '#/components/schemas/PetKind'`
+  echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
 	// https://github.com/docopt/docopt.go/issues/59
 	opts, err := docopt.ParseDoc(usage)
@@ -138,7 +142,7 @@ func actualMain() int {
 
 	logCatchall, err := os.OpenFile(lib.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
-		log.Println(err)
+		lib.ColorERR.Println(err)
 		return retryOrReport()
 	}
 	defer logCatchall.Close()
@@ -152,6 +156,10 @@ func actualMain() int {
 
 	if args.Update {
 		return doUpdate()
+	}
+
+	if args.Env {
+		return doEnv(args.EnvVars)
 	}
 
 	cfg, err := lib.NewCfg(args.Lint && !args.HideConfig)
@@ -244,6 +252,27 @@ func doUpdate() int {
 			fmt.Println("The update failed 🙈 please try again")
 			return statusFailedUpdate
 		}
+	}
+	return statusOK
+}
+
+func doEnv(vars []string) int {
+	all := map[string]bool{
+		envAPIKey: false,
+	}
+	if len(vars) == 0 {
+		for key := range all {
+			fmt.Printf("%s=\"%s\"\n", key, os.Getenv(key))
+		}
+		return statusOK
+	}
+
+	for _, key := range vars {
+		if printed, ok := all[key]; !ok || printed {
+			return statusFailed
+		}
+		all[key] = true
+		fmt.Printf("%s=\"%s\"\n", key, os.Getenv(key))
 	}
 	return statusOK
 }
