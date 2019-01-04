@@ -3,10 +3,13 @@ package lib
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/xeipuuv/gojsonschema"
@@ -73,7 +76,6 @@ func (vald *Validator) seed(base string, schemas schemasJSON) (err error) {
 
 		sid := vald.ensureMapped("", schema)
 		if sid == 0 {
-			// Impossible
 			panic(absRef)
 		}
 		refSID := vald.Refs[absRef]
@@ -531,6 +533,19 @@ func enumToGo(value *ValueJSON) interface{} {
 		return vs
 	default:
 		panic("unreachable")
+	}
+}
+
+func (vald *Validator) WriteAbsoluteReferences(w io.Writer) {
+	all := make([]string, 0, len(vald.Refs))
+	for absRef := range vald.Refs {
+		all = append(all, absRef)
+	}
+	sort.Slice(all, func(i, j int) bool {
+		return strings.ToLower(all[i]) < strings.ToLower(all[j])
+	})
+	for _, absRef := range all {
+		fmt.Fprintln(w, absRef)
 	}
 }
 

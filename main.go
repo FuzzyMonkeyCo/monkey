@@ -280,15 +280,10 @@ func doEnv(vars []string) int {
 func doSchema(vald *lib.Validator, ref string) int {
 	refs := vald.Refs
 	refsCount := len(refs)
-	showRefs := func() {
-		for absRef := range refs {
-			fmt.Println(absRef)
-		}
-	}
 	if ref == "" {
 		log.Printf("[NFO] found %d refs\n", refsCount)
 		lib.ColorNFO.Printf("Found %d refs\n", refsCount)
-		showRefs()
+		vald.WriteAbsoluteReferences(os.Stdout)
 		return statusOK
 	}
 
@@ -299,7 +294,7 @@ func doSchema(vald *lib.Validator, ref string) int {
 			lib.ColorERR.Printf("No such $ref '%s'\n", ref)
 			if refsCount > 0 {
 				fmt.Println("Try one of:")
-				showRefs()
+				vald.WriteAbsoluteReferences(os.Stdout)
 			}
 		default:
 			lib.ColorERR.Println(err)
