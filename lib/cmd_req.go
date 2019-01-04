@@ -99,7 +99,7 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
-	totalR++
+	mnk.Progress.TotalR++
 
 	if err = ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)

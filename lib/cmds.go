@@ -1,21 +1,40 @@
 package lib
 
-var (
-	lastLane      lane
-	shrinkingFrom lane
-	totalR        uint32
+import (
+	"time"
 )
 
-type lane struct {
-	T uint32
-	R uint32
+type Monkey struct {
+	Cfg      *UserCfg
+	Vald     *Validator
+	Name     string
+	EID      uint32
+	Progress *Progress
 }
 
-type Monkey struct {
-	Cfg  *UserCfg
-	Vald *Validator
-	Name string
-	EID  uint32
+type Progress struct {
+	Start         time.Time
+	LastLane      Lane
+	ShrinkingFrom Lane
+	TotalR        uint32
+	TotalC        uint32
+}
+
+type Lane struct {
+	T uint32
+	R uint32
+	C uint32
+}
+
+func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
+	return &Monkey{
+		Cfg:  cfg,
+		Vald: vald,
+		Name: name,
+		Progress: &Progress{
+			Start: time.Now(),
+		},
+	}
 }
 
 type Action interface {

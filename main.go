@@ -297,12 +297,12 @@ func doFuzz(cfg *lib.UserCfg, vald *lib.Validator) int {
 		return retryOrReport()
 	}
 	act := lib.Action(&lib.DoFuzz{})
-	mnk := &lib.Monkey{Cfg: cfg, Vald: vald, Name: binTitle}
+	mnk := lib.NewMonkey(cfg, vald, binTitle)
 
 	for {
 		if done, ok := act.(*lib.FuzzProgress); ok && (done.GetFailure() || done.GetSuccess()) {
 			ensureDeleted(lib.EnvID())
-			return done.Outcome()
+			return done.Outcome(mnk)
 		}
 
 		var err error

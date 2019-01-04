@@ -146,20 +146,35 @@ rcv:
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Println(">>> FuzzProgress", act)
-	lastLane = lane{T: act.TotalTestsCount, R: act.TestCallsCount}
+	mnk.Progress.LastLane = Lane{
+		T: act.GetTotalTestsCount(),
+		R: act.GetTestCallsCount(),
+		C: act.GetCallChecksCount(),
+	}
+	if act.GetFailure() || act.GetSuccess() {
+		mnk.Progress.TotalR = act.GetTotalCallsCount()
+		mnk.Progress.TotalC = act.GetTotalChecksCount()
+	}
 	return
 }
 
-func (act *FuzzProgress) Outcome() int {
+func (act *FuzzProgress) Outcome(mnk *Monkey) int {
+	p := mnk.Progress
 	os.Stdout.Write([]byte{'\n'})
-	fmt.Printf("Ran %d tests totalling %d requests\n", lastLane.T, totalR)
+	ColorWRN.Println(
+		"Ran", p.LastLane.T, "tests",
+		"totalling", p.TotalR, "requests",
+		"and", p.TotalC, "checks",
+		"in", time.Since(p.Start))
 
 	if act.GetFailure() {
-		d, m := shrinkingFrom.T, lastLane.T-shrinkingFrom.T
+		d := p.ShrinkingFrom.T
+		m := p.LastLane.T - d
+		ColorERR.Printf("A bug was detected after %d tests then shrunk ", d)
 		if m != 1 {
-			fmt.Printf("A bug was detected after %d tests then shrunk %d times!\n", d, m)
+			ColorERR.Println(m, "times!")
 		} else {
-			fmt.Printf("A bug was detected after %d tests then shrunk once!\n", d)
+			ColorERR.Println("once!")
 		}
 		return 6
 	}
@@ -167,7 +182,7 @@ func (act *FuzzProgress) Outcome() int {
 	if !act.GetSuccess() {
 		log.Fatalln("[ERR] there should be success!")
 	}
-	fmt.Println("No bugs found... yet.")
+	ColorNFO.Println("No bugs found... yet.")
 	return 0
 }
 
