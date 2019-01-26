@@ -24,8 +24,8 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 	SID, ok := endpoint.Outputs[status]
 	if !ok {
 		check1.Failure = true
-		err := fmt.Sprintf("unexpected HTTP code '%d'", status)
-		check1.Details = append(check1.Details, err)
+		err := fmt.Errorf("unexpected HTTP code '%d'", status)
+		check1.Details = append(check1.Details, err.Error())
 		ColorERR.Println("[NFO]", err)
 	} else {
 		check1.Success = true
@@ -128,7 +128,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
-		e := fmt.Sprintf("%#v", err.Error())
+		e := err.Error()
 		log.Println("[NFO] ▲", e)
 		nxt.Reason = e
 		nxt.Failure = true

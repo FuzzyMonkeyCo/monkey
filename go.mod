@@ -14,13 +14,12 @@ require (
 	github.com/mattn/go-colorable v0.0.9 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/testify v0.0.0-20181224173747-660f15d67dbb
+	github.com/stretchr/testify v1.3.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	github.com/xeipuuv/gojsonschema v0.0.0-20181112162635-ac52e6811b56
+	github.com/xeipuuv/gojsonschema v1.1.0
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190102155601-82a175fd1598 // indirect
+	golang.org/x/sys v0.0.0-20190124100055-b90733256f2e // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
