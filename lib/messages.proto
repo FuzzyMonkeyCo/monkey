@@ -107,15 +107,17 @@ message IsValid {
 message UserCfg {
   uint32 version = 1;
   string api_key = 2;
-  bytes seed = 3;
-  uint32 n = 4;
+  repeated string usage = 3;
+  bytes seed = 4;
+  uint32 n = 5;
+  repeated uint32 EIDs = 6;
 
   enum Kind {
     UNKNOWN = 0;
     OpenAPIv3 = 1;
   }
-  Kind kind = 5;
-  string file = 6;
+  Kind kind = 7;
+  string file = 8;
 
   message Runtime {
     string host = 1;
@@ -123,14 +125,14 @@ message UserCfg {
     string final_host = 3;
     string final_port = 4;
   }
-  Runtime runtime = 7;
+  Runtime runtime = 9;
 
   message Exec {
     repeated string start = 1;
     repeated string reset = 2;
     repeated string stop = 3;
   }
-  Exec exec = 8;
+  Exec exec = 10;
 }
 
 enum ExecKind {

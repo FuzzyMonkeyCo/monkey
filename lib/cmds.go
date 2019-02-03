@@ -9,7 +9,7 @@ type Monkey struct {
 	Vald     *Validator
 	Name     string
 	ws       *wsState
-	eid      uint32
+	eid      eid
 	progress *progress
 }
 

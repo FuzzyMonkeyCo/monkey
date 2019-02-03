@@ -39,7 +39,9 @@ func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 		return
 	}
 
-	cfg, err = parseCfg(config, showCfg)
+	if cfg, err = parseCfg(config, showCfg); err == nil {
+		cfg.Usage = os.Args
+	}
 	return
 }
 

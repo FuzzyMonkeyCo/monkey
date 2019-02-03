@@ -69,6 +69,8 @@ type params struct {
 	Verbosity                uint8    `mapstructure:"-v"`
 	ValidateAgainst          string   `mapstructure:"--validate-against"`
 	EnvVars                  []string `mapstructure:"VAR"`
+	FuzzOnly                 []string `mapstructure:"--only"`
+	FuzzExcept               []string `mapstructure:"--except"`
 }
 
 func usage() (args *params, ret int) {
@@ -79,10 +81,10 @@ Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] env [VAR ...]
   ` + B + ` [-vvv] login --user=USER
-  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]... [--only=REGEX]... [--except=REGEX]...
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
-  ` + B + ` [-vvv] schema [--validate-against=REF]
+  ` + B + ` [-vvv] schema [--validate-against=PTR]
   ` + B + ` [-vvv] exec (start | reset | stop)
   ` + B + ` [-vvv] -h | --help
   ` + B + ` [-vvv]      --update
@@ -95,10 +97,12 @@ Options:
   -V, --version           Show version
   --hide-config           Do not show YAML configuration while linting
   --seed=SEED             Use specific parameters for the RNG
-  --validate-against=REF  Schema $ref to validate STDIN against
+  --validate-against=PTR  Schema $ref to validate STDIN against
   --tag=TAG               Labels that can help classification
   --test=ID               Which test to shrink
   --tests=N               Number of tests to run [default: 100]
+  --only=REGEX            Only test matching endpoints
+  --except=REGEX          Do not test these endpoints
   --user=USER             Authenticate on fuzzymonkey.co as USER
   --with-magic            Auto fill in schemas from random API calls
 
@@ -106,7 +110,7 @@ Try:
      export FUZZYMONKEY_API_KEY=42
   ` + B + ` --update
   ` + B + ` init --with-magic
-  ` + B + ` fuzz
+  ` + B + ` fuzz --only=/pets
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
 	// https://github.com/docopt/docopt.go/issues/59
@@ -117,6 +121,7 @@ Try:
 		ret = statusFailed
 		return
 	}
+
 	if opts["--version"].(bool) {
 		fmt.Println(binTitle)
 		return // ret = statusOK
@@ -169,7 +174,7 @@ func actualMain() int {
 	if args.Lint {
 		e := fmt.Sprintf("%s is a valid v%d configuration", lib.LocalCfg, cfg.Version)
 		log.Println("[NFO]", e)
-		lib.ColorNFO.Printf(e)
+		lib.ColorNFO.Println(e)
 	}
 
 	if args.Exec {
@@ -210,11 +215,19 @@ func actualMain() int {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
 		lib.ColorERR.Println(err)
-		return retryOrReport()
+		return statusFailed
 	}
 
+	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
+	eids, err := vald.FilterEndpoints(args.FuzzOnly, args.FuzzExcept)
+	if err != nil {
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+	cfg.EIDs = eids
 	cfg.N = args.N
-	return doFuzz(cfg, vald)
+	mnk := lib.NewMonkey(cfg, vald, binTitle)
+	return doFuzz(mnk)
 }
 
 func ensureDeleted(path string) {
@@ -320,7 +333,7 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 	return statusOK
 }
 
-func doFuzz(cfg *lib.UserCfg, vald *lib.Validator) int {
+func doFuzz(mnk *lib.Monkey) int {
 	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
 		log.Println("[ERR]", lib.Shell(), "is required")
 		return statusFailedRequire
@@ -330,7 +343,6 @@ func doFuzz(cfg *lib.UserCfg, vald *lib.Validator) int {
 		return retryOrReport()
 	}
 
-	mnk := lib.NewMonkey(cfg, vald, binTitle)
 	if err := mnk.Dial(wsURL); err != nil {
 		return retryOrReport()
 	}

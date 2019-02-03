@@ -81,7 +81,7 @@ func (ws *wsState) cast(req Action) (err error) {
 func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
 	for {
 		// Sometimes sets mnk.cfg.Runtime.Final* fields
-		log.Printf(">>> act %#v\n", act)
+		log.Printf("[DBG] >>> act %#v\n", act)
 		if err = act.exec(mnk); err != nil {
 			mnk.ws.err2 <- err
 			return
@@ -155,7 +155,7 @@ func (act *DoFuzz) exec(mnk *Monkey) (err error) {
 }
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
-	log.Println(">>> FuzzProgress", act)
+	log.Println("[DBG] >>> FuzzProgress", act)
 	mnk.progress.lastLane = lane{
 		t: act.GetTotalTestsCount(),
 		r: act.GetTestCallsCount(),

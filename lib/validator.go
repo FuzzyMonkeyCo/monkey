@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 var ErrInvalidPayload = errors.New("invalid JSON payload")
 var ErrNoSuchRef = errors.New("no such $ref")
 
+type eid = uint32
 type sid = uint32
 type schemaJSON = map[string]interface{}
 type schemasJSON = map[string]schemaJSON
@@ -32,7 +34,7 @@ func newValidator(capaEndpoints, capaSchemas int) *Validator {
 	return &Validator{
 		Refs: make(map[string]sid, capaSchemas),
 		Spec: &SpecIR{
-			Endpoints: make(map[uint32]*Endpoint, capaEndpoints),
+			Endpoints: make(map[eid]*Endpoint, capaEndpoints),
 			Schemas:   &Schemas{Json: make(map[sid]*RefOrSchemaJSON, capaSchemas)},
 		},
 		Refd: gojsonschema.NewSchemaLoader(),
@@ -534,6 +536,108 @@ func enumToGo(value *ValueJSON) interface{} {
 	default:
 		panic("unreachable")
 	}
+}
+
+func compileSlice(strs []string) (res map[string]*regexp.Regexp, err error) {
+	res = make(map[string]*regexp.Regexp, len(strs))
+	for _, str := range strs {
+		var re *regexp.Regexp
+		if re, err = regexp.Compile(str); err != nil {
+			return
+		}
+		res[str] = re
+	}
+	return
+}
+
+func (vald *Validator) FilterEndpoints(only, except []string) (eids []eid, err error) {
+	// Ensure user input is valid
+	onlys, err := compileSlice(only)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	if _, err = compileSlice(except); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	total := len(vald.Spec.Endpoints)
+	all := make(map[eid]string, total)
+	for eid := range vald.Spec.Endpoints {
+		e := vald.Spec.Endpoints[eid].GetJson()
+		path := pathToOA3(e.PathPartials)
+		all[eid] = fmt.Sprintf("%s\t%s", e.Method, path)
+	}
+
+	var es map[eid]string
+	if len(only) == 0 {
+		es = all
+	} else {
+		es = make(map[eid]string, total)
+		// OR over `only`
+		// Fail if any `only` is not there
+		for str, re := range onlys {
+			matched := false
+			for eid, e := range all {
+				if re.MatchString(e) {
+					log.Println("[DBG]", str, "matched", e)
+					matched = true
+					if _, ok := es[eid]; !ok {
+						es[eid] = e
+					}
+				}
+			}
+			if !matched {
+				err = fmt.Errorf("%s did not match any endpoints", str)
+				log.Println("[ERR]", err)
+				return
+			}
+		}
+	}
+
+	// OR over `except`
+	// Do not error if any `except` is not there
+	if len(except) != 0 {
+		var excepts *regexp.Regexp
+		if excepts, err = regexp.Compile(strings.Join(except, "|")); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		for eid, e := range es {
+			if excepts.MatchString(e) {
+				delete(es, eid)
+			}
+		}
+	}
+
+	// TODO? fallback from regexp to JSON Pointer matching
+	// TODO: ensure PTRs are valid & exist
+	// TODO: filter on endpoints
+	// TODO: filter on schemas (i.e.: on endpoints which I/O given schemas)
+	// TODO: golang (Docker style) filtering in general (tags, operationIDs, ...)
+
+	// Fail on empty EIDs
+	if len(es) == 0 {
+		err = errors.New("0 endpoints selected for testing")
+		log.Println("[ERR]", err)
+		return
+	}
+
+	selected := len(es)
+	eids = make([]eid, 0, selected)
+	for eid := range es {
+		eids = append(eids, eid)
+	}
+	sort.Slice(eids, func(i, j int) bool { return eids[i] < eids[j] })
+
+	e := fmt.Sprintf("%d endpoints selected for testing", selected)
+	log.Println("[NFO]", e)
+	ColorNFO.Println(e)
+	for _, eid := range eids {
+		fmt.Println(es[eid])
+	}
+	return
 }
 
 func (vald *Validator) WriteAbsoluteReferences(w io.Writer) {

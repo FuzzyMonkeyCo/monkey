@@ -56,7 +56,7 @@ func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 }
 
 func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
-	log.Println("exec:", ExecKind_name[int32(kind)])
+	log.Println("[DBG] >>> exec:", ExecKind_name[int32(kind)])
 	nxt = &RepResetProgress{Kind: kind}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {

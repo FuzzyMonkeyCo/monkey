@@ -97,7 +97,7 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
 			outputs := vald.outputsFromOA3(docOp.Responses)
 			method := methodFromOA3(docMethod)
-			vald.Spec.Endpoints[uint32(1+j+l)] = &Endpoint{
+			vald.Spec.Endpoints[eid(1+j+l)] = &Endpoint{
 				Endpoint: &Endpoint_Json{
 					&EndpointJSON{
 						Method:       method,
@@ -112,7 +112,7 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 }
 
 // For testing
-func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[uint32]*Endpoint) {
+func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*Endpoint) {
 	doc.Paths = make(openapi3.Paths, len(es))
 	for _, e := range es {
 		endpoint := e.GetJson()
