@@ -371,10 +371,11 @@ func retryOrReportThenCleanup(err error) int {
 func retryOrReport() int {
 	const issues = "https://github.com/" + githubSlug + "/issues"
 	const email = "ook@fuzzymonkey.co"
-	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Printf("\nYou may want to take a look at %s\n", lib.LogID())
-	fmt.Printf("or come by %s\n", issues)
-	fmt.Printf("or drop us a line at %s\n", email)
-	fmt.Println("\nThank you for your patience & sorry about this :)")
+	w := os.Stderr
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
+	fmt.Fprintf(w, "\nYou may want to take a look at %s\n", lib.LogID())
+	fmt.Fprintf(w, "or come by %s\n", issues)
+	fmt.Fprintf(w, "or drop us a line at %s\n", email)
+	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
 	return statusFailed
 }
