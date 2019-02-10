@@ -135,7 +135,7 @@ components:
 
     NewPet:
       required:
-        - name  
+        - name
       properties:
         name:
           type: string

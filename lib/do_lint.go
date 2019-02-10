@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
@@ -22,22 +21,8 @@ func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err er
 	}
 
 	loader := openapi3.NewSwaggerLoader()
-	var doc *openapi3.Swagger
-	switch strings.ToLower(filepath.Ext(docPath)) {
-	case ".yml", ".yaml":
-		if doc, err = loader.LoadSwaggerFromYAMLData(blob); err != nil {
-			log.Println("[ERR]", err)
-			ColorERR.Println(err)
-			return
-		}
-	case ".json":
-		if doc, err = loader.LoadSwaggerFromData(blob); err != nil {
-			log.Println("[ERR]", err)
-			ColorERR.Println(err)
-			return
-		}
-	default:
-		err = fmt.Errorf("unsupported file format: %s", docPath)
+	doc, err := loader.LoadSwaggerFromData(blob)
+	if err != nil {
 		log.Println("[ERR]", err)
 		ColorERR.Println(err)
 		return

@@ -36,6 +36,7 @@ update:
 	go generate
 	go get -u -a
 	go mod tidy
+	go mod verify
 
 latest:
 	sh -eux <misc/latest.sh

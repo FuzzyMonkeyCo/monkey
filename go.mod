@@ -1,16 +1,13 @@
 module github.com/FuzzyMonkeyCo/monkey
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v0.0.0-20181010231311-3f9d52f7176a
 	github.com/getkin/kin-openapi v0.0.0-20181218110731-97f8f226984b
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/golang/protobuf v1.2.0
 	github.com/googleapis/gnostic v0.0.0-20181205012611-41e081210329
 	github.com/gorilla/websocket v0.0.0-20181206070239-95ba29eb981b
 	github.com/hashicorp/logutils v1.0.0
-	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.4 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
@@ -19,7 +16,8 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.1.0
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190204203706-41f3e6584952 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	golang.org/x/sys v0.0.0-20190209173611-3b5209105503 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
+
+replace github.com/getkin/kin-openapi => github.com/getkin/kin-openapi v0.1.1-0.20190210195911-82a13f94c08e
