@@ -7,42 +7,11 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 )
-
-const (
-	// If no message arrive in `srvTimeout` then fail
-	srvTimeout = 15 * time.Second
-)
-
-type wsState struct {
-	URL    *url.URL
-	c      *websocket.Conn
-	msgUID uint32
-	req    chan []byte
-	rep    chan []byte
-	err    chan error
-	err2   chan error
-	ping   chan struct{}
-	done   chan struct{}
-}
-
-func newWS(URL *url.URL, c *websocket.Conn) *wsState {
-	return &wsState{
-		URL:  URL,
-		c:    c,
-		req:  make(chan []byte, 1),
-		rep:  make(chan []byte, 1),
-		err:  make(chan error, 1),
-		err2: make(chan error, 1),
-		ping: make(chan struct{}, 1),
-		done: make(chan struct{}, 1),
-	}
-}
 
 func (ws *wsState) cast(req Action) (err error) {
 	ws.msgUID++
@@ -212,7 +181,7 @@ func (mnk *Monkey) Dial(URL string) error {
 		"X-Api-Key":  {mnk.Cfg.ApiKey},
 	}
 
-	log.Println("[NFO] connecting to", u.String())
+	log.Println("[NFO] dialing", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -222,97 +191,11 @@ func (mnk *Monkey) Dial(URL string) error {
 	mnk.progress = newProgress()
 	mnk.ws = newWS(u, c)
 
-	go mnk.ws.reader()
-	pong := make(chan struct{}, 1)
-	go mnk.ws.writer(pong)
-
 	select {
-	case <-pong:
-		log.Println("[DBG] <-pong!")
-		close(pong)
-		return nil
 	case err := <-mnk.ws.err:
 		log.Println("[DBG] <-err!")
 		return err
-	case <-time.After(srvTimeout):
-		err := errors.New("timeout waiting for PING from server")
-		log.Println("[ERR]", err)
-		return err
-	}
-}
-
-func (ws *wsState) reader() {
-	defer func() { ws.done <- struct{}{} }()
-
-	for {
-		_, rep, err := ws.c.ReadMessage()
-		if err != nil {
-			log.Println("[ERR]", err)
-			ws.err <- err
-			return
-		}
-		log.Printf("[DBG] recv %dB: %s...\n", len(rep), rep[:4])
-		if len(rep) == 4 && string(rep) == `PING` {
-			ws.ping <- struct{}{}
-		} else {
-			ws.rep <- rep
-		}
-	}
-}
-
-func (ws *wsState) writer(pong chan struct{}) {
-	defer close(ws.req)
-	defer close(ws.rep)
-	defer close(ws.err)
-	defer close(ws.err2)
-	defer close(ws.ping)
-	defer close(ws.done)
-
-	func() {
-		var once sync.Once
-		const binMsg = websocket.BinaryMessage
-		const txtMsg = websocket.TextMessage
-
-		for {
-			select {
-			case data := <-ws.req:
-				log.Println("[DBG] <-req", data[:4])
-				start := time.Now()
-				if err := ws.c.WriteMessage(binMsg, data); err != nil {
-					log.Println("[ERR]", err)
-					ws.err <- err
-					return
-				}
-				log.Println("[DBG] sent", len(data), "in", time.Since(start))
-			case <-ws.ping:
-				log.Println("[DBG] <-ping")
-				data := []byte(`PONG`)
-				if err := ws.c.WriteMessage(txtMsg, data); err != nil {
-					log.Println("[ERR]", err)
-					ws.err <- err
-					return
-				}
-				once.Do(func() { pong <- struct{}{} })
-			case err := <-ws.err2:
-				log.Println("[DBG] <-err2")
-				data := []byte(err.Error())
-				if err := ws.c.WriteMessage(txtMsg, data); err != nil {
-					log.Println("[ERR]", err)
-					return
-				}
-			case <-ws.done:
-				log.Println("[DBG] <-done")
-				return
-			case <-time.After(srvTimeout):
-				ColorERR.Println(ws.URL.Hostname(), "took too long to respond")
-				log.Fatalln("[ERR] srvTimeout")
-				return
-			}
-		}
-	}()
-
-	log.Println("[DBG] ws manager ending")
-	if err := ws.c.Close(); err != nil {
-		log.Println("[ERR]", err)
+	default:
+		return nil
 	}
 }
