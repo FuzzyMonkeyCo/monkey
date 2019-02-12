@@ -13,13 +13,10 @@ const (
 	wsWriteWait = 2 * time.Second
 
 	// Time allowed to read the next pong message from the peer.
-	wsPongWait = 30 * time.Second
+	wsPongWait = 10 * time.Second
 
 	// Maximum message size allowed from peer in bytes
-	wsMaxMessageSize = 8192
-
-	// Fail if reading for longer
-	wsTimeout = 15 * time.Second
+	wsMaxMessageSize = 8 * 1024
 )
 
 type wsState struct {
@@ -52,22 +49,26 @@ func (ws *wsState) reader() {
 		log.Println("[DBG] ending reader")
 		if err := ws.c.Close(); err != nil {
 			log.Println("[ERR]", err)
+			ws.err <- err
 		}
 	}()
 	ws.c.SetReadLimit(wsMaxMessageSize)
 	ws.c.SetReadDeadline(time.Now().Add(wsPongWait))
-	ws.c.SetPingHandler(func(FIXME string) error {
-		log.Println("[DBG] SetPingHandler", FIXME)
-		ws.c.SetReadDeadline(time.Now().Add(wsPongWait))
-		return nil
+	ws.c.SetPingHandler(func(msg string) (err error) {
+		log.Println("[DBG] SetPingHandler", msg)
+		if err = ws.c.WriteControl(websocket.PongMessage, []byte(msg), time.Now().Add(wsPongWait)); err != nil {
+			log.Println("[ERR]", err)
+			ws.err <- err
+		}
+		return
 	})
 	for {
 		ty, rep, err := ws.c.ReadMessage()
 		if err != nil {
-			ws.err <- err
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) { //, websocket.CloseAbnormalClosure) {
 				log.Println("[ERR]", err)
 			}
+			ws.err <- err
 			break
 		}
 		log.Printf("[DBG] recv %dB: %s... (%#v)\n", len(rep), rep[:4], ty)
@@ -81,6 +82,7 @@ func (ws *wsState) writer() {
 		log.Println("[DBG] ending writer")
 		if err := ws.c.Close(); err != nil {
 			log.Println("[ERR]", err)
+			ws.err <- err
 		}
 	}()
 	for {
@@ -88,7 +90,10 @@ func (ws *wsState) writer() {
 		case data, ok := <-ws.req:
 			ws.c.SetWriteDeadline(time.Now().Add(wsWriteWait))
 			if !ok {
-				ws.c.WriteMessage(websocket.CloseMessage, []byte{})
+				if err := ws.c.WriteMessage(websocket.CloseMessage, []byte{}); err != nil {
+					log.Println("[ERR]", err)
+					ws.err <- err
+				}
 				return
 			}
 
@@ -106,13 +111,9 @@ func (ws *wsState) writer() {
 			data := []byte(err.Error())
 			if err := ws.c.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Println("[ERR]", err)
+				ws.err <- err
 				return
 			}
-
-		case <-time.After(wsTimeout):
-			ColorERR.Println(ws.URL.Hostname(), "took too long to respond")
-			log.Fatalln("[ERR] srvTimeout")
-			return
 		}
 	}
 }

@@ -106,10 +106,6 @@ func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
 		case err = <-mnk.ws.err:
 			log.Println("[ERR] 🡳", time.Since(start), err)
 			return
-		case <-time.After(15 * time.Second):
-			err = errors.New("ws call timeout")
-			log.Println("[ERR]", err)
-			return
 		}
 	}
 }
