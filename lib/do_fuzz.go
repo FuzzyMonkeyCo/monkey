@@ -14,10 +14,7 @@ import (
 )
 
 func (ws *wsState) cast(req Action) (err error) {
-	ws.msgUID++
-	// reqUID := wsMsgUID
-	msg := &Msg{UID: ws.msgUID}
-
+	msg := &Msg{Ts: NowMonoNano()}
 	switch req.(type) {
 	case *DoFuzz:
 		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
@@ -37,8 +34,9 @@ func (ws *wsState) cast(req Action) (err error) {
 	}
 
 	log.Println("[DBG] encoding", msg)
-	payload, err := proto.Marshal(msg)
-	if err != nil {
+	var payload []byte
+	if payload, err = proto.Marshal(msg); err != nil {
+		// Log err in caller
 		return
 	}
 
@@ -66,11 +64,6 @@ func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
 				log.Println("[ERR]", err)
 				return
 			}
-
-			// if msg.GetUID() != reqUID {
-			// 	err = errors.New("bad dialog sequence number")
-			// 	return
-			// }
 
 			switch msg.GetMsg().(type) {
 			case *Msg_DoReset:

@@ -122,9 +122,7 @@ func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
 	log.Println("[NFO] ▼", harReq)
 	start := time.Now()
 	_, err = clientReq.Do(r)
-	us := time.Since(start)
-	log.Println("[NFO] ❙", us)
-	nxt.Usec = uint64(us)
+	nxt.TsDiff = uint64(time.Since(start))
 
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?

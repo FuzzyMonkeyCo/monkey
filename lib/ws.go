@@ -20,13 +20,12 @@ const (
 )
 
 type wsState struct {
-	URL    *url.URL
-	c      *websocket.Conn
-	msgUID uint32
-	req    chan []byte
-	rep    chan []byte
-	err    chan error
-	err2   chan error
+	URL  *url.URL
+	c    *websocket.Conn
+	req  chan []byte
+	rep  chan []byte
+	err  chan error
+	err2 chan error
 }
 
 func newWS(URL *url.URL, c *websocket.Conn) *wsState {
@@ -116,4 +115,9 @@ func (ws *wsState) writer() {
 			}
 		}
 	}
+}
+
+// NowMonoNano gives current monotonic time with nanoseconds precision
+func NowMonoNano() uint64 {
+	return uint64(time.Now().UnixNano())
 }

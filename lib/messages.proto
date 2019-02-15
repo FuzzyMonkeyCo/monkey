@@ -7,7 +7,7 @@ syntax = "proto3";
 package lib;
 
 message Msg {
-  uint32 UID = 1;
+  uint64 ts = 1;
   oneof msg {
     RepError500 err500 = 2;
     RepError400 err400 = 3;
@@ -65,7 +65,7 @@ message ReqDoReset {
 message RepResetProgress {
   bool failure = 1;
   bool success = 2;
-  uint64 usec = 3;
+  uint64 ts_diff = 3;
   ExecKind kind = 4;
 }
 
@@ -82,7 +82,7 @@ message ReqDoCall {
 message RepCallDone {
   bool failure = 1;
   bool success = 2;
-  uint64 usec = 3;
+  uint64 ts_diff = 3;
   string reason = 4;
   HAR.Entry response = 5;
 }

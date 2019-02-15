@@ -124,7 +124,7 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 		log.Println("[DBG] execution error:", error)
 	}()
 	err = <-ch
-	nxt.Usec += uint64(time.Since(start) / time.Microsecond)
+	nxt.TsDiff += uint64(time.Since(start))
 
 	if err != nil {
 		log.Println("[ERR]", stderr.String()+"\n"+err.Error())
