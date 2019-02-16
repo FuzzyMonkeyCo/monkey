@@ -6,6 +6,32 @@
 syntax = "proto3";
 package lib;
 
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// See: https://github.com/gogo/protobuf/blob/master/extensions.md
+// Enable custom Size method (Required by Marshal and Unmarshal)
+option (gogoproto.sizer_all) = true;
+// Enable custom Marshal method
+option (gogoproto.marshaler_all) = true;
+// stable_marshaler
+// Enable custom Unmarshal method
+option (gogoproto.unmarshaler_all) = true;
+//option (gogoproto.gostring_all) = true;
+//option (gogoproto.goproto_stringer_all) = false;
+//option (gogoproto.stringer_all) =  true;
+
+// Generate func (this *ProtoMessage) Equal(that interface{}) bool
+option (gogoproto.equal_all) = true;
+// Don't generate XXX_unrecognized
+option (gogoproto.goproto_unrecognized_all) = true;
+// jsontag, moretags: https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
+
+//FIXME
+//option (gogoproto.goproto_testgen_all) = true;
+//option (gogoproto.goproto_benchgen_all) = true;
+// https://godoc.org/github.com/gogo/protobuf/plugin/populate
+
+
 message Msg {
   uint64 ts = 1;
   oneof msg {
@@ -421,7 +447,8 @@ message HAR {
     int32 compression = 2;
     string encoding = 3;
     string mime_type = 4;
-    int32 size = 5;
+    // Renamed `size` to `length` to avoid conflict with gogofast
+    int32 length = 5;
     string text = 6;
   }
 

@@ -31,7 +31,7 @@ E if can be inlined
 ! ag '^\s+fmt\.Errorf'
 E unused value
 
-! ag 'fmt\.Errorf."[^%\n]*"'
+! ag --ignore '*.pb.go' 'fmt\.Errorf."[^%\n]*"'
 E prefer errors.New
 
 ! ag '([^ ]+) != nil\s+{\s+for [^=]+ := range \1'

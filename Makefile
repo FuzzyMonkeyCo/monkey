@@ -15,8 +15,8 @@ FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
 LNX = $(EXE)-Linux-x86_64
 DST ?= .
 
-GPB ?= 3.5.1
-GPB_IMG ?= znly/protoc:0.3.0
+GPB ?= 3.6.1
+GPB_IMG ?= znly/protoc:0.4.0
 
 all: lint gpb
 	go generate
@@ -48,10 +48,10 @@ deps:
 	go install -i honnef.co/go/tools/cmd/megacheck
 	go install -i github.com/wadey/gocovmerge
 	go install -i github.com/kyoh86/richgo
-	go install -i github.com/golang/protobuf/protoc-gen-go
 
+gpb: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
 gpb: lib/messages.proto
-	docker run --rm -v $$PWD:$$PWD -w $$PWD $(GPB_IMG) --go_out=. -I. $^
+	$(PROTOC) --gogofast_out=. $^
 
 lint:
 	gofmt -s -w *.go lib/*.go

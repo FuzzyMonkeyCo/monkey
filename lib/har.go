@@ -219,7 +219,7 @@ func harResponse(hr *http.Response) (*HAR_Response, error) {
 	hr.Body = ioutil.NopCloser(bytes.NewReader(bodyData))
 	r.Content = &HAR_Content{}
 	r.Content.Text = string(bodyData)
-	r.Content.Size = int32(len(bodyData))
+	r.Content.Length = int32(len(bodyData))
 
 	r.Content.MimeType = hr.Header.Get("Content-Type")
 	if r.Content.MimeType == "" {
