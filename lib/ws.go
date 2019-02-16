@@ -117,6 +117,8 @@ func (ws *wsState) writer() {
 	}
 }
 
+type WSMsg = isMsg_Msg
+
 // NowMonoNano gives current monotonic time with nanoseconds precision
 func NowMonoNano() uint64 {
 	return uint64(time.Now().UnixNano())
