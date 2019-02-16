@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -93,7 +92,7 @@ func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
 		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
-			if s := schemaPtr.GetSchema(); s != nil && proto.Equal(&schema, s) {
+			if s := schemaPtr.GetSchema(); s != nil && schema.Equal(s) {
 				return SID
 			}
 		}
