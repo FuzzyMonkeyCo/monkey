@@ -4,7 +4,7 @@ require (
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v0.0.0-20181010231311-3f9d52f7176a
 	github.com/getkin/kin-openapi v0.0.0-20181218110731-97f8f226984b
-	github.com/gogo/protobuf v1.2.0
+	github.com/gogo/protobuf v1.2.1
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20181205012611-41e081210329
 	github.com/gorilla/websocket v0.0.0-20181206070239-95ba29eb981b
