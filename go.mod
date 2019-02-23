@@ -9,15 +9,14 @@ require (
 	github.com/googleapis/gnostic v0.0.0-20181205012611-41e081210329
 	github.com/gorilla/websocket v0.0.0-20181206070239-95ba29eb981b
 	github.com/hashicorp/logutils v1.0.0
-	github.com/mattn/go-colorable v0.1.0 // indirect
-	github.com/mattn/go-isatty v0.0.4 // indirect
+	github.com/mattn/go-colorable v0.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/stretchr/testify v1.3.0
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.1.0
 	golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4 // indirect
-	golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a // indirect
+	golang.org/x/sys v0.0.0-20190222171317-cd391775e71e // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
 
