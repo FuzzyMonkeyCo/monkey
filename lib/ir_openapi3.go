@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	mimeJSON = "application/json"
+	mimeJSON             = "application/json"
+	oasComponentsSchemas = "#/components/schemas/"
 
 	// For testing
 	someDescription = "some description"
@@ -53,7 +54,7 @@ func (vald *Validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	for name, docSchema := range docSchemas {
 		schemas[name] = vald.schemaFromOA3(docSchema.Value)
 	}
-	return vald.seed("#/components/schemas/", schemas)
+	return vald.seed(oasComponentsSchemas, schemas)
 }
 
 // For testing
@@ -62,7 +63,7 @@ func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
 	for _, refOrSchema := range sm {
 		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
 			if ref := schemaPtr.GetRef(); ref != "" {
-				name := strings.TrimPrefix(ref, "#/components/schemas/")
+				name := strings.TrimPrefix(ref, oasComponentsSchemas)
 				seededSchemas[name] = sm.schemaToOA3(schemaPtr.GetSID())
 			}
 		}
