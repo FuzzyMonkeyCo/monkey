@@ -301,10 +301,8 @@ func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	return
 }
 
-// For testing
 type schemap map[sid]*RefOrSchemaJSON
 
-// For testing
 func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	schemaOrRef, ok := sm[SID]
 	if !ok {
@@ -320,7 +318,7 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	if schemaEnum := schema.GetEnum(); len(schemaEnum) != 0 {
 		enum := make([]interface{}, len(schemaEnum))
 		for i, v := range schemaEnum {
-			enum[i] = enumToGo(v)
+			enum[i] = EnumToGo(v)
 		}
 		s["enum"] = enum
 	}
@@ -507,7 +505,7 @@ func enumFromGo(value interface{}) *ValueJSON {
 	}
 }
 
-func enumToGo(value *ValueJSON) interface{} {
+func EnumToGo(value *ValueJSON) interface{} {
 	if value.GetIsNull() {
 		return nil
 	}
@@ -522,14 +520,14 @@ func enumToGo(value *ValueJSON) interface{} {
 		val := value.GetArray().GetValues()
 		vs := make([]interface{}, len(val))
 		for i, v := range val {
-			vs[i] = enumToGo(v)
+			vs[i] = EnumToGo(v)
 		}
 		return vs
 	case *ValueJSON_Object:
 		val := value.GetObject().GetValues()
 		vs := make(map[string]interface{}, len(val))
 		for n, v := range val {
-			vs[n] = enumToGo(v)
+			vs[n] = EnumToGo(v)
 		}
 		return vs
 	default:
@@ -700,6 +698,7 @@ func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
 	var sm schemap
 	sm = ss.GetJson()
 	s := sm.toGo(SID)
+	log.Printf("[???] SID:%d %+v", SID, s)
 	// FIXME? turns out Compile does not need an $id set?
 	// id := fmt.Sprintf("file:///schema_%d.json", SID)
 	// s["$id"] = id
@@ -709,8 +708,11 @@ func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
 	refd := gojsonschema.NewSchemaLoader()
 	for _, refOrSchema := range sm {
 		if ptr := refOrSchema.GetPtr(); ptr != nil {
-			sl := gojsonschema.NewGoLoader(sm.toGo(ptr.GetSID()))
-			if err := refd.AddSchema(ptr.GetRef(), sl); err != nil {
+			SID, ref := ptr.GetSID(), ptr.GetRef()
+			s := sm.toGo(SID)
+			// log.Printf("[???] SID:%d %s %+v", SID, ref, s)
+			sl := gojsonschema.NewGoLoader(s)
+			if err := refd.AddSchema(ref, sl); err != nil {
 				panic(err)
 			}
 		}

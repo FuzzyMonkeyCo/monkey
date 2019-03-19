@@ -6,6 +6,8 @@
 syntax = "proto3";
 package lib;
 
+option go_package = "github.com/FuzzyMonkeyCo/monkey/lib";
+
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 // See: https://github.com/gogo/protobuf/blob/master/extensions.md
@@ -23,7 +25,7 @@ option (gogoproto.unmarshaler_all) = true;
 // Generate func (this *ProtoMessage) Equal(that interface{}) bool
 option (gogoproto.equal_all) = true;
 // Don't generate XXX_unrecognized
-option (gogoproto.goproto_unrecognized_all) = true;
+//option (gogoproto.goproto_unrecognized_all) = true;
 // jsontag, moretags: https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
 
 //FIXME
@@ -122,12 +124,6 @@ message RepValidateProgress {
 
 message RepCallResult {
   ValueJSON response = 1;
-}
-
-message IsValid {
-  uint32 SID = 1;
-  ValueJSON data = 2;
-  Schemas vald = 3;
 }
 
 message UserCfg {
