@@ -37,37 +37,35 @@ option (gogoproto.equal_all) = true;
 message Msg {
   uint64 ts = 1;
   oneof msg {
-    RepError500 err500 = 2;
-    RepError400 err400 = 3;
-    RepError401 err401 = 4;
-    RepError403 err403 = 5;
+    RepError error = 2;
 
     // Begin of testing
-    DoFuzz fuzz = 6;
+    DoFuzz fuzz = 3;
     // Progress & end of testing
-    FuzzProgress fuzz_progress = 7;
+    FuzzProgress fuzz_progress = 4;
     // Log lines and things about SUT
-    SUTMetrics metrics = 8;
+    SUTMetrics metrics = 5;
 
     // Try call to SUT
-    ReqDoCall do_call = 9;
-    RepCallDone call_done = 10;
-    RepValidateProgress validate_progress = 11;
-    RepCallResult call_result = 12;
+    ReqDoCall do_call = 6;
+    RepCallDone call_done = 7;
+    RepValidateProgress validate_progress = 8;
+    RepCallResult call_result = 9;
 
     // Reset SUT state
-    ReqDoReset do_reset = 13;
-    RepResetProgress reset_progress = 14;
+    ReqDoReset do_reset = 10;
+    RepResetProgress reset_progress = 11;
   }
 }
 
-message RepError400 {
-}
-message RepError401 {
-}
-message RepError403 {
-}
-message RepError500 {
+message RepError {
+  enum Culprit {
+    UNKNOWN = 0;
+    client = 1;
+    server = 2;
+  }
+  Culprit culprit = 1;
+  string reason = 2;
 }
 
 message DoFuzz {

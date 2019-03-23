@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -70,14 +69,14 @@ func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
 				act = msg.GetDoReset()
 			case *Msg_DoCall:
 				act = msg.GetDoCall()
-			case *Msg_Err400:
-				err = errors.New("400 Bad Request")
-			case *Msg_Err401:
-				err = errors.New("401 Unauthorized")
-			case *Msg_Err403:
-				err = errors.New("403 Forbidden")
-			case *Msg_Err500:
-				err = errors.New("500 Internal Server Error")
+			case *Msg_Error:
+				e := msg.GetError()
+				culprit := e.GetCulprit().String()
+				if reason := e.GetReason(); reason != "" {
+					err = fmt.Errorf("%s error: %s", culprit, reason)
+				} else {
+					err = fmt.Errorf("%s error", culprit)
+				}
 			case *Msg_FuzzProgress:
 				done = msg.GetFuzzProgress()
 				if err = done.exec(mnk); err != nil {
