@@ -476,7 +476,7 @@ func transformSchemaToOA3(s schemaJSON) schemaJSON {
 			switch v {
 			case "":
 				continue
-			case Schema_JSON_Type_name[int32(Schema_JSON_null)]:
+			case Schema_JSON_null.String():
 				s["nullable"] = true
 			default:
 				sType = v

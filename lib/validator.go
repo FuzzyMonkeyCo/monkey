@@ -327,7 +327,7 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	if schemaTypes := schema.GetTypes(); len(schemaTypes) != 0 {
 		types := make([]string, len(schemaTypes))
 		for i, v := range schemaTypes {
-			types[i] = Schema_JSON_Type_name[int32(v)]
+			types[i] = v.String()
 		}
 		s["type"] = types
 	}
@@ -471,7 +471,7 @@ func formatToGo(format Schema_JSON_Format) string {
 	case Schema_JSON_uri_reference:
 		return "uri-reference"
 	default:
-		return Schema_JSON_Format_name[int32(format)]
+		return format.String()
 	}
 }
 

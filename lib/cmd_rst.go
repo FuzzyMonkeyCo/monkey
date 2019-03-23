@@ -56,7 +56,7 @@ func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 }
 
 func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
-	log.Println("[DBG] >>> exec:", ExecKind_name[int32(kind)])
+	log.Println("[DBG] >>> exec:", kind.String())
 	nxt = &RepResetProgress{Kind: kind}
 	shellCmds := cfg.script(kind)
 	if len(shellCmds) == 0 {
@@ -135,7 +135,7 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 }
 
 func fmtExecError(k ExecKind, i int, c, e, s string) {
-	kind := ExecKind_name[int32(k)]
+	kind := k.String()
 	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, kind, e)
 	fmt.Printf("Command:\n%s\n", c)
 	fmt.Printf("Stderr:\n%s\n", s)

@@ -8039,7 +8039,7 @@ func (m *SpecIR) MarshalTo(dAtA []byte) (int, error) {
 		i += n21
 	}
 	if len(m.Endpoints) > 0 {
-		for k, _ := range m.Endpoints {
+		for k := range m.Endpoints {
 			dAtA[i] = 0x12
 			i++
 			v := m.Endpoints[k]
@@ -8087,7 +8087,7 @@ func (m *Schemas) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Json) > 0 {
-		for k, _ := range m.Json {
+		for k := range m.Json {
 			dAtA[i] = 0xa
 			i++
 			v := m.Json[k]
@@ -8294,7 +8294,7 @@ func (m *EndpointJSON) MarshalTo(dAtA []byte) (int, error) {
 		}
 	}
 	if len(m.Outputs) > 0 {
-		for k, _ := range m.Outputs {
+		for k := range m.Outputs {
 			dAtA[i] = 0x22
 			i++
 			v := m.Outputs[k]
@@ -8615,7 +8615,7 @@ func (m *Schema_JSON) MarshalTo(dAtA []byte) (int, error) {
 		i++
 	}
 	if len(m.Properties) > 0 {
-		for k, _ := range m.Properties {
+		for k := range m.Properties {
 			dAtA[i] = 0xa2
 			i++
 			dAtA[i] = 0x1
@@ -8865,7 +8865,7 @@ func (m *ObjectJSON) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if len(m.Values) > 0 {
-		for k, _ := range m.Values {
+		for k := range m.Values {
 			dAtA[i] = 0xa
 			i++
 			v := m.Values[k]

@@ -105,7 +105,7 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 	}
 
 	expectedKind := UserCfg_OpenAPIv3
-	if userConf.Spec.Kind != UserCfg_Kind_name[int32(expectedKind)] {
+	if userConf.Spec.Kind != expectedKind.String() {
 		err = errors.New("spec's kind must be set to OpenAPIv3")
 		log.Println("[ERR]", err)
 		ColorERR.Println(err)
