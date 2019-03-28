@@ -27,3 +27,6 @@ vendor/
 /meta.go
 /*.cov
 /cov.out
+
+#FIXME
+/github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go

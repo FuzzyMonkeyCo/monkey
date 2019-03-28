@@ -18,7 +18,7 @@ DST ?= .
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
 
-all: lint gpb
+all: gpb lint
 	go generate
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
@@ -52,6 +52,8 @@ deps:
 gpb: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
 gpb: lib/messages.proto
 	$(PROTOC) --gogofast_out=. $^
+#	FIXME: don't have this github.com/ folder created in the first place
+	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >lib/messages.pb.go
 
 lint:
 	gofmt -s -w *.go lib/*.go
