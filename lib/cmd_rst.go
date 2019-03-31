@@ -27,24 +27,6 @@ var (
 
 func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 	if isHARReady() {
-		/// exec of FuzzProgress
-		// var str string
-		// if *cmd.Passed {
-		// 	str = "✓"
-		// } else {
-		// 	if !*cmd.Passed {
-		// 		str = "✗"
-		// 	}
-		// }
-
-		// if cmd.ShrinkingFrom != nil {
-		// 	shrinkingFrom = *cmd.ShrinkingFrom
-		// 	if lastLane.T == cmd.ShrinkingFrom.T {
-		// 		str += "\n"
-		// 	}
-		// }
-		// fmt.Print(str)
-
 		clearHAR()
 	}
 

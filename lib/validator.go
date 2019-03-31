@@ -621,14 +621,14 @@ func (vald *Validator) FilterEndpoints(only, except []string) (eids []eid, err e
 		return
 	}
 
-	selected := len(es)
+	selected := uint32(len(es))
 	eids = make([]eid, 0, selected)
 	for eid := range es {
 		eids = append(eids, eid)
 	}
 	sort.Slice(eids, func(i, j int) bool { return eids[i] < eids[j] })
 
-	e := fmt.Sprintf("%d endpoints selected for testing", selected)
+	e := fmt.Sprintf("%d %s selected for testing", selected, plural("endpoint", selected))
 	log.Println("[NFO]", e)
 	ColorNFO.Println(e)
 	for _, eid := range eids {

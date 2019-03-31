@@ -24,7 +24,7 @@ func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
 type progress struct {
 	start         time.Time
 	lastLane      lane
-	shrinkingFrom lane
+	shrinkingFrom *lane
 	totalR        uint32
 	totalC        uint32
 }
