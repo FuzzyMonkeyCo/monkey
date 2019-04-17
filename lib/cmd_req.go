@@ -15,63 +15,68 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		return
 	}
 
+	var SID sid
 	// Check #1: HTTP Code
-	check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
-	log.Println("[NFO] checking", check1.Details[0])
-	endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
-	status := act.Response.Response.Status
-	// TODO: handle 1,2,3,4,5,XXX
-	SID, ok := endpoint.Outputs[status]
-	if !ok {
-		check1.Failure = true
-		err := fmt.Errorf("unexpected HTTP code '%d'", status)
-		check1.Details = append(check1.Details, err.Error())
-		ColorERR.Println("[NFO]", err)
-	} else {
-		check1.Success = true
-	}
-	if err := mnk.ws.cast(check1); err != nil {
-		log.Fatalln("[ERR]", err)
-	}
-	check1 = nil
-	if !ok {
-		return
+	{
+		check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
+		log.Println("[NFO] checking", check1.Details[0])
+		endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
+		status := act.Response.Response.Status
+		// TODO: handle 1,2,3,4,5,XXX
+		var ok bool
+		if SID, ok = endpoint.Outputs[status]; !ok {
+			check1.Failure = true
+			err := fmt.Errorf("unexpected HTTP code '%d'", status)
+			check1.Details = append(check1.Details, err.Error())
+			ColorERR.Println("[NFO]", err)
+		} else {
+			check1.Success = true
+		}
+		if err := mnk.ws.cast(check1); err != nil {
+			log.Fatalln("[ERR]", err)
+		}
+		if !ok {
+			return
+		}
 	}
 
-	// Check #2: valid JSON response
-	check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
-	log.Println("[NFO] checking", check2.Details[0])
 	var json_data interface{}
-	data := []byte(act.Response.Response.Content.Text)
-	if err := json.Unmarshal(data, &json_data); err != nil {
-		check2.Failure = true
-		check2.Details = append(check2.Details, err.Error())
-		ColorERR.Println("[ERR]", err)
-	} else {
-		check2.Success = true
-	}
-	if err := mnk.ws.cast(check2); err != nil {
-		log.Fatalln("[ERR]", err)
-	}
-	check2 = nil
-	if json_data == nil {
-		return
+	// Check #2: valid JSON response
+	{
+		check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
+		log.Println("[NFO] checking", check2.Details[0])
+		data := []byte(act.Response.Response.Content.Text)
+		if err := json.Unmarshal(data, &json_data); err != nil {
+			check2.Failure = true
+			check2.Details = append(check2.Details, err.Error())
+			ColorERR.Println("[ERR]", err)
+		} else {
+			check2.Success = true
+		}
+		if err := mnk.ws.cast(check2); err != nil {
+			log.Fatalln("[ERR]", err)
+		}
+		if json_data == nil {
+			return
+		}
 	}
 
 	// Check #3: response validates JSON schema
-	check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
-	log.Println("[NFO] checking", check3.Details[0])
-	if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
-		check3.Failure = true
-		check3.Details = append(check3.Details, errs...)
-		for _, e := range errs {
-			ColorERR.Println(e)
+	{
+		check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
+		log.Println("[NFO] checking", check3.Details[0])
+		if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
+			check3.Failure = true
+			check3.Details = append(check3.Details, errs...)
+			for _, e := range errs {
+				ColorERR.Println(e)
+			}
+		} else {
+			check3.Success = true
 		}
-	} else {
-		check3.Success = true
-	}
-	if err := mnk.ws.cast(check3); err != nil {
-		log.Fatalln("[ERR]", err)
+		if err := mnk.ws.cast(check3); err != nil {
+			log.Fatalln("[ERR]", err)
+		}
 	}
 
 	// TODO: user-provided postconditions
@@ -99,8 +104,6 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	if nxt, err = act.makeRequest(); err != nil {
 		return
 	}
-	// FIXME: trust upstream on this
-	mnk.progress.totalR++
 
 	if err = mnk.ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)

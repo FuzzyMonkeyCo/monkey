@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/gogo/protobuf/proto"
@@ -44,7 +43,7 @@ func (ws *wsState) cast(req Action) (err error) {
 	return
 }
 
-func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
+func (mnk *Monkey) FuzzingLoop(act Action) (err error) {
 	for {
 		// Sometimes sets mnk.cfg.Runtime.Final* fields
 		log.Printf("[DBG] >>> act %#v\n", act)
@@ -78,14 +77,13 @@ func (mnk *Monkey) FuzzingLoop(act Action) (done *FuzzProgress, err error) {
 					err = fmt.Errorf("%s error", culprit)
 				}
 			case *Msg_FuzzProgress:
-				done = msg.GetFuzzProgress()
+				done := msg.GetFuzzProgress()
 				if err = done.exec(mnk); err != nil {
 					return
 				}
 				if done.GetFailure() || done.GetSuccess() {
 					return
 				}
-				done = nil
 				goto rcv
 			default:
 				err = fmt.Errorf("unexpected msg: %#v", msg)
@@ -107,86 +105,6 @@ func (act *DoFuzz) exec(mnk *Monkey) (err error) {
 	act.Spec = mnk.Vald.Spec
 	if err = mnk.ws.cast(act); err != nil {
 		log.Println("[ERR]", err)
-	}
-	return
-}
-
-func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
-	log.Println("[DBG] >>> FuzzProgress", act)
-	currentLane := lane{
-		t: act.GetTotalTestsCount(),
-		r: act.GetTestCallsCount(),
-		c: act.GetCallChecksCount(),
-	}
-
-	var str string
-
-	if act.GetLastCallSuccess() {
-		str = "✓"
-	}
-	if act.GetLastCallFailure() {
-		str = "✗"
-	}
-
-	switch {
-	case mnk.progress.shrinkingFrom == nil && act.GetShrinking():
-		mnk.progress.shrinkingFrom = &mnk.progress.lastLane
-		str += "\n"
-	case mnk.progress.lastLane.t != currentLane.t:
-		str += " "
-	}
-
-	mnk.progress.lastLane = currentLane
-	if act.GetFailure() || act.GetSuccess() {
-		mnk.progress.totalR = act.GetTotalCallsCount()
-		mnk.progress.totalC = act.GetTotalChecksCount()
-	}
-
-	fmt.Print(str)
-	return
-}
-
-func plural(s string, n uint32) string {
-	if n == 1 {
-		return s
-	}
-	return s + "s"
-}
-
-func (mnk *Monkey) Outcome(act *FuzzProgress) (success bool) {
-	p := mnk.progress
-	os.Stdout.Write([]byte{'\n'})
-	ColorWRN.Println(
-		"Ran", p.lastLane.t, plural("test", p.lastLane.t),
-		"totalling", p.totalR, plural("request", p.totalR),
-		"and", p.totalC, plural("check", p.totalC),
-		"in", time.Since(p.start))
-
-	if act.GetSuccess() {
-		ColorNFO.Println("No bugs found... yet.")
-		success = true
-		return
-	}
-	if !act.GetFailure() {
-		panic(`there should be success!`)
-	}
-
-	var d, m uint32
-	if p.shrinkingFrom == nil {
-		d = p.lastLane.t
-	} else {
-		d = p.shrinkingFrom.t
-		m = p.lastLane.t - d
-	}
-	ColorERR.Printf("A bug reproducible in %d HTTP %s", p.lastLane.r, plural("request", p.lastLane.r))
-	ColorERR.Printf(" was detected after %d %s ", d, plural("test", d))
-	switch m {
-	case 0:
-		ColorERR.Println("and not yet shrunk.")
-	case 1:
-		ColorERR.Println("then shrunk", "once.")
-	default:
-		ColorERR.Println("then shrunk", m, "times.")
 	}
 	return
 }

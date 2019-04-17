@@ -326,6 +326,7 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 	if err := lib.SnapEnv(lib.EnvID()); err != nil {
 		return retryOrReport()
 	}
+	defer ensureDeleted(lib.EnvID())
 
 	if act := lib.ExecuteScript(cfg, kind); act.Failure || !act.Success {
 		return statusFailedExec
@@ -342,26 +343,23 @@ func doFuzz(mnk *lib.Monkey) int {
 	if err := lib.SnapEnv(lib.EnvID()); err != nil {
 		return retryOrReport()
 	}
+	defer ensureDeleted(lib.EnvID())
 
 	if err := mnk.Dial(wsURL); err != nil {
 		return retryOrReport()
 	}
 
-	done, err := mnk.FuzzingLoop(lib.Action(&lib.DoFuzz{}))
-	if err != nil {
+	if err := mnk.FuzzingLoop(lib.Action(&lib.DoFuzz{})); err != nil {
 		return retryOrReportThenCleanup(err)
 	}
-	ensureDeleted(lib.EnvID())
-	if mnk.Outcome(done) {
+	if mnk.TestsSucceeded() {
 		return statusOK
 	}
 	return statusFailedFuzz
 }
 
 func retryOrReportThenCleanup(err error) int {
-	defer func() {
-		lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	}()
+	defer lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	if lib.HadExecError {
 		return statusFailedExec
 	}

@@ -698,7 +698,7 @@ func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
 	var sm schemap
 	sm = ss.GetJson()
 	s := sm.toGo(SID)
-	log.Printf("[???] SID:%d %+v", SID, s)
+	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, json_data)
 	// FIXME? turns out Compile does not need an $id set?
 	// id := fmt.Sprintf("file:///schema_%d.json", SID)
 	// s["$id"] = id

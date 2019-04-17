@@ -23,22 +23,14 @@ func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
 
 type progress struct {
 	start         time.Time
-	lastLane      lane
-	shrinkingFrom *lane
-	totalR        uint32
-	totalC        uint32
+	lastLane      FuzzProgress
+	shrinkingFrom *FuzzProgress
 }
 
 func newProgress() *progress {
 	return &progress{
 		start: time.Now(),
 	}
-}
-
-type lane struct {
-	t uint32
-	r uint32
-	c uint32
 }
 
 type Action interface {
