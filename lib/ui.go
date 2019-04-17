@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"log"
 	"time"
 )
@@ -13,29 +14,58 @@ func (mnk *Monkey) showReseting() {
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] >>> FuzzProgress %+v", act)
+	last := mnk.progress.lastLane
 	var str string
 
-	switch {
-	case act.GetLastCallSuccess():
-		str += ColorNFO.Sprint("✓")
-	case act.GetLastCallFailure():
-		str += ColorERR.Sprint("✗")
-	case act.GetSuccess() || act.GetFailure():
-		str += "\n"
+	if mnk.progress.lastLane.GetTotalTestsCount() == 0 {
+		str = ColorNFO.Sprint("[")
 	}
 
-	switch {
-	case act.GetShrinking() && mnk.progress.shrinkingFrom == nil:
+	diff := &FuzzProgress{
+		TotalTestsCount:  act.GetTotalTestsCount() - last.GetTotalTestsCount(),
+		TotalCallsCount:  act.GetTotalCallsCount() - last.GetTotalCallsCount(),
+		TotalChecksCount: act.GetTotalChecksCount() - last.GetTotalChecksCount(),
+		TestCallsCount:   act.GetTestCallsCount() - last.GetTestCallsCount(),
+		CallChecksCount:  act.GetCallChecksCount() - last.GetCallChecksCount(),
+	}
+	log.Printf("[ERR] diff %+v", diff)
+
+	if act.GetLastCheckSuccess() {
+		str += "."
+	} else {
+		if act.GetLastCheckFailure() {
+			str += "!"
+		}
+	}
+	if act.GetLastCallSuccess() {
+		str += ColorWRN.Sprint("✓")
+	} else {
+		if act.GetLastCallFailure() {
+			str += ColorERR.Sprint("✗")
+		}
+	}
+	if act.GetSuccess() {
+		str += ColorWRN.Sprint("PASSED") + ColorNFO.Sprint("]") + "\n"
+	} else {
+		if act.GetFailure() {
+			str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
+		}
+	}
+
+	///////SO let's compute a diff of act - lastLane and display in accordance
+	/////// be smart on diffing bools!
+	mnk.progress.lastLane = *act
+	if act.GetShrinking() && mnk.progress.shrinkingFrom == nil {
 		mnk.progress.shrinkingFrom = &mnk.progress.lastLane
 		str += "Shrinking: "
-	case act.GetTotalTestsCount() == 0:
-		str = "Testing: " + str
-	case act.GetTotalTestsCount() != mnk.progress.lastLane.GetTotalTestsCount():
-		str += "]"
 	}
+	// case act.GetTotalTestsCount() == 0:
+	// 	// Avoids getting in below case
+	// case act.GetTotalTestsCount() != mnk.progress.lastLane.GetTotalTestsCount():
+	// 	str += "]["
 
-	mnk.progress.lastLane = *act
-	ColorNFO.Print(str)
+	// mnk.progress.lastLane = *act
+	fmt.Print(str)
 	return
 }
 
@@ -73,6 +103,8 @@ func (mnk *Monkey) TestsSucceeded() (success bool) {
 			ColorERR.Println(" test.")
 		case m == 0:
 			ColorERR.Println(" tests and not yet shrunk.")
+			//TODO: suggest shrinking invocation
+			// A task that tries to minimize a testcase to its smallest possible size, such that it still triggers the same underlying bug on the target program.
 		case m == 1:
 			ColorERR.Println(" tests then shrunk", "once.")
 		default:

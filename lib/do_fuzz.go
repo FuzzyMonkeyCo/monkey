@@ -46,7 +46,7 @@ func (ws *wsState) cast(req Action) (err error) {
 func (mnk *Monkey) FuzzingLoop(act Action) (err error) {
 	for {
 		// Sometimes sets mnk.cfg.Runtime.Final* fields
-		log.Printf("[DBG] >>> act %#v\n", act)
+		log.Printf("[ERR] >>> act %#v\n", act)
 		if err = act.exec(mnk); err != nil {
 			mnk.ws.err2 <- err
 			return

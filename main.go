@@ -227,6 +227,7 @@ func actualMain() int {
 	cfg.EIDs = eids
 	cfg.N = args.N
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
+	lib.ColorNFO.Println("Testing...")
 	return doFuzz(mnk)
 }
 

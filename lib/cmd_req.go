@@ -35,7 +35,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		if err := mnk.ws.cast(check1); err != nil {
 			log.Fatalln("[ERR]", err)
 		}
-		if !ok {
+		if check1.Failure || !ok {
 			return
 		}
 	}
@@ -56,7 +56,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		if err := mnk.ws.cast(check2); err != nil {
 			log.Fatalln("[ERR]", err)
 		}
-		if json_data == nil {
+		if check2.Failure || json_data == nil {
 			return
 		}
 	}
@@ -76,6 +76,9 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		}
 		if err := mnk.ws.cast(check3); err != nil {
 			log.Fatalln("[ERR]", err)
+		}
+		if check3.Failure {
+			return
 		}
 	}
 
@@ -107,8 +110,9 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 
 	if err = mnk.ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
-	mnk.castPostConditions(nxt)
+	err = mnk.castPostConditions(nxt)
 	mnk.eid = 0
 	return
 }

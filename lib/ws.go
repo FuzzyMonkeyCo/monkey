@@ -11,9 +11,10 @@ import (
 const (
 	// Fail if sending takes longer
 	wsWriteWait = 2 * time.Second
-
 	// Time allowed to read the next pong message from the peer.
 	wsPongWait = 10 * time.Second
+	// Fail if receiving takes longer
+	wsReadWait = 30 * time.Second
 
 	// Maximum message size allowed from peer in bytes
 	wsMaxMessageSize = 8 * 1024
@@ -52,7 +53,7 @@ func (ws *wsState) reader() {
 		}
 	}()
 	ws.c.SetReadLimit(wsMaxMessageSize)
-	ws.c.SetReadDeadline(time.Now().Add(wsPongWait))
+	ws.c.SetReadDeadline(time.Now().Add(wsReadWait))
 	ws.c.SetPingHandler(func(msg string) (err error) {
 		log.Println("[DBG] SetPingHandler", msg)
 		if err = ws.c.WriteControl(websocket.PongMessage, []byte(msg), time.Now().Add(wsPongWait)); err != nil {
@@ -64,9 +65,9 @@ func (ws *wsState) reader() {
 	for {
 		ty, rep, err := ws.c.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) { //, websocket.CloseAbnormalClosure) {
-				log.Println("[ERR]", err)
-			}
+			log.Println("[ERR]", err)
+			// if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) { //, websocket.CloseAbnormalClosure) {
+			// }
 			ws.err <- err
 			break
 		}
