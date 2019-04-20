@@ -2,6 +2,7 @@ package lib
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/url"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-func (mnk *Monkey) castPostConditions(act *RepCallDone) {
+func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	if act.Failure {
 		log.Println("[DBG] call failed, skipping checks")
 		return
@@ -26,14 +27,15 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		var ok bool
 		if SID, ok = endpoint.Outputs[status]; !ok {
 			check1.Failure = true
-			err := fmt.Errorf("unexpected HTTP code '%d'", status)
+			err = fmt.Errorf("unexpected HTTP code '%d'", status)
 			check1.Details = append(check1.Details, err.Error())
 			ColorERR.Println("[NFO]", err)
 		} else {
 			check1.Success = true
 		}
-		if err := mnk.ws.cast(check1); err != nil {
-			log.Fatalln("[ERR]", err)
+		if e := mnk.ws.cast(check1); e != nil {
+			log.Println("[ERR]", e)
+			return e
 		}
 		if check1.Failure || !ok {
 			return
@@ -46,15 +48,16 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
 		log.Println("[NFO] checking", check2.Details[0])
 		data := []byte(act.Response.Response.Content.Text)
-		if err := json.Unmarshal(data, &json_data); err != nil {
+		if err = json.Unmarshal(data, &json_data); err != nil {
 			check2.Failure = true
 			check2.Details = append(check2.Details, err.Error())
 			ColorERR.Println("[ERR]", err)
 		} else {
 			check2.Success = true
 		}
-		if err := mnk.ws.cast(check2); err != nil {
-			log.Fatalln("[ERR]", err)
+		if e := mnk.ws.cast(check2); e != nil {
+			log.Println("[ERR]", e)
+			return e
 		}
 		if check2.Failure || json_data == nil {
 			return
@@ -66,6 +69,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
 		log.Println("[NFO] checking", check3.Details[0])
 		if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
+			err = errors.New(errs[0])
 			check3.Failure = true
 			check3.Details = append(check3.Details, errs...)
 			for _, e := range errs {
@@ -74,8 +78,9 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 		} else {
 			check3.Success = true
 		}
-		if err := mnk.ws.cast(check3); err != nil {
-			log.Fatalln("[ERR]", err)
+		if e := mnk.ws.cast(check3); e != nil {
+			log.Println("[ERR]", e)
+			return e
 		}
 		if check3.Failure {
 			return
@@ -86,9 +91,10 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) {
 
 	checkN := &RepCallResult{Response: enumFromGo(json_data)}
 	log.Println("[DBG] checks passed")
-	if err := mnk.ws.cast(checkN); err != nil {
-		log.Fatalln("[ERR]", err)
+	if err = mnk.ws.cast(checkN); err != nil {
+		log.Println("[ERR]", err)
 	}
+	return
 }
 
 func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
