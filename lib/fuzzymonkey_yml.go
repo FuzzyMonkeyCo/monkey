@@ -174,7 +174,7 @@ func (cfg *UserCfg) FindThenReadBlob() (docPath string, blob []byte, err error) 
 	log.Println("[NFO] reading spec from", docPath)
 	if blob, err = ioutil.ReadFile(docPath); err != nil {
 		log.Println("[ERR]", err)
-		fmt.Printf("Could not read '%s'\n", docPath)
+		ColorERR.Printf("Could not read '%s'\n", docPath)
 	}
 	return
 }
