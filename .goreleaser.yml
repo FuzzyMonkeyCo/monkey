@@ -1,0 +1,45 @@
+builds:
+- env:
+  - CGO_ENABLED=0
+  ldflags:
+    - '-s -w -extldflags "-static" -X main.Version={{.Version}} -X main.Commit={{.Commit}}'
+- goos:
+  - darwin
+  - freebsd
+  - linux
+  - windows
+  goarch:
+  - 386
+  - amd64
+  - arm
+  - arm64
+  goarm:
+  - 7
+
+release:
+  name_template: '{{.Version}}'
+
+archive:
+  name_template: '{{.ProjectName}}-{{.Version}}-{{.Os}}-{{.Arch}}'
+  format: tar.gz
+  replacements:
+    386: i386
+    amd64: x86_64
+    arm64: aarch64
+    darwin: Darwin
+    freebsd: FreeBSD
+    linux: Linux
+    windows: Windows
+  format_overrides:
+  - goos: windows
+    format: zip
+
+checksum:
+  name_template: '{{.ProjectName}}-{{.Version}}-{{.Os}}-{{.Arch}}.sha256.txt'
+
+sign:
+  artifacts: checksum
+
+# TODO: homebrew
+# TODO: snap
+# TODO: apt
