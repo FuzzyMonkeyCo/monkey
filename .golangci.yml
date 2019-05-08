@@ -1,0 +1,13 @@
+linters:
+  enable:
+  - dupl
+  - gocritic
+  - gocyclo
+  - golint
+  - gosec
+  - govet
+  - megacheck
+  - nakedret
+  - prealloc
+  - scopelint
+  - unconvert
