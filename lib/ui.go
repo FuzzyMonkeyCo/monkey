@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (mnk *Monkey) showReseting() {
+func (mnk *Monkey) showResetting() {
 	// TODO: use [..][..][..] instead of |..|..|..|
 	// with: mnk.progress.lastLane.GetTotalTestsCount() == 0
 	ColorERR.Printf("|")
