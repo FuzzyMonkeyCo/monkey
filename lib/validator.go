@@ -15,14 +15,6 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-var ErrInvalidPayload = errors.New("invalid JSON payload")
-var ErrNoSuchRef = errors.New("no such $ref")
-
-type eid = uint32
-type sid = uint32
-type schemaJSON = map[string]interface{}
-type schemasJSON = map[string]schemaJSON
-
 type Validator struct {
 	Spec *SpecIR
 	Refs map[string]sid
@@ -547,7 +539,22 @@ func compileSlice(strs []string) (res map[string]*regexp.Regexp, err error) {
 	return
 }
 
-func (vald *Validator) FilterEndpoints(only, except []string) (eids []eid, err error) {
+func (vald *Validator) FilterEndpoints(only, except,
+	onlyI, exceptI, onlyO, exceptO []string) (eids []eid, err error) {
+	const fmtMPIO = "%s\t%s\t%s ➜ %s"
+	for _, oI := range onlyI {
+		only = append(only, "^[^\t]+\t[^\t]+\t("+oI+") ➜ [^$]*$")
+	}
+	for _, oO := range onlyO {
+		only = append(only, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ("+oO+")$")
+	}
+	for _, eI := range exceptI {
+		except = append(except, "^[^\t]+\t[^\t]+\t("+eI+") ➜ [^$]*$")
+	}
+	for _, eO := range exceptO {
+		except = append(except, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ("+eO+")$")
+	}
+
 	// Ensure user input is valid
 	onlys, err := compileSlice(only)
 	if err != nil {
@@ -559,12 +566,24 @@ func (vald *Validator) FilterEndpoints(only, except []string) (eids []eid, err e
 		return
 	}
 
+	// TODO? filter on 2nd, 3rd, ... -level schemas
+	// instead of just first level (ref A references B & C)
 	total := len(vald.Spec.Endpoints)
 	all := make(map[eid]string, total)
 	for eid := range vald.Spec.Endpoints {
 		e := vald.Spec.Endpoints[eid].GetJson()
 		path := pathToOA3(e.PathPartials)
-		all[eid] = fmt.Sprintf("%s\t%s", e.Method, path)
+		inputs := make([]sid, 0, len(e.Inputs))
+		for _, param := range e.Inputs {
+			inputs = append(inputs, param.SID)
+		}
+		ins := strings.Join(vald.refsFromSIDs(inputs), " | ")
+		outputs := make([]sid, 0, len(e.Outputs))
+		for _, SID := range e.Outputs {
+			outputs = append(outputs, SID)
+		}
+		outs := strings.Join(vald.refsFromSIDs(outputs), " | ")
+		all[eid] = fmt.Sprintf(fmtMPIO, e.Method, path, ins, outs)
 	}
 
 	var es map[eid]string
@@ -608,11 +627,9 @@ func (vald *Validator) FilterEndpoints(only, except []string) (eids []eid, err e
 		}
 	}
 
-	// TODO? fallback from regexp to JSON Pointer matching
-	// TODO: ensure PTRs are valid & exist
-	// TODO: filter on endpoints
-	// TODO: filter on schemas (i.e.: on endpoints which I/O given schemas)
-	// TODO: golang (Docker style) filtering in general (tags, operationIDs, ...)
+	// TODO: use Go templates to filter on very specific fields. See:
+	// https://github.com/kubernetes/kubernetes/blob/c0d9a0728ce5920f97fecab977be15636e57126b/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/jsonpath.go#L143
+	// https://github.com/kubernetes/kubernetes/blob/103813057c5ef6cc416e6fdb71515e90d98cd3a9/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/template.go#L85
 
 	// Fail on empty EIDs
 	if len(es) == 0 {

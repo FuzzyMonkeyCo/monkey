@@ -71,6 +71,10 @@ type params struct {
 	EnvVars                  []string `mapstructure:"VAR"`
 	FuzzOnly                 []string `mapstructure:"--only"`
 	FuzzExcept               []string `mapstructure:"--except"`
+	FuzzCallsWithInputs      []string `mapstructure:"--calls-with-input"`
+	FuzzCallsWithoutInputs   []string `mapstructure:"--calls-without-input"`
+	FuzzCallsWithOutputs     []string `mapstructure:"--calls-with-output"`
+	FuzzCallsWithoutOutputs  []string `mapstructure:"--calls-without-output"`
 }
 
 func usage() (args *params, ret int) {
@@ -80,37 +84,41 @@ func usage() (args *params, ret int) {
 Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] env [VAR ...]
-  ` + B + ` [-vvv] login --user=USER
-  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]... [--only=REGEX]... [--except=REGEX]...
+  ` + B + ` [-vvv] login [--user=USER]
+  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+                     [--only=REGEX]... [--except=REGEX]...
+                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
+                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
-  ` + B + ` [-vvv] schema [--validate-against=PTR]
+  ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (start | reset | stop)
   ` + B + ` [-vvv] -h | --help
   ` + B + ` [-vvv]      --update
   ` + B + ` [-vvv] -V | --version
 
 Options:
-  -v, -vv, -vvv           Debug verbosity level
-  -h, --help              Show this screen
-  -U, --update            Ensures ` + B + ` is current
-  -V, --version           Show version
-  --hide-config           Do not show YAML configuration while linting
-  --seed=SEED             Use specific parameters for the RNG
-  --validate-against=PTR  Schema $ref to validate STDIN against
-  --tag=TAG               Labels that can help classification
-  --test=ID               Which test to shrink
-  --tests=N               Number of tests to run [default: 100]
-  --only=REGEX            Only test matching endpoints
-  --except=REGEX          Do not test these endpoints
-  --user=USER             Authenticate on fuzzymonkey.co as USER
-  --with-magic            Auto fill in schemas from random API calls
+  -v, -vv, -vvv                  Debug verbosity level
+  -h, --help                     Show this screen
+  -U, --update                   Ensures ` + B + ` is current
+  -V, --version                  Show version
+  --hide-config                  Do not show YAML configuration while linting
+  --seed=SEED                    Use specific parameters for the RNG
+  --validate-against=REF         Schema $ref to validate STDIN against
+  --tag=TAG                      Labels that can help classification
+  --test=ID                      Which test to shrink
+  --tests=N                      Number of tests to run [default: 100]
+  --only=REGEX                   Only test matching calls
+  --except=REGEX                 Do not test these calls
+  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
+  --calls-without-output=SCHEMA  Test calls which never output schema PTR
+  --user=USER                    Authenticate on fuzzymonkey.co as USER
+  --with-magic                   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   ` + B + ` --update
-  ` + B + ` init --with-magic
-  ` + B + ` fuzz --only=/pets
+  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
 	// https://github.com/docopt/docopt.go/issues/59
@@ -158,6 +166,12 @@ func actualMain() int {
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, lib.LogID(), args)
+
+	if args.Init || args.Login {
+		// FIXME: implement init & login
+		lib.ColorERR.Println("Action not implemented yet")
+		return statusFailed
+	}
 
 	if args.Update {
 		return doUpdate()
@@ -219,15 +233,21 @@ func actualMain() int {
 	}
 
 	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
-	eids, err := vald.FilterEndpoints(args.FuzzOnly, args.FuzzExcept)
+	eids, err := vald.FilterEndpoints(args.FuzzOnly, args.FuzzExcept,
+		args.FuzzCallsWithInputs, args.FuzzCallsWithoutInputs,
+		args.FuzzCallsWithOutputs, args.FuzzCallsWithoutOutputs)
 	if err != nil {
 		lib.ColorERR.Println(err)
 		return statusFailed
 	}
 	cfg.EIDs = eids
 	cfg.N = args.N
+	if cfg.N == 0 {
+		lib.ColorERR.Println("No tests to run.")
+		return statusFailed
+	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
-	lib.ColorNFO.Println("Testing...")
+	lib.ColorNFO.Println("Running", cfg.N, "tests...")
 	return doFuzz(mnk)
 }
 
@@ -274,9 +294,10 @@ func doEnv(vars []string) int {
 	all := map[string]bool{
 		envAPIKey: false,
 	}
+	penv := func(key string) { fmt.Printf("%s=%q\n", key, os.Getenv(key)) }
 	if len(vars) == 0 {
 		for key := range all {
-			fmt.Printf("%s=\"%s\"\n", key, os.Getenv(key))
+			penv(key)
 		}
 		return statusOK
 	}
@@ -286,7 +307,7 @@ func doEnv(vars []string) int {
 			return statusFailed
 		}
 		all[key] = true
-		fmt.Printf("%s=\"%s\"\n", key, os.Getenv(key))
+		penv(key)
 	}
 	return statusOK
 }

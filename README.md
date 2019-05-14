@@ -7,13 +7,16 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey	v0.0.0	0.19.1-136-gf085414-dirty	go1.11.4
+monkey	v0.0.0	0.19.1-165-g11b29c8-dirty	go1.12.5
 
 Usage:
   monkey [-vvv] init [--with-magic]
   monkey [-vvv] env [VAR ...]
-  monkey [-vvv] login --user=USER
+  monkey [-vvv] login [--user=USER]
   monkey [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+                     [--only=REGEX]... [--except=REGEX]...
+                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
+                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] lint [--show-spec] [--hide-config]
   monkey [-vvv] schema [--validate-against=REF]
@@ -23,24 +26,27 @@ Usage:
   monkey [-vvv] -V | --version
 
 Options:
-  -v, -vv, -vvv           Debug verbosity level
-  -h, --help              Show this screen
-  -U, --update            Ensures monkey is current
-  -V, --version           Show version
-  --hide-config           Do not show YAML configuration while linting
-  --seed=SEED             Use specific parameters for the RNG
-  --validate-against=REF  Schema $ref to validate STDIN against
-  --tag=TAG               Labels that can help classification
-  --test=ID               Which test to shrink
-  --tests=N               Number of tests to run [default: 100]
-  --user=USER             Authenticate on fuzzymonkey.co as USER
-  --with-magic            Auto fill in schemas from random API calls
+  -v, -vv, -vvv                  Debug verbosity level
+  -h, --help                     Show this screen
+  -U, --update                   Ensures monkey is current
+  -V, --version                  Show version
+  --hide-config                  Do not show YAML configuration while linting
+  --seed=SEED                    Use specific parameters for the RNG
+  --validate-against=REF         Schema $ref to validate STDIN against
+  --tag=TAG                      Labels that can help classification
+  --test=ID                      Which test to shrink
+  --tests=N                      Number of tests to run [default: 100]
+  --only=REGEX                   Only test matching calls
+  --except=REGEX                 Do not test these calls
+  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
+  --calls-without-output=SCHEMA  Test calls which never output schema PTR
+  --user=USER                    Authenticate on fuzzymonkey.co as USER
+  --with-magic                   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   monkey --update
-  monkey init --with-magic
-  monkey fuzz
+  monkey fuzz --only /pets --calls-without-input=NewPet --tests=0
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 
