@@ -31,7 +31,7 @@ cache:
 #     - $GOPATH/pkg
 
 install:
-- curl -sL https://git.io/goreleaser | bash
+- curl -sL https://git.io/goreleaser | bash -- --rm-dist --snapshot --skip-publish -p 24
 - make deps
 - go version
 - shellcheck --version
