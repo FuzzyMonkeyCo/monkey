@@ -9,7 +9,6 @@ before_install: |
   if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
     brew install the_silver_searcher
     ag --version
-    ./misc/goolint.sh
     sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
     monkey -vvv --version
     set +e
@@ -29,41 +28,31 @@ install:
 - git --version
 - shellcheck --version
 - go version
-- curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-- golangci-lint --version
-- snap --version
-- snap install goreleaser
-- goreleaser --version
-- goreleaser --rm-dist --snapshot --skip-publish
 
 script:
 - shellcheck $(git ls-files | grep '.sh$')
 - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
 - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-- OSARCH=linux/amd64 make x
-- go fmt ./...
+- make lint
 - go mod tidy
 - go mod verify
-- make lint
-- golangci-lint run
 - make test.ci
-- ./monkey-Linux-x86_64 -h | grep monkey
-- ./monkey-Linux-x86_64 --help | grep monkey
-- ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
-- ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
 - |
   git --no-pager diff
   [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
+- curl -sL http://git.io/goreleaser | sh -s -- --rm-dist --snapshot --skip-publish
+- ./dist/linux_amd64/monkey -h | grep monkey
+- ./dist/linux_amd64/monkey --help | grep monkey
+- ./dist/linux_amd64/monkey -V | grep -F "monkey\t$CURRENT_TAG\t"
+- ./dist/linux_amd64/monkey --version | grep -F "monkey\t$CURRENT_TAG\t"
 - |
-  if [[ $CURRENT_TAG != 0.0.0 ]]; then
-    make x
-    [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
-  fi
+  git --no-pager diff
+  [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 deploy:
 - provider: script
   skip_cleanup: true
-  script: curl -sL https://git.io/goreleaser | bash
+  script: curl -sL https://git.io/goreleaser | sh
   on:
     tags: true
     condition: $TRAVIS_OS_NAME = linux

@@ -4,16 +4,16 @@ builds:
   - WSURL=wss://api.fuzzymonkey.co:7077/1/fuzz
   goos:
   - darwin
-  - freebsd
+  # TODO: - freebsd
   - linux
   - windows
   goarch:
   - 386
   - amd64
-  - arm
-  - arm64
-  goarm:
-  - 7
+  # TODO: - arm
+  # TODO: - arm64
+  # goarm:
+  # TODO: - 7
   ignore: []
   ldflags:
   - '-X main.binSHA={{.ShortCommit}}'
@@ -23,13 +23,12 @@ builds:
   - '-s -w'
 
 archives:
-- name_template: '{{.ProjectName}}-{{.Tag}}-{{.Os}}-{{.Arch}}'
-  format: tar.gz
+- name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}'
   replacements:
     # $(uname -s) and $(uname -m)
     386: i386
     amd64: x86_64
-    arm64: aarch64
+    # arm64: aarch64
     darwin: Darwin
     freebsd: FreeBSD
     linux: Linux

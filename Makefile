@@ -1,19 +1,6 @@
 .PHONY: all update debug lint x test ape
 
 EXE = monkey
-OSARCH ?= \
-  windows/386 windows/amd64 \
-   darwin/386  darwin/amd64 \
-    linux/386   linux/amd64   linux/arm linux/arm64 linux/mips linux/mipsle \
-  freebsd/386 freebsd/amd64 freebsd/arm \
-   netbsd/386  netbsd/amd64  netbsd/arm \
-  openbsd/386 openbsd/amd64 \
-    plan9/386   plan9/amd64 \
-              solaris/amd64
-SHA = sha256.txt
-FMT = $(EXE)-{{.OSUname}}-{{.ArchUname}}
-LNX = $(EXE)-Linux-x86_64
-DST ?= .
 
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
@@ -21,12 +8,6 @@ GPB_IMG ?= znly/protoc:0.4.0
 all: lib/messages.pb.go lint
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
-
-x:
-	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
-	CGO_ENABLED=0 gox -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose -osarch "$$(echo $(OSARCH))" .
-	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
-	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
 
 update: SHELL := /bin/bash
 update:
@@ -57,8 +38,7 @@ debug: all
 	./$(EXE) -vvv fuzz
 
 distclean: clean
-	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
-	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
+	$(if $(wildcard dist/),rm -r dist/)
 clean:
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)
