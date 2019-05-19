@@ -41,7 +41,7 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 		str += ColorWRN.Sprint("✓")
 	} else {
 		if act.GetLastCallFailure() {
-			str += ColorERR.Sprint("✗")
+			str += ColorERR.Sprint("⨯")
 		}
 	}
 	if act.GetSuccess() {

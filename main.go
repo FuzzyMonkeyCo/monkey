@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/lib"
@@ -16,7 +17,6 @@ import (
 )
 
 //go:generate echo Let's go bananas!
-//go:generate ./misc/gen_meta.sh
 
 const (
 	/// CLI statuses
@@ -36,14 +36,17 @@ const (
 	statusFailedSchema = 9
 
 	binName    = "monkey"
-	binTitle   = binName + "/" + binVersion
+	binSHA     = "feedb065"
+	binVersion = "0.0.0"
 	githubSlug = "FuzzyMonkeyCo/" + binName
+	wsURL      = "ws://api.dev.fuzzymonkey.co:7077/1/fuzz"
 
 	// Environment variables used
 	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
 var (
+	binTitle    = strings.Join([]string{binName, binVersion, binSHA, runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
 	clientUtils = &http.Client{
 		Timeout: time.Duration(10 * time.Second),
 	}
@@ -78,8 +81,8 @@ type params struct {
 }
 
 func usage() (args *params, ret int) {
-	B, V, D := lib.ColorNFO.Sprintf(binName), binVersion, binDescribe
-	usage := B + "\tv" + V + "\t" + D + "\t" + runtime.Version() + `
+	B := lib.ColorNFO.Sprintf(binName)
+	usage := binTitle + `
 
 Usage:
   ` + B + ` [-vvv] init [--with-magic]

@@ -18,14 +18,12 @@ DST ?= .
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
 
-all: gpb lint
-	go generate
+all: lib/messages.pb.go lint
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	go build -o $(EXE)
 
 x:
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
-	go generate
 	CGO_ENABLED=0 gox -output '$(DST)/$(FMT)' -ldflags '-s -w' -verbose -osarch "$$(echo $(OSARCH))" .
 	cd $(DST) && for bin in $(EXE)-*; do sha256sum $$bin | tee $$bin.$(SHA); done
 	$(if $(filter-out .,$(DST)),,sha256sum --check --strict *$(SHA))
@@ -33,7 +31,6 @@ x:
 update: SHELL := /bin/bash
 update:
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
-	go generate
 	go get -u -a
 	go mod tidy
 	go mod verify
@@ -49,11 +46,11 @@ deps:
 	go install -i github.com/wadey/gocovmerge
 	go install -i github.com/kyoh86/richgo
 
-gpb: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
-gpb: lib/messages.proto
+lib/messages.pb.go: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
+lib/messages.pb.go: lib/messages.proto
 	$(PROTOC) --gogofast_out=. $^
 #	FIXME: don't have this github.com/ folder created in the first place
-	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >lib/messages.pb.go
+	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >$@
 
 lint:
 	gofmt -s -w *.go lib/*.go
@@ -68,7 +65,6 @@ distclean: clean
 	$(if $(wildcard $(EXE)-*-*.$(SHA)),rm $(EXE)-*-*.$(SHA))
 	$(if $(wildcard $(EXE)-*-*),rm $(EXE)-*-*)
 clean:
-	$(if $(wildcard meta.go),rm meta.go)
 	$(if $(wildcard $(EXE)),rm $(EXE))
 	$(if $(wildcard $(EXE).test),rm $(EXE).test)
 	$(if $(wildcard *.cov),rm *.cov)
@@ -89,7 +85,6 @@ ape: $(EXE).test
 # Thanks https://blog.cloudflare.com/go-coverage-with-external-tests
 $(EXE).test: lint
 	$(if $(wildcard *.cov),rm *.cov)
-	go generate
 	go test -covermode=count -c
 
 ape-cleanup:

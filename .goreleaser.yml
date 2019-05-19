@@ -1,9 +1,8 @@
 builds:
 - env:
   - CGO_ENABLED=0
-  ldflags:
-    - '-s -w -extldflags "-static" -X main.Version={{.Version}} -X main.Commit={{.Commit}}'
-- goos:
+  - WSURL=wss://api.fuzzymonkey.co:7077/1/fuzz
+  goos:
   - darwin
   - freebsd
   - linux
@@ -15,14 +14,19 @@ builds:
   - arm64
   goarm:
   - 7
+  ignore: []
+  ldflags:
+  - '-X main.binSHA={{.ShortCommit}}'
+  - '-X main.binVersion={{.Tag}}'
+  - '-X main.wsURL={{.Env.WSURL}}'
+  - '-extldflags "-static"'
+  - '-s -w'
 
-release:
-  name_template: '{{.Version}}'
-
-archive:
-  name_template: '{{.ProjectName}}-{{.Version}}-{{.Os}}-{{.Arch}}'
+archives:
+- name_template: '{{.ProjectName}}-{{.Tag}}-{{.Os}}-{{.Arch}}'
   format: tar.gz
   replacements:
+    # $(uname -s) and $(uname -m)
     386: i386
     amd64: x86_64
     arm64: aarch64
@@ -35,10 +39,11 @@ archive:
     format: zip
 
 checksum:
-  name_template: '{{.ProjectName}}-{{.Version}}-{{.Os}}-{{.Arch}}.sha256.txt'
+  name_template: 'checksums.sha256.txt'
+  algorithm: sha256
 
 sign:
-  artifacts: checksum
+  artifacts: none
 
 # TODO: homebrew
 # TODO: snap
