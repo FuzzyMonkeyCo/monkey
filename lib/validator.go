@@ -471,22 +471,20 @@ func enumFromGo(value interface{}) *ValueJSON {
 	if value == nil {
 		return &ValueJSON{Value: &ValueJSON_IsNull{true}}
 	}
-	switch value.(type) {
+	switch val := value.(type) {
 	case bool:
-		return &ValueJSON{Value: &ValueJSON_Boolean{value.(bool)}}
+		return &ValueJSON{Value: &ValueJSON_Boolean{val}}
 	case float64:
-		return &ValueJSON{Value: &ValueJSON_Number{value.(float64)}}
+		return &ValueJSON{Value: &ValueJSON_Number{val}}
 	case string:
-		return &ValueJSON{Value: &ValueJSON_Text{value.(string)}}
+		return &ValueJSON{Value: &ValueJSON_Text{val}}
 	case []interface{}:
-		val := value.([]interface{})
 		vs := make([]*ValueJSON, len(val))
 		for i, v := range val {
 			vs[i] = enumFromGo(v)
 		}
 		return &ValueJSON{Value: &ValueJSON_Array{&ArrayJSON{Values: vs}}}
 	case map[string]interface{}:
-		val := value.(map[string]interface{})
 		vs := make(map[string]*ValueJSON, len(val))
 		for n, v := range val {
 			vs[n] = enumFromGo(v)

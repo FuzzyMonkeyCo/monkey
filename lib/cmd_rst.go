@@ -19,7 +19,7 @@ const (
 
 var (
 	isRunning = false
-	// To exit with statusFailedExec
+	// HadExecError to exit with statusFailedExec
 	HadExecError = false
 	// To not post-stop after stop
 	wasStopped = false
@@ -98,14 +98,14 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 	// Racing for ctx.Done() is a workaround to ^
 	go func() {
 		<-ctx.Done()
-		error := fmt.Errorf("Timed out after %s", time.Since(start))
-		ch <- error
-		log.Println("[DBG]", error)
+		e := fmt.Errorf("Timed out after %s", time.Since(start))
+		ch <- e
+		log.Println("[DBG]", e)
 	}()
 	go func() {
-		error := exe.Run()
-		ch <- error
-		log.Println("[DBG] execution error:", error)
+		e := exe.Run()
+		ch <- e
+		log.Println("[DBG] execution error:", e)
 	}()
 	err = <-ch
 	nxt.TsDiff += uint64(time.Since(start))

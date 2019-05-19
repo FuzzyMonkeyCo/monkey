@@ -241,11 +241,12 @@ func (p *HAR_PostData) data() string {
 		var elems []string
 		for _, p := range p.Params {
 			var pair string
-			if p == nil {
+			switch {
+			case p == nil:
 				pair = ""
-			} else if len(p.Value) == 0 {
+			case len(p.Value) == 0:
 				pair = p.Name
-			} else {
+			default:
 				pair = p.Name + "=" + p.Value
 			}
 

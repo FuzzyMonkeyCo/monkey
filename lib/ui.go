@@ -31,7 +31,7 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] diff %+v", diff)
 
 	if act.GetLastCheckSuccess() {
-		str += "."
+		str += "•"
 	} else if act.GetLastCheckFailure() {
 		str += "!"
 	}
