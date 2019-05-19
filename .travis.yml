@@ -26,12 +26,15 @@ cache:
   - $GOPATH/pkg/mod
 
 install:
+- git --version
+- shellcheck --version
+- go version
 - curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
 - golangci-lint --version
-- go version
-- shellcheck --version
-- git --version
-- curl -sL https://git.io/goreleaser | bash -- --rm-dist --snapshot --skip-publish -p 24
+- snap --version
+- snap install goreleaser
+- goreleaser --version
+- goreleaser --rm-dist --snapshot --skip-publish
 
 script:
 - shellcheck $(git ls-files | grep '.sh$')
