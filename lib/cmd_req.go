@@ -42,13 +42,13 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		}
 	}
 
-	var json_data interface{}
+	var jsonData interface{}
 	// Check #2: valid JSON response
 	{
 		check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
 		log.Println("[NFO] checking", check2.Details[0])
 		data := []byte(act.Response.Response.Content.Text)
-		if err = json.Unmarshal(data, &json_data); err != nil {
+		if err = json.Unmarshal(data, &jsonData); err != nil {
 			check2.Failure = true
 			check2.Details = append(check2.Details, err.Error())
 			ColorERR.Println("[ERR]", err)
@@ -59,7 +59,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 			log.Println("[ERR]", e)
 			return e
 		}
-		if check2.Failure || json_data == nil {
+		if check2.Failure || jsonData == nil {
 			return
 		}
 	}
@@ -68,7 +68,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	{
 		check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
 		log.Println("[NFO] checking", check3.Details[0])
-		if errs := mnk.Vald.Spec.Schemas.Validate(SID, json_data); len(errs) != 0 {
+		if errs := mnk.Vald.Spec.Schemas.Validate(SID, jsonData); len(errs) != 0 {
 			err = errors.New(errs[0])
 			check3.Failure = true
 			check3.Details = append(check3.Details, errs...)
@@ -89,7 +89,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 
 	// TODO: user-provided postconditions
 
-	checkN := &RepCallResult{Response: enumFromGo(json_data)}
+	checkN := &RepCallResult{Response: enumFromGo(jsonData)}
 	log.Println("[DBG] checks passed")
 	if err = mnk.ws.cast(checkN); err != nil {
 		log.Println("[ERR]", err)

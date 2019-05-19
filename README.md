@@ -1,4 +1,4 @@
-# [monkey](https://github.com/FuzzyMonkeyCo/monkey) ~ FuzzyMonkeyCo's minion [![TravisCI build status](https://travis-ci.org/FuzzyMonkeyCo/monkey.svg?branch=master)](https://travis-ci.org/FuzzyMonkeyCo/monkey/builds) [![Goreport card](https://goreportcard.com/badge/github.com/FuzzyMonkeyCo/monkey)](https://goreportcard.com/report/github.com/FuzzyMonkeyCo/monkey)
+# [monkey](https://github.com/FuzzyMonkeyCo/monkey) ~ FuzzyMonkeyCo's minion [![TravisCI build status](https://travis-ci.org/FuzzyMonkeyCo/monkey.svg?branch=master)](https://travis-ci.org/FuzzyMonkeyCo/monkey/builds) [![Goreport card](https://goreportcard.com/badge/github.com/FuzzyMonkeyCo/monkey)](https://goreportcard.com/report/github.com/FuzzyMonkeyCo/monkey) [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FFuzzyMonkeyCo%2Fmonkey.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FFuzzyMonkeyCo%2Fmonkey?ref=badge_shield)
 
 [FuzzyMonkey](https://fuzzymonkey.co) is an automated JSON API testing service based on QuickCheck.
 

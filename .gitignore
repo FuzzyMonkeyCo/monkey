@@ -21,10 +21,10 @@ vendor/
 
 # End of https://www.gitignore.io/api/go
 
+/dist/
 /monkey
 /monkey.test
 /monkey-*
-/meta.go
 /*.cov
 /cov.out
 

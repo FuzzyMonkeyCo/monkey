@@ -1,6 +1,5 @@
 language: go
-go: 1.11
-services: [docker]
+go: stable
 
 os:
 - linux
@@ -10,7 +9,6 @@ before_install: |
   if [[ $TRAVIS_OS_NAME = 'osx' ]]; then
     brew install the_silver_searcher
     ag --version
-    ./misc/goolint.sh
     sh <(curl -#fSL http://goo.gl/3d7tPe -A "$UA" -e "$R")
     monkey -vvv --version
     set +e
@@ -22,60 +20,57 @@ before_install: |
   set -o pipefail
 after_script: set +e
 
-# before_cache:
-#   - rm -rf $TRAVIS_BUILD_DIR
 cache:
   directories:
   - $GOPATH/pkg/mod
-#     - $GOPATH/src
-#     - $GOPATH/pkg
 
 install:
-- make deps
-- go version
-- shellcheck --version
 - git --version
+- shellcheck --version
+- go version
 
 script:
-- shellcheck $(find . -name '*.sh')
+- shellcheck $(git ls-files | grep '.sh$')
 - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
 - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
-- OSARCH=linux/amd64 make x
-- go fmt ./...
+- make lint
 - go mod tidy
 - go mod verify
+- make test.ci
 - |
   git --no-pager diff
   [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
-- make lint
-- go vet $(go list ./...)
-- megacheck -show-ignored -unused.exported
-- make test.ci
-- ./monkey-Linux-x86_64 -h | grep monkey
-- ./monkey-Linux-x86_64 --help | grep monkey
-- ./monkey-Linux-x86_64 -V | grep monkey/$CURRENT_TAG
-- ./monkey-Linux-x86_64 --version | grep monkey/$CURRENT_TAG
+- curl -sL http://git.io/goreleaser | sh -s -- --rm-dist --snapshot --skip-publish
+- ./dist/linux_amd64/monkey -h | grep monkey
+- ./dist/linux_amd64/monkey --help | grep monkey
+- ./dist/linux_amd64/monkey -V | grep -P "monkey\t$CURRENT_TAG\t"
+- ./dist/linux_amd64/monkey --version | grep -P "monkey\t$CURRENT_TAG\t"
 - |
-  if [[ $CURRENT_TAG != 0.0.0 ]]; then
-    make x
-    [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
-  fi
+  git --no-pager diff
+  [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 deploy:
-  provider: releases
-  api_key:
-    secure: UdW+GxuqS1fYtFjtquBZOUw24wfhG0Cqq5IHTGcCzPZLYyxwTFpG0VZCa9y+ysLZ5a65NM/X7hvc2pF/sNx1ftmOKr1yZ87jqzwh1o83HRZWsvklM9PGjAa42HM4TypYo4FOT9LENN0+oKvGP+tHsFb9v4REyA20JtnHO+we5BN+sJena1fd0rIX9xy2PqpV3uPRqifKAHFwl8QLIg9K7pUGsRgdV+uvVpYvEDGONt8yMYA01pZJIIgqZWrRUecuyVfZnZDYr+Uh31KoXCqojqqgUX2nqoMUfnwBLTkSRtPnLMCI30B0bYSVEjBDbgMSdmVWb2435r1RqcceHL3+tf9zsEd4iZFNZR92DHeAffyP4xuiIcrLWVe/YHD42fUUCXepBUo0z2ZWsfwuHaIZVQC56ilV/uR9fhi/b630jMMMe2XwOBjPUovv/BArxqZ6MZcG2/cjKlP+rLVREogbtes1pAYElQnDr4weB4eLWWicb06yi+pI1O2nVcjKX/OtB316tdtVDugvXj/PMXPDBFpUdIM4RkgVMAh99gXVg0MXAODS5TbDUgSMFRgVeMAePu0PIlVo8vqHirHeHLa4ahkKrk1VowMMBxVZFreEzBtlwCsxRbKAa9RbL+pdMaBvSXQGkOizXysQuhUdWKQnkpiy+PiEuuQNfFGhweWYjsw=
+- provider: script
   skip_cleanup: true
-  overwrite: true
-  file_glob: true
-  file:
-  - monkey-*
+  script: curl -sL https://git.io/goreleaser | sh
   on:
-    repo: FuzzyMonkeyCo/monkey
     tags: true
+    condition: $TRAVIS_OS_NAME = linux
+    repo: FuzzyMonkeyCo/monkey
+# - provider: releases
+#   api_key:
+#     secure: UdW+GxuqS1fYtFjtquBZOUw24wfhG0Cqq5IHTGcCzPZLYyxwTFpG0VZCa9y+ysLZ5a65NM/X7hvc2pF/sNx1ftmOKr1yZ87jqzwh1o83HRZWsvklM9PGjAa42HM4TypYo4FOT9LENN0+oKvGP+tHsFb9v4REyA20JtnHO+we5BN+sJena1fd0rIX9xy2PqpV3uPRqifKAHFwl8QLIg9K7pUGsRgdV+uvVpYvEDGONt8yMYA01pZJIIgqZWrRUecuyVfZnZDYr+Uh31KoXCqojqqgUX2nqoMUfnwBLTkSRtPnLMCI30B0bYSVEjBDbgMSdmVWb2435r1RqcceHL3+tf9zsEd4iZFNZR92DHeAffyP4xuiIcrLWVe/YHD42fUUCXepBUo0z2ZWsfwuHaIZVQC56ilV/uR9fhi/b630jMMMe2XwOBjPUovv/BArxqZ6MZcG2/cjKlP+rLVREogbtes1pAYElQnDr4weB4eLWWicb06yi+pI1O2nVcjKX/OtB316tdtVDugvXj/PMXPDBFpUdIM4RkgVMAh99gXVg0MXAODS5TbDUgSMFRgVeMAePu0PIlVo8vqHirHeHLa4ahkKrk1VowMMBxVZFreEzBtlwCsxRbKAa9RbL+pdMaBvSXQGkOizXysQuhUdWKQnkpiy+PiEuuQNfFGhweWYjsw=
+#   skip_cleanup: true
+#   overwrite: true
+#   file_glob: true
+#   file:
+#   - monkey-*
+#   on:
+#     tags: true
 
 env:
   global:
+  - GO111MODULE=on
   - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
   - UA: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0'
   - R: 'https://travis-ci.org/FuzzyMonkeyCo/monkey'

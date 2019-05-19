@@ -31,25 +31,19 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] diff %+v", diff)
 
 	if act.GetLastCheckSuccess() {
-		str += "."
-	} else {
-		if act.GetLastCheckFailure() {
-			str += "!"
-		}
+		str += "•"
+	} else if act.GetLastCheckFailure() {
+		str += "!"
 	}
 	if act.GetLastCallSuccess() {
 		str += ColorWRN.Sprint("✓")
-	} else {
-		if act.GetLastCallFailure() {
-			str += ColorERR.Sprint("✗")
-		}
+	} else if act.GetLastCallFailure() {
+		str += ColorERR.Sprint("⨯")
 	}
 	if act.GetSuccess() {
 		str += ColorWRN.Sprint("PASSED") + ColorNFO.Sprint("]") + "\n"
-	} else {
-		if act.GetFailure() {
-			str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
-		}
+	} else if act.GetFailure() {
+		str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
 	}
 
 	///////SO let's compute a diff of act - lastLane and display in accordance

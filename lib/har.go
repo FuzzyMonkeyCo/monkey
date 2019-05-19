@@ -232,19 +232,21 @@ func harResponse(hr *http.Response) (*HAR_Response, error) {
 
 // FIXME: URL encoding?
 func (p *HAR_PostData) data() string {
-	if p == nil {
+	switch {
+	case p == nil:
 		return ""
-	} else if len(p.Text) > 0 {
+	case len(p.Text) > 0:
 		return p.Text
-	} else if len(p.Params) > 0 {
+	case len(p.Params) > 0:
 		var elems []string
 		for _, p := range p.Params {
 			var pair string
-			if p == nil {
+			switch {
+			case p == nil:
 				pair = ""
-			} else if len(p.Value) == 0 {
+			case len(p.Value) == 0:
 				pair = p.Name
-			} else {
+			default:
 				pair = p.Name + "=" + p.Value
 			}
 
