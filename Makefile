@@ -38,11 +38,7 @@ update:
 latest:
 	sh -eux <misc/latest.sh
 
-deps:
-#	Writes to $GOPATH/bin so keep that in mind...
-	go install -i github.com/fenollp/gox
-	go install -i golang.org/x/lint/golint
-	go install -i honnef.co/go/tools/cmd/megacheck
+devdeps:
 	go install -i github.com/wadey/gocovmerge
 	go install -i github.com/kyoh86/richgo
 
@@ -54,7 +50,6 @@ lib/messages.pb.go: lib/messages.proto
 
 lint:
 	gofmt -s -w *.go lib/*.go
-	golint -set_exit_status
 	./misc/goolint.sh
 
 debug: all

@@ -1,0 +1,29 @@
+[run]
+  # deadline = "10m"
+  skip-files = []
+
+[linters-settings]
+
+  [linters-settings.golint]
+    min-confidence = 0.0
+
+  [linters-settings.maligned]
+    suggest-new = true
+
+  [linters-settings.misspell]
+    locale = "US"
+
+[linters]
+  enable-all = true
+  disable = [
+    # "gocyclo", # FIXME must be fixed
+    # "gosec",
+    # "dupl",
+    # "maligned",
+    # "lll",
+    # "unparam",
+    # "prealloc",
+    # "scopelint",
+    # "gochecknoinits",
+    # "gochecknoglobals",
+  ]
