@@ -13,19 +13,19 @@ import (
 
 func (ws *wsState) cast(req Action) (err error) {
 	msg := &Msg{Ts: NowMonoNano()}
-	switch req.(type) {
+	switch r := req.(type) {
 	case *DoFuzz:
-		msg.Msg = &Msg_Fuzz{Fuzz: req.(*DoFuzz)}
+		msg.Msg = &Msg_Fuzz{Fuzz: r}
 	case *RepCallDone:
-		msg.Msg = &Msg_CallDone{CallDone: req.(*RepCallDone)}
+		msg.Msg = &Msg_CallDone{CallDone: r}
 	case *RepCallResult:
-		msg.Msg = &Msg_CallResult{CallResult: req.(*RepCallResult)}
+		msg.Msg = &Msg_CallResult{CallResult: r}
 	case *RepResetProgress:
-		msg.Msg = &Msg_ResetProgress{ResetProgress: req.(*RepResetProgress)}
+		msg.Msg = &Msg_ResetProgress{ResetProgress: r}
 	case *RepValidateProgress:
-		msg.Msg = &Msg_ValidateProgress{ValidateProgress: req.(*RepValidateProgress)}
+		msg.Msg = &Msg_ValidateProgress{ValidateProgress: r}
 	case *SUTMetrics:
-		msg.Msg = &Msg_Metrics{Metrics: req.(*SUTMetrics)}
+		msg.Msg = &Msg_Metrics{Metrics: r}
 	default:
 		err = fmt.Errorf("unexpected req: %#v", req)
 		return

@@ -16,14 +16,6 @@
 [linters]
   enable-all = true
   disable = [
-    # "gocyclo", # FIXME must be fixed
-    # "gosec",
-    # "dupl",
-    # "maligned",
-    # "lll",
-    # "unparam",
-    # "prealloc",
-    # "scopelint",
-    # "gochecknoinits",
-    # "gochecknoglobals",
+    "gochecknoglobals",
+    "nakedret",
   ]

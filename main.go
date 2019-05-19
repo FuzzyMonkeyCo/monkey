@@ -48,15 +48,12 @@ const (
 var (
 	binTitle    = strings.Join([]string{binName, binVersion, binSHA, runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
 	clientUtils = &http.Client{
-		Timeout: time.Duration(10 * time.Second),
+		Timeout: 10 * time.Second,
 	}
 )
 
-func init() {
-	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
-}
-
 func main() {
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 	os.Exit(actualMain())
 }
 
