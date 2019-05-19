@@ -11,7 +11,7 @@ var ErrNoSuchRef = errors.New("no such $ref")
 
 type eid = uint32
 type sid = uint32
-type sids []uint32
+type sids []sid
 type schemaJSON = map[string]interface{}
 type schemasJSON = map[string]schemaJSON
 

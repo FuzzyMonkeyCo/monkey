@@ -525,47 +525,15 @@ func EnumToGo(value *ValueJSON) interface{} {
 	}
 }
 
-func compileSlice(strs []string) (res map[string]*regexp.Regexp, err error) {
-	res = make(map[string]*regexp.Regexp, len(strs))
-	for _, str := range strs {
-		var re *regexp.Regexp
-		if re, err = regexp.Compile(str); err != nil {
-			return
-		}
-		res[str] = re
-	}
-	return
-}
-
-func (vald *Validator) FilterEndpoints(only, except,
-	onlyI, exceptI, onlyO, exceptO []string) (eids []eid, err error) {
-	const fmtMPIO = "%s\t%s\t%s ➜ %s"
-	for _, oI := range onlyI {
-		only = append(only, "^[^\t]+\t[^\t]+\t("+oI+") ➜ [^$]*$")
-	}
-	for _, oO := range onlyO {
-		only = append(only, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ("+oO+")$")
-	}
-	for _, eI := range exceptI {
-		except = append(except, "^[^\t]+\t[^\t]+\t("+eI+") ➜ [^$]*$")
-	}
-	for _, eO := range exceptO {
-		except = append(except, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ("+eO+")$")
-	}
-
-	// Ensure user input is valid
-	onlys, err := compileSlice(only)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	if _, err = compileSlice(except); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
+func (vald *Validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	// TODO? filter on 2nd, 3rd, ... -level schemas
 	// instead of just first level (ref A references B & C)
+
+	// TODO: use Go templates to filter on very specific fields. See:
+	// https://github.com/kubernetes/kubernetes/blob/c0d9a0728ce5920f97fecab977be15636e57126b/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/jsonpath.go#L143
+	// https://github.com/kubernetes/kubernetes/blob/103813057c5ef6cc416e6fdb71515e90d98cd3a9/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/template.go#L85
+
+	const fmtMPIO = "%s\t%s\t%s ➜ %s"
 	total := len(vald.Spec.Endpoints)
 	all := make(map[eid]string, total)
 	for eid := range vald.Spec.Endpoints {
@@ -584,70 +552,75 @@ func (vald *Validator) FilterEndpoints(only, except,
 		all[eid] = fmt.Sprintf(fmtMPIO, e.Method, path, ins, outs)
 	}
 
-	var es map[eid]string
-	if len(only) == 0 {
-		es = all
-	} else {
-		es = make(map[eid]string, total)
-		// OR over `only`
-		// Fail if any `only` is not there
-		for str, re := range onlys {
-			matched := false
-			for eid, e := range all {
-				if re.MatchString(e) {
-					log.Println("[DBG]", str, "matched", e)
-					matched = true
-					if _, ok := es[eid]; !ok {
-						es[eid] = e
-					}
-				}
-			}
-			if !matched {
-				err = fmt.Errorf("%s did not match any endpoints", str)
-				log.Println("[ERR]", err)
-				return
-			}
+	for i := 0; i < len(args); i++ {
+		cmd := args[i]
+		i++
+		switch cmd {
+		case "--only":
+			err = filterEndpoints(all, true, args[i])
+		case "--except":
+			err = filterEndpoints(all, false, args[i])
+		case "--calls-with-input":
+			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t([^()]*"+args[i]+"[^()]*) ➜ [^$]*$")
+		case "--calls-without-input":
+			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t([^()]*"+args[i]+"[^()]*) ➜ [^$]*$")
+		case "--calls-with-output":
+			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^()]*"+args[i]+"[^()]*)$")
+		case "--calls-without-output":
+			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^()]*"+args[i]+"[^()]*)$")
+		default:
+			i--
 		}
-	}
-
-	// OR over `except`
-	// Do not error if any `except` is not there
-	if len(except) != 0 {
-		var excepts *regexp.Regexp
-		if excepts, err = regexp.Compile(strings.Join(except, "|")); err != nil {
-			log.Println("[ERR]", err)
+		if err != nil {
 			return
 		}
-		for eid, e := range es {
-			if excepts.MatchString(e) {
-				delete(es, eid)
-			}
-		}
 	}
 
-	// TODO: use Go templates to filter on very specific fields. See:
-	// https://github.com/kubernetes/kubernetes/blob/c0d9a0728ce5920f97fecab977be15636e57126b/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/jsonpath.go#L143
-	// https://github.com/kubernetes/kubernetes/blob/103813057c5ef6cc416e6fdb71515e90d98cd3a9/staging/src/k8s.io/cli-runtime/pkg/genericclioptions/printers/template.go#L85
+	selected := uint32(len(all))
+	e := fmt.Sprintf("%d of %d %s selected for testing", selected, total, plural("endpoint", selected))
+	if selected == 0 {
+		err = errors.New(e)
+		log.Println("[ERR]", err)
+		// Error printed in main.go
+		return
+	}
 
-	// Fail on empty EIDs
-	if len(es) == 0 {
-		err = errors.New("0 endpoints selected for testing")
+	log.Println("[NFO]", e)
+	ColorNFO.Println(e)
+	eids = make([]eid, 0, selected)
+	for eid := range all {
+		eids = append(eids, eid)
+	}
+	sort.Slice(eids, func(i, j int) bool { return eids[i] < eids[j] })
+	for _, eid := range eids {
+		fmt.Println(all[eid])
+	}
+	return
+}
+
+func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) {
+	var re *regexp.Regexp
+	if re, err = regexp.Compile(pattern); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	selected := uint32(len(es))
-	eids = make([]eid, 0, selected)
-	for eid := range es {
-		eids = append(eids, eid)
+	onlyMatched := false
+	for eid, e := range all {
+		if re.MatchString(e) {
+			log.Println("[DBG]", pattern, "matched", e)
+			onlyMatched = true
+			if !only {
+				delete(all, eid)
+			}
+		} else if only {
+			delete(all, eid)
+		}
 	}
-	sort.Slice(eids, func(i, j int) bool { return eids[i] < eids[j] })
-
-	e := fmt.Sprintf("%d %s selected for testing", selected, plural("endpoint", selected))
-	log.Println("[NFO]", e)
-	ColorNFO.Println(e)
-	for _, eid := range eids {
-		fmt.Println(es[eid])
+	if only && !onlyMatched {
+		// Fail if any `only` is not there
+		err = fmt.Errorf("%s did not match any endpoints", pattern)
+		log.Println("[ERR]", err)
 	}
 	return
 }

@@ -68,12 +68,6 @@ type params struct {
 	Verbosity                uint8    `mapstructure:"-v"`
 	ValidateAgainst          string   `mapstructure:"--validate-against"`
 	EnvVars                  []string `mapstructure:"VAR"`
-	FuzzOnly                 []string `mapstructure:"--only"`
-	FuzzExcept               []string `mapstructure:"--except"`
-	FuzzCallsWithInputs      []string `mapstructure:"--calls-with-input"`
-	FuzzCallsWithoutInputs   []string `mapstructure:"--calls-without-input"`
-	FuzzCallsWithOutputs     []string `mapstructure:"--calls-with-output"`
-	FuzzCallsWithoutOutputs  []string `mapstructure:"--calls-without-output"`
 }
 
 func usage(binTitle string) (args *params, ret int) {
@@ -234,9 +228,7 @@ func actualMain() int {
 	}
 
 	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
-	eids, err := vald.FilterEndpoints(args.FuzzOnly, args.FuzzExcept,
-		args.FuzzCallsWithInputs, args.FuzzCallsWithoutInputs,
-		args.FuzzCallsWithOutputs, args.FuzzCallsWithoutOutputs)
+	eids, err := vald.FilterEndpoints(os.Args)
 	if err != nil {
 		lib.ColorERR.Println(err)
 		return statusFailed
