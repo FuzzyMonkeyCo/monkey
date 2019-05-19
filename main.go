@@ -46,7 +46,6 @@ const (
 )
 
 var (
-	binTitle    = strings.Join([]string{binName, binVersion, binSHA, runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
 	clientUtils = &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -77,7 +76,7 @@ type params struct {
 	FuzzCallsWithoutOutputs  []string `mapstructure:"--calls-without-output"`
 }
 
-func usage() (args *params, ret int) {
+func usage(binTitle string) (args *params, ret int) {
 	B := lib.ColorNFO.Sprintf(binName)
 	usage := binTitle + `
 
@@ -144,7 +143,9 @@ Try:
 }
 
 func actualMain() int {
-	args, ret := usage()
+	binTitle := strings.Join([]string{binName, binVersion, binSHA,
+		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
+	args, ret := usage(binTitle)
 	if args == nil {
 		return ret
 	}

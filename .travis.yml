@@ -43,8 +43,8 @@ script:
 - curl -sL http://git.io/goreleaser | sh -s -- --rm-dist --snapshot --skip-publish
 - ./dist/linux_amd64/monkey -h | grep monkey
 - ./dist/linux_amd64/monkey --help | grep monkey
-- ./dist/linux_amd64/monkey -V | grep -F "monkey\t$CURRENT_TAG\t"
-- ./dist/linux_amd64/monkey --version | grep -F "monkey\t$CURRENT_TAG\t"
+- ./dist/linux_amd64/monkey -V | grep -P "monkey\t$CURRENT_TAG\t"
+- ./dist/linux_amd64/monkey --version | grep -P "monkey\t$CURRENT_TAG\t"
 - |
   git --no-pager diff
   [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
