@@ -561,13 +561,13 @@ func (vald *Validator) FilterEndpoints(args []string) (eids []eid, err error) {
 		case "--except":
 			err = filterEndpoints(all, false, args[i])
 		case "--calls-with-input":
-			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t([^()]*"+args[i]+"[^()]*) ➜ [^$]*$")
+			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t([^\t]*"+args[i]+"[^\t]*) ➜ [^$]*$")
 		case "--calls-without-input":
-			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t([^()]*"+args[i]+"[^()]*) ➜ [^$]*$")
+			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t([^\t]*"+args[i]+"[^\t]*) ➜ [^$]*$")
 		case "--calls-with-output":
-			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^()]*"+args[i]+"[^()]*)$")
+			err = filterEndpoints(all, true, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^\t]*"+args[i]+"[^\t]*)$")
 		case "--calls-without-output":
-			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^()]*"+args[i]+"[^()]*)$")
+			err = filterEndpoints(all, false, "^[^\t]+\t[^\t]+\t[^\t]* ➜ ([^\t]*"+args[i]+"[^\t]*)$")
 		default:
 			i--
 		}
