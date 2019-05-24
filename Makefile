@@ -29,7 +29,7 @@ lib/messages.pb.go: lib/messages.proto
 	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >$@
 
 lint:
-	gofmt -s -w *.go lib/*.go
+	gofmt -s -w *.go */*.go
 	./misc/goolint.sh
 
 debug: all
