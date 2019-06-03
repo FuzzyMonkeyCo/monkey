@@ -552,6 +552,26 @@ func (vald *Validator) FilterEndpoints(args []string) (eids []eid, err error) {
 		all[eid] = fmt.Sprintf(fmtMPIO, e.Method, path, ins, outs)
 	}
 
+	{
+		argz := make([]string, 0, len(args))
+	outter:
+		for i := 0; i < len(args); i++ {
+			arg := args[i]
+			for _, p := range []string{"--only=", "--except=",
+				"--calls-with-input=", "--calls-without-input=",
+				"--calls-with-output=", "--calls-without-output=",
+			} {
+				l := len(p)
+				if len(arg) > l && p == arg[0:l] {
+					argz = append(argz, []string{p[0 : l-1], arg[l:]}...)
+					break outter
+				}
+			}
+			argz = append(argz, arg)
+		}
+		args = argz
+	}
+
 	for i := 0; i < len(args); i++ {
 		cmd := args[i]
 		i++
