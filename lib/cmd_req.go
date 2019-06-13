@@ -110,7 +110,7 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	}
 	act.updateHostHeader(mnk.Cfg)
 	var nxt *RepCallDone
-	if nxt, err = act.makeRequest(); err != nil {
+	if nxt, err = act.makeRequest(mnk); err != nil {
 		return
 	}
 
@@ -123,28 +123,32 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	return
 }
 
-func (act *ReqDoCall) makeRequest() (nxt *RepCallDone, err error) {
+func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 	harReq := act.GetRequest()
 	nxt = &RepCallDone{}
-	r, err := harReq.Request()
+	req, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
 	log.Println("[NFO] ▼", harReq)
+	if err = mnk.showRequest(req); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
 	start := time.Now()
-	_, err = clientReq.Do(r)
+	rep, err := clientReq.Do(req)
 	nxt.TsDiff = uint64(time.Since(start))
 
+	var e string
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
 		e := err.Error()
 		log.Println("[NFO] ▲", e)
 		nxt.Reason = e
 		nxt.Failure = true
-		err = nil
-		return
 	}
 
 	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
