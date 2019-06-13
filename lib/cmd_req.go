@@ -145,7 +145,7 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 	var e string
 	if err != nil {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
-		e := err.Error()
+		e = err.Error()
 		log.Println("[NFO] ▲", e)
 		nxt.Reason = e
 		nxt.Failure = true
@@ -153,8 +153,20 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 
 	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
 	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
-	resp := lastHAR()
-	log.Println("[NFO] ▲", resp)
+	var resp *HAR_Entry
+	if err == nil {
+		resp = lastHAR()
+		log.Println("[NFO] ▲", resp)
+	}
+
+	if err = mnk.showResponse(rep, e); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	if err != nil {
+		return nxt, nil
+	}
 	nxt.Response = resp
 	nxt.Success = true
 	return
