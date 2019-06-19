@@ -44,6 +44,11 @@ func (ws *wsState) cast(req Action) (err error) {
 }
 
 func (mnk *Monkey) FuzzingLoop(act Action) (err error) {
+	defer func() {
+		mnk.progress.bar.Done()
+		fmt.Println("\n")
+	}()
+
 	for {
 		// Sometimes sets mnk.cfg.Runtime.Final* fields
 		log.Printf("[ERR] >>> act %#v\n", act)
@@ -127,7 +132,7 @@ func (mnk *Monkey) Dial(URL string) error {
 		return err
 	}
 
-	mnk.progress = newProgress()
+	mnk.progress = newProgress(mnk.Cfg.N)
 	mnk.ws = newWS(u, c)
 
 	select {

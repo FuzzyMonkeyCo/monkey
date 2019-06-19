@@ -104,10 +104,10 @@ func (ws *wsState) writer() {
 				ws.err <- err
 				return
 			}
-			log.Println("[DBG] sent", len(data), "in", time.Since(start))
+			log.Println("[DBG] sent", len(data), "bytes in", time.Since(start))
 
 		case err := <-ws.err2:
-			log.Println("[DBG] <-err2")
+			log.Printf("[DBG] <-err2: %v", err)
 			data := []byte(err.Error())
 			if err := ws.c.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Println("[ERR]", err)

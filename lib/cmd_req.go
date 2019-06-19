@@ -176,7 +176,8 @@ func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
 	URL, err := url.Parse(act.Request.URL)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
+		// Malformed URLs are unexpected
+		panic(err)
 	}
 
 	// TODO: if host is an IPv6 then it has to be braced with []

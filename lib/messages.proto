@@ -376,6 +376,7 @@ message ObjectJSON {
   map<string, ValueJSON> values = 1;
 }
 
+// TODO: replace with https://github.com/protocolbuffers/protobuf/blob/f2a919f58f12574ac04ca79e6b84577dec6f2b43/src/google/protobuf/struct.proto#L62
 message ValueJSON {
   oneof value {
     bool is_null = 1;
@@ -387,6 +388,7 @@ message ValueJSON {
   }
 }
 
+// TODO: split this into dedicated package
 // http://www.softwareishard.com/blog/har-12-spec/
 // NOTE: durations are in nanoseconds instead of milliseconds
 message HAR {

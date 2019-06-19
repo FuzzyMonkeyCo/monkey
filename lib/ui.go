@@ -1,15 +1,44 @@
 package lib
 
 import (
-	"fmt"
 	"log"
 	"time"
+
+	"github.com/superhawk610/bar"
 )
+
+type progress struct {
+	bar           *bar.Bar
+	start         time.Time
+	lastLane      FuzzProgress
+	shrinkingFrom *FuzzProgress
+}
+
+func newProgress(n uint32) *progress {
+	return &progress{
+		bar: bar.NewWithOpts(
+			// bar.WithDebug(),
+			bar.WithDimensions(int(n), 37),
+			bar.WithDisplay("", "█", "█", " ", "|"),
+			// bar.WithFormat(":state :percent :bar :rate ops/s :eta"),
+			bar.WithFormat(":state :bar :rate ops/s :eta"),
+		),
+		start: time.Now(),
+	}
+}
+
+// TODO: print info logs as they appear when fuzzing
+// with a progress bar of size=N at the bottom a la `apt`.
+// See https://github.com/gosuri/uiprogress/issues/42
+// See https://github.com/sethgrid/multibar/issues/17
 
 func (mnk *Monkey) showResetting() {
 	// TODO: use [..][..][..] instead of |..|..|..|
 	// with: mnk.progress.lastLane.GetTotalTestsCount() == 0
 	ColorERR.Printf("|")
+	mnk.progress.bar.Update(
+		int(mnk.progress.lastLane.GetTotalTestsCount()),
+		bar.Context{bar.Ctx("state", "Resetting...")})
 }
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
@@ -40,11 +69,11 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	} else if act.GetLastCallFailure() {
 		str += ColorERR.Sprint("⨯")
 	}
-	if act.GetSuccess() {
-		str += ColorWRN.Sprint("PASSED") + ColorNFO.Sprint("]") + "\n"
-	} else if act.GetFailure() {
-		str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
-	}
+	// if act.GetSuccess() {
+	// 	str += ColorWRN.Sprint("PASSED") + ColorNFO.Sprint("]") + "\n"
+	// } else if act.GetFailure() {
+	// 	str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
+	// }
 
 	///////SO let's compute a diff of act - lastLane and display in accordance
 	/////// be smart on diffing bools!
@@ -59,7 +88,10 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	// 	str += "]["
 
 	// mnk.progress.lastLane = *act
-	fmt.Print(str)
+	// fmt.Print(str)
+	if !(act.GetLastCheckSuccess() || act.GetLastCheckFailure()) {
+		mnk.progress.bar.TickAndUpdate(bar.Context{bar.Ctx("state", "Testing...")})
+	}
 	return
 }
 
