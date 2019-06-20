@@ -742,6 +742,7 @@ func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
 	errs := make([]string, 0, len(errors))
 	for _, e := range errors {
 		errs = append(errs, e.String())
+		log.Printf("[ERR] value: %#v", e.Value())
 	}
 	return errs
 }

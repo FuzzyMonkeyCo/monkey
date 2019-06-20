@@ -14,8 +14,7 @@ func (mnk *Monkey) showRequest(r *http.Request) error {
 		// MUST log in caller
 		return err
 	}
-	// ColorNFO.Printf("%s", dump)
-	mnk.progress.bar.Interrupt(ColorNFO.Sprintf("%s", dump))
+	mnk.progress.dbg(string(dump))
 	return nil
 }
 
@@ -30,7 +29,6 @@ func (mnk *Monkey) showResponse(r *http.Response, e string) error {
 		// MUST log in caller
 		return err
 	}
-	// ColorWRN.Printf("%s", dump)
-	mnk.progress.bar.Interrupt(ColorWRN.Sprintf("%s", dump))
+	mnk.progress.wrn(string(dump))
 	return nil
 }

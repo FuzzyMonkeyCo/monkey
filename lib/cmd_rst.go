@@ -26,7 +26,7 @@ var (
 )
 
 func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
-	mnk.showResetting()
+	mnk.progress.state("Resetting...")
 
 	if isHARReady() {
 		clearHAR()

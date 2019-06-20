@@ -9,6 +9,7 @@ import (
 
 type progress struct {
 	bar           *bar.Bar
+	failed        bool
 	start         time.Time
 	lastLane      FuzzProgress
 	shrinkingFrom *FuzzProgress
@@ -27,28 +28,27 @@ func newProgress(n uint32) *progress {
 	}
 }
 
-// TODO: print info logs as they appear when fuzzing
-// with a progress bar of size=N at the bottom a la `apt`.
-// See https://github.com/gosuri/uiprogress/issues/42
-// See https://github.com/sethgrid/multibar/issues/17
-
-func (mnk *Monkey) showResetting() {
-	// TODO: use [..][..][..] instead of |..|..|..|
-	// with: mnk.progress.lastLane.GetTotalTestsCount() == 0
-	ColorERR.Printf("|")
-	mnk.progress.bar.Update(
-		int(mnk.progress.lastLane.GetTotalTestsCount()),
-		bar.Context{bar.Ctx("state", "Resetting...")})
+func (p *progress) dbg(s string) { p.bar.Interrupt(s) }
+func (p *progress) nfo(s string) { p.bar.Interrupt(ColorNFO.Sprintf("%s", s)) }
+func (p *progress) wrn(s string) { p.bar.Interrupt(ColorWRN.Sprintf("%s", s)) }
+func (p *progress) err(s string) {
+	p.bar.Interrupt(ColorERR.Sprintf("%s", s))
+	p.failed = true
+}
+func (p *progress) state(s string) {
+	p.bar.Update(int(p.lastLane.GetTotalTestsCount()),
+		bar.Context{bar.Ctx("state", s)})
 }
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] >>> FuzzProgress %+v", act)
 	last := mnk.progress.lastLane
+	mnk.progress.lastLane = *act
 	var str string
 
-	if mnk.progress.lastLane.GetTotalTestsCount() == 0 {
-		str = ColorNFO.Sprint("[")
-	}
+	// if last.GetTotalTestsCount() == 0 {
+	// 	str = ColorNFO.Sprint("[")
+	// }
 
 	diff := &FuzzProgress{
 		TotalTestsCount:  act.GetTotalTestsCount() - last.GetTotalTestsCount(),
@@ -77,7 +77,6 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 
 	///////SO let's compute a diff of act - lastLane and display in accordance
 	/////// be smart on diffing bools!
-	mnk.progress.lastLane = *act
 	if act.GetShrinking() && mnk.progress.shrinkingFrom == nil {
 		mnk.progress.shrinkingFrom = &mnk.progress.lastLane
 		str += "Shrinking: "
@@ -87,11 +86,7 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	// case act.GetTotalTestsCount() != mnk.progress.lastLane.GetTotalTestsCount():
 	// 	str += "]["
 
-	// mnk.progress.lastLane = *act
 	// fmt.Print(str)
-	if !(act.GetLastCheckSuccess() || act.GetLastCheckFailure()) {
-		mnk.progress.bar.TickAndUpdate(bar.Context{bar.Ctx("state", "Testing...")})
-	}
 	return
 }
 

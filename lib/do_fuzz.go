@@ -46,7 +46,8 @@ func (ws *wsState) cast(req Action) (err error) {
 func (mnk *Monkey) FuzzingLoop(act Action) (err error) {
 	defer func() {
 		mnk.progress.bar.Done()
-		fmt.Println("\n")
+		fmt.Println()
+		fmt.Println()
 	}()
 
 	for {

@@ -28,16 +28,19 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		if SID, ok = endpoint.Outputs[status]; !ok {
 			check1.Failure = true
 			err = fmt.Errorf("unexpected HTTP code '%d'", status)
-			check1.Details = append(check1.Details, err.Error())
-			ColorERR.Println("[NFO]", err)
+			e := err.Error()
+			check1.Details = append(check1.Details, e)
+			log.Println("[NFO]", err)
+			mnk.progress.err(e)
 		} else {
 			check1.Success = true
+			mnk.progress.nfo("HTTP code checked")
 		}
-		if e := mnk.ws.cast(check1); e != nil {
-			log.Println("[ERR]", e)
-			return e
+		if err = mnk.ws.cast(check1); err != nil {
+			log.Println("[ERR]", err)
+			return
 		}
-		if check1.Failure || !ok {
+		if check1.Failure {
 			return
 		}
 	}
@@ -50,14 +53,17 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		data := []byte(act.Response.Response.Content.Text)
 		if err = json.Unmarshal(data, &jsonData); err != nil {
 			check2.Failure = true
-			check2.Details = append(check2.Details, err.Error())
-			ColorERR.Println("[ERR]", err)
+			e := err.Error()
+			check2.Details = append(check2.Details, e)
+			log.Println("[NFO]", err)
+			mnk.progress.err(e)
 		} else {
 			check2.Success = true
+			mnk.progress.nfo("response is valid JSON")
 		}
-		if e := mnk.ws.cast(check2); e != nil {
-			log.Println("[ERR]", e)
-			return e
+		if err = mnk.ws.cast(check2); err != nil {
+			log.Println("[ERR]", err)
+			return
 		}
 		if check2.Failure || jsonData == nil {
 			return
@@ -69,18 +75,20 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
 		log.Println("[NFO] checking", check3.Details[0])
 		if errs := mnk.Vald.Spec.Schemas.Validate(SID, jsonData); len(errs) != 0 {
-			err = errors.New(errs[0])
+			err = errors.New(strings.Join(errs, "; "))
 			check3.Failure = true
 			check3.Details = append(check3.Details, errs...)
+			log.Println("[NFO]", err)
 			for _, e := range errs {
-				ColorERR.Println(e)
+				mnk.progress.err(e)
 			}
 		} else {
 			check3.Success = true
+			mnk.progress.nfo("response validates JSON Schema")
 		}
-		if e := mnk.ws.cast(check3); e != nil {
-			log.Println("[ERR]", e)
-			return e
+		if err = mnk.ws.cast(check3); err != nil {
+			log.Println("[ERR]", err)
+			return
 		}
 		if check3.Failure {
 			return
@@ -91,6 +99,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 
 	checkN := &RepCallResult{Response: enumFromGo(jsonData)}
 	log.Println("[DBG] checks passed")
+	mnk.progress.nfo("")
 	if err = mnk.ws.cast(checkN); err != nil {
 		log.Println("[ERR]", err)
 	}
@@ -98,6 +107,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 }
 
 func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
+	mnk.progress.state("Testing...")
 	mnk.eid = act.EID
 
 	if !isHARReady() {
