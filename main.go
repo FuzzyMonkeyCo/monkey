@@ -59,13 +59,14 @@ func main() {
 type params struct {
 	Fuzz, Shrink             bool
 	Lint, Schema             bool
-	Init, Env, Login         bool
+	Init, Env, Login, Logs   bool
 	Exec, Start, Reset, Stop bool
 	Update                   bool     `mapstructure:"--update"`
 	HideConfig               bool     `mapstructure:"--hide-config"`
 	ShowSpec                 bool     `mapstructure:"--show-spec"`
 	N                        uint32   `mapstructure:"--tests"`
 	Verbosity                uint8    `mapstructure:"-v"`
+	LogOffset                uint64   `mapstructure:"--previous"`
 	ValidateAgainst          string   `mapstructure:"--validate-against"`
 	EnvVars                  []string `mapstructure:"VAR"`
 }
@@ -76,7 +77,6 @@ func usage(binTitle string) (args *params, ret int) {
 
 Usage:
   ` + B + ` [-vvv] init [--with-magic]
-  ` + B + ` [-vvv] env [VAR ...]
   ` + B + ` [-vvv] login [--user=USER]
   ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
                      [--only=REGEX]... [--except=REGEX]...
@@ -89,6 +89,8 @@ Usage:
   ` + B + ` [-vvv] -h | --help
   ` + B + ` [-vvv]      --update
   ` + B + ` [-vvv] -V | --version
+  ` + B + ` [-vvv] env [VAR ...]
+  ` + B + ` logs [--previous=N]
 
 Options:
   -v, -vv, -vvv                  Debug verbosity level
@@ -144,10 +146,17 @@ func actualMain() int {
 		return ret
 	}
 
-	if err := lib.MakePwdID(binName); err != nil {
-		return retryOrReport()
+	if args.Logs {
+		offset := args.LogOffset
+		if offset == 0 {
+			offset = 1
+		}
+		return doLogs(offset)
 	}
 
+	if err := lib.MakePwdID(binName, 0); err != nil {
+		return retryOrReport()
+	}
 	logCatchall, err := os.OpenFile(lib.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		lib.ColorERR.Println(err)
@@ -260,6 +269,27 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 		3: "DBG",
 	}[verbosity]
 	return logutils.LogLevel(lvl)
+}
+
+func doLogs(offset uint64) int {
+	if err := lib.MakePwdID(binName, offset); err != nil {
+		return retryOrReport()
+	}
+
+	fn := lib.LogID()
+	os.Stderr.WriteString(fn + "\n")
+	f, err := os.Open(fn)
+	if err != nil {
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(os.Stdout, f); err != nil {
+		lib.ColorERR.Println(err)
+		return retryOrReport()
+	}
+	return statusOK
 }
 
 func doUpdate() int {

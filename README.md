@@ -7,11 +7,10 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey	v0.0.0	0.19.1-165-g11b29c8-dirty	go1.12.5
+monkey	0.0.0	feedb065	go1.12.6	amd64	darwin
 
 Usage:
   monkey [-vvv] init [--with-magic]
-  monkey [-vvv] env [VAR ...]
   monkey [-vvv] login [--user=USER]
   monkey [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
                      [--only=REGEX]... [--except=REGEX]...
@@ -24,6 +23,8 @@ Usage:
   monkey [-vvv] -h | --help
   monkey [-vvv]      --update
   monkey [-vvv] -V | --version
+  monkey [-vvv] env [VAR ...]
+  monkey logs [--previous=N]
 
 Options:
   -v, -vv, -vvv                  Debug verbosity level
