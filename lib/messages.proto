@@ -274,8 +274,7 @@ message Schema {
     }
     repeated Type types = 1;  // default: []
 
-    repeated ValueJSON enum
-    = 2;  // default: []
+    repeated ValueJSON enum = 2;  // default: []
 
     // type: string
     enum Format {

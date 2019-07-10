@@ -6,7 +6,7 @@ GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
 
 all: lib/messages.pb.go lint
-	CGO_ENABLED=0 go build -o $(EXE) $(if $(wildcard $(EXE)),|| rm $(EXE))
+	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
 
 update: SHELL := /bin/bash
 update:
