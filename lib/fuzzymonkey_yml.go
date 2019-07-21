@@ -23,6 +23,11 @@ const (
 	defaultCfgPort = "3000"
 )
 
+var (
+	// FIXME: find a way to carry some non-proto state from config to Monkey
+	addHeaderAuthorization *string
+)
+
 func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 	fd, err := os.Open(LocalCfg)
 	if err != nil {
@@ -89,6 +94,7 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 			KindIdentified UserCfg_Kind `yaml:"-"`
 			Host           string       `yaml:"host"`
 			Port           string       `yaml:"port"`
+			HeaderAuthz    *string      `yaml:"authorization"`
 		} `yaml:"spec"`
 	}
 
@@ -123,6 +129,10 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		def := defaultCfgPort
 		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
 		userConf.Spec.Port = def
+	}
+
+	if userConf.Spec.HeaderAuthz != nil {
+		addHeaderAuthorization = userConf.Spec.HeaderAuthz
 	}
 
 	if showCfg {

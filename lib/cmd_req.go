@@ -140,6 +140,10 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 		return
 	}
 
+	if addHeaderAuthorization != nil {
+		req.Header.Add("Authorization", *addHeaderAuthorization)
+	}
+
 	log.Println("[NFO] ▼", harReq)
 	if err = mnk.showRequest(req); err != nil {
 		log.Println("[ERR]", err)

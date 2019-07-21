@@ -67,6 +67,7 @@ spec:
   port: 8000
   file: ./spec.yml
   kind: OpenAPIv3
+  authorization: Bearer xyz
 start:
 - make service-start
 reset:
@@ -82,6 +83,7 @@ stop:
 	require.Equal(t, "./spec.yml", cfg.File)
 	require.Equal(t, UserCfg_OpenAPIv3, cfg.Kind)
 	require.Equal(t, "OpenAPIv3", cfg.Kind.String())
+	require.Equal(t, "Bearer xyz", *addHeaderAuthorization)
 	require.Equal(t, []string{"make service-start"}, cfg.Exec.Start)
 	require.Equal(t, []string{"make service-restart"}, cfg.Exec.Reset_)
 	require.Equal(t, []string{"make service-kill"}, cfg.Exec.Stop)
