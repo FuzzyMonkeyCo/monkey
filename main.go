@@ -249,7 +249,7 @@ func actualMain() int {
 		return statusFailed
 	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
-	lib.ColorNFO.Println("Running", cfg.N, "tests...")
+	lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
 	return doFuzz(mnk)
 }
 

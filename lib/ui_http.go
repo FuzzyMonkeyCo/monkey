@@ -14,13 +14,13 @@ func (mnk *Monkey) showRequest(r *http.Request) error {
 		// MUST log in caller
 		return err
 	}
-	mnk.progress.dbg(string(dump))
+	mnk.progress.show(string(dump))
 	return nil
 }
 
 func (mnk *Monkey) showResponse(r *http.Response, e string) error {
 	if r == nil {
-		ColorERR.Println(e)
+		mnk.progress.err(e)
 		return nil
 	}
 
@@ -29,6 +29,6 @@ func (mnk *Monkey) showResponse(r *http.Response, e string) error {
 		// MUST log in caller
 		return err
 	}
-	mnk.progress.wrn(string(dump))
+	mnk.progress.show(string(dump))
 	return nil
 }

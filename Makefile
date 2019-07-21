@@ -46,7 +46,7 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	go test -count 10 ./... | richgo testfilter
+	richgo test -count 10 ./...
 test.ci: all
 	go test -v -race ./...
 
