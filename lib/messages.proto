@@ -1,0 +1,543 @@
+// https://developers.google.com/protocol-buffers/docs/proto3
+// See:
+// https://github.com/googleapis/gnostic/blob/48a0ecef/OpenAPIv3/OpenAPIv3.proto
+// See: https://github.com/luckymarmot/API-Flow/blob/24cc71a/src/README.md
+
+syntax = "proto3";
+package lib;
+
+option go_package = "github.com/FuzzyMonkeyCo/monkey/lib";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// See: https://github.com/gogo/protobuf/blob/master/extensions.md
+// Enable custom Size method (Required by Marshal and Unmarshal)
+option (gogoproto.sizer_all) = true;
+// Enable custom Marshal method
+option (gogoproto.marshaler_all) = true;
+// stable_marshaler
+// Enable custom Unmarshal method
+option (gogoproto.unmarshaler_all) = true;
+//option (gogoproto.gostring_all) = true;
+//option (gogoproto.goproto_stringer_all) = false;
+//option (gogoproto.stringer_all) =  true;
+
+// Generate func (this *ProtoMessage) Equal(that interface{}) bool
+option (gogoproto.equal_all) = true;
+// Don't generate XXX_unrecognized
+//option (gogoproto.goproto_unrecognized_all) = true;
+// jsontag, moretags: https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
+
+//FIXME
+//option (gogoproto.goproto_testgen_all) = true;
+//option (gogoproto.goproto_benchgen_all) = true;
+// https://godoc.org/github.com/gogo/protobuf/plugin/populate
+
+
+message Msg {
+  uint64 ts = 1;
+  oneof msg {
+    RepError error = 2;
+
+    // Begin of testing
+    DoFuzz fuzz = 3;
+    // Progress & end of testing
+    FuzzProgress fuzz_progress = 4;
+    // Log lines and things about SUT
+    SUTMetrics metrics = 5;
+
+    // Try call to SUT
+    ReqDoCall do_call = 6;
+    RepCallDone call_done = 7;
+    RepValidateProgress validate_progress = 8;
+    RepCallResult call_result = 9;
+
+    // Reset SUT state
+    ReqDoReset do_reset = 10;
+    RepResetProgress reset_progress = 11;
+  }
+}
+
+message RepError {
+  enum Culprit {
+    UNKNOWN = 0;
+    client = 1;
+    server = 2;
+  }
+  Culprit culprit = 1;
+  string reason = 2;
+}
+
+message DoFuzz {
+  UserCfg cfg = 1;
+  SpecIR spec = 2;
+}
+message FuzzProgress {
+  bool failure = 1;
+  bool success = 2;
+  bool last_call_failure = 3;
+  bool last_call_success = 4;
+  bool last_check_failure = 5;
+  bool last_check_success = 6;
+  bool shrinking = 7;
+  uint32 total_tests_count = 8;
+  uint32 total_calls_count = 9;
+  uint32 total_checks_count = 10;
+  uint32 test_calls_count = 11;
+  uint32 call_checks_count = 12;
+  uint32 shrink_amount = 13;
+}
+message ReqDoReset {
+  ExecKind kind = 1;
+}
+message RepResetProgress {
+  bool failure = 1;
+  bool success = 2;
+  uint64 ts_diff = 3;
+  ExecKind kind = 4;
+}
+
+message SUTMetrics {
+  // A log line
+  string log_origin = 2;
+  string log_line = 3;
+}
+
+message ReqDoCall {
+  uint32 EID = 1;
+  HAR.Request request = 2;
+}
+message RepCallDone {
+  bool failure = 1;
+  bool success = 2;
+  uint64 ts_diff = 3;
+  string reason = 4;
+  HAR.Entry response = 5;
+}
+
+message RepValidateProgress {
+  bool failure = 1;
+  bool success = 2;
+  // Some info
+  repeated string details = 3;
+}
+
+message RepCallResult {
+  ValueJSON response = 1;
+}
+
+message UserCfg {
+  uint32 version = 1;
+  string api_key = 2;
+  repeated string usage = 3;
+  bytes seed = 4;
+  uint32 n = 5;
+  repeated uint32 EIDs = 6;
+
+  enum Kind {
+    UNKNOWN = 0;
+    OpenAPIv3 = 1;
+  }
+  Kind kind = 7;
+  string file = 8;
+
+  message Runtime {
+    string host = 1;
+    string final_host = 2;
+  }
+  Runtime runtime = 9;
+
+  message Exec {
+    repeated string start = 1;
+    repeated string reset = 2;
+    repeated string stop = 3;
+  }
+  Exec exec = 10;
+}
+
+enum ExecKind {
+  UNKNOWN = 0;
+  start = 1;
+  reset = 2;
+  stop = 3;
+  stop_then_start = 4;
+}
+
+message SpecIR {
+  Schemas schemas = 1;
+  // All endpoints are here.
+  // Start at 1 then increases monotonously. 0 (zero) is reserved for bug finding.
+  map<uint32, Endpoint> endpoints = 2;
+}
+
+message Schemas {
+  // All schemas are here.
+  // Start at 1. 0 (zero) is reserved for bug finding.
+  map<uint32, RefOrSchemaJSON> json = 1;
+}
+
+message RefOrSchemaJSON {
+  oneof ptr_or_schema {
+    // Probably most often from a $ref
+    // Only use SchemaPtr here. Everywhere else use SID.
+    SchemaPtr ptr = 1;
+    // Actual schema when not a $ref
+    Schema.JSON schema = 2;
+  }
+}
+
+message SchemaPtr {
+  // Pointer to actual schema. i.e. key in Schemas message.
+  uint32 SID = 1;
+  // $ref if was ref'd, in canonical/absolute (#/...-like) format.
+  string ref = 2;
+}
+
+message Endpoint {
+  oneof endpoint {
+    EndpointJSON json = 1;
+  }
+}
+
+message EndpointJSON {
+  enum Method {
+    UNKNOWN = 0;
+    GET = 1;
+    HEAD = 2;
+    POST = 3;
+    PUT = 4;
+    PATCH = 5;
+    DELETE = 6;
+    CONNECT = 7;
+    OPTIONS = 8;
+    TRACE = 9;
+  }
+  Method method = 1;
+  repeated PathPartial path_partials = 2;
+  repeated ParamJSON inputs = 3;
+  // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+  // The uint32 values are SID
+  map<uint32, uint32> outputs = 4;
+}
+
+message ParamJSON {
+  bool is_required = 1;
+  uint32 SID = 2;
+  // Note: bodies have an empty name
+  string name = 3;
+
+  enum Kind {
+    UNKNOWN = 0;
+    body = 1;
+    path = 2;
+    query = 3;
+    header = 4;
+    cookie = 5;
+  }
+  Kind kind = 4;
+
+  // TODO: repeated Example examples
+}
+
+message PathPartial {
+  oneof pp {
+    string part = 1;
+    string ptr = 2;
+  }
+}
+
+/// https://swagger.io/docs/specification/data-models/keywords/
+/// https://tools.ietf.org/html/draft-wright-json-schema-validation-00
+/// http://json-schema.org/draft-06/json-schema-release-notes.html
+/// http://json-schema.org/draft-07/json-schema-release-notes.html
+// https://github.com/mikunn/openapi-schema-to-json-schema
+// https://github.com/kogosoftwarellc/openapi-jsonschema-parameters
+// https://github.com/garethr/openapi2jsonschema
+
+message Schema {
+  message JSON {
+    // (Some) things can be combined (: enum + type)
+    //   so just lay things out flat...
+
+    enum Type {
+      UNKNOWN = 0;
+      any = 1;
+      null = 2;
+      boolean = 3;
+      integer = 4;
+      number = 5;
+      array = 6;
+      string = 7;
+      object = 8;
+    }
+    repeated Type types = 1;  // default: []
+
+    repeated ValueJSON enum = 2;  // default: []
+
+    // type: string
+    enum Format {
+      NONE = 0;
+      date_time = 1;
+      date = 2;
+      // time = 3;
+      email = 4;
+      // idn-email = 5;
+      hostname = 6;
+      // idn_hostname = 7;
+      ipv4 = 8;
+      ipv6 = 9;
+      uri = 10;
+      uri_reference = 11;
+      // iri = 12;
+      // iri_reference = 13;
+      // uri_template = 14;
+      // json_pointer = 15;
+      // relative_json_pointer = 16;
+      regex = 17;
+      int32 = 18;
+      int64 = 19;
+      float = 20;
+      double = 21;
+      byte = 22;
+      binary = 23;
+      password = 24;
+    }
+    Format format = 3;      // default: NONE
+    uint64 min_length = 4;  // default: 0
+    uint64 max_length = 5;
+    bool has_max_length = 6;
+    string pattern = 7;  // default: ""
+
+    // type: number | integer
+    double minimum = 8;
+    double maximum = 9;
+    bool has_minimum = 10;
+    bool has_maximum = 11;
+    double translated_multiple_of = 12;  // default: 0.0, add +1.0 when reading
+    bool exclusive_minimum = 13;         // default: false
+    bool exclusive_maximum = 14;         // default: false
+
+    // type: array
+    repeated uint32 items = 15;  // default: empty list
+    bool unique_items = 16;      // default: false
+    uint64 min_items = 17;       // default: 0
+    uint64 max_items = 18;
+    bool has_max_items = 19;
+    // TODO: additionalItems :: bool | SID
+
+    // type: object
+    map<string, uint32> properties = 20;  // default {}
+    repeated string required = 21;        // default: []
+    uint64 min_properties = 22;           // default: 0
+    uint64 max_properties = 23;
+    bool has_max_properties = 24;
+    /// FIXME true is equivalent to {}, false is equivalent to {"not": {}}
+    message AdditionalProperties {
+      oneof add_props {
+        bool always_succeed = 1;
+        uint32 SID = 2;
+      }
+    }
+    AdditionalProperties additional_properties = 25;
+    bool has_additional_properties = 26;
+    // TODO: patternProperties :: SID
+
+    repeated uint32 all_of = 27;  // default: []
+    repeated uint32 any_of = 28;  // default: []
+    repeated uint32 one_of = 29;  // default: []
+
+    uint32 not = 30;
+
+    // TODO: default, examples
+    // TODO: draft-04 but not part of OpenAPIv3.0.0
+    //  $schema
+    //  id, $id
+    //  dependencies
+    // TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
+    //  const
+    //  contains
+    //  propertyNames
+    //  some formats
+    // TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
+    //  if, then, else
+    //  (readOnly, writeOnly, contentMediaType, contentEncoding)
+    //  some formats
+  }
+}
+
+message ArrayJSON {
+  repeated ValueJSON values = 1;
+}
+
+message ObjectJSON {
+  map<string, ValueJSON> values = 1;
+}
+
+// TODO: replace with https://github.com/protocolbuffers/protobuf/blob/f2a919f58f12574ac04ca79e6b84577dec6f2b43/src/google/protobuf/struct.proto#L62
+message ValueJSON {
+  oneof value {
+    bool is_null = 1;
+    bool boolean = 2;
+    double number = 3;
+    string text = 4;
+    ArrayJSON array = 5;
+    ObjectJSON object = 6;
+  }
+}
+
+// TODO: split this into dedicated package
+// http://www.softwareishard.com/blog/har-12-spec/
+// NOTE: durations are in nanoseconds instead of milliseconds
+message HAR {
+  message Request {
+    string comment = 1;
+    int32 body_size = 2;
+    int32 headers_size = 3;
+    repeated Header headers = 4;
+    repeated Cookie cookies = 5;
+    string http_version = 6;
+    string method = 7;
+    string URL = 8;
+    PostData post_data = 9;
+    repeated Query query_string = 10;
+  }
+
+  message Response {
+    string comment = 1;
+    int32 body_size = 2;
+    int32 headers_size = 3;
+    repeated Header headers = 4;
+    repeated Cookie cookies = 5;
+    string http_version = 6;
+    Content content = 7;
+    string redirect_URL = 8;
+    uint32 status = 9;
+    string status_text = 10;
+  }
+
+  message AroundRequest {
+    string comment = 1;
+    string e_tag = 2;
+    // iso8601
+    string expires = 3;
+    uint32 hit_count = 4;
+    // iso8601
+    string last_access = 5;
+  }
+
+  message Browser {
+    string comment = 1;
+    string name = 2;
+    string version = 3;
+  }
+
+  message Cache {
+    string comment = 1;
+    AroundRequest after_request = 2;
+    AroundRequest before_request = 3;
+  }
+
+  message Content {
+    string comment = 1;
+    int32 compression = 2;
+    string encoding = 3;
+    string mime_type = 4;
+    // Renamed `size` to `length` to avoid conflict with gogofast
+    int32 length = 5;
+    string text = 6;
+  }
+
+  message Cookie {
+    string comment = 1;
+    string domain = 2;
+    // iso8601
+    string expires = 3;
+    bool http_only = 4;
+    string name = 5;
+    string path = 6;
+    bool secure = 7;
+    string value = 8;
+  }
+
+  message Creator {
+    string comment = 1;
+    string name = 2;
+    string version = 3;
+  }
+
+  message Entry {
+    string comment = 1;
+    Cache cache = 2;
+    string connection = 3;
+    string page_ref = 4;
+    Request request = 5;
+    Response response = 6;
+    string server_IP_address = 7;
+    // iso8601
+    string started_date_time = 8;
+    int64 time = 9;
+    Timings timings = 10;
+  }
+
+  message Header {
+    string comment = 1;
+    string name = 2;
+    string value = 3;
+  }
+
+  message Log {
+    string comment = 1;
+    Browser browser = 2;
+    Creator creator = 3;
+    repeated Entry entries = 4;
+    repeated Page pages = 5;
+    string version = 6;
+  }
+
+  message Page {
+    string comment = 1;
+    string id = 2;
+    PageTimings page_timings = 3;
+    // iso8601
+    string started_date_time = 4;
+    string title = 5;
+  }
+
+  message PageTimings {
+    string comment = 1;
+    int64 on_content_load = 2;
+    int64 on_load = 3;
+  }
+
+  message PostData {
+    string comment = 1;
+    string mime_type = 2;
+    repeated PostDataParam params = 3;
+    string text = 4;
+  }
+
+  message PostDataParam {
+    string comment = 1;
+    string content_type = 2;
+    string file_name = 3;
+    string name = 4;
+    string value = 5;
+  }
+
+  message Query {
+    string comment = 1;
+    string name = 2;
+    string value = 3;
+  }
+
+  message Timings {
+    string comment = 1;
+    int64 blocked = 2;
+    int64 connect = 3;
+    int64 dns = 4;
+    int64 receive = 5;
+    int64 send = 6;
+    int64 ssl = 7;
+    int64 wait = 8;
+  }
+}

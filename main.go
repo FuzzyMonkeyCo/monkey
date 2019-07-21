@@ -7,130 +7,263 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
+	"time"
 
+	"github.com/FuzzyMonkeyCo/monkey/lib"
 	"github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
+	"github.com/mitchellh/mapstructure"
 )
 
 //go:generate echo Let's go bananas!
-//go:generate go run misc/gen_schemas.go
-//go:generate ./misc/gen_meta.sh
 
 const (
+	/// CLI statuses
+	statusOK     = 0
+	statusFailed = 1
+	// Something happened during linting
+	statusFailedLint = 2
+	// `binName` executable could not be upgraded
+	statusFailedUpdate = 3
+	// Some external dependency is missing (probably bash)
+	statusFailedRequire = 5
+	// Fuzzing found a bug!
+	statusFailedFuzz = 6
+	// A user command (start, reset, stop) failed
+	statusFailedExec = 7
+	// Validating payload against schema failed
+	statusFailedSchema = 9
+
 	binName    = "monkey"
-	binTitle   = binName + "/" + binVersion
-	envAPIKey  = "FUZZYMONKEY_API_KEY"
+	binSHA     = "feedb065"
+	binVersion = "0.0.0"
 	githubSlug = "FuzzyMonkeyCo/" + binName
+	wsURL      = "ws://api.dev.fuzzymonkey.co:7077/1/fuzz"
+
+	// Environment variables used
+	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
 var (
-	apiRoot     string
-	initURL     string
-	nextURL     string
-	lintURL     string
-	clientUtils = &http.Client{}
+	clientUtils = &http.Client{
+		Timeout: 10 * time.Second,
+	}
 )
 
-func init() {
-	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
-
-	if binVersion == "0.0.0" {
-		apiRoot = "http://fuzz.dev.fuzzymonkey.co/1"
-		lintURL = "http://lint.dev.fuzzymonkey.co/1/blob"
-	} else {
-		//FIXME: use HTTPS
-		apiRoot = "http://fuzz.fuzzymonkey.co/1"
-		lintURL = "http://lint.fuzzymonkey.co/1/blob"
-	}
-	initURL = apiRoot + "/init"
-	nextURL = apiRoot + "/next"
-
-	loadSchemas()
-}
-
 func main() {
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 	os.Exit(actualMain())
 }
 
-func usage() (docopt.Opts, error) {
-	usage := binName + "\tv" + binVersion + "\t" + binDescribe + "\t" + runtime.Version() + `
+type params struct {
+	Fuzz, Shrink             bool
+	Lint, Schema             bool
+	Init, Env, Login, Logs   bool
+	Exec, Start, Reset, Stop bool
+	Update                   bool     `mapstructure:"--update"`
+	HideConfig               bool     `mapstructure:"--hide-config"`
+	ShowSpec                 bool     `mapstructure:"--show-spec"`
+	N                        uint32   `mapstructure:"--tests"`
+	Verbosity                uint8    `mapstructure:"-v"`
+	LogOffset                uint64   `mapstructure:"--previous"`
+	ValidateAgainst          string   `mapstructure:"--validate-against"`
+	EnvVars                  []string `mapstructure:"VAR"`
+}
+
+func usage(binTitle string) (args *params, ret int) {
+	B := lib.ColorNFO.Sprintf(binName)
+	usage := binTitle + `
 
 Usage:
-  ` + binName + ` [-vvv] fuzz
-  ` + binName + ` [-vvv] lint
-  ` + binName + ` [-vvv] -h | --help
-  ` + binName + ` [-vvv] -U | --update
-  ` + binName + ` [-vvv] -V | --version
+  ` + B + ` [-vvv] init [--with-magic]
+  ` + B + ` [-vvv] login [--user=USER]
+  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+                     [--only=REGEX]... [--except=REGEX]...
+                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
+                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
+  ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
+  ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
+  ` + B + ` [-vvv] schema [--validate-against=REF]
+  ` + B + ` [-vvv] exec (start | reset | stop)
+  ` + B + ` [-vvv] -h | --help
+  ` + B + ` [-vvv]      --update
+  ` + B + ` [-vvv] -V | --version
+  ` + B + ` [-vvv] env [VAR ...]
+  ` + B + ` logs [--previous=N]
 
 Options:
-  -v, -vv, -vvv  Debug verbosity level
-  -h, --help     Show this screen
-  -U, --update   Ensures ` + binName + ` is latest
-  -V, --version  Show version
+  -v, -vv, -vvv                  Debug verbosity level
+  -h, --help                     Show this screen
+  -U, --update                   Ensures ` + B + ` is current
+  -V, --version                  Show version
+  --hide-config                  Do not show YAML configuration while linting
+  --seed=SEED                    Use specific parameters for the RNG
+  --validate-against=REF         Schema $ref to validate STDIN against
+  --tag=TAG                      Labels that can help classification
+  --test=ID                      Which test to shrink
+  --tests=N                      Number of tests to run [default: 100]
+  --only=REGEX                   Only test matching calls
+  --except=REGEX                 Do not test these calls
+  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
+  --calls-without-output=SCHEMA  Test calls which never output schema PTR
+  --user=USER                    Authenticate on fuzzymonkey.co as USER
+  --with-magic                   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
-  ` + binName + ` --update
-  ` + binName + ` fuzz`
+  ` + B + ` --update
+  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
+  echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
-	parser := &docopt.Parser{
-		HelpHandler:  docopt.PrintHelpOnly,
-		OptionsFirst: true,
+	// https://github.com/docopt/docopt.go/issues/59
+	opts, err := docopt.ParseDoc(usage)
+	if err != nil {
+		// Usage shown: bad args
+		lib.ColorERR.Println(err)
+		ret = statusFailed
+		return
 	}
-	return parser.ParseArgs(usage, os.Args[1:], binTitle)
+
+	if opts["--version"].(bool) {
+		fmt.Println(binTitle)
+		return // ret = statusOK
+	}
+
+	args = &params{}
+	if err := mapstructure.WeakDecode(opts, args); err != nil {
+		lib.ColorERR.Println(err)
+		return nil, statusFailed
+	}
+	return
 }
 
 func actualMain() int {
-	args, err := usage()
-	if err != nil {
-		// Usage shown: bad args
-		return 1
-	}
-	if len(args) == 0 {
-		// Help or version shown
-		return 0
+	binTitle := strings.Join([]string{binName, binVersion, binSHA,
+		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
+	args, ret := usage(binTitle)
+	if args == nil {
+		return ret
 	}
 
-	if err := makePwdID(); err != nil {
+	if args.Logs {
+		offset := args.LogOffset
+		if offset == 0 {
+			offset = 1
+		}
+		return doLogs(offset)
+	}
+
+	if err := lib.MakePwdID(binName, 0); err != nil {
 		return retryOrReport()
 	}
-
-	logCatchall, err := os.OpenFile(logID(), os.O_WRONLY|os.O_CREATE, 0640)
+	logCatchall, err := os.OpenFile(lib.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
-		log.Println(err)
+		lib.ColorERR.Println(err)
 		return retryOrReport()
 	}
 	defer logCatchall.Close()
 	logFiltered := &logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"DBG", "NFO", "ERR", "NOP"},
-		MinLevel: logLevel(args["-v"].(int)),
+		MinLevel: logLevel(args.Verbosity),
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Println("[ERR] (not an error)", binTitle, logID(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, lib.LogID(), args)
 
-	if args["--update"].(bool) {
+	if args.Init || args.Login {
+		// FIXME: implement init & login
+		lib.ColorERR.Println("Action not implemented yet")
+		return statusFailed
+	}
+
+	if args.Update {
 		return doUpdate()
 	}
 
-	apiKey := os.Getenv(envAPIKey)
-	if args["lint"].(bool) {
-		return doLint(apiKey)
+	if args.Env {
+		return doEnv(args.EnvVars)
 	}
 
-	// if args["fuzz"].(bool)
-	return doFuzz(apiKey)
+	cfg, err := lib.NewCfg(args.Lint && !args.HideConfig)
+	if err != nil {
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+	if args.Lint {
+		e := fmt.Sprintf("%s is a valid v%d configuration", lib.LocalCfg, cfg.Version)
+		log.Println("[NFO]", e)
+		lib.ColorNFO.Println(e)
+	}
+
+	if args.Exec {
+		switch {
+		case args.Start:
+			return doExec(cfg, lib.ExecKind_start)
+		case args.Reset:
+			return doExec(cfg, lib.ExecKind_reset)
+		case args.Stop:
+			return doExec(cfg, lib.ExecKind_stop)
+		default:
+			return retryOrReport()
+		}
+	}
+
+	docPath, blob, err := cfg.FindThenReadBlob()
+	if err != nil {
+		return retryOrReport()
+	}
+
+	// Always lint before fuzzing
+	vald, err := lib.DoLint(docPath, blob, args.ShowSpec)
+	if err != nil {
+		return statusFailedLint
+	}
+	if args.Lint {
+		err := fmt.Errorf("%s is a valid %v specification", docPath, cfg.Kind)
+		log.Println("[NFO]", err)
+		lib.ColorNFO.Println(err)
+		return statusOK
+	}
+
+	if args.Schema {
+		return doSchema(vald, args.ValidateAgainst)
+	}
+
+	if cfg.ApiKey = os.Getenv(envAPIKey); cfg.ApiKey == "" {
+		err = fmt.Errorf("$%s is unset", envAPIKey)
+		log.Println("[ERR]", err)
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+
+	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
+	eids, err := vald.FilterEndpoints(os.Args)
+	if err != nil {
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+	cfg.EIDs = eids
+	cfg.N = args.N
+	if cfg.N == 0 {
+		lib.ColorERR.Println("No tests to run.")
+		return statusFailed
+	}
+	mnk := lib.NewMonkey(cfg, vald, binTitle)
+	lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+	return doFuzz(mnk)
 }
 
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		fmt.Println(err)
-		log.Panic("[ERR] ", err)
+		log.Println("[ERR]", err)
+		lib.ColorERR.Println(err)
+		panic(err)
 	}
 }
 
-func logLevel(verbosity int) logutils.LogLevel {
-	lvl := map[int]string{
+func logLevel(verbosity uint8) logutils.LogLevel {
+	lvl := map[uint8]string{
 		0: "NOP",
 		1: "ERR",
 		2: "NFO",
@@ -139,89 +272,159 @@ func logLevel(verbosity int) logutils.LogLevel {
 	return logutils.LogLevel(lvl)
 }
 
+func doLogs(offset uint64) int {
+	if err := lib.MakePwdID(binName, offset); err != nil {
+		return retryOrReport()
+	}
+
+	fn := lib.LogID()
+	os.Stderr.WriteString(fn + "\n")
+	f, err := os.Open(fn)
+	if err != nil {
+		lib.ColorERR.Println(err)
+		return statusFailed
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(os.Stdout, f); err != nil {
+		lib.ColorERR.Println(err)
+		return retryOrReport()
+	}
+	return statusOK
+}
+
 func doUpdate() int {
-	latest, err := peekLatestRelease()
+	rel := &lib.GithubRelease{
+		Slug:   githubSlug,
+		Name:   binName,
+		Client: clientUtils,
+	}
+	latest, err := rel.PeekLatestRelease()
 	if err != nil {
 		return retryOrReport()
 	}
 
-	// assumes not v-prefixed
-	// assumes never patching old-minor releases
 	if latest != binVersion {
-		fmt.Printf("A newer version of %s is out: %s (you have %s)\n",
-			binName, latest, binVersion)
-		if err := replaceCurrentRelease(latest); err != nil {
+		fmt.Println("A version newer than", binVersion, "is out:", latest)
+		if err := rel.ReplaceCurrentRelease(latest); err != nil {
 			fmt.Println("The update failed 🙈 please try again")
-			return 3
+			return statusFailedUpdate
 		}
 	}
-	return 0
+	return statusOK
 }
 
-func doLint(apiKey string) int {
-	if yml, err := readYML(); err == nil {
-		if _, err := lintDocs(apiKey, yml); err != nil {
-			return 2
+func doEnv(vars []string) int {
+	all := map[string]bool{
+		envAPIKey: false,
+	}
+	penv := func(key string) { fmt.Printf("%s=%q\n", key, os.Getenv(key)) }
+	if len(vars) == 0 {
+		for key := range all {
+			penv(key)
 		}
-		return 0
+		return statusOK
 	}
-	return retryOrReport()
+
+	for _, key := range vars {
+		if printed, ok := all[key]; !ok || printed {
+			return statusFailed
+		}
+		all[key] = true
+		penv(key)
+	}
+	return statusOK
 }
 
-func doFuzz(apiKey string) int {
-	if _, err := os.Stat(shell()); os.IsNotExist(err) {
-		log.Printf("%s is required\n", shell())
-		return 5
+func doSchema(vald *lib.Validator, ref string) int {
+	refs := vald.Refs
+	refsCount := len(refs)
+	if ref == "" {
+		log.Printf("[NFO] found %d refs\n", refsCount)
+		lib.ColorNFO.Printf("Found %d refs\n", refsCount)
+		vald.WriteAbsoluteReferences(os.Stdout)
+		return statusOK
 	}
 
-	if apiKey == "" {
-		log.Printf("$%s is unset\n", envAPIKey)
-		return 4
+	if err := vald.ValidateAgainstSchema(ref); err != nil {
+		switch err {
+		case lib.ErrInvalidPayload:
+		case lib.ErrNoSuchRef:
+			lib.ColorERR.Printf("No such $ref '%s'\n", ref)
+			if refsCount > 0 {
+				fmt.Println("Try one of:")
+				vald.WriteAbsoluteReferences(os.Stdout)
+			}
+		default:
+			lib.ColorERR.Println(err)
+		}
+		return statusFailedSchema
+	}
+	lib.ColorNFO.Println("Payload is valid")
+	return statusOK
+}
+
+func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
+	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
+		log.Println(lib.Shell(), "is required")
+		return statusFailedRequire
+	}
+	if err := lib.SnapEnv(lib.EnvID()); err != nil {
+		return retryOrReport()
+	}
+	defer ensureDeleted(lib.EnvID())
+
+	act, err := lib.ExecuteScript(cfg, kind)
+	if err != nil {
+		lib.ColorERR.Println(err)
+	}
+	if err != nil || act.Failure || !act.Success {
+		return statusFailedExec
+	}
+	return statusOK
+}
+
+func doFuzz(mnk *lib.Monkey) int {
+	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
+		log.Println("[ERR]", lib.Shell(), "is required")
+		return statusFailedRequire
 	}
 
-	if err := snapEnv(envID()); err != nil {
+	if err := lib.SnapEnv(lib.EnvID()); err != nil {
+		return retryOrReport()
+	}
+	defer ensureDeleted(lib.EnvID())
+
+	if err := mnk.Dial(wsURL); err != nil {
 		return retryOrReport()
 	}
 
-	cfg, cmd, err := initDialogue(apiKey)
-	if err != nil {
-		if _, ok := err.(*docsInvalidError); ok {
-			ensureDeleted(envID())
-			return 2
-		}
-		if cfg == nil {
-			return retryOrReport()
-		}
-		return retryOrReportThenCleanup(cfg, err)
+	if err := mnk.FuzzingLoop(lib.Action(&lib.DoFuzz{})); err != nil {
+		return retryOrReportThenCleanup(err)
 	}
-
-	for {
-		if cmd.Kind() == kindDone {
-			ensureDeleted(envID())
-			return fuzzOutcome(cmd.(*doneCmd))
-		}
-
-		if cmd, err = next(cfg, cmd); err != nil {
-			return retryOrReportThenCleanup(cfg, err)
-		}
+	if mnk.TestsSucceeded() {
+		return statusOK
 	}
+	return statusFailedFuzz
 }
 
-func retryOrReportThenCleanup(cfg *ymlCfg, err error) int {
-	defer maybePostStop(cfg)
-	if hadExecError {
-		return 7
+func retryOrReportThenCleanup(err error) int {
+	defer lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
+	if lib.HadExecError {
+		lib.ColorERR.Println(err)
+		return statusFailedExec
 	}
 	return retryOrReport()
 }
 
 func retryOrReport() int {
-	issues := "https://github.com/" + githubSlug + "/issues"
-	email := "ook@fuzzymonkey.co"
-	fmt.Println("\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Printf("\nYou may want to take a look at %s\n", logID())
-	fmt.Printf("or come by %s\n", issues)
-	fmt.Printf("or drop us a line at %s\n", email)
-	fmt.Println("\nThank you for your patience & sorry about this :)")
-	return 1
+	const issues = "https://github.com/" + githubSlug + "/issues"
+	const email = "ook@fuzzymonkey.co"
+	w := os.Stderr
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
+	fmt.Fprintf(w, "\nYou may want to take a look at %s\n", lib.LogID())
+	fmt.Fprintf(w, "or come by %s\n", issues)
+	fmt.Fprintf(w, "or drop us a line at %s\n", email)
+	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
+	return statusFailed
 }

@@ -1,4 +1,4 @@
-package main
+package lib
 
 import (
 	"fmt"
@@ -12,21 +12,19 @@ import (
 	"strings"
 )
 
+const pwdIDDigits = 20
+
 var pwdID string
 
-func envID() string {
+func EnvID() string {
 	return pwdID + ".env"
 }
 
-func logID() string {
+func LogID() string {
 	return pwdID + ".log"
 }
 
-func updateID() string {
-	return pwdID + "_update.bin"
-}
-
-func makePwdID() (err error) {
+func MakePwdID(name string, offset uint64) (err error) {
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -44,11 +42,14 @@ func makePwdID() (err error) {
 		return
 	}
 	h := fnv.New64a()
-	h.Write([]byte(realCwd))
+	if _, err = h.Write([]byte(realCwd)); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 	id := fmt.Sprintf("%d", h.Sum64())
-	prefix := path.Join(tmp, "."+binName+"_"+id)
+	prefix := path.Join(tmp, "."+name+"_"+id)
 
-	slot, err := findNewIDSlot(prefix)
+	slot, err := findIDSlot(prefix, offset)
 	if err != nil {
 		return
 	}
@@ -57,21 +58,23 @@ func makePwdID() (err error) {
 	return
 }
 
-func findNewIDSlot(prefix string) (slot string, err error) {
+func findIDSlot(prefix string, offset uint64) (slot string, err error) {
 	prefixPattern := prefix + "_"
-	pattern := prefixPattern + strings.Repeat("?", 6) + ".*"
+	pattern := prefixPattern + strings.Repeat("?", pwdIDDigits) + ".*"
 	paths, err := filepath.Glob(pattern)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	padder := func(n uint64) string { return fmt.Sprintf("%06d", n) }
+	padder := func(n uint64) string {
+		return fmt.Sprintf("%0"+strconv.Itoa(pwdIDDigits)+"d", n)
+	}
 
 	prefixLen := len(prefixPattern)
 	nums := []string{padder(0)}
 	for _, path := range paths {
-		nums = append(nums, path[prefixLen:prefixLen+6])
+		nums = append(nums, path[prefixLen:prefixLen+pwdIDDigits])
 	}
 	sort.Strings(nums)
 
@@ -82,6 +85,6 @@ func findNewIDSlot(prefix string) (slot string, err error) {
 		return
 	}
 
-	slot = padder(big + 1)
+	slot = padder(big + 1 - offset)
 	return
 }

@@ -1,9 +1,10 @@
-package main
+package lib
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,33 +12,42 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 )
 
-const (
-	githubV3APIHeader  = "application/vnd.github.v3+json"
-	latestReleaseURL   = "https://api.github.com/repos/" + githubSlug + "/releases/latest"
-	releaseDownloadURL = "https://github.com/" + githubSlug + "/releases/download/"
-)
+type GithubRelease struct {
+	Slug   string
+	Name   string
+	Client *http.Client
+}
 
-func peekLatestRelease() (latest string, err error) {
-	get, err := http.NewRequest(http.MethodGet, latestReleaseURL, nil)
+func (rel *GithubRelease) LatestURL() string {
+	return "https://api.github.com/repos/" + rel.Slug + "/releases/latest"
+}
+
+func (rel *GithubRelease) DownloadURL() string {
+	return "https://github.com/" + rel.Slug + "/releases/download/"
+}
+
+func (rel *GithubRelease) PeekLatestRelease() (latest string, err error) {
+	get, err := http.NewRequest(http.MethodGet, rel.LatestURL(), nil)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	get.Header.Set("Accept", githubV3APIHeader)
-	log.Printf("[NFO] fetching latest version from %s\n", latestReleaseURL)
-	resp, err := clientUtils.Do(get)
+	get.Header.Set("Accept", "application/vnd.github.v3+json")
+	log.Printf("[NFO] fetching latest version from %s\n", rel.LatestURL())
+	resp, err := rel.Client.Do(get)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
@@ -54,11 +64,16 @@ func peekLatestRelease() (latest string, err error) {
 	return
 }
 
-func replaceCurrentRelease(latest string) (err error) {
-	relURL := releaseDownloadURL + latest + "/" + nameExe()
+// assumes not v-prefixed
+// assumes never re-tagging releases
+// assumes only releasing newer tags
+func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
+	exe := rel.Executable()
+	relURL := rel.DownloadURL() + latest + "/" + exe
 	sumsURL := relURL + ".sha256.txt"
+	updateID := path.Join(os.TempDir(), exe+".bin")
 
-	bin, err := os.OpenFile(updateID(), os.O_WRONLY|os.O_CREATE, 0744)
+	bin, err := os.OpenFile(updateID, os.O_WRONLY|os.O_CREATE, 0744)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -69,14 +84,14 @@ func replaceCurrentRelease(latest string) (err error) {
 
 	log.Printf("[NFO] fetching %s\n", relURL)
 	fmt.Println("Fetching", relURL)
-	resp, err := clientUtils.Get(relURL)
+	resp, err := rel.Client.Get(relURL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}
@@ -90,12 +105,12 @@ func replaceCurrentRelease(latest string) (err error) {
 	log.Printf("[NFO] checksumed: %s", sum)
 	log.Printf("[NFO] fetching checksum from %s\n", sumsURL)
 	fmt.Println("Fetching checksum...")
-	latestSum, err := fetchLatestSum(sumsURL)
+	latestSum, err := rel.fetchLatestSum(sumsURL)
 	if err != nil {
 		return
 	}
 	if latestSum != sum {
-		err = fmt.Errorf("checksums did not match")
+		err = errors.New("checksums did not match")
 		log.Println("[ERR]", err)
 		fmt.Println("Data was corrupted!")
 		return
@@ -108,12 +123,12 @@ func replaceCurrentRelease(latest string) (err error) {
 	}
 	log.Println("[NFO] replacing", dst)
 	fmt.Println("Replacing", dst)
-	err = os.Rename(updateID(), dst)
+	err = os.Rename(updateID, dst)
 	return
 }
 
-func nameExe() (exe string) {
-	exe = binName + "-" + unameS(runtime.GOOS) + "-" + unameM(runtime.GOARCH)
+func (rel *GithubRelease) Executable() (exe string) {
+	exe = rel.Name + "-" + unameS(runtime.GOOS) + "-" + unameM(runtime.GOARCH)
 	if runtime.GOOS == "windows" {
 		exe += ".exe"
 	}
@@ -147,16 +162,16 @@ func unameM(arch string) string {
 	}[arch]
 }
 
-func fetchLatestSum(URL string) (sum string, err error) {
-	resp, err := clientUtils.Get(URL)
+func (rel *GithubRelease) fetchLatestSum(URL string) (sum string, err error) {
+	resp, err := rel.Client.Get(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		err = newStatusError(200, resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		err = newStatusError(http.StatusOK, resp.Status)
 		log.Println("[ERR]", err)
 		return
 	}

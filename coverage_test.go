@@ -10,6 +10,11 @@ import (
 )
 
 func TestCov(t *testing.T) {
+	pathErrCode := os.Getenv("MONKEY_CODEFILE")
+	if pathErrCode == "" {
+		t.SkipNow()
+	}
+
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
@@ -20,8 +25,7 @@ func TestCov(t *testing.T) {
 
 	fmt.Println("EXIT", code)
 	data := []byte(strconv.Itoa(code))
-	path := os.Getenv("MONKEY_CODEFILE")
-	if err := ioutil.WriteFile(path, data, 0644); err != nil {
+	if err := ioutil.WriteFile(pathErrCode, data, 0644); err != nil {
 		panic(err)
 	}
 }

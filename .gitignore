@@ -21,10 +21,12 @@ vendor/
 
 # End of https://www.gitignore.io/api/go
 
+/dist/
 /monkey
 /monkey.test
 /monkey-*
-/meta.go
-/schemas.go
 /*.cov
 /cov.out
+
+#FIXME
+/github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go
