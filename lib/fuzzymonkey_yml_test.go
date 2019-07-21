@@ -77,8 +77,7 @@ stop:
 
 	cfg, err := parseCfg(config, false)
 	require.NoError(t, err)
-	require.Equal(t, "app.vcap.me", cfg.Runtime.Host)
-	require.Equal(t, "8000", cfg.Runtime.Port)
+	require.Equal(t, `https://app.vcap.me:{{ env "MY_PORT" }}`, cfg.Runtime.Host)
 	require.Equal(t, "./spec.yml", cfg.File)
 	require.Equal(t, UserCfg_OpenAPIv3, cfg.Kind)
 	require.Equal(t, "OpenAPIv3", cfg.Kind.String())
@@ -95,24 +94,11 @@ version: 1
 spec:
   kind: OpenAPIv3
 `),
-		"version & host": []byte(`
-version: 1
-spec:
-  kind: OpenAPIv3
-  host: localhost
-`),
-		"version & port": []byte(`
-version: 1
-spec:
-  kind: OpenAPIv3
-  port: 3000
-`),
 	} {
 		t.Run(name, func(t *testing.T) {
 			cfg, err := parseCfg(config, false)
 			require.NoError(t, err)
-			require.Equal(t, "localhost", cfg.Runtime.Host)
-			require.Equal(t, "3000", cfg.Runtime.Port)
+			require.Equal(t, "http://localhost:3000", cfg.Runtime.Host)
 		})
 	}
 }
