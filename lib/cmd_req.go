@@ -139,7 +139,6 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 
 func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 	harReq := act.GetRequest()
-	nxt = &RepCallDone{}
 	req, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -158,10 +157,15 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 
 	start := time.Now()
 	rep, err := clientReq.Do(req)
-	nxt.TsDiff = uint64(time.Since(start))
+	nxt = &RepCallDone{TsDiff: uint64(time.Since(start))}
 
 	var e string
-	if err != nil {
+	if err == nil {
+		resp := lastHAR()
+		log.Println("[NFO] ▲", resp)
+		nxt.Response = resp
+		nxt.Success = true
+	} else {
 		//FIXME: is there a way to describe these failures in HAR 1.2?
 		e = err.Error()
 		log.Println("[NFO] ▲", e)
@@ -169,24 +173,9 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 		nxt.Failure = true
 	}
 
-	//FIXME maybe: append(headers, fmt.Sprintf("Host: %v", resp.Host))
-	//FIXME: make sure order is preserved github.com/golang/go/issues/21853
-	var resp *HAR_Entry
-	if err == nil {
-		resp = lastHAR()
-		log.Println("[NFO] ▲", resp)
-	}
-
 	if err = mnk.showResponse(rep, e); err != nil {
 		log.Println("[ERR]", err)
-		return
 	}
-
-	if err != nil {
-		return nxt, nil
-	}
-	nxt.Response = resp
-	nxt.Success = true
 	return
 }
 
