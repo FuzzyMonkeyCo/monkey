@@ -143,9 +143,7 @@ message UserCfg {
 
   message Runtime {
     string host = 1;
-    string port = 2;
-    string final_host = 3;
-    string final_port = 4;
+    string final_host = 2;
   }
   Runtime runtime = 9;
 

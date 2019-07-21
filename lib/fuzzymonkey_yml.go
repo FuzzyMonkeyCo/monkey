@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -19,8 +20,7 @@ import (
 const (
 	LocalCfg       = ".fuzzymonkey.yml"
 	lastCfgVersion = 1
-	defaultCfgHost = "localhost"
-	defaultCfgPort = "3000"
+	defaultCfgHost = "http://localhost:3000"
 )
 
 var (
@@ -93,7 +93,6 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 			Kind           string       `yaml:"kind"`
 			KindIdentified UserCfg_Kind `yaml:"-"`
 			Host           string       `yaml:"host"`
-			Port           string       `yaml:"port"`
 			HeaderAuthz    *string      `yaml:"authorization"`
 		} `yaml:"spec"`
 	}
@@ -121,14 +120,14 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 
 	if userConf.Spec.Host == "" {
 		def := defaultCfgHost
-		log.Printf("[NFO] field 'host' is empty/unset: using %v\n", def)
+		log.Printf("[NFO] field 'host' is empty/unset: using %q\n", def)
 		userConf.Spec.Host = def
 	}
-
-	if userConf.Spec.Port == "" {
-		def := defaultCfgPort
-		log.Printf("[NFO] field 'port' is empty/unset: using %v\n", def)
-		userConf.Spec.Port = def
+	if !strings.Contains(userConf.Spec.Host, "{{") {
+		if _, err = url.ParseRequestURI(userConf.Spec.Host); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
 	}
 
 	if userConf.Spec.HeaderAuthz != nil {
@@ -152,7 +151,6 @@ func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		Kind:    userConf.Spec.KindIdentified,
 		Runtime: &UserCfg_Runtime{
 			Host: userConf.Spec.Host,
-			Port: userConf.Spec.Port,
 		},
 		Exec: &UserCfg_Exec{
 			Start:  userConf.Start,

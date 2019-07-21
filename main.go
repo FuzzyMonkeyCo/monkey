@@ -187,7 +187,8 @@ func actualMain() int {
 
 	cfg, err := lib.NewCfg(args.Lint && !args.HideConfig)
 	if err != nil {
-		return retryOrReport()
+		lib.ColorERR.Println(err)
+		return statusFailed
 	}
 	if args.Lint {
 		e := fmt.Sprintf("%s is a valid v%d configuration", lib.LocalCfg, cfg.Version)
@@ -373,7 +374,11 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 	}
 	defer ensureDeleted(lib.EnvID())
 
-	if act := lib.ExecuteScript(cfg, kind); act.Failure || !act.Success {
+	act, err := lib.ExecuteScript(cfg, kind)
+	if err != nil {
+		lib.ColorERR.Println(err)
+	}
+	if err != nil || act.Failure || !act.Success {
 		return statusFailedExec
 	}
 	return statusOK
@@ -406,6 +411,7 @@ func doFuzz(mnk *lib.Monkey) int {
 func retryOrReportThenCleanup(err error) int {
 	defer lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	if lib.HadExecError {
+		lib.ColorERR.Println(err)
 		return statusFailedExec
 	}
 	return retryOrReport()

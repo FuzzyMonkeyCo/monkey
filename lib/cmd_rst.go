@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"sync"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -23,6 +23,10 @@ var (
 	HadExecError = false
 	// To not post-stop after stop
 	wasStopped = false
+
+	unstacheTmpl = template.New("unstache").Funcs(template.FuncMap{
+		"env": unstacheEnv,
+	})
 )
 
 func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
@@ -32,14 +36,18 @@ func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 		clearHAR()
 	}
 
-	nxt := ExecuteScript(mnk.Cfg, act.GetKind())
+	var nxt Action
+	if nxt, err = ExecuteScript(mnk.Cfg, act.GetKind()); err != nil {
+		return
+	}
+
 	if err = mnk.ws.cast(nxt); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return
 }
 
-func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
+func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress, err error) {
 	log.Println("[DBG] >>> exec:", kind.String())
 	nxt = &RepResetProgress{Kind: kind}
 	shellCmds := cfg.script(kind)
@@ -50,7 +58,6 @@ func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
 	wasStopped = kind == ExecKind_stop
 
 	var stderr bytes.Buffer
-	var err error
 	for i, shellCmd := range shellCmds {
 		if err = executeCommand(nxt, &stderr, shellCmd); err != nil {
 			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
@@ -62,7 +69,10 @@ func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress) {
 	nxt.Success = true
 
 	isRunning = kind != ExecKind_stop
-	maybeFinalizeConf(cfg, kind)
+	if err = maybeFinalizeConf(cfg, kind); err != nil {
+		HadExecError = true
+		return nil, err
+	}
 	return
 }
 
@@ -182,54 +192,39 @@ func Shell() string {
 func unstacheEnv(envVar string) (envVal string, err error) {
 	envVal = readEnv(envVar)
 	if envVal == "" {
-		err = fmt.Errorf("Environment variable $%s is unset or empty", envVar)
+		err = fmt.Errorf("Environment variable %q is unset or empty", envVar)
 	}
 	return
 }
 
-func unstache(field string) string {
-	if field[:2] != "{{" {
-		return field
+func unstache(field string) (string, error) {
+	if !strings.Contains(field, "{{") {
+		return field, nil
 	}
-
-	funcMap := template.FuncMap{
-		"env": unstacheEnv,
-	}
-	tmpl := template.New("unstache").Funcs(funcMap)
 
 	var err error
-	if tmpl, err = tmpl.Parse(field); err != nil {
+	if unstacheTmpl, err = unstacheTmpl.Parse(field); err != nil {
 		log.Println("[ERR]", err)
-		panic(err)
+		return "", err
 	}
 	var buffer bytes.Buffer
-	if err := tmpl.Execute(&buffer, ""); err != nil {
+	if err := unstacheTmpl.Execute(&buffer, ""); err != nil {
 		log.Println("[ERR]", err)
-		panic(err)
+		return "", err
 	}
-	return buffer.String()
+	return buffer.String(), nil
 }
 
-func maybeFinalizeConf(cfg *UserCfg, kind ExecKind) {
+func maybeFinalizeConf(cfg *UserCfg, kind ExecKind) error {
 	if kind == ExecKind_stop {
-		return
+		return nil
 	}
-
-	var wg sync.WaitGroup
 	if cfg.Runtime.FinalHost == "" || kind != ExecKind_reset {
-		wg.Add(1)
-		go func() {
-			cfg.Runtime.FinalHost = unstache(cfg.Runtime.Host)
-			wg.Done()
-		}()
+		host, err := unstache(cfg.Runtime.Host)
+		if err != nil {
+			return err
+		}
+		cfg.Runtime.FinalHost = host
 	}
-
-	if cfg.Runtime.FinalPort == "" || kind != ExecKind_reset {
-		wg.Add(1)
-		go func() {
-			cfg.Runtime.FinalPort = unstache(cfg.Runtime.Port)
-			wg.Done()
-		}()
-	}
-	wg.Wait()
+	return nil
 }

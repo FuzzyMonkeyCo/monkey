@@ -51,7 +51,7 @@ func (mnk *Monkey) FuzzingLoop(act Action) (err error) {
 	}()
 
 	for {
-		// Sometimes sets mnk.cfg.Runtime.Final* fields
+		// Sometimes sets mnk.cfg.Runtime.FinalHost
 		log.Printf("[ERR] >>> act %#v\n", act)
 		if err = act.exec(mnk); err != nil {
 			mnk.ws.err2 <- err
@@ -116,7 +116,7 @@ func (act *DoFuzz) exec(mnk *Monkey) (err error) {
 }
 
 func (mnk *Monkey) Dial(URL string) error {
-	u, err := url.Parse(URL)
+	u, err := url.ParseRequestURI(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return err

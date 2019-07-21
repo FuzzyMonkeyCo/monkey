@@ -63,8 +63,7 @@ func TestV1ReadAllSet(t *testing.T) {
 	config := []byte(`
 version: 1
 spec:
-  host: app.vcap.me
-  port: 8000
+  host: https://app.vcap.me:{{ env "MY_PORT" }}
   file: ./spec.yml
   kind: OpenAPIv3
   authorization: Bearer xyz

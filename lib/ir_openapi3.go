@@ -624,7 +624,7 @@ func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 		log.Println(`[NFO] field 'servers' has many values: using the first one`)
 	}
 
-	u, err := url.Parse(docServers[0].URL)
+	u, err := url.ParseRequestURI(docServers[0].URL)
 	if err != nil {
 		log.Println("[ERR]", err)
 		ColorERR.Println(err)

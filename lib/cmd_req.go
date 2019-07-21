@@ -112,11 +112,17 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 		newHARTransport(mnk.Name)
 	}
 
-	act.updateUserAgentHeader(mnk.Name)
-	if err = act.updateURL(mnk.Cfg); err != nil {
+	configured, err := url.ParseRequestURI(mnk.Cfg.Runtime.FinalHost)
+	if err != nil {
+		log.Println("[ERR]", err)
 		return
 	}
-	act.updateHostHeader(mnk.Cfg)
+
+	act.updateUserAgentHeader(mnk.Name)
+	if err = act.updateURL(configured); err != nil {
+		return
+	}
+	act.updateHostHeader(configured)
 	var nxt *RepCallDone
 	if nxt, err = act.makeRequest(mnk); err != nil {
 		return
@@ -184,16 +190,15 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 	return
 }
 
-func (act *ReqDoCall) updateURL(cfg *UserCfg) (err error) {
+func (act *ReqDoCall) updateURL(configured *url.URL) (err error) {
 	URL, err := url.Parse(act.Request.URL)
 	if err != nil {
-		log.Println("[ERR]", err)
-		// Malformed URLs are unexpected
-		panic(err)
+		log.Println("[ERR] malformed URLs are unexpected:", err)
+		return
 	}
 
-	// TODO: if host is an IPv6 then it has to be braced with []
-	URL.Host = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
+	URL.Scheme = configured.Scheme
+	URL.Host = configured.Host
 	act.Request.URL = URL.String()
 	return
 }
@@ -209,10 +214,10 @@ func (act *ReqDoCall) updateUserAgentHeader(ua string) {
 	}
 }
 
-func (act *ReqDoCall) updateHostHeader(cfg *UserCfg) {
+func (act *ReqDoCall) updateHostHeader(configured *url.URL) {
 	for i := range act.Request.Headers {
 		if act.Request.Headers[i].Name == "Host" {
-			act.Request.Headers[i].Value = cfg.Runtime.FinalHost + ":" + cfg.Runtime.FinalPort
+			act.Request.Headers[i].Value = configured.Host
 			break
 		}
 	}
