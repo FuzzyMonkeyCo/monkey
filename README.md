@@ -121,3 +121,8 @@ stop:
 ### Issues?
 
 Report bugs [on the project page](https://github.com/FuzzyMonkeyCo/monkey/issues) or [contact us](mailto:ook@fuzzymonkey.co).
+
+
+## License
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2FFuzzyMonkeyCo%2Fmonkey.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2FFuzzyMonkeyCo%2Fmonkey?ref=badge_large)
