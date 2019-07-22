@@ -41,8 +41,8 @@ checksum:
   name_template: 'checksums.sha256.txt'
   algorithm: sha256
 
-sign:
-  artifacts: none
+signs:
+- artifacts: none
 
 # TODO: homebrew
 # TODO: snap

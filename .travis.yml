@@ -45,6 +45,9 @@ script:
 - ./monkey -h | grep monkey
 - ./monkey --help | grep monkey
 - |
+  # --rm-dist doesn't seem to be doing its job
+  rm -rf ./dist
+- |
   git --no-pager diff
   [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
@@ -56,16 +59,6 @@ deploy:
     tags: true
     condition: $TRAVIS_OS_NAME = linux
     repo: FuzzyMonkeyCo/monkey
-# - provider: releases
-#   api_key:
-#     secure: UdW+GxuqS1fYtFjtquBZOUw24wfhG0Cqq5IHTGcCzPZLYyxwTFpG0VZCa9y+ysLZ5a65NM/X7hvc2pF/sNx1ftmOKr1yZ87jqzwh1o83HRZWsvklM9PGjAa42HM4TypYo4FOT9LENN0+oKvGP+tHsFb9v4REyA20JtnHO+we5BN+sJena1fd0rIX9xy2PqpV3uPRqifKAHFwl8QLIg9K7pUGsRgdV+uvVpYvEDGONt8yMYA01pZJIIgqZWrRUecuyVfZnZDYr+Uh31KoXCqojqqgUX2nqoMUfnwBLTkSRtPnLMCI30B0bYSVEjBDbgMSdmVWb2435r1RqcceHL3+tf9zsEd4iZFNZR92DHeAffyP4xuiIcrLWVe/YHD42fUUCXepBUo0z2ZWsfwuHaIZVQC56ilV/uR9fhi/b630jMMMe2XwOBjPUovv/BArxqZ6MZcG2/cjKlP+rLVREogbtes1pAYElQnDr4weB4eLWWicb06yi+pI1O2nVcjKX/OtB316tdtVDugvXj/PMXPDBFpUdIM4RkgVMAh99gXVg0MXAODS5TbDUgSMFRgVeMAePu0PIlVo8vqHirHeHLa4ahkKrk1VowMMBxVZFreEzBtlwCsxRbKAa9RbL+pdMaBvSXQGkOizXysQuhUdWKQnkpiy+PiEuuQNfFGhweWYjsw=
-#   skip_cleanup: true
-#   overwrite: true
-#   file_glob: true
-#   file:
-#   - monkey-*
-#   on:
-#     tags: true
 
 env:
   global:
