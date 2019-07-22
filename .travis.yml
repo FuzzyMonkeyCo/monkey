@@ -73,6 +73,8 @@ env:
   - CURRENT_TAG=${TRAVIS_TAG:-0.0.0}
   - UA: 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0'
   - R: 'https://travis-ci.org/FuzzyMonkeyCo/monkey'
+  # GITHUB_TOKEN
+  - secure: 'wnDny6IXiRwSRLun7/AyX7LyvXoWqRMjc/mw3AnYsy7YOMpCBKTUpCOzdt9QtgVDi1jamDR1vmY3fVmO5kLqeKxK32t7jgVepLpEOt43H4ithNKHOJwi2BG0dav3yXfW6Igjp7DaioiK65mCqfiFiOChpP9y4gJPBCMvCK3bHvyop3WrNlpw7yHN7oouUxg4HlHi7pG0wDuvbFy2CMUsdbreRivheYoZ2OUi2AnwQmiN0Knx8e+Cl41whT+CCI6Li3yeRQVjhReC47pIbIcm71e1pxl2ULSfIojbus6LVs6dm1mSGWpxN2f9Fsjatorj6gKkqWrYjtUlv270VX55y8XPYNA4Fb/tg8dmNPKudJ4Yd7rr/xUvU+xcUHh0h+jUTDKElEJOmXUXdgCWUzXhIAB0gUX6uz3+N46v/YknXFL2AnmL5Vxi8neDpS8WBYclLN/utPlA2rQgTlrBaMGJ9F8SpuClVtW4abnGWbJD+Lngrc4mNqBcIp8bDS+FdOm2QFZ5vTj9S4uuWxuaMvHDX+C+6nqG5QziwCXfQ6Q/eMQcEpqe3gwCDktyDO3CJ7v3GlXn14RAfOepopQqj9hKOsfcUxS+6mf6KiQWRtv+msQ5LHP0O3En7qTDu1UOUvnHiI4ZoSJhl3YLNrvy4S9oSQunlPD4NUDNrqapbziEUP8='
 
 notifications:
   email:
