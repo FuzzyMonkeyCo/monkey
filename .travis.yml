@@ -44,8 +44,6 @@ script:
 - tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
 - ./monkey -h | grep monkey
 - ./monkey --help | grep monkey
-- ./monkey -V | grep -P "monkey\t$CURRENT_TAG\t"
-- ./monkey --version | grep -P "monkey\t$CURRENT_TAG\t"
 - |
   git --no-pager diff
   [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
