@@ -18,7 +18,8 @@ func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
 }
 
 type Action interface {
-	// TODO: isMsg_Msg() + split into req/rep interfaces
+	// TODO: split into req/rep interfaces
+	// FIXME: embed isMsg_Msg
 	exec(mnk *Monkey) (err error)
 }
 

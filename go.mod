@@ -1,6 +1,7 @@
 module github.com/FuzzyMonkeyCo/monkey
 
 require (
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v0.0.0-20181010231311-3f9d52f7176a
 	github.com/getkin/kin-openapi v0.2.0
@@ -18,6 +19,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.1.0
+	go.starlark.net v0.0.0-20190717023158-fc7a7f44baed
 	golang.org/x/sys v0.0.0-20190712062909-fae7ac547cb7 // indirect
 	gopkg.in/yaml.v2 v2.2.2
 )
