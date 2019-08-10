@@ -57,18 +57,18 @@ func main() {
 }
 
 type params struct {
-	Fuzz, Shrink             bool
-	Lint, Schema             bool
-	Init, Env, Login, Logs   bool
-	Exec, Start, Reset, Stop bool
-	Update                   bool     `mapstructure:"--update"`
-	HideConfig               bool     `mapstructure:"--hide-config"`
-	ShowSpec                 bool     `mapstructure:"--show-spec"`
-	N                        uint32   `mapstructure:"--tests"`
-	Verbosity                uint8    `mapstructure:"-v"`
-	LogOffset                uint64   `mapstructure:"--previous"`
-	ValidateAgainst          string   `mapstructure:"--validate-against"`
-	EnvVars                  []string `mapstructure:"VAR"`
+	Fuzz, Shrink                   bool
+	Lint, Schema                   bool
+	Init, Env, Login, Logs         bool
+	Exec, Start, Reset, Stop, Repl bool
+	Update                         bool     `mapstructure:"--update"`
+	HideConfig                     bool     `mapstructure:"--hide-config"`
+	ShowSpec                       bool     `mapstructure:"--show-spec"`
+	N                              uint32   `mapstructure:"--tests"`
+	Verbosity                      uint8    `mapstructure:"-v"`
+	LogOffset                      uint64   `mapstructure:"--previous"`
+	ValidateAgainst                string   `mapstructure:"--validate-against"`
+	EnvVars                        []string `mapstructure:"VAR"`
 }
 
 func usage(binTitle string) (args *params, ret int) {
@@ -85,7 +85,7 @@ Usage:
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
   ` + B + ` [-vvv] schema [--validate-against=REF]
-  ` + B + ` [-vvv] exec (start | reset | stop)
+  ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] -h | --help
   ` + B + ` [-vvv]      --update
   ` + B + ` [-vvv] -V | --version
@@ -198,6 +198,9 @@ func actualMain() int {
 
 	if args.Exec {
 		switch {
+		case args.Repl:
+			lib.DoExecREPL()
+			return statusOK
 		case args.Start:
 			return doExec(cfg, lib.ExecKind_start)
 		case args.Reset:
