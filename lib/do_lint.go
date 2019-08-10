@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// DoLint builds a valid spec IR
 func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
