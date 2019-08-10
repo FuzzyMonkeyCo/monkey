@@ -46,7 +46,7 @@ func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err er
 		// EmitDefaults: true,
 	}
 	stringified, err := jsoner.MarshalToString(vald.Spec)
-	log.Println("[DBG]", err, stringified[:37], "...")
+	log.Printf("[DBG] %+v %37s...", err, stringified)
 	return
 }
 
