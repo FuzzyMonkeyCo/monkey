@@ -1,10 +1,5 @@
 package lib
 
-//FIXME: switch to TOML?
-// https://github.com/toml-lang/toml
-// https://github.com/crdoconnor/strictyaml#why-strictyaml
-// https://github.com/pelletier/go-toml
-
 import (
 	"errors"
 	"fmt"
@@ -13,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"go.starlark.net/starlark"
 	"gopkg.in/yaml.v2"
@@ -48,9 +44,11 @@ func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 		return
 	}
 
+	start := time.Now()
 	if _, err = loadCfg(config, showCfg); err != nil {
 		return
 	}
+	log.Println(">>>", time.Since(start))
 
 	if cfg, err = parseCfg(config, showCfg); err == nil {
 		cfg.Usage = os.Args
@@ -96,15 +94,91 @@ type SUT struct {
 }
 
 func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
-	// repeat(str, n=1) is a Go function called from Starlark.
-	// It behaves like the 'string * int' operation.
-	repeat := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		var s string
-		n := 1
-		if err := starlark.UnpackArgs(b.Name(), args, kwargs, "s", &s, "n?", &n); err != nil {
+	const (
+		localCfg    = ".fuzzymonkey.star"
+		preludeStar = "fm-prelude.star"
+		preludeData = `
+def SUT(**kwargs):
+	sut = {
+		'start': kwargs.pop('start', []),
+		'reset': kwargs.pop('reset', []),
+		'stop':  kwargs.pop('stop', []),
+	}
+	if len(kwargs) != 0:
+		fail("Unexpected arguments to SUT():", kwargs)
+	for k, xs in sut.items():
+		if not (type(xs) == 'list' and all([type(x) == 'string' for x in xs])):
+			fail("SUT({} = ...) must be a list of strings".format(k))
+	return sut
+
+def Spec(**kwargs):
+	spec = {
+		'version': kwargs.pop('version', 1),
+		'model': kwargs.pop('model'),
+		'overrides': kwargs.pop('overrides', {}),
+	}
+	if len(kwargs) != 0:
+		fail("Unexpected arguments to Spec():", kwargs)
+	if type(spec.version) != 'int':
+		fail("Spec(version = ...) must be a positive integer")
+	if type(spec.model) != 'dict':
+		fail("Spec(model = ...) must be a Model object")
+	if type(spec.overrides) != 'dict':
+		fail("Spec(overrides = ...) must be a dict")
+	return spec
+
+def OpenAPIv3(**kwargs):
+	model = {}
+	if len(kwargs) != 0:
+		fail("Unexpected arguments to Spec():", kwargs)
+
+`
+	)
+
+	var globals starlark.StringDict
+	if globals, err = starlark.ExecFile(&starlark.Thread{
+		Name:  "prelude",
+		Print: func(_ *starlark.Thread, msg string) { log.Println(msg) },
+	}, preludeStar, preludeData, starlark.StringDict{}); err != nil {
+		if evalErr, ok := err.(*starlark.EvalError); ok {
+			bt := evalErr.Backtrace()
+			log.Println("[ERR]", bt)
+			return
+		}
+		log.Println("[ERR]", err)
+		return
+	}
+
+	fmt.Println("\nGlobals:")
+	for _, name := range globals.Keys() {
+		v := globals[name]
+		fmt.Printf("%s (%s) = %s\n", name, v.Type(), v.String())
+	}
+
+	var valSUT SUT
+	bifSUT := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		var start, reset, stop *starlark.List
+		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+			"start", &start,
+			"reset", &reset,
+			"stop", &stop,
+		); err != nil {
 			return nil, err
 		}
-		return starlark.String(strings.Repeat(s, n)), nil
+		ColorWRN.Printf("%+v\n", start)
+		ColorWRN.Printf("%+v\n", reset)
+		ColorWRN.Printf("%+v\n", stop)
+		valSUT = SUT{
+			// Start: start,
+			// Reset: reset,
+			// Stop:  stop,
+		}
+		ColorWRN.Printf("%+v\n", valSUT)
+		var ret *starlark.Dict = starlark.NewDict(3)
+		ret.SetKey(starlark.String("start"), start)
+		ret.SetKey(starlark.String("reset"), reset)
+		ret.SetKey(starlark.String("stop"), stop)
+		return starlark.None, nil
 	}
 
 	var valSpec Spec
@@ -122,16 +196,18 @@ func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 			return nil, err
 		}
 		ColorWRN.Printf("%+v\n", model)
-		ColorWRN.Printf("%+v\n", overrides)
+		var valModel Modeler
+
 		valOverrides := make(map[string]string, overrides.Len())
 		for _, kv := range overrides.Items() {
 			k := kv.Index(0).(starlark.String).GoString()
 			v := kv.Index(1).(starlark.String).GoString()
 			valOverrides[k] = v
 		}
+
 		valSpec = Spec{
-			Version: version,
-			// Model:     model,
+			Version:   version,
+			Model:     valModel,
 			Overrides: valOverrides,
 		}
 		ColorERR.Printf("%+v\n", valSpec)
@@ -151,45 +227,13 @@ func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		return ret, nil
 	}
 
-	bifSUT := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		var start, reset, stop *starlark.List
-		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-			"start", &start,
-			"reset", &reset,
-			"stop", &stop,
-		); err != nil {
-			return nil, err
-		}
-		ColorWRN.Printf("%+v\n", start)
-		ColorWRN.Printf("%+v\n", reset)
-		ColorWRN.Printf("%+v\n", stop)
-		ColorWRN.Printf("%+v\n", SUT{
-			// Start: start,
-			// Reset: reset,
-			// Stop:  stop,
-		})
-		var ret *starlark.Dict = starlark.NewDict(3)
-		ret.SetKey(starlark.String("start"), start)
-		ret.SetKey(starlark.String("reset"), reset)
-		ret.SetKey(starlark.String("stop"), stop)
-		return ret, nil
-	}
-
-	// The Thread defines the behavior of the built-in 'print' function.
-	thread := &starlark.Thread{
+	globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
+	globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
+	globals["OpenAPIv3"] = starlark.NewBuiltin("OpenAPIv3", bifOpenAPIv3)
+	if globals, err = starlark.ExecFile(&starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
-	}
-
-	const localCfg = ".fuzzymonkey.star"
-	var globals starlark.StringDict
-	if globals, err = starlark.ExecFile(thread, localCfg, nil, starlark.StringDict{
-		"greeting":  starlark.String("hello"),
-		"repeat":    starlark.NewBuiltin("repeat", repeat),
-		"Spec":      starlark.NewBuiltin("Spec", bifSpec),
-		"OpenAPIv3": starlark.NewBuiltin("OpenAPIv3", bifOpenAPIv3),
-		"SUT":       starlark.NewBuiltin("SUT", bifSUT),
-	}); err != nil {
+	}, localCfg, nil, globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
