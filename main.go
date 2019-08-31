@@ -199,7 +199,10 @@ func actualMain() int {
 	if args.Exec {
 		switch {
 		case args.Repl:
-			lib.DoExecREPL()
+			if err := lib.DoExecREPL(); err != nil {
+				lib.ColorERR.Println(err)
+				return statusFailed
+			}
 			return statusOK
 		case args.Start:
 			return doExec(cfg, lib.ExecKind_start)

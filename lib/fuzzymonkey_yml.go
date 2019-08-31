@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.starlark.net/starlark"
+	// "go.starlark.net/starlarktest"
 	"gopkg.in/yaml.v2"
 )
 
@@ -131,25 +132,32 @@ type SUT struct {
 	Start, Reset, Stop []string
 }
 
-func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+var (
+	starlarkThread     *starlark.Thread
+	starlarkGlobals    starlark.StringDict
+	starlarkModelState *starlark.Dict
+)
+
+func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err error) {
 	const (
-		localCfg    = ".fuzzymonkey.star"
+		localCfg    = "fuzzymonkey.star"
 		preludeStar = "fm-prelude.star"
 	)
-	var (
-		preludeData string
-		globals     starlark.StringDict
-	)
+	var preludeData string
 
 	for _, model := range registeredIRModels {
 		preludeData += model.StarlarkModelerConstructor
 		preludeData += "\n\n"
 	}
+	// if globals, err = starlarktest.LoadAssertModule(); err != nil {
+	// 	log.Println("[ERR]", err)
+	// 	return
+	// }
 
 	if globals, err = starlark.ExecFile(&starlark.Thread{
 		Name:  "prelude",
 		Print: func(_ *starlark.Thread, msg string) { log.Println(msg) },
-	}, preludeStar, preludeData, starlark.StringDict{}); err != nil {
+	}, preludeStar, preludeData, globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
@@ -266,12 +274,51 @@ func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		return starlark.None, nil
 	}
 
+	valAfter := make([]struct{ Probe, Predicate, Match, Action starlark.Value }, 0)
+	bifAfter := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		var probe, predicate, match, action starlark.Value
+		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+			"probe", &probe,
+			"predicate", &predicate,
+			"match", &match,
+			"action", &action,
+		); err != nil {
+			return nil, err
+		}
+
+		ColorERR.Printf("probe:%+v, predicate:%+v, match:%+v, action:%+v\n",
+			probe, predicate, match, action)
+		ColorERR.Printf(">>> After: %#v\n", valAfter)
+		return starlark.None, nil
+	}
+
+	bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
+		ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
+		if err := starlarkModelState.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
+			return nil, err
+		}
+		return starlark.None, nil
+	}
+	for _, fname := range []string{"StateGet", "StateUpdate"} {
+		globals[fname] = starlark.NewBuiltin(fname, bifStateF)
+	}
+
 	globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
 	globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
-	if globals, err = starlark.ExecFile(&starlark.Thread{
+	globals["After"] = starlark.NewBuiltin("After", bifAfter)
+	muh := "BigBoyState"
+	boi := starlark.NewDict(42)
+	if err := boi.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
+		panic(err)
+	}
+	globals[muh] = boi
+	ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
+	starlarkThread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
-	}, localCfg, nil, globals); err != nil {
+	}
+	if starlarkGlobals, err = starlark.ExecFile(starlarkThread, localCfg, nil, globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
@@ -281,8 +328,21 @@ func loadCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
 		return
 	}
 
-	ColorERR.Printf("%#v\n", valSpec)
+	ColorERR.Printf(">>> Spec: %#v\n", valSpec)
+	ColorERR.Printf(">>> SUT: %#v\n", valSUT)
+	// FIXME: ensure Spec + SUT were called & cleanup globals maybe
 	log.Println("[NFO] starlark cfg globals:", len(globals.Keys()))
+	ColorERR.Printf(">>> globals: %#v\n", globals)
+
+	// ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
+	// f, ok := globals["unpure"].(*starlark.Function)
+	// if !ok {
+	// 	panic(err)
+	// }
+	// ret, err := starlark.Call(th1, f, starlark.Tuple{}, []starlark.Tuple{})
+	// ColorERR.Printf(">>> called ret: %#v\n", ret)
+	// ColorERR.Printf(">>> called err: %#v\n", err)
+	// ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
 	return
 }
 

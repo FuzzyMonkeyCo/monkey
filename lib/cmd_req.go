@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"go.starlark.net/starlark"
 )
 
 func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
@@ -94,6 +96,24 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	}
 
 	// TODO: user-provided postconditions
+	{
+		muh := "State"
+		starlarkModelState = starlark.NewDict(42)
+		if err := starlarkModelState.SetKey(starlark.String("bip"), starlark.String("bap")); err != nil {
+			panic(err)
+		}
+		starlarkGlobals[muh] = starlarkModelState
+		ColorERR.Printf(">>>>>> %s: %+v\n", muh, starlarkGlobals[muh])
+		f, ok := starlarkGlobals["actionAfterWeapons"].(*starlark.Function)
+		if !ok {
+			panic(err)
+		}
+		args := starlark.Tuple{starlark.NewDict(0)}
+		ret, err := starlark.Call(starlarkThread, f, args, nil)
+		ColorERR.Printf(">>> called ret: %#v\n", ret)
+		ColorERR.Printf(">>> called err: %#v\n", err)
+		ColorERR.Printf(">>>>>> %s: %+v\n", muh, starlarkGlobals[muh])
+	}
 
 	checkN := &RepCallResult{Response: enumFromGo(jsonData)}
 	log.Println("[DBG] checks passed")

@@ -10,23 +10,27 @@ import (
 
 func init() {
 	// non-standard dialect flags
-	resolve.AllowFloat = true  // allow floating-point numbers
-	resolve.AllowSet = true    // allow set data type
-	resolve.AllowLambda = true // allow lambda expressions
+	///resolve.AllowNestedDef = true      // def statements within function bodies
+	resolve.AllowLambda = true         // lambda x, y: (x,y)
+	resolve.AllowFloat = true          // floating point
+	resolve.AllowSet = true            // sets
+	resolve.AllowGlobalReassign = true // reassignment to top-level names
+	//> Starlark programs cannot be Turing complete
+	//> unless the -recursion flag is specified.
+	resolve.AllowRecursion = false
 }
 
 // DoExecREPL executes a Starlark Read-Eval-Print-Loop
-func DoExecREPL() {
+func DoExecREPL() error {
 	thread := &starlark.Thread{Load: repl.MakeLoad()}
-	globals := make(starlark.StringDict)
+	// globals, err := loadCfg([]byte{}, false)
+	// if err != nil {
+	// 	return err
+	// }
 
 	fmt.Println("Welcome to Starlark (go.starlark.net)")
 	thread.Name = "REPL"
-	repl.REPL(thread, globals)
-
-	// for _, name := range globals.Keys() {
-	// 	if !strings.HasPrefix(name, "_") {
-	// 		fmt.Fprintf(os.Stderr, "%s = %s\n", name, globals[name])
-	// 	}
-	// }
+	// repl.REPL(thread, globals)
+	repl.REPL(thread, starlark.StringDict{})
+	return nil
 }
