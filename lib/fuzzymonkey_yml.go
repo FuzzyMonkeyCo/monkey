@@ -307,13 +307,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
 	globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
 	globals["After"] = starlark.NewBuiltin("After", bifAfter)
-	muh := "BigBoyState"
-	boi := starlark.NewDict(42)
-	if err := boi.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
-		panic(err)
-	}
-	globals[muh] = boi
-	ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
 	starlarkThread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
@@ -333,16 +326,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	// FIXME: ensure Spec + SUT were called & cleanup globals maybe
 	log.Println("[NFO] starlark cfg globals:", len(globals.Keys()))
 	ColorERR.Printf(">>> globals: %#v\n", globals)
-
-	// ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
-	// f, ok := globals["unpure"].(*starlark.Function)
-	// if !ok {
-	// 	panic(err)
-	// }
-	// ret, err := starlark.Call(th1, f, starlark.Tuple{}, []starlark.Tuple{})
-	// ColorERR.Printf(">>> called ret: %#v\n", ret)
-	// ColorERR.Printf(">>> called err: %#v\n", err)
-	// ColorERR.Printf(">>> %s: %#v\n", muh, globals[muh].String())
 	return
 }
 
