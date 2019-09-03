@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.starlark.net/starlark"
-	// "go.starlark.net/starlarktest"
 	"gopkg.in/yaml.v2"
 )
 
@@ -132,11 +131,30 @@ type SUT struct {
 	Start, Reset, Stop []string
 }
 
-var (
-	starlarkThread     *starlark.Thread
-	starlarkGlobals    starlark.StringDict
-	starlarkModelState *starlark.Dict
-)
+var userRTLang struct {
+	Thread     *starlark.Thread
+	Globals    starlark.StringDict
+	ModelState *starlark.Dict
+	// InitialRun is true only when localcfg is first interpreted
+	InitialRun bool
+	// EnvRead holds all the envs looked up while InitialRun is true
+	EnvRead map[string]string
+}
+
+func bifEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var env starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &env); err != nil {
+		return nil, err
+	}
+	envStr := env.GoString()
+	if !userRTLang.InitialRun {
+		return nil, fmt.Errorf("calling %s(%q) is forbidden", b.Name(), envStr)
+	}
+
+	read := os.Getenv(envStr)
+	userRTLang.EnvRead[envStr] = read
+	return starlark.String(read), nil
+}
 
 func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err error) {
 	const (
@@ -149,10 +167,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		preludeData += model.StarlarkModelerConstructor
 		preludeData += "\n\n"
 	}
-	// if globals, err = starlarktest.LoadAssertModule(); err != nil {
-	// 	log.Println("[ERR]", err)
-	// 	return
-	// }
 
 	if globals, err = starlark.ExecFile(&starlark.Thread{
 		Name:  "prelude",
@@ -295,7 +309,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
 		ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
-		if err := starlarkModelState.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
+		if err := userRTLang.ModelState.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
 			return nil, err
 		}
 		return starlark.None, nil
@@ -304,14 +318,15 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		globals[fname] = starlark.NewBuiltin(fname, bifStateF)
 	}
 
+	globals["Env"] = starlark.NewBuiltin("Env", bifEnv)
 	globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
 	globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
 	globals["After"] = starlark.NewBuiltin("After", bifAfter)
-	starlarkThread = &starlark.Thread{
+	userRTLang.Thread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
 	}
-	if starlarkGlobals, err = starlark.ExecFile(starlarkThread, localCfg, nil, globals); err != nil {
+	if userRTLang.Globals, err = starlark.ExecFile(userRTLang.Thread, localCfg, nil, globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
