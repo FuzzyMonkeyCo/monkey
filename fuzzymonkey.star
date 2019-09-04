@@ -1,19 +1,24 @@
-spec = 'dev-spec.json'
-if Env('SUT_IS_PROD') != '':
-    spec = 'normal_spec.yml'
+# Invariants of our APIs expressed in a Python-like language
+
+mode = Env('TESTING_WHAT', 'jsonplaceholder')
+host, spec = 'https://jsonplaceholder.typicode.com/', 'lib/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml'
+if mode == 'jsonplaceholder':
+    pass
+elif mode == 'other-thing':
+    spec = 'some/other/spec.json'
+else:
+    fail("Unhandled testing mode '{}'".format(mode))
 print('Now testing {}.'.format(spec))
 
-bearerAuth = Env("SOME_AUTH_TOKEN") or fail("unset SOME_AUTH_TOKEN")
-bearerAuth = 'Bearer ' + bearerAuth
-backendHost = Env("SOME_HOST_URL") or fail("unset SOME_HOST_URL")
-
 OpenAPIv3(
-    file = 'openapi/{}'.format(spec),
+    file = spec,
 
-    host = backendHost,
-    authorization = bearerAuth,
+    host = host,
+    # authorization = 'Bearer ' + ...,
 
-    exec_reset = 'printf "Resetting state...\n"'
+    ExecReset = '''
+    printf 'Resetting state...\n'
+    '''
 )
 
 
@@ -56,23 +61,28 @@ def actionAfterGetExistingWeapon(response):
 # StateDelete(k)
 
 TriggerActionAfterProbe(
-    probe = 'monkey:http:response',
-    predicate = None,
-    match = {
-        'request': {'method': 'GET', 'path': '/csgo/weapons'},
-        'status_code': 200,
-    },
+    probe = ('monkey', 'http', 'response'),
+    predicate = lambda response: all([
+        response['request']['method'] == 'GET',
+        response['request']['path'] == '/csgo/weapons',
+        response['status_code'] == 200,
+    ]),
+    # predicate = None,
+    # match = {
+    #     'request': {'method': 'GET', 'path': '/csgo/weapons'},
+    #     'status_code': 200,
+    # },
     action = actionAfterWeapons,
 )
 
 TriggerActionAfterProbe(
-    probe = 'monkey:http:response',
+    probe = ('http', 'response'),
     predicate = lambda response: all([
         response['request']['method'] == 'GET',
         response['request']['route'] == '/csgo/weapons/:weapon_id',
         response['status_code'] in range(200, 299),
         response['body']['id'] in State['weapons'],
     ]),
-    match = None,
+    # match = None,
     action = actionAfterGetExistingWeapon,
 )

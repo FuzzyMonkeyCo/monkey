@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/lib"
-	"github.com/docopt/docopt-go"
+	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
 )
@@ -256,7 +256,12 @@ func actualMain() int {
 		return statusFailed
 	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
-	lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+	if cfg.N == 1 {
+		// TODO: find a "plural" lib
+		lib.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
+	} else {
+		lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+	}
 	return doFuzz(mnk)
 }
 

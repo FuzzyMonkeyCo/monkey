@@ -107,7 +107,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		args := starlark.Tuple{starlark.NewDict(0)}
 		for _, trigger := range userRTLang.Triggers {
 			f := trigger.Predicate
-			ret, err := starlark.Call(userRTLang.Thread, &f, args, nil)
+			ret, err := starlark.Call(userRTLang.Thread, f, args, nil)
 			ColorERR.Printf(">>> called ret: %#v\n", ret)
 			ColorERR.Printf(">>> called err: %#v\n", err)
 			ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
@@ -131,7 +131,11 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 		newHARTransport(mnk.Name)
 	}
 
-	configured, err := url.ParseRequestURI(mnk.Cfg.Runtime.FinalHost)
+	host := mnk.Cfg.Runtime.FinalHost
+	if addHost != nil {
+		host = *addHost
+	}
+	configured, err := url.ParseRequestURI(host)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return

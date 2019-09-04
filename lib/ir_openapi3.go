@@ -40,7 +40,8 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *Validator, err error) {
 		return
 	}
 
-	basePath, err := basePathFromOA3(doc.Servers)
+	// FIXME: set host in basePath & still allow it to be overridden in .star
+	_, basePath, err := basePathFromOA3(doc.Servers)
 	if err != nil {
 		return
 	}
@@ -613,7 +614,7 @@ func makeXXXToOA3(xxx uint32) string {
 }
 
 //TODO: support the whole spec on /"servers"
-func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
+func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err error) {
 	if len(docServers) == 0 {
 		log.Println(`[NFO] field 'servers' empty/unset: using "/"`)
 		basePath = "/"
@@ -631,6 +632,7 @@ func basePathFromOA3(docServers openapi3.Servers) (basePath string, err error) {
 		return
 	}
 	basePath = u.Path
+	host = u.String()
 
 	if basePath == "" || basePath[0] != '/' {
 		err = errors.New(`field 'servers' has no suitable 'url'`)

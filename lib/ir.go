@@ -29,5 +29,8 @@ func (vald *Validator) refsFromSIDs(SIDs sids) []string {
 			refs = append(refs, ref)
 		}
 	}
+	if len(refs) == 0 {
+		return []string{"_"}
+	}
 	return refs
 }
