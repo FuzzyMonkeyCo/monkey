@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"go.starlark.net/starlark"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 const (
@@ -138,22 +138,45 @@ var userRTLang struct {
 	// InitialRun is true only when localcfg is first interpreted
 	InitialRun bool
 	// EnvRead holds all the envs looked up while InitialRun is true
-	EnvRead map[string]string
+	EnvRead  map[string]string
+	Triggers []triggerActionAfterProbe
 }
 
-func bifEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+// TODO: turn these into methods of userRTLang
+
+func bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var env starlark.String
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &env); err != nil {
 		return nil, err
 	}
 	envStr := env.GoString()
 	if !userRTLang.InitialRun {
+		// FIXME: just don't declare bEnv
 		return nil, fmt.Errorf("calling %s(%q) is forbidden", b.Name(), envStr)
 	}
 
 	read := os.Getenv(envStr)
 	userRTLang.EnvRead[envStr] = read
 	return starlark.String(read), nil
+}
+
+type triggerActionAfterProbe struct {
+	Probe     starlark.Tuple
+	Predicate starlark.Function
+	Action    starlark.Function
+}
+
+func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var trigger triggerActionAfterProbe
+	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+		"probe", &trigger.Probe,
+		"predicate", &trigger.Predicate,
+		"action", &trigger.Action,
+	); err != nil {
+		return nil, err
+	}
+	userRTLang.Triggers = append(userRTLang.Triggers, trigger)
+	return starlark.None, nil
 }
 
 func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err error) {
@@ -288,24 +311,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		return starlark.None, nil
 	}
 
-	valAfter := make([]struct{ Probe, Predicate, Match, Action starlark.Value }, 0)
-	bifAfter := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		var probe, predicate, match, action starlark.Value
-		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-			"probe", &probe,
-			"predicate", &predicate,
-			"match", &match,
-			"action", &action,
-		); err != nil {
-			return nil, err
-		}
-
-		ColorERR.Printf("probe:%+v, predicate:%+v, match:%+v, action:%+v\n",
-			probe, predicate, match, action)
-		ColorERR.Printf(">>> After: %#v\n", valAfter)
-		return starlark.None, nil
-	}
-
 	bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
 		ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
@@ -318,10 +323,14 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		globals[fname] = starlark.NewBuiltin(fname, bifStateF)
 	}
 
-	globals["Env"] = starlark.NewBuiltin("Env", bifEnv)
+	userRTLang.EnvRead = make(map[string]string)
+	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
+	userRTLang.InitialRun = true
+
+	globals["Env"] = starlark.NewBuiltin("Env", bEnv)
 	globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
 	globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
-	globals["After"] = starlark.NewBuiltin("After", bifAfter)
+	globals["TriggerActionAfterProbe"] = starlark.NewBuiltin("TriggerActionAfterProbe", bTriggerActionAfterProbe)
 	userRTLang.Thread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
@@ -335,6 +344,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		log.Println("[ERR]", err)
 		return
 	}
+	userRTLang.InitialRun = false
 
 	ColorERR.Printf(">>> Spec: %#v\n", valSpec)
 	ColorERR.Printf(">>> SUT: %#v\n", valSUT)

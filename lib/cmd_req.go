@@ -104,15 +104,14 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		}
 		userRTLang.Globals[muh] = userRTLang.ModelState
 		ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
-		f, ok := userRTLang.Globals["actionAfterWeapons"].(*starlark.Function)
-		if !ok {
-			panic(err)
-		}
 		args := starlark.Tuple{starlark.NewDict(0)}
-		ret, err := starlark.Call(userRTLang.Thread, f, args, nil)
-		ColorERR.Printf(">>> called ret: %#v\n", ret)
-		ColorERR.Printf(">>> called err: %#v\n", err)
-		ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
+		for _, trigger := range userRTLang.Triggers {
+			f := trigger.Predicate
+			ret, err := starlark.Call(userRTLang.Thread, &f, args, nil)
+			ColorERR.Printf(">>> called ret: %#v\n", ret)
+			ColorERR.Printf(">>> called err: %#v\n", err)
+			ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
+		}
 	}
 
 	checkN := &RepCallResult{Response: enumFromGo(jsonData)}
