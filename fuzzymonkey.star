@@ -1,11 +1,13 @@
 # Invariants of our APIs expressed in a Python-like language
 
-mode = Env('TESTING_WHAT', 'jsonplaceholder')
-host, spec = 'https://jsonplaceholder.typicode.com/', 'lib/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml'
-if mode == 'jsonplaceholder':
-    pass
+print('THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','unset'))
+
+host, spec = 'https://jsonplaceholder.typicode.com/', None
+mode = Env('TESTING_WHAT')
+if mode == '':
+    spec = 'lib/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml'
 elif mode == 'other-thing':
-    spec = 'some/other/spec.json'
+    pass
 else:
     fail("Unhandled testing mode '{}'".format(mode))
 print('Now testing {}.'.format(spec))
@@ -27,11 +29,11 @@ State = {
 }
 
 def actionAfterWeapons(response):
-    print(StateGet())
+    print('StateGet() =', StateGet())
     print("!!! actionAfterWeapons", response)
     return
     # Response has already been validated and JSON decoded
-    body = response['body']['as_json']
+    body = response['body']
     # Set some state
     weapons = StateGet('weapons')
     weapons[ body['id'] ] = body
@@ -40,7 +42,7 @@ def actionAfterWeapons(response):
 def actionAfterGetExistingWeapon(response):
     print('actionAfterGetWeapon', response)
     weapon_id = int(response['request']['url'][-1])
-    body = response['body']['as_json']
+    body = response['body']
     # Ensure an API contract
     #assert.eq(weapon_id, body['id'])
     # Implied: if weapon_id in StateGet('weapons'):

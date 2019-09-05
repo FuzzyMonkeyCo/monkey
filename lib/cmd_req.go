@@ -95,22 +95,82 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		}
 	}
 
-	// TODO: user-provided postconditions
+	// Check #N: user-provided postconditions
 	{
-		muh := "State"
-		userRTLang.ModelState = starlark.NewDict(42)
-		if err := userRTLang.ModelState.SetKey(starlark.String("bip"), starlark.String("bap")); err != nil {
+		checkN := &RepValidateProgress{Details: []string{"user properties"}}
+		log.Println("[NFO] checking", checkN.Details[0])
+		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.show(msg) }
+		userRTLang.Globals[tState] = userRTLang.ModelState
+		mnk.progress.wrn(fmt.Sprintf(">>>>>> %s: %+v", tState, userRTLang.Globals[tState]))
+		response := starlark.NewDict(3)
+		if err := response.SetKey(starlark.String("status_code"), starlark.MakeInt(200)); err != nil {
 			panic(err)
 		}
-		userRTLang.Globals[muh] = userRTLang.ModelState
-		ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
-		args := starlark.Tuple{starlark.NewDict(0)}
-		for _, trigger := range userRTLang.Triggers {
-			f := trigger.Predicate
-			ret, err := starlark.Call(userRTLang.Thread, f, args, nil)
-			ColorERR.Printf(">>> called ret: %#v\n", ret)
-			ColorERR.Printf(">>> called err: %#v\n", err)
-			ColorERR.Printf(">>>>>> %s: %+v\n", muh, userRTLang.Globals[muh])
+		body := starlark.NewDict(1)
+		if err := body.SetKey(starlark.String("id"), starlark.MakeInt(42)); err != nil {
+			panic(err)
+		}
+		if err := response.SetKey(starlark.String("body"), body); err != nil {
+			panic(err)
+		}
+		request := starlark.NewDict(3)
+		if err := request.SetKey(starlark.String("method"), starlark.String("GET")); err != nil {
+			panic(err)
+		}
+		if err := request.SetKey(starlark.String("path"), starlark.String("/csgo/weapons")); err != nil {
+			panic(err)
+		}
+		if err := request.SetKey(starlark.String("route"), starlark.String("/csgo/weapons")); err != nil {
+			panic(err)
+		}
+		if err := response.SetKey(starlark.String("request"), request); err != nil {
+			panic(err)
+		}
+		args := starlark.Tuple{response}
+		for i, trigger := range userRTLang.Triggers {
+			// FIXME: make predicate / action part of check name
+			var shouldBeBool starlark.Value
+			shouldBeBool, err = starlark.Call(userRTLang.Thread, trigger.Predicate, args, nil)
+			mnk.progress.wrn(fmt.Sprintf(">>>>>> %s: %+v", tState, userRTLang.Globals[tState]))
+			if err != nil {
+				checkN.Failure = true
+				//TODO: split on \n.s
+				checkN.Details = append(checkN.Details, err.Error())
+				log.Println("[NFO]", err)
+				if evalErr, ok := err.(*starlark.EvalError); ok {
+					bt := evalErr.Backtrace()
+					mnk.progress.checkFailed([]string{bt})
+				} else {
+					mnk.progress.checkFailed([]string{err.Error()})
+				}
+				// break
+			} else {
+				triggered, ok := shouldBeBool.(starlark.Bool)
+				if !ok {
+					panic(`FIXME: thats also a check failure`)
+				}
+				if triggered {
+					mnk.progress.nfo(fmt.Sprintf(">>> [%d] triggered", i))
+					var shouldBeNone starlark.Value
+					if shouldBeNone, err = starlark.Call(userRTLang.Thread, trigger.Action, args, nil); err != nil {
+						panic(fmt.Sprintf("FIXME: handle that too: %v", err))
+					}
+					if shouldBeNone != starlark.None {
+						panic(`FIXME: thats also a check failure`)
+					}
+					checkN.Success = true
+					mnk.progress.checkPassed("user prop")
+				} else {
+					mnk.progress.nfo(fmt.Sprintf(">>> [%d] not triggered", i))
+				}
+			}
+			if err = mnk.ws.cast(checkN); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			if checkN.Failure {
+				return
+			}
 		}
 	}
 

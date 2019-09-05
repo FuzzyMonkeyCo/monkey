@@ -166,6 +166,11 @@ var userRTLang struct {
 }
 
 // TODO: turn these into methods of userRTLang
+const (
+	tState                   = "State"
+	tEnv                     = "Env"
+	tTriggerActionAfterProbe = "TriggerActionAfterProbe"
+)
 
 func bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var env, def starlark.String
@@ -217,126 +222,123 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, modelMaker(modeler))
 	}
 
-	valSUT := SUT{}
-	bifSUT := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		var start, reset, stop starlark.Value
-		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-			"start", &start,
-			"reset", &reset,
-			"stop", &stop,
-		); err != nil {
-			return nil, err
-		}
-		xs, ok := starListOfStringsToSlice(start)
-		if !ok {
-			return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "start", "list of strings")
-		}
-		valSUT.Start = xs
-		if xs, ok = starListOfStringsToSlice(reset); !ok {
-			return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "reset", "list of strings")
-		}
-		valSUT.Reset = xs
-		if xs, ok = starListOfStringsToSlice(stop); !ok {
-			return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "stop", "list of strings")
-		}
-		valSUT.Stop = xs
-		return starlark.None, nil
-	}
+	// valSUT := SUT{}
+	// bifSUT := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	// 	var start, reset, stop starlark.Value
+	// 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+	// 		"start", &start,
+	// 		"reset", &reset,
+	// 		"stop", &stop,
+	// 	); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	xs, ok := starListOfStringsToSlice(start)
+	// 	if !ok {
+	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "start", "list of strings")
+	// 	}
+	// 	valSUT.Start = xs
+	// 	if xs, ok = starListOfStringsToSlice(reset); !ok {
+	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "reset", "list of strings")
+	// 	}
+	// 	valSUT.Reset = xs
+	// 	if xs, ok = starListOfStringsToSlice(stop); !ok {
+	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "stop", "list of strings")
+	// 	}
+	// 	valSUT.Stop = xs
+	// 	return starlark.None, nil
+	// }
 
-	valSpec := Spec{}
-	bifSpec := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		var (
-			version          = 1
-			model, overrides starlark.Value
-		)
-		if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-			"model", &model,
-			"overrides", &overrides,
-			"version?", &version,
-		); err != nil {
-			return nil, err
-		}
-		valSpec.Version = version
+	// valSpec := Spec{}
+	// bifSpec := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	// 	var (
+	// 		version          = 1
+	// 		model, overrides starlark.Value
+	// 	)
+	// 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
+	// 		"model", &model,
+	// 		"overrides", &overrides,
+	// 		"version?", &version,
+	// 	); err != nil {
+	// 		return nil, err
+	// 	}
+	// 	valSpec.Version = version
 
-		var valOverrides map[string]string
-		{
-			ovs, ok := overrides.(*starlark.Dict)
-			if !ok {
-				return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-			}
-			valOverrides = make(map[string]string, ovs.Len())
-			for _, kv := range ovs.Items() {
-				k, ok := kv.Index(0).(starlark.String)
-				if !ok {
-					return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-				}
-				v, ok := kv.Index(1).(starlark.String)
-				if !ok {
-					return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-				}
-				valOverrides[k.GoString()] = v.GoString()
-			}
-		}
-		valSpec.Overrides = valOverrides
+	// 	var valOverrides map[string]string
+	// 	{
+	// 		ovs, ok := overrides.(*starlark.Dict)
+	// 		if !ok {
+	// 			return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
+	// 		}
+	// 		valOverrides = make(map[string]string, ovs.Len())
+	// 		for _, kv := range ovs.Items() {
+	// 			k, ok := kv.Index(0).(starlark.String)
+	// 			if !ok {
+	// 				return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
+	// 			}
+	// 			v, ok := kv.Index(1).(starlark.String)
+	// 			if !ok {
+	// 				return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
+	// 			}
+	// 			valOverrides[k.GoString()] = v.GoString()
+	// 		}
+	// 	}
+	// 	valSpec.Overrides = valOverrides
 
-		// var valModel Modeler
-		// {
-		// 	mo, ok := model.(*starlark.Dict)
-		// 	if !ok {
-		// 		return nil, fmt.Errorf("%s(%s = ...) must be %s", "Spec", "model", "OpenAPIv3(...)")
-		// 	}
-		// 	v, found, err := mo.Get(starlark.String("ModelKind"))
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-		// 	if !found {
-		// 		return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-		// 	}
-		// 	vv, ok := v.(starlark.Int)
-		// 	if !ok {
-		// 		return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-		// 	}
-		// 	vvv, ok := vv.Int64()
-		// 	if !ok {
-		// 		return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-		// 	}
-		// 	m, ok := registeredIRModels[ModelKind(vvv)]
-		// 	if !ok {
-		// 		return nil, fmt.Errorf("unexpected model id: %d", vvv)
-		// 	}
-		// 	if valModel, err = m.GoModelerConstructor(*mo); err != nil {
-		// 		return nil, err
-		// 	}
-		// }
-		// valSpec.Model = valModel
+	// 	var valModel Modeler
+	// 	{
+	// 		mo, ok := model.(*starlark.Dict)
+	// 		if !ok {
+	// 			return nil, fmt.Errorf("%s(%s = ...) must be %s", "Spec", "model", "OpenAPIv3(...)")
+	// 		}
+	// 		v, found, err := mo.Get(starlark.String("ModelKind"))
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
+	// 		if !found {
+	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
+	// 		}
+	// 		vv, ok := v.(starlark.Int)
+	// 		if !ok {
+	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
+	// 		}
+	// 		vvv, ok := vv.Int64()
+	// 		if !ok {
+	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
+	// 		}
+	// 		m, ok := registeredIRModels[ModelKind(vvv)]
+	// 		if !ok {
+	// 			return nil, fmt.Errorf("unexpected model id: %d", vvv)
+	// 		}
+	// 		if valModel, err = m.GoModelerConstructor(*mo); err != nil {
+	// 			return nil, err
+	// 		}
+	// 	}
+	// 	valSpec.Model = valModel
 
-		return starlark.None, nil
-	}
+	// 	return starlark.None, nil
+	// }
 
 	bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
-		ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
+		// ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
 		if err := userRTLang.ModelState.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
 			return nil, err
 		}
-		return starlark.None, nil
+		return userRTLang.ModelState, nil
 	}
 	for _, fname := range []string{"StateGet", "StateUpdate"} {
 		userRTLang.Globals[fname] = starlark.NewBuiltin(fname, bifStateF)
 	}
-
+	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
+	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
+	userRTLang.Thread = &starlark.Thread{
+		Name:  "cfg",
+		Print: func(_ *starlark.Thread, msg string) { fmt.Println(msg) },
+	}
 	userRTLang.EnvRead = make(map[string]string)
 	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
 	userRTLang.InitialRun = true
-
-	userRTLang.Globals["Env"] = starlark.NewBuiltin("Env", bEnv)
-	userRTLang.Globals["SUT"] = starlark.NewBuiltin("SUT", bifSUT)
-	userRTLang.Globals["Spec"] = starlark.NewBuiltin("Spec", bifSpec)
-	userRTLang.Globals["TriggerActionAfterProbe"] = starlark.NewBuiltin("TriggerActionAfterProbe", bTriggerActionAfterProbe)
-	userRTLang.Thread = &starlark.Thread{
-		Name:  "cfg",
-		Print: func(_ *starlark.Thread, msg string) { ColorNFO.Println(msg) },
-	}
+	defer func() { userRTLang.InitialRun = false }()
 	if userRTLang.Globals, err = starlark.ExecFile(userRTLang.Thread, localCfg, nil, userRTLang.Globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
@@ -346,11 +348,29 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		log.Println("[ERR]", err)
 		return
 	}
-	userRTLang.InitialRun = false
 
-	ColorERR.Printf(">>> Spec: %#v\n", valSpec)
-	ColorERR.Printf(">>> SUT: %#v\n", valSUT)
-	// FIXME: ensure Spec + SUT were called & cleanup globals maybe
+	delete(userRTLang.Globals, tEnv)
+	delete(userRTLang.Globals, tTriggerActionAfterProbe)
+	// TODO: ensure only lowercase things are exported
+	userRTLang.ModelState = starlark.NewDict(0)
+	if state, ok := userRTLang.Globals[tState]; ok {
+		d, ok := state.(*starlark.Dict)
+		if !ok {
+			panic("FIXME")
+		}
+		// TODO: check state is a dict with string keys
+		for _, kd := range d.Items() {
+			k, v := kd.Index(0), kd.Index(1)
+			if k.Type() != "string" {
+				panic("TODO")
+			}
+			if err := userRTLang.ModelState.SetKey(k, v); err != nil {
+				panic(err)
+			}
+		}
+	}
+
+	// FIXME: ensure Spec + SUT were called
 	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))
 	ColorERR.Printf(">>> globals: %#v\n", userRTLang.Globals)
 	return
