@@ -1,14 +1,17 @@
 package lib
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"go.starlark.net/starlark"
 	yaml "gopkg.in/yaml.v2"
@@ -54,18 +57,26 @@ func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 	return
 }
 
-// Spec describes a spec
-type Spec struct {
-	Version   int
-	Model     Modeler
-	Overrides map[string]string
-}
-
 // Modeler describes any model
 type Modeler interface {
-	Kind() ModelKind
-	pp()
+	SetSUTResetter(SUTResetter)
+	Pretty(w io.Writer) (n int, err error)
 }
+
+// SUTResetter describes ways to reset the system under test to a known initial state
+type SUTResetter interface {
+	Start(context.Context) error
+	Reset(context.Context) error
+	Stop(context.Context) error
+}
+
+type SUTShell struct {
+	start, reset, stop string
+}
+
+func (s *SUTShell) Start(ctx context.Context) error { return nil }
+func (s *SUTShell) Reset(ctx context.Context) error { return nil }
+func (s *SUTShell) Stop(ctx context.Context) error  { return nil }
 
 type ModelerFunc func(d starlark.StringDict) (Modeler, error)
 type slBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
@@ -74,8 +85,8 @@ var registeredIRModels = map[string]ModelerFunc{
 	"OpenAPIv3": func(d starlark.StringDict) (Modeler, error) {
 		mo := ModelOpenAPIv3{}
 		var (
-			found      bool
-			file, host starlark.Value
+			found              bool
+			file, host, hAuthz starlark.Value
 		)
 
 		if file, found = d["file"]; !found || file.Type() != "string" {
@@ -86,8 +97,20 @@ var registeredIRModels = map[string]ModelerFunc{
 		if host, found = d["host"]; found && host.Type() != "string" {
 			return nil, errors.New("OpenAPIv3(host = ...) must be a string")
 		}
-		h := host.(starlark.String).GoString()
-		addHost = &h
+		if found {
+			h := host.(starlark.String).GoString()
+			mo.Host = h
+			addHost = &h
+		}
+
+		if hAuthz, found = d["header_authorization"]; found && hAuthz.Type() != "string" {
+			return nil, errors.New("OpenAPIv3(header_authorization = ...) must be a string")
+		}
+		if found {
+			authz := hAuthz.(starlark.String).GoString()
+			mo.HeaderAuthorization = authz
+			addHeaderAuthorization = &authz
+		}
 
 		return mo, nil
 	},
@@ -96,79 +119,119 @@ var registeredIRModels = map[string]ModelerFunc{
 func modelMaker(modeler ModelerFunc) slBuiltin {
 	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		fname := b.Name()
-
 		if args.Len() != 0 {
 			return nil, fmt.Errorf("%s(...) does not take positional arguments", fname)
 		}
 
-		d := make(starlark.StringDict, len(kwargs))
+		u := make(starlark.StringDict, len(kwargs))
+		r := make(starlark.StringDict, len(kwargs))
 		for _, kv := range kwargs {
 			k, v := kv.Index(0), kv.Index(1)
 			key := k.(starlark.String).GoString()
 			// FIXME: prempt Exec* fields + other Capitalized keys
-			d[key] = v
+			reserved := false
+			for i, c := range key {
+				if !(c <= unicode.MaxASCII && unicode.IsPrint(c)) {
+					panic("FIXME: illegal")
+				}
+				if i == 0 && unicode.IsUpper(c) {
+					reserved = true
+					break
+				}
+			}
+			if !reserved {
+				u[key] = v
+			} else {
+				r[key] = v
+			}
 		}
-		mo, err := modeler(d)
+		mo, err := modeler(u)
 		if err != nil {
 			return nil, err
 		}
+		resetter, err := newSUTResetter(fname, r)
+		if err != nil {
+			return nil, err
+		}
+		mo.SetSUTResetter(resetter)
 
-		userRTLang.Models = append(userRTLang.Models, mo)
+		userRTLang.Modelers = append(userRTLang.Modelers, mo)
 		return starlark.None, nil
 	}
 }
 
-// def OpenAPIv3(**kwargs):
-// # AddNewModel takes care of popping exec_* and setting ModelKind.
-// 	model = AddNewModel(kwargs, ` + strconv.Itoa(int(ModelKindOpenAPIv3)) + `)
-//  aaaah let's just do a Go model constructor for now...
-// 		'file': kwargs.pop('file'),
-// # This should be ensured by the framework:
-// 	if len(kwargs) != 0:
-// 		fail("Unexpected arguments to <...>():", kwargs)
-// 	return model
-
-// ModelKind enumerates model kinds
-type ModelKind int
-
-const (
-	// ModelKindUnset is the empty ModelKind
-	ModelKindUnset ModelKind = iota
-	// ModelKindOpenAPIv3 is for OpenAPIv3 models
-	ModelKindOpenAPIv3
-)
+func newSUTResetter(modelerName string, r starlark.StringDict) (SUTResetter, error) {
+	var (
+		ok bool
+		v  starlark.Value
+		vv starlark.String
+		t  string
+		// TODO: other SUTResetter.s
+		resetter = &SUTShell{}
+	)
+	t = tExecStart
+	if v, ok = r[t]; ok {
+		delete(r, t)
+		if vv, ok = v.(starlark.String); !ok {
+			return nil, fmt.Errorf("%s(%s = ...) must be a string", modelerName, t)
+		}
+		resetter.start = vv.GoString()
+	}
+	t = tExecReset
+	if v, ok = r[t]; ok {
+		delete(r, t)
+		if vv, ok = v.(starlark.String); !ok {
+			return nil, fmt.Errorf("%s(%s = ...) must be a string", modelerName, t)
+		}
+		resetter.reset = vv.GoString()
+	}
+	t = tExecStop
+	if v, ok = r[t]; ok {
+		delete(r, t)
+		if vv, ok = v.(starlark.String); !ok {
+			return nil, fmt.Errorf("%s(%s = ...) must be a string", modelerName, t)
+		}
+		resetter.stop = vv.GoString()
+	}
+	if len(r) != 0 {
+		return nil, fmt.Errorf("Unexpected arguments to %s(): %s", modelerName, strings.Join(r.Keys(), ", "))
+	}
+	return resetter, nil
+}
 
 // ModelOpenAPIv3 describes OpenAPIv3 models
 type ModelOpenAPIv3 struct {
+	resetter SUTResetter
+
+	// File is a path within current directory pointing to a YAML spec
 	File string
+	// Host superseeds the spec's base URL
+	Host string
+	// HeaderAuthorization if non-empty is added to requests as bearer token
+	HeaderAuthorization string
 }
 
-// Kind returns a ModelKind
-func (m ModelOpenAPIv3) Kind() ModelKind { return ModelKindOpenAPIv3 }
-func (m ModelOpenAPIv3) pp()             { fmt.Println(m) }
-
-// SUT describes ways to reset the system under test to a known initial state
-type SUT struct {
-	Start, Reset, Stop []string
-}
+func (m ModelOpenAPIv3) SetSUTResetter(sr SUTResetter)         { m.resetter = sr }
+func (m ModelOpenAPIv3) Pretty(w io.Writer) (n int, err error) { return fmt.Fprintf(w, "%+v\n", m) }
 
 var userRTLang struct {
 	Thread     *starlark.Thread
 	Globals    starlark.StringDict
 	ModelState *starlark.Dict
-	// InitialRun is true only when localcfg is first interpreted
-	InitialRun bool
-	// EnvRead holds all the envs looked up while InitialRun is true
+	// EnvRead holds all the envs looked up on initial run
 	EnvRead  map[string]string
 	Triggers []triggerActionAfterProbe
 
-	Models []Modeler
+	Modelers []Modeler
 }
 
 // TODO: turn these into methods of userRTLang
 const (
-	tState                   = "State"
 	tEnv                     = "Env"
+	tExecReset               = "ExecReset"
+	tExecStart               = "ExecStart"
+	tExecStop                = "ExecStop"
+	tState                   = "State"
 	tTriggerActionAfterProbe = "TriggerActionAfterProbe"
 )
 
@@ -178,11 +241,6 @@ func bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs 
 		return nil, err
 	}
 	envStr := env.GoString()
-	if !userRTLang.InitialRun {
-		// FIXME: just don't declare bEnv during InitialRun
-		return nil, fmt.Errorf("calling %s(%q) is forbidden", b.Name(), envStr)
-	}
-
 	// FIXME: actually maybe read env from Exec shell? These shells should inherit user env anyway?
 	read, ok := os.LookupEnv(envStr)
 	if !ok {
@@ -222,102 +280,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, modelMaker(modeler))
 	}
 
-	// valSUT := SUT{}
-	// bifSUT := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	// 	var start, reset, stop starlark.Value
-	// 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-	// 		"start", &start,
-	// 		"reset", &reset,
-	// 		"stop", &stop,
-	// 	); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	xs, ok := starListOfStringsToSlice(start)
-	// 	if !ok {
-	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "start", "list of strings")
-	// 	}
-	// 	valSUT.Start = xs
-	// 	if xs, ok = starListOfStringsToSlice(reset); !ok {
-	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "reset", "list of strings")
-	// 	}
-	// 	valSUT.Reset = xs
-	// 	if xs, ok = starListOfStringsToSlice(stop); !ok {
-	// 		return nil, fmt.Errorf("%s(%s = ...) must be a %s", "SUT", "stop", "list of strings")
-	// 	}
-	// 	valSUT.Stop = xs
-	// 	return starlark.None, nil
-	// }
-
-	// valSpec := Spec{}
-	// bifSpec := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	// 	var (
-	// 		version          = 1
-	// 		model, overrides starlark.Value
-	// 	)
-	// 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-	// 		"model", &model,
-	// 		"overrides", &overrides,
-	// 		"version?", &version,
-	// 	); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	valSpec.Version = version
-
-	// 	var valOverrides map[string]string
-	// 	{
-	// 		ovs, ok := overrides.(*starlark.Dict)
-	// 		if !ok {
-	// 			return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-	// 		}
-	// 		valOverrides = make(map[string]string, ovs.Len())
-	// 		for _, kv := range ovs.Items() {
-	// 			k, ok := kv.Index(0).(starlark.String)
-	// 			if !ok {
-	// 				return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-	// 			}
-	// 			v, ok := kv.Index(1).(starlark.String)
-	// 			if !ok {
-	// 				return nil, fmt.Errorf("%s(%s = ...) must be a %s", "Spec", "overrides", "map of strings to strings")
-	// 			}
-	// 			valOverrides[k.GoString()] = v.GoString()
-	// 		}
-	// 	}
-	// 	valSpec.Overrides = valOverrides
-
-	// 	var valModel Modeler
-	// 	{
-	// 		mo, ok := model.(*starlark.Dict)
-	// 		if !ok {
-	// 			return nil, fmt.Errorf("%s(%s = ...) must be %s", "Spec", "model", "OpenAPIv3(...)")
-	// 		}
-	// 		v, found, err := mo.Get(starlark.String("ModelKind"))
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
-	// 		if !found {
-	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-	// 		}
-	// 		vv, ok := v.(starlark.Int)
-	// 		if !ok {
-	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-	// 		}
-	// 		vvv, ok := vv.Int64()
-	// 		if !ok {
-	// 			return nil, fmt.Errorf("%s(%s = ...) is incorrect", "Spec", "model")
-	// 		}
-	// 		m, ok := registeredIRModels[ModelKind(vvv)]
-	// 		if !ok {
-	// 			return nil, fmt.Errorf("unexpected model id: %d", vvv)
-	// 		}
-	// 		if valModel, err = m.GoModelerConstructor(*mo); err != nil {
-	// 			return nil, err
-	// 		}
-	// 	}
-	// 	valSpec.Model = valModel
-
-	// 	return starlark.None, nil
-	// }
-
 	bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
 		// ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
@@ -333,12 +295,10 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
 	userRTLang.Thread = &starlark.Thread{
 		Name:  "cfg",
-		Print: func(_ *starlark.Thread, msg string) { fmt.Println(msg) },
+		Print: func(_ *starlark.Thread, msg string) { ColorWRN.Println(msg) },
 	}
 	userRTLang.EnvRead = make(map[string]string)
 	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
-	userRTLang.InitialRun = true
-	defer func() { userRTLang.InitialRun = false }()
 	if userRTLang.Globals, err = starlark.ExecFile(userRTLang.Thread, localCfg, nil, userRTLang.Globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
@@ -349,47 +309,54 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		return
 	}
 
+	// Ensure at least one model was defined
+	ColorERR.Printf(">>> modelers: %#v\n", userRTLang.Modelers)
+	if len(userRTLang.Modelers) == 0 {
+		panic("FIXME")
+	}
+
 	delete(userRTLang.Globals, tEnv)
 	delete(userRTLang.Globals, tTriggerActionAfterProbe)
-	// TODO: ensure only lowercase things are exported
 	userRTLang.ModelState = starlark.NewDict(0)
 	if state, ok := userRTLang.Globals[tState]; ok {
 		d, ok := state.(*starlark.Dict)
 		if !ok {
 			panic("FIXME")
 		}
-		// TODO: check state is a dict with string keys
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
-			if k.Type() != "string" {
-				panic("TODO")
+			// Ensures State keys are all String.s
+			if _, ok := k.(starlark.String); !ok {
+				panic("FIXME")
 			}
 			if err := userRTLang.ModelState.SetKey(k, v); err != nil {
 				panic(err)
 			}
 		}
+		delete(userRTLang.Globals, tState)
 	}
-
-	// FIXME: ensure Spec + SUT were called
-	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))
-	ColorERR.Printf(">>> globals: %#v\n", userRTLang.Globals)
-	return
-}
-
-func starListOfStringsToSlice(val starlark.Value) ([]string, bool) {
-	if list, ok := val.(*starlark.List); ok {
-		n := list.Len()
-		xs := make([]string, 0, n)
-		for i := 0; i < n; i++ {
-			if x, ok := list.Index(i).(starlark.String); ok {
-				xs = append(xs, x.GoString())
-			} else {
-				return nil, false
+	// TODO: ensure only lowercase things are exported
+	for key := range userRTLang.Globals {
+		if len(key) > 255 {
+			panic("FIXME")
+		}
+		for _, c := range key {
+			if unicode.IsUpper(c) {
+				panic("FIXME")
+			}
+			break
+		}
+		for _, c := range key {
+			if !unicode.IsPrint(c) {
+				panic("FIXME")
 			}
 		}
-		return xs, true
 	}
-	return nil, false
+
+	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))
+	ColorERR.Printf(">>> globals: %#v\n", userRTLang.Globals)
+	ColorERR.Printf(">>> envs: %+v\n", userRTLang.EnvRead)
+	return
 }
 
 func parseCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {

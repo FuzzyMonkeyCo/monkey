@@ -99,7 +99,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	{
 		checkN := &RepValidateProgress{Details: []string{"user properties"}}
 		log.Println("[NFO] checking", checkN.Details[0])
-		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.show(msg) }
+		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
 		userRTLang.Globals[tState] = userRTLang.ModelState
 		mnk.progress.wrn(fmt.Sprintf(">>>>>> %s: %+v", tState, userRTLang.Globals[tState]))
 		response := starlark.NewDict(3)

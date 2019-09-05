@@ -16,7 +16,7 @@ OpenAPIv3(
     file = spec,
 
     host = host,
-    # authorization = 'Bearer ' + ...,
+    # header_authorization = 'Bearer ' + ...,
 
     ExecReset = '''
     printf 'Resetting state...\n'
@@ -40,7 +40,7 @@ def actionAfterWeapons(response):
     StateUpdate('weapons', weapons)
 
 def actionAfterGetExistingWeapon(response):
-    print('actionAfterGetWeapon', response)
+    print('!!! actionAfterGetWeapon', response)
     weapon_id = int(response['request']['url'][-1])
     body = response['body']
     # Ensure an API contract
