@@ -24,11 +24,13 @@ OpenAPIv3(
 )
 
 
+# State is optional but HAS TO be a Dict.
 State = {
     'weapons': {},
 }
 
-def actionAfterWeapons(State, response):
+# def actionAfterWeapons(State, response):
+def actionAfterWeapons(response):
     print('### State =', State)
     print("!!! actionAfterWeapons", response)
     State['bla'] = 42   
@@ -37,9 +39,10 @@ def actionAfterWeapons(State, response):
     body = response['body']
     # Set some state
     State['weapons'][ body['id'] ] = body
-    return State
+    # return State
 
-def actionAfterGetExistingWeapon(State, response):
+# def actionAfterGetExistingWeapon(State, response):
+def actionAfterGetExistingWeapon(response):
     print('!!! actionAfterGetWeapon', response)
     weapon_id = int(response['request']['url'][-1])
     body = response['body']
@@ -52,20 +55,13 @@ def actionAfterGetExistingWeapon(State, response):
         fail("wrong data for weapon:", weapon_id,
              "expected", State['weapons'][weapon_id],
              "got", body)
-    return State
-
-# State = {"strk": v0} # : State is optional but HAS TO be a Dict.
-# StateSet(k, v) what happens during loop?
-# StateUpdate(k, v2) what happens during loop?
-# StateGet(k, def)
-# StateItems() ordering?
-# StateKeys() ordering?
-# StateDelete(k) dont fail if doesn't exist
+    # return State
 
 TriggerActionAfterProbe(
     name = 'Collect things',
     probe = ('monkey', 'http', 'response'),
-    predicate = lambda State, response: all([
+    # predicate = lambda State, response: all([
+    predicate = lambda response: all([
         response['request']['method'] == 'GET',
         response['request']['path'] == '/csgo/weapons',
         response['status_code'] == 200,
@@ -81,7 +77,8 @@ TriggerActionAfterProbe(
 TriggerActionAfterProbe(
     name = 'Ensure things match collected',
     probe = ('http', 'response'),
-    predicate = lambda State, response: all([
+    # predicate = lambda State, response: all([
+    predicate = lambda response: all([
         response['request']['method'] == 'GET',
         response['request']['route'] == '/csgo/weapons/:weapon_id',
         response['status_code'] in range(200, 299),

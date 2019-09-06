@@ -100,7 +100,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		checkN := &RepValidateProgress{Details: []string{"user properties"}}
 		log.Println("[NFO] checking", checkN.Details[0])
 		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
-		// userRTLang.Globals[tState] = userRTLang.ModelState
+		userRTLang.Globals[tState] = userRTLang.ModelState
 		mnk.progress.wrn(fmt.Sprintf(">>>>>> %s: %+v", tState, userRTLang.Globals[tState]))
 		response := starlark.NewDict(3)
 		if err := response.SetKey(starlark.String("status_code"), starlark.MakeInt(200)); err != nil {
@@ -126,7 +126,8 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		if err := response.SetKey(starlark.String("request"), request); err != nil {
 			panic(err)
 		}
-		args := starlark.Tuple{userRTLang.ModelState, response}
+		// args := starlark.Tuple{userRTLang.ModelState, response}
+		args := starlark.Tuple{response}
 		for i, trigger := range userRTLang.Triggers {
 			// FIXME: make predicate / action part of check name
 			var shouldBeBool starlark.Value
@@ -156,9 +157,9 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 						panic(fmt.Sprintf("FIXME: %v", err))
 					}
 					ColorERR.Printf(">>>### State = %+v\n", newModelState)
-					if userRTLang.ModelState, ok = newModelState.(*starlark.Dict); !ok {
-						panic(`FIXME: thats also a check failure`)
-					}
+					// if userRTLang.ModelState, ok = newModelState.(*starlark.Dict); !ok {
+					// 	panic(`FIXME: thats also a check failure`)
+					// }
 					checkN.Success = true
 					mnk.progress.checkPassed("user prop")
 				} else {

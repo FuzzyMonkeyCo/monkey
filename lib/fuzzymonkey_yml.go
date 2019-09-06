@@ -14,7 +14,7 @@ import (
 	"unicode"
 
 	"go.starlark.net/starlark"
-	// "go.starlark.net/syntax"
+	"go.starlark.net/syntax"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -218,67 +218,67 @@ func (m ModelOpenAPIv3) SetSUTResetter(sr SUTResetter)   { m.resetter = sr }
 func (m ModelOpenAPIv3) GetSUTResetter() SUTResetter     { return m.resetter }
 func (m ModelOpenAPIv3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
-// type modelState struct {
-// 	d starlark.Dict
-// }
+type modelState struct {
+	d starlark.Dict
+}
 
-// var (
-// 	_ starlark.Value           = (*modelState)(nil)
-// 	_ starlark.HasAttrs        = (*modelState)(nil)
-// 	_ starlark.HasSetKey       = (*modelState)(nil)
-// 	_ starlark.IterableMapping = (*modelState)(nil)
-// 	_ starlark.Sequence        = (*modelState)(nil)
-// 	_ starlark.Comparable      = (*modelState)(nil)
-// )
+var (
+	_ starlark.Value           = (*modelState)(nil)
+	_ starlark.HasAttrs        = (*modelState)(nil)
+	_ starlark.HasSetKey       = (*modelState)(nil)
+	_ starlark.IterableMapping = (*modelState)(nil)
+	_ starlark.Sequence        = (*modelState)(nil)
+	_ starlark.Comparable      = (*modelState)(nil)
+)
 
-// func NewState(size int) *modelState {
-// 	return &modelState{d: *starlark.NewDict(size)}
-// }
+func NewState(size int) *modelState {
+	return &modelState{d: *starlark.NewDict(size)}
+}
 
-// func (s *modelState) Clear() error { return s.d.Clear() }
-// func (s *modelState) Delete(k starlark.Value) (v starlark.Value, found bool, err error) {
-// 	return s.d.Delete(k)
-// }
-// func (s *modelState) Get(k starlark.Value) (v starlark.Value, found bool, err error) {
-// 	return s.d.Get(k)
-// }
-// func (s *modelState) Items() []starlark.Tuple    { return s.d.Items() }
-// func (s *modelState) Keys() []starlark.Value     { return s.d.Keys() }
-// func (s *modelState) Len() int                   { return s.d.Len() }
-// func (s *modelState) Iterate() starlark.Iterator { return s.d.Iterate() }
-// func (s *modelState) SetKey(k, v starlark.Value) error {
-// 	ColorERR.Printf(">>> SetKey(%v, %v) >>> %+v\n", k, v, s)
-// 	return s.d.SetKey(k, v)
-// }
-// func (s *modelState) String() string { return s.d.String() }
-// func (s *modelState) Type() string   { return "modelState" }
-// func (s *modelState) Freeze() {
-// 	ColorERR.Printf(">>> not freezing >>> %+v\n", s)
-// 	// TODO: we sure?
-// 	/// d.ht.freeze()
-// }
-// func (s *modelState) Truth() starlark.Bool  { return s.d.Truth() }
-// func (s *modelState) Hash() (uint32, error) { return s.d.Hash() }
+func (s *modelState) Clear() error { return s.d.Clear() }
+func (s *modelState) Delete(k starlark.Value) (v starlark.Value, found bool, err error) {
+	return s.d.Delete(k)
+}
+func (s *modelState) Get(k starlark.Value) (v starlark.Value, found bool, err error) {
+	return s.d.Get(k)
+}
+func (s *modelState) Items() []starlark.Tuple    { return s.d.Items() }
+func (s *modelState) Keys() []starlark.Value     { return s.d.Keys() }
+func (s *modelState) Len() int                   { return s.d.Len() }
+func (s *modelState) Iterate() starlark.Iterator { return s.d.Iterate() }
+func (s *modelState) SetKey(k, v starlark.Value) error {
+	ColorERR.Printf(">>> SetKey(%v, %v) >>> %+v\n", k, v, s)
+	return s.d.SetKey(k, v)
+}
+func (s *modelState) String() string { return s.d.String() }
+func (s *modelState) Type() string   { return "modelState" }
+func (s *modelState) Freeze() {
+	ColorERR.Printf(">>> not freezing >>> %+v\n", s)
+	// TODO: we sure?
+	/// d.ht.freeze()
+}
+func (s *modelState) Truth() starlark.Bool  { return s.d.Truth() }
+func (s *modelState) Hash() (uint32, error) { return s.d.Hash() }
 
-// func (s *modelState) Attr(name string) (starlark.Value, error) {
-// 	// TODO: return builtinAttr(d, name, dictMethods)
-// 	return s.d.Attr(name)
-// 	// return nil, errors.New("some Attr() error")
-// }
-// func (s *modelState) AttrNames() []string {
-// 	// TODO: return builtinAttrNames(dictMethods)
-// 	return s.d.AttrNames()
-// }
+func (s *modelState) Attr(name string) (starlark.Value, error) {
+	// TODO: return builtinAttr(d, name, dictMethods)
+	return s.d.Attr(name)
+	// return nil, errors.New("some Attr() error")
+}
+func (s *modelState) AttrNames() []string {
+	// TODO: return builtinAttrNames(dictMethods)
+	return s.d.AttrNames()
+}
 
-// func (x *modelState) CompareSameType(op syntax.Token, y_ starlark.Value, depth int) (bool, error) {
-// 	return x.d.CompareSameType(op, y_, depth)
-// }
+func (x *modelState) CompareSameType(op syntax.Token, y_ starlark.Value, depth int) (bool, error) {
+	return x.d.CompareSameType(op, y_, depth)
+}
 
 var userRTLang struct {
-	Thread  *starlark.Thread
-	Globals starlark.StringDict
-	// ModelState *modelState
-	ModelState *starlark.Dict
+	Thread     *starlark.Thread
+	Globals    starlark.StringDict
+	ModelState *modelState
+	// ModelState *starlark.Dict
 	// EnvRead holds all the envs looked up on initial run
 	EnvRead  map[string]string
 	Triggers []triggerActionAfterProbe
@@ -343,18 +343,6 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		}
 		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, modelMaker(modeler))
 	}
-
-	// bifStateF := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	// 	//FIXME: impl State funcs + initial `State` read & map[string]Value enforcement
-	// 	// ColorERR.Printf(">>> kwargs = %+v\n", kwargs)
-	// 	if err := userRTLang.ModelState.SetKey(starlark.String("blip"), starlark.String("Ah!")); err != nil {
-	// 		return nil, err
-	// 	}
-	// 	return userRTLang.ModelState, nil
-	// }
-	// for _, fname := range []string{"StateGet", "StateUpdate"} {
-	// 	userRTLang.Globals[fname] = starlark.NewBuiltin(fname, bifStateF)
-	// }
 	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
 	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
 	userRTLang.Thread = &starlark.Thread{
@@ -387,7 +375,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			panic("FIXME")
 		}
 		delete(userRTLang.Globals, tState)
-		userRTLang.ModelState = starlark.NewDict(d.Len())
+		userRTLang.ModelState = NewState(d.Len())
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
 			// Ensures State keys are all String.s
@@ -401,7 +389,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			}
 		}
 	} else {
-		userRTLang.ModelState = starlark.NewDict(0)
+		userRTLang.ModelState = NewState(0)
 	}
 	// TODO: ensure only lowercase things are exported
 	for key := range userRTLang.Globals {
