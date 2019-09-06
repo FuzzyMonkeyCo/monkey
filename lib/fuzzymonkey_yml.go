@@ -250,13 +250,9 @@ func (s *modelState) SetKey(k, v starlark.Value) error {
 	ColorERR.Printf(">>> SetKey(%v, %v) >>> %+v\n", k, v, s)
 	return s.d.SetKey(k, v)
 }
-func (s *modelState) String() string { return s.d.String() }
-func (s *modelState) Type() string   { return "modelState" }
-func (s *modelState) Freeze() {
-	ColorERR.Printf(">>> not freezing >>> %+v\n", s)
-	// TODO: we sure?
-	/// d.ht.freeze()
-}
+func (s *modelState) String() string        { return s.d.String() }
+func (s *modelState) Type() string          { return s.d.Type() }
+func (s *modelState) Freeze()               { s.d.Freeze() }
 func (s *modelState) Truth() starlark.Bool  { return s.d.Truth() }
 func (s *modelState) Hash() (uint32, error) { return s.d.Hash() }
 
@@ -412,6 +408,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))
 	ColorERR.Printf(">>> globals: %#v\n", userRTLang.Globals)
 	ColorERR.Printf(">>> envs: %+v\n", userRTLang.EnvRead)
+	ColorERR.Printf(">>> trigs: %+v\n", userRTLang.Triggers)
 	return
 }
 
