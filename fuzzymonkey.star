@@ -28,18 +28,18 @@ State = {
     'weapons': {},
 }
 
-def actionAfterWeapons(response):
-    print('StateGet() =', StateGet())
+def actionAfterWeapons(State, response):
+    print('### State =', State)
     print("!!! actionAfterWeapons", response)
-    return
+    State['bla'] = 42   
+    print('### State =', State)
     # Response has already been validated and JSON decoded
     body = response['body']
     # Set some state
-    weapons = StateGet('weapons')
-    weapons[ body['id'] ] = body
-    StateUpdate('weapons', weapons)
+    State['weapons'][ body['id'] ] = body
+    return State
 
-def actionAfterGetExistingWeapon(response):
+def actionAfterGetExistingWeapon(State, response):
     print('!!! actionAfterGetWeapon', response)
     weapon_id = int(response['request']['url'][-1])
     body = response['body']
@@ -48,23 +48,24 @@ def actionAfterGetExistingWeapon(response):
     # Implied: if weapon_id in StateGet('weapons'):
     # Verify state
     #AssertThat(body).equals(weapons[weapon_id])
-    if body != StateGet('weapons')[weapon_id]:
+    if body != State['weapons'][weapon_id]:
         fail("wrong data for weapon:", weapon_id,
-             "expected", StateGet('weapons')[weapon_id],
+             "expected", State['weapons'][weapon_id],
              "got", body)
+    return State
 
-# There MUST NOT be any upper case exports.
 # State = {"strk": v0} # : State is optional but HAS TO be a Dict.
-# StateSet(k, v)
-# StateUpdate(k, v2)
-# StateGet(k)
-# StateItems()
-# StateKeys()
-# StateDelete(k)
+# StateSet(k, v) what happens during loop?
+# StateUpdate(k, v2) what happens during loop?
+# StateGet(k, def)
+# StateItems() ordering?
+# StateKeys() ordering?
+# StateDelete(k) dont fail if doesn't exist
 
 TriggerActionAfterProbe(
+    name = 'Collect things',
     probe = ('monkey', 'http', 'response'),
-    predicate = lambda response: all([
+    predicate = lambda State, response: all([
         response['request']['method'] == 'GET',
         response['request']['path'] == '/csgo/weapons',
         response['status_code'] == 200,
@@ -78,8 +79,9 @@ TriggerActionAfterProbe(
 )
 
 TriggerActionAfterProbe(
+    name = 'Ensure things match collected',
     probe = ('http', 'response'),
-    predicate = lambda response: all([
+    predicate = lambda State, response: all([
         response['request']['method'] == 'GET',
         response['request']['route'] == '/csgo/weapons/:weapon_id',
         response['status_code'] in range(200, 299),
