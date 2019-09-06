@@ -36,8 +36,10 @@ def actionAfterWeapons(State, response):
     print('### State =', State)
     # Response has already been validated and JSON decoded
     body = response['body']
+    print("Setting thing {}".format(body['id']))
     # Set some state
     State['weapons'][ body['id'] ] = body
+    print('### State =', State)
     return State
 
 def actionAfterGetExistingWeapon(State, response):

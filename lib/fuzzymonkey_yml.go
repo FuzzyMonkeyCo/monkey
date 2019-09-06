@@ -235,46 +235,31 @@ func NewState(size int) *modelState {
 	return &modelState{d: *starlark.NewDict(size)}
 }
 
-func (s *modelState) Clear() error { return s.d.Clear() }
-func (s *modelState) Delete(k starlark.Value) (v starlark.Value, found bool, err error) {
-	return s.d.Delete(k)
-}
-func (s *modelState) Get(k starlark.Value) (v starlark.Value, found bool, err error) {
-	return s.d.Get(k)
-}
-func (s *modelState) Items() []starlark.Tuple    { return s.d.Items() }
-func (s *modelState) Keys() []starlark.Value     { return s.d.Keys() }
-func (s *modelState) Len() int                   { return s.d.Len() }
-func (s *modelState) Iterate() starlark.Iterator { return s.d.Iterate() }
-func (s *modelState) SetKey(k, v starlark.Value) error {
-	ColorERR.Printf(">>> SetKey(%v, %v) >>> %+v\n", k, v, s)
-	return s.d.SetKey(k, v)
-}
-func (s *modelState) String() string        { return s.d.String() }
-func (s *modelState) Type() string          { return s.d.Type() }
-func (s *modelState) Freeze()               { s.d.Freeze() }
-func (s *modelState) Truth() starlark.Bool  { return s.d.Truth() }
-func (s *modelState) Hash() (uint32, error) { return s.d.Hash() }
-
-func (s *modelState) Attr(name string) (starlark.Value, error) {
-	// TODO: return builtinAttr(d, name, dictMethods)
-	return s.d.Attr(name)
-	// return nil, errors.New("some Attr() error")
-}
-func (s *modelState) AttrNames() []string {
-	// TODO: return builtinAttrNames(dictMethods)
-	return s.d.AttrNames()
-}
+func (s *modelState) Clear() error                                          { return s.d.Clear() }
+func (s *modelState) Delete(k starlark.Value) (starlark.Value, bool, error) { return s.d.Delete(k) }
+func (s *modelState) Get(k starlark.Value) (starlark.Value, bool, error)    { return s.d.Get(k) }
+func (s *modelState) Items() []starlark.Tuple                               { return s.d.Items() }
+func (s *modelState) Keys() []starlark.Value                                { return s.d.Keys() }
+func (s *modelState) Len() int                                              { return s.d.Len() }
+func (s *modelState) Iterate() starlark.Iterator                            { return s.d.Iterate() }
+func (s *modelState) SetKey(k, v starlark.Value) error                      { return s.d.SetKey(k, v) }
+func (s *modelState) String() string                                        { return s.d.String() }
+func (s *modelState) Type() string                                          { return s.d.Type() }
+func (s *modelState) Freeze()                                               { s.d.Freeze() }
+func (s *modelState) Truth() starlark.Bool                                  { return s.d.Truth() }
+func (s *modelState) Hash() (uint32, error)                                 { return s.d.Hash() }
+func (s *modelState) Attr(name string) (starlark.Value, error)              { return s.d.Attr(name) }
+func (s *modelState) AttrNames() []string                                   { return s.d.AttrNames() }
 
 func (x *modelState) CompareSameType(op syntax.Token, y_ starlark.Value, depth int) (bool, error) {
 	return x.d.CompareSameType(op, y_, depth)
 }
 
 var userRTLang struct {
-	Thread     *starlark.Thread
-	Globals    starlark.StringDict
-	ModelState *modelState
-	// ModelState *starlark.Dict
+	Thread  *starlark.Thread
+	Globals starlark.StringDict
+	// ModelState *modelState
+	ModelState *starlark.Dict
 	// EnvRead holds all the envs looked up on initial run
 	EnvRead  map[string]string
 	Triggers []triggerActionAfterProbe
@@ -371,7 +356,8 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			panic("FIXME")
 		}
 		delete(userRTLang.Globals, tState)
-		userRTLang.ModelState = NewState(d.Len())
+		// userRTLang.ModelState = NewState(d.Len())
+		userRTLang.ModelState = starlark.NewDict(d.Len())
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
 			// Ensures State keys are all String.s
@@ -380,12 +366,14 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			}
 			// TODO: restrict v.s to literals only?
 			ColorERR.Printf(">>> modelState: SetKey(%v, %v)\n", k, v)
+			// if err := userRTLang.ModelState.SetKey(k, v); err != nil {
 			if err := userRTLang.ModelState.SetKey(k, starlark.NewDict(0)); err != nil {
 				panic(err)
 			}
 		}
 	} else {
-		userRTLang.ModelState = NewState(0)
+		// userRTLang.ModelState = NewState(0)
+		userRTLang.ModelState = starlark.NewDict(0)
 	}
 	// TODO: ensure only lowercase things are exported
 	for key := range userRTLang.Globals {
