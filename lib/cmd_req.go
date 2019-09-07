@@ -100,7 +100,6 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		checkN := &RepValidateProgress{Details: []string{"user properties"}}
 		log.Println("[NFO] checking", checkN.Details[0])
 		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
-		// userRTLang.Globals[tState] = userRTLang.ModelState
 		response := starlark.NewDict(3)
 		if err := response.SetKey(starlark.String("status_code"), starlark.MakeInt(200)); err != nil {
 			panic(err)
@@ -153,8 +152,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 						panic(fmt.Sprintf("FIXME: %v", err))
 					}
 					ColorERR.Printf(">>>### State = %+v\n", newModelState)
-					// if userRTLang.ModelState, ok = newModelState.(*modelState); !ok {
-					if userRTLang.ModelState, ok = newModelState.(*starlark.Dict); !ok {
+					if userRTLang.ModelState, ok = newModelState.(*modelState); !ok {
 						panic(`FIXME: thats also a check failure`)
 					}
 					checkN.Success = true
