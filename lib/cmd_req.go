@@ -97,9 +97,8 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 
 	// Check #N: user-provided postconditions
 	{
-		checkN := &RepValidateProgress{Details: []string{"user properties"}}
-		log.Println("[NFO] checking", checkN.Details[0])
-		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
+		log.Printf("[NFO] checking %d user properties", len(userRTLang.Triggers))
+
 		response := starlark.NewDict(3)
 		if err := response.SetKey(starlark.String("status_code"), starlark.MakeInt(200)); err != nil {
 			panic(err)
@@ -124,40 +123,64 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		if err := response.SetKey(starlark.String("request"), request); err != nil {
 			panic(err)
 		}
+
 		args := starlark.Tuple{userRTLang.ModelState, response}
+		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
 		for i, trigger := range userRTLang.Triggers {
-			// FIXME: make predicate / action part of check name
+			checkN := &RepValidateProgress{Details: []string{fmt.Sprintf("user property #%d: %q", i, trigger.Name.GoString())}}
+			log.Println("[NFO] checking", checkN.Details[0])
+
 			var shouldBeBool starlark.Value
 			if shouldBeBool, err = starlark.Call(userRTLang.Thread, trigger.Predicate, args, nil); err != nil {
 				checkN.Failure = true
-				//TODO: split on \n.s
-				checkN.Details = append(checkN.Details, err.Error())
-				log.Println("[NFO]", err)
+				//TODO: split on \n.s or you know create a type better than []string
 				if evalErr, ok := err.(*starlark.EvalError); ok {
-					bt := evalErr.Backtrace()
-					mnk.progress.checkFailed([]string{bt})
+					checkN.Details = append(checkN.Details, evalErr.Backtrace())
 				} else {
-					mnk.progress.checkFailed([]string{err.Error()})
+					checkN.Details = append(checkN.Details, err.Error())
 				}
-				// break
+				log.Println("[NFO]", err)
+				mnk.progress.checkFailed(checkN.Details[1:])
 			} else {
+
 				triggered, ok := shouldBeBool.(starlark.Bool)
 				if !ok {
-					panic(`FIXME: thats also a check failure`)
-				}
-				if triggered {
-					mnk.progress.nfo(fmt.Sprintf(">>> [%d] triggered", i))
-					var newModelState starlark.Value
-					if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args, nil); err != nil {
-						panic(fmt.Sprintf("FIXME: %v", err))
-					}
-					if userRTLang.ModelState, ok = newModelState.(*modelState); !ok {
-						panic(`FIXME: thats also a check failure`)
-					}
-					checkN.Success = true
-					mnk.progress.checkPassed("user prop")
+					checkN.Failure = true
+					err = fmt.Errorf("expected predicate to return a Bool, got: %v", shouldBeBool)
+					e := err.Error()
+					checkN.Details = append(checkN.Details, e)
+					log.Println("[NFO]", err)
+					mnk.progress.checkFailed([]string{e})
 				} else {
-					mnk.progress.nfo(fmt.Sprintf(">>> [%d] not triggered", i))
+					if !triggered {
+						mnk.progress.checkSkipped(checkN.Details[0])
+					} else {
+
+						var newModelState starlark.Value
+						if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args, nil); err != nil {
+							checkN.Failure = true
+							//TODO: split on \n.s or you know create a type better than []string
+							if evalErr, ok := err.(*starlark.EvalError); ok {
+								checkN.Details = append(checkN.Details, evalErr.Backtrace())
+							} else {
+								checkN.Details = append(checkN.Details, err.Error())
+							}
+							log.Println("[NFO]", err)
+							mnk.progress.checkFailed(checkN.Details[1:])
+						}
+						if userRTLang.ModelState, ok = newModelState.(*modelState); !ok {
+							checkN.Failure = true
+							err = fmt.Errorf("expected action to return a ModelState, got: %v", newModelState)
+							e := err.Error()
+							checkN.Details = append(checkN.Details, e)
+							log.Println("[NFO]", err)
+							mnk.progress.checkFailed([]string{e})
+						} else {
+
+							checkN.Success = true
+							mnk.progress.checkPassed(checkN.Details[0])
+						}
+					}
 				}
 			}
 			if err = mnk.ws.cast(checkN); err != nil {
@@ -170,10 +193,10 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		}
 	}
 
-	checkN := &RepCallResult{Response: enumFromGo(jsonData)}
+	checkZ := &RepCallResult{Response: enumFromGo(jsonData)}
 	log.Println("[DBG] checks passed")
 	mnk.progress.checksPassed()
-	if err = mnk.ws.cast(checkN); err != nil {
+	if err = mnk.ws.cast(checkZ); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return

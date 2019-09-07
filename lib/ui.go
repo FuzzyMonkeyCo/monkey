@@ -44,6 +44,9 @@ func (p *progress) checksPassed() { p.nfo(" All checks passed.\n") }
 func (p *progress) checkPassed(s string) {
 	p.show(" " + ColorOK.Sprintf("✓") + " " + ColorNFO.Sprintf(s))
 }
+func (p *progress) checkSkipped(s string) {
+	p.show(" " + ColorWRN.Sprintf("◦") + " " + ColorNFO.Sprintf(s) + " skipped")
+}
 func (p *progress) checkFailed(ss []string) {
 	p.failed = true
 	for _, s := range ss {
