@@ -151,7 +151,6 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 					if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args, nil); err != nil {
 						panic(fmt.Sprintf("FIXME: %v", err))
 					}
-					ColorERR.Printf(">>>### State = %+v\n", newModelState)
 					if userRTLang.ModelState, ok = newModelState.(*modelState); !ok {
 						panic(`FIXME: thats also a check failure`)
 					}
