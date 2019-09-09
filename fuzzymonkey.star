@@ -32,7 +32,7 @@ State = {
 def actionAfterWeapons(State, response):
     print('### State =', State)
     print("!!! actionAfterWeapons", response)
-    State['bla'] = 42   
+    State['bla'] = 42
     print('### State =', State)
     # Response has already been validated and JSON decoded
     body = response['body']
