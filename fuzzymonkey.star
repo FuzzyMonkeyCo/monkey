@@ -24,37 +24,37 @@ OpenAPIv3(
 )
 
 
-# State is optional but HAS TO be a Dict.
+# State is optional but has to be a Dict.
 State = {
-    'weapons': {},
+    'posts': {},
 }
 
-def actionAfterWeapons(State, response):
-    print('### State =', State)
-    print("!!! actionAfterWeapons", response)
-    State['bla'] = 42
-    print('### State =', State)
+def actionAfterPosts(State, response):
     # Response has already been validated and JSON decoded
-    body = response['body']
-    print("Setting thing {}".format(body['id']))
-    # Set some state
-    State['weapons'][ body['id'] ] = body
-    print('### State =', State)
+    for post in response['json']:
+        # Set some state
+        State['posts'][ post['id'] ] = post
+    print("State has {} items".format(len(State['posts'])))
     return State
 
-def actionAfterGetExistingWeapon(State, response):
-    print('!!! actionAfterGetWeapon', response)
-    weapon_id = int(response['request']['url'][-1])
-    body = response['body']
+def ensureIdMatchesURL(State, response):
+    postId = int(response['request']['url'].split('/')[-1])
+    # Implied: postId in State['posts'] and post == State['posts'][postId]
     # Ensure an API contract
-    #assert.eq(weapon_id, body['id'])
-    # Implied: if weapon_id in StateGet('weapons'):
+    #AssertThat(postId).Equals(post['id'])
+    if postId != response['json']['id']:
+        fail("Post Id from URL must match Id in body")
+    return State
+
+def actionAfterGetExistingPost(State, response):
+    postId = int(response['request']['url'].split('/')[-1])
+    post = response['json']
     # Verify state
-    #AssertThat(body).equals(weapons[weapon_id])
-    if body != State['weapons'][weapon_id]:
-        fail("wrong data for weapon:", weapon_id,
-             "expected", State['weapons'][weapon_id],
-             "got", body)
+    #AssertThat(post).Equals(State['posts'][postId])
+    if post != State['posts'][postId]:
+        fail("wrong data for post:", postId,
+             "expected", State['posts'][postId],
+             "got", post)
     return State
 
 TriggerActionAfterProbe(
@@ -62,26 +62,38 @@ TriggerActionAfterProbe(
     probe = ('monkey', 'http', 'response'),
     predicate = lambda State, response: all([
         response['request']['method'] == 'GET',
-        response['request']['path'] == '/csgo/weapons',
+        response['request']['url'].endswith('/posts'),
         response['status_code'] == 200,
     ]),
     # predicate = None,
     # match = {
-    #     'request': {'method': 'GET', 'path': '/csgo/weapons'},
+    #     'request': {'method': 'GET', 'path': '/posts'},
     #     'status_code': 200,
     # },
-    action = actionAfterWeapons,
+    action = actionAfterPosts,
 )
 
+for action in [ensureIdMatchesURL, actionAfterGetExistingPost]:
+    TriggerActionAfterProbe(
+        # name = 'Ensure things match collected',
+        probe = ('http', 'response'),
+        predicate = lambda State, response: all([
+            response['request']['method'] == 'GET',
+            response['request']['url'].find('/posts/') != -1,
+            response['status_code'] in range(200, 299),
+            'id' in response['json'] and response['json']['id'] in State['posts'],
+        ]),
+        # match = None,
+        action = action,
+    )
+
 TriggerActionAfterProbe(
-    name = 'Ensure things match collected',
     probe = ('http', 'response'),
     predicate = lambda State, response: all([
         response['request']['method'] == 'GET',
-        response['request']['route'] == '/csgo/weapons/:weapon_id',
+        response['request']['url'].find('/posts/') != -1,
+        response['request']['url'].endswith('/comments'),
         response['status_code'] in range(200, 299),
-        response['body']['id'] in State['weapons'],
     ]),
-    # match = None,
-    action = actionAfterGetExistingWeapon,
+    action = lambda State, response: None,
 )

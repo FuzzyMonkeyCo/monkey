@@ -330,7 +330,7 @@ type triggerActionAfterProbe struct {
 func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var trigger triggerActionAfterProbe
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"name", &trigger.Name,
+		"name?", &trigger.Name,
 		"probe", &trigger.Probe,
 		"predicate", &trigger.Predicate,
 		"action", &trigger.Action,
@@ -339,6 +339,10 @@ func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args sta
 	}
 	// TODO: enforce arities
 	log.Println("[NFO] registering", b.Name(), trigger)
+	if name := trigger.Name.GoString(); name == "" {
+		trigger.Name = starlark.String(trigger.Action.Name())
+		// TODO: complain if trigger.Name == "lambda"
+	}
 	userRTLang.Triggers = append(userRTLang.Triggers, trigger)
 	return starlark.None, nil
 }

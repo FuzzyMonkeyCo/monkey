@@ -34,3 +34,45 @@ func DoExecREPL() error {
 	repl.REPL(thread, starlark.StringDict{})
 	return nil
 }
+
+func slValueFromInterface(v interface{}) (starlark.Value, error) {
+	switch vv := v.(type) {
+	case nil:
+		return starlark.None, nil
+	case bool:
+		return starlark.Bool(vv), nil
+	case int64:
+		return starlark.MakeInt64(vv), nil
+	case float64:
+		return starlark.Float(vv), nil
+	case string:
+		return starlark.String(vv), nil
+	case []interface{}:
+		values := make([]starlark.Value, 0, len(vv))
+		for _, value := range vv {
+			var vvv starlark.Value
+			var err error
+			if vvv, err = slValueFromInterface(value); err != nil {
+				return nil, err
+			}
+			values = append(values, vvv)
+		}
+		return starlark.NewList(values), nil
+	case map[string]interface{}:
+		values := starlark.NewDict(len(vv))
+		for key, value := range vv {
+			var vvv starlark.Value
+			var err error
+			if vvv, err = slValueFromInterface(value); err != nil {
+				return nil, err
+			}
+			if err = values.SetKey(starlark.String(key), vvv); err != nil {
+				return nil, err
+			}
+		}
+		return values, nil
+	default:
+		err := fmt.Errorf("not a JSON value: %v", v)
+		return nil, err
+	}
+}
