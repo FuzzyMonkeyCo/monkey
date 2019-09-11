@@ -23,7 +23,8 @@ const HARSpecVersion = "1.2"
 // HARRecorder logs every HTTP request and response
 type HARRecorder struct {
 	http.RoundTripper
-	Log *HAR_Log
+	Log    *HAR_Log
+	RepReq map[string]interface{}
 }
 
 // NewHAR is a handy HAR constructor
@@ -38,11 +39,14 @@ func NewHAR(name string) *HAR_Log {
 	}
 }
 
+var _ http.RoundTripper = (*HARRecorder)(nil)
+
 // NewRecorder returns a new Recorder object that fulfills the http.RoundTripper interface
 func NewRecorder(name string) *HARRecorder {
 	return &HARRecorder{
 		RoundTripper: http.DefaultTransport,
 		Log:          NewHAR(name),
+		RepReq:       make(map[string]interface{}, 5),
 	}
 }
 

@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"strings"
 	"time"
@@ -185,31 +187,103 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	return
 }
 
+// CallCapturer is not CastCapturer {Request(), ..Wait?}
+type CallCapturer interface {
+	Request() starlark.Value
+	Response() starlark.Value
+}
+
+type CallCaptureShower interface {
+	ShowRequest(func(string, ...interface{})) error
+	ShowResponse(func(string, ...interface{})) error
+}
+
+type transportCapturer struct {
+	req, rep starlark.Value
+	err      string
+	elapsed  time.Duration
+
+	showf func(string, ...interface{})
+}
+
+func newHTTPTCap(showf func(string, ...interface{})) *transportCapturer {
+	return &transportCapturer{
+		req:   starlark.None,
+		showf: showf,
+	}
+}
+
+// Request/Response somewhat follow python's `requests` API
+var _ CallCapturer = (*transportCapturer)(nil)
+
+func (c *transportCapturer) Request() starlark.Value  { return c.req }
+func (c *transportCapturer) Response() starlark.Value { return c.rep }
+
+var _ CallCaptureShower = (*transportCapturer)(nil)
+
+func (c *transportCapturer) ShowRequest(showf func(string, ...interface{})) error {
+	// TODO: output `curl` requests when showing counterexample
+	//   https://github.com/sethgrid/gencurl
+	//   https://github.com/moul/http2curl
+	dump, err := httputil.DumpRequestOut(r, false)
+	if err != nil {
+		// MUST log in caller
+		return err
+	}
+	// show(string(dump))
+	showf("%s", dump)
+	return nil
+}
+
+func (c *transportCapturer) ShowResponse(showf func(string, ...interface{})) error {
+	if r == nil {
+		panic("FIXME")
+	}
+
+	dump, err := httputil.DumpResponse(r, false)
+	if err != nil {
+		// MUST log in caller
+		return err
+	}
+	// show(string(dump))
+	showf("%s", dump)
+	return nil
+}
+
+func (c *transportCapturer) request(r *http.Request) error {
+	return nil
+}
+
+func (c *transportCapturer) response(r *http.Response) error {
+	return nil
+}
+
+var _ http.RoundTripper = (*transportCapturer)(nil)
+
+func (c *transportCapturer) RoundTrip(req *http.Request) (rep *http.Response, err error) {
+	if err = c.request(req); err != nil {
+		return
+	}
+
+	start := time.Now()
+	if rep, err = http.DefaultTransport.RoundTrip(req); err != nil {
+		return
+	}
+	elapsed := time.Since(start)
+	c.elapsed = elapsed
+
+	err = c.response(rep)
+	return
+}
+
 func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
-	mnk.progress.state("Testing...")
+	mnk.progress.state("🙈")
 	mnk.eid = act.EID
 
-	if !isHARReady() {
-		newHARTransport(mnk.Name)
-	}
+	tcap := newHTTPTCap(mnk.progress.showf)
 
-	host := mnk.Cfg.Runtime.FinalHost
-	if addHost != nil {
-		host = *addHost
-	}
-	configured, err := url.ParseRequestURI(host)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	act.updateUserAgentHeader(mnk.Name)
-	if err = act.updateURL(configured); err != nil {
-		return
-	}
-	act.updateHostHeader(configured)
 	var nxt *RepCallDone
-	if nxt, err = act.makeRequest(mnk); err != nil {
+	if nxt, err = tcap.makeRequest(act.GetRequest(), mnk.Cfg.Runtime.FinalHost); err != nil {
 		return
 	}
 
@@ -217,13 +291,13 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
+
 	err = mnk.castPostConditions(nxt)
 	mnk.eid = 0
 	return
 }
 
-func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
-	harReq := act.GetRequest()
+func (c *transportCapturer) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDone, err error) {
 	req, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -234,37 +308,51 @@ func (act *ReqDoCall) makeRequest(mnk *Monkey) (nxt *RepCallDone, err error) {
 		req.Header.Add("Authorization", *addHeaderAuthorization)
 	}
 
-	log.Println("[NFO] ▼", harReq)
-	if err = mnk.showRequest(req); err != nil {
+	if addHost != nil {
+		host = *addHost
+	}
+	configured, err := url.ParseRequestURI(host)
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	start := time.Now()
-	rep, err := clientReq.Do(req)
-	nxt = &RepCallDone{TsDiff: uint64(time.Since(start))}
+	updateUserAgentHeader(req)
+	updateHostHeader(req, configured)
+	if err = updateURL(req, configured); err != nil {
+		return
+	}
 
-	var e string
+	log.Println("[NFO] ▼", harReq)
+	if err = c.ShowRequest(c.showf); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
+	_, err = (&http.Client{
+		Transport: c,
+	}).Do(req)
+
+	nxt = &RepCallDone{TsDiff: uint64(c.elapsed)}
 	if err == nil {
-		resp := lastHAR()
+		resp := c.Response()
 		log.Println("[NFO] ▲", resp)
-		nxt.Response = resp
+		// FIXME: nxt.Response = resp
 		nxt.Success = true
 	} else {
-		//FIXME: is there a way to describe these failures in HAR 1.2?
-		e = err.Error()
-		log.Println("[NFO] ▲", e)
-		nxt.Reason = e
+		c.err = err.Error()
+		log.Println("[NFO] ▲", c.err)
+		nxt.Reason = c.err
 		nxt.Failure = true
 	}
 
-	if err = mnk.showResponse(rep, e); err != nil {
+	if err = c.ShowResponse(c.showf); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return
 }
 
-func (act *ReqDoCall) updateURL(configured *url.URL) (err error) {
+func updateURL(r *http.Request, configured *url.URL) (err error) {
 	URL, err := url.Parse(act.Request.URL)
 	if err != nil {
 		log.Println("[ERR] malformed URLs are unexpected:", err)
@@ -277,18 +365,18 @@ func (act *ReqDoCall) updateURL(configured *url.URL) (err error) {
 	return
 }
 
-func (act *ReqDoCall) updateUserAgentHeader(ua string) {
+func updateUserAgentHeader(r *http.Request) {
 	for i := range act.Request.Headers {
 		if act.Request.Headers[i].Name == "User-Agent" {
 			if strings.HasPrefix(act.Request.Headers[i].Value, "FuzzyMonkey.co/") {
-				act.Request.Headers[i].Value = ua
+				act.Request.Headers[i].Value = binTitle
 				break
 			}
 		}
 	}
 }
 
-func (act *ReqDoCall) updateHostHeader(configured *url.URL) {
+func updateHostHeader(r *http.Request, configured *url.URL) {
 	for i := range act.Request.Headers {
 		if act.Request.Headers[i].Name == "Host" {
 			act.Request.Headers[i].Value = configured.Host
@@ -297,7 +385,6 @@ func (act *ReqDoCall) updateHostHeader(configured *url.URL) {
 	}
 }
 
-// Somewhat follows python's `requests` API
 func slValueFromHAR(entry *HAR_Entry) (r starlark.Value, err error) {
 	// FIXME: skip HAR entirely
 	req := starlark.NewDict(4)

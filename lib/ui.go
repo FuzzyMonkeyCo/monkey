@@ -32,9 +32,10 @@ func (p *progress) state(s string) {
 	advancement := 1 + int(p.lastLane.GetTotalCallsCount())
 	p.bar.Update(advancement, bar.Context{bar.Ctx("state", s)})
 }
-func (p *progress) show(s string) { p.bar.Interrupt(s) }
-func (p *progress) nfo(s string)  { p.show(ColorNFO.Sprintf("%s", s)) }
-func (p *progress) wrn(s string)  { p.show(ColorWRN.Sprintf("%s", s)) }
+func (p *progress) show(s string)                         { p.bar.Interrupt(s) }
+func (p *progress) showf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
+func (p *progress) nfo(s string)                          { p.show(ColorNFO.Sprintf("%s", s)) }
+func (p *progress) wrn(s string)                          { p.show(ColorWRN.Sprintf("%s", s)) }
 func (p *progress) err(s string) {
 	p.show(ColorERR.Sprintf("%s", s))
 	p.failed = true

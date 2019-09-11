@@ -1,19 +1,20 @@
 package lib
 
+var binTitle string
+
 type Monkey struct {
 	Cfg      *UserCfg
 	Vald     *Validator
-	Name     string
 	ws       *wsState
 	eid      eid
 	progress *progress
 }
 
 func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
+	binTitle = name
 	return &Monkey{
 		Cfg:  cfg,
 		Vald: vald,
-		Name: name,
 	}
 }
 
