@@ -1,17 +1,26 @@
 package lib
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.starlark.net/starlark"
+)
+
+var (
+	headerContentLength    = http.CanonicalHeaderKey("Content-Length")
+	headerHost             = http.CanonicalHeaderKey("Host")
+	headerTransferEncoding = http.CanonicalHeaderKey("Transfer-Encoding")
+	headerUserAgent        = http.CanonicalHeaderKey("User-Agent")
 )
 
 func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
@@ -20,79 +29,32 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		return
 	}
 
-	var SID sid
-	// Check #1: HTTP Code
-	{
-		check1 := &RepValidateProgress{Details: []string{"HTTP code"}}
-		log.Println("[NFO] checking", check1.Details[0])
-		endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
-		status := act.Response.Response.Status
-		// TODO: handle 1,2,3,4,5,XXX
-		var ok bool
-		if SID, ok = endpoint.Outputs[status]; !ok {
-			check1.Failure = true
-			err = fmt.Errorf("unexpected HTTP code '%d'", status)
-			e := err.Error()
-			check1.Details = append(check1.Details, e)
-			log.Println("[NFO]", err)
-			mnk.progress.checkFailed([]string{e})
-		} else {
-			check1.Success = true
-			mnk.progress.checkPassed("HTTP code checked")
+	var reqrep CallCapturer = tcap
+	for {
+		name, lambda := reqrep.CheckFirst()
+		if name == "" {
+			break
 		}
-		if err = mnk.ws.cast(check1); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		if check1.Failure {
-			return
-		}
-	}
 
-	var jsonData interface{}
-	// Check #2: valid JSON response
-	{
-		check2 := &RepValidateProgress{Details: []string{"valid JSON response"}}
-		log.Println("[NFO] checking", check2.Details[0])
-		data := []byte(act.Response.Response.Content.Text)
-		if err = json.Unmarshal(data, &jsonData); err != nil {
-			check2.Failure = true
-			e := err.Error()
-			check2.Details = append(check2.Details, e)
-			log.Println("[NFO]", err)
-			mnk.progress.checkFailed([]string{e})
+		check := &RepValidateProgress{Details: []string{name}}
+		log.Println("[NFO] checking", check.Details[0])
+		success, failure := lambda(mnk)
+		if success != "" {
+			check.Success = true
+			mnk.progress.checkPassed(success)
+		} else if len(failure) != 0 {
+			check.Details = append(check.Details, failure...)
+			log.Println(append([]string{"[NFO]"}, failure...))
+			mnk.progress.checkFailed(failure)
 		} else {
-			check2.Success = true
-			mnk.progress.checkPassed("response is valid JSON")
+			mnk.progress.checkSkipped(check.Details[0])
 		}
-		if err = mnk.ws.cast(check2); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		if check2.Failure || jsonData == nil {
-			return
-		}
-	}
 
-	// Check #3: response validates JSON schema
-	{
-		check3 := &RepValidateProgress{Details: []string{"response validates schema"}}
-		log.Println("[NFO] checking", check3.Details[0])
-		if errs := mnk.Vald.Spec.Schemas.Validate(SID, jsonData); len(errs) != 0 {
-			err = errors.New(strings.Join(errs, "; "))
-			check3.Failure = true
-			check3.Details = append(check3.Details, errs...)
-			log.Println("[NFO]", err)
-			mnk.progress.checkFailed(errs)
-		} else {
-			check3.Success = true
-			mnk.progress.checkPassed("response validates JSON Schema")
-		}
-		if err = mnk.ws.cast(check3); err != nil {
+		if err = mnk.ws.cast(check); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		if check3.Failure {
+		if check.Failure {
 			return
 		}
 	}
@@ -101,7 +63,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	{
 		log.Printf("[NFO] checking %d user properties", len(userRTLang.Triggers))
 		var response starlark.Value
-		if response, err = slValueFromHAR(act.Response); err != nil {
+		if response, err = slValueFromInterface(reqrep.Response()); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -177,7 +139,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	}
 
 	// Check #Z: all checks passed
-	checkZ := &RepCallResult{Response: enumFromGo(jsonData)}
+	checkZ := &RepCallResult{} //FIXME:Response: enumFromGo(jsonData)}
 	if err = mnk.ws.cast(checkZ); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -189,78 +151,261 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 
 // CallCapturer is not CastCapturer {Request(), ..Wait?}
 type CallCapturer interface {
-	Request() starlark.Value
-	Response() starlark.Value
+	Request() map[string]interface{}
+	Response() map[string]interface{}
+
+	// FIXME: really not sure that this belongs here:
+	CheckFirst() (string, CheckerFunc)
 }
+
+type CheckerFunc func(*Monkey) (string, []string)
 
 type CallCaptureShower interface {
 	ShowRequest(func(string, ...interface{})) error
 	ShowResponse(func(string, ...interface{})) error
 }
 
-type transportCapturer struct {
-	req, rep starlark.Value
-	err      string
-	elapsed  time.Duration
+var (
+	_ CallCapturer      = (*tCapHTTP)(nil)
+	_ CallCaptureShower = (*tCapHTTP)(nil)
+	_ http.RoundTripper = (*tCapHTTP)(nil)
+)
 
-	showf func(string, ...interface{})
+type tCapHTTP struct {
+	showf    func(string, ...interface{})
+	req, rep []byte
+
+	// Request/Response somewhat follow python's `requests` API
+
+	/// request
+	reqMethod  string
+	reqUrl     *url.URL
+	reqHeaders http.Header
+	reqHasBody bool
+	reqBody    []byte
+	reqJSON    interface{}
+	/// reply
+	repErr     string
+	repStatus  int
+	repReason  string
+	repHeaders http.Header
+	repHasBody bool
+	repBody    []byte
+	repJSON    interface{}
+
+	elapsed time.Duration
+	// TODO: pick from these
+	// %{content_type} shows the Content-Type of the requested document, if there was any.
+	// %{filename_effective} shows the ultimate filename that curl writes out to. This is only meaningful if curl is told to write to a file with the --remote-name or --output option. It's most useful in combination with the --remote-header-name option.
+	// %{ftp_entry_path} shows the initial path curl ended up in when logging on to the remote FTP server.
+	// %{response_code} shows the numerical response code that was found in the last transfer.
+	// %{http_connect} shows the numerical code that was found in the last response (from a proxy) to a curl CONNECT request.
+	// %{local_ip} shows the IP address of the local end of the most recently done connection—can be either IPv4 or IPv6
+	// %{local_port} shows the local port number of the most recently made connection
+	// %{num_connects} shows the number of new connects made in the recent transfer.
+	// %{num_redirects} shows the number of redirects that were followed in the request.
+	// %{redirect_url} shows the actual URL a redirect would take you to when an HTTP request was made without -L to follow redirects.
+	// %{remote_ip} shows the remote IP address of the most recently made connection—can be either IPv4 or IPv6.
+	// %{remote_port} shows the remote port number of the most recently made connection.
+	// %{size_download} shows the total number of bytes that were downloaded.
+	// %{size_header} shows the total number of bytes of the downloaded headers.
+	// %{size_request} shows the total number of bytes that were sent in the HTTP request.
+	// %{size_upload} shows the total number of bytes that were uploaded.
+	// %{speed_download} shows the average download speed that curl measured for the complete download in bytes per second.
+	// %{speed_upload} shows the average upload speed that curl measured for the complete upload in bytes per second.
+	// %{ssl_verify_result} shows the result of the SSL peer certificate verification that was requested. 0 means the verification was successful.
+	// %{time_appconnect} shows the time, in seconds, it took from the start until the SSL/SSH/etc connect/handshake to the remote host was completed.
+	// %{time_connect} shows the time, in seconds, it took from the start until the TCP connect to the remote host (or proxy) was completed.
+	// %{time_namelookup} shows the time, in seconds, it took from the start until the name resolving was completed.
+	// %{time_pretransfer} shows the time, in seconds, it took from the start until the file transfer was just about to begin. This includes all pre-transfer commands and negotiations that are specific to the particular protocol(s) involved.
+	// %{time_redirect} shows the time, in seconds, it took for all redirection steps including name lookup, connect, pre-transfer and transfer before the final transaction was started. time_redirect shows the complete execution time for multiple redirections.
+	// %{time_starttransfer} shows the time, in seconds, it took from the start until the first byte was just about to be transferred. This includes time_pretransfer and also the time the server needed to calculate the result.
+	// %{time_total} shows the total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
+	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
+
+	// FIXME: not sure about this
+	firstChecks []namedLambda
+	matchedSID  sid
 }
 
-func newHTTPTCap(showf func(string, ...interface{})) *transportCapturer {
-	return &transportCapturer{
-		req:   starlark.None,
+type namedLambda struct {
+	name   string
+	lambda CheckerFunc
+}
+
+func (c *tCapHTTP) CheckFirst() (string, CheckerFunc) {
+	var nameAndLambda namedLambda
+	nameAndLambda, c.firstChecks = c.firstChecks[0], c.firstChecks[1:]
+	return nameAndLambda.name, nameAndLambda.lambda
+}
+
+func newHTTPTCap(showf func(string, ...interface{})) *tCapHTTP {
+	c := &tCapHTTP{
 		showf: showf,
 	}
+	c.firstChecks = []namedLambda{
+		{"HTTP code", c.checkFirst_HTTPCode},
+		{"valid JSON response", c.checkFirst_validJSONResponse},
+		{"response validates schema", c.checkFirst_validatesJSONSchema},
+		{"", nil},
+	}
+	return c
 }
 
-// Request/Response somewhat follow python's `requests` API
-var _ CallCapturer = (*transportCapturer)(nil)
+func (c *tCapHTTP) checkFirst_HTTPCode(mnk *Monkey) (s string, f []string) {
+	endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
+	var ok bool
+	// TODO: handle 1,2,3,4,5,XXX
+	// TODO: think about overflow
+	if c.matchedSID, ok = endpoint.Outputs[uint32(c.repStatus)]; !ok {
+		f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", c.repStatus))
+		return
+	}
+	s = "HTTP code checked"
+	return
+}
 
-func (c *transportCapturer) Request() starlark.Value  { return c.req }
-func (c *transportCapturer) Response() starlark.Value { return c.rep }
+func (c *tCapHTTP) checkFirst_validJSONResponse(mnk *Monkey) (s string, f []string) {
+	if !c.repHasBody {
+		f = append(f, "response body is empty")
+		return
+	}
 
-var _ CallCaptureShower = (*transportCapturer)(nil)
+	// TODO: get Unmarshal error of request() method & return it
+	s = "response is valid JSON"
+	return
+}
 
-func (c *transportCapturer) ShowRequest(showf func(string, ...interface{})) error {
+func (c *tCapHTTP) checkFirst_validatesJSONSchema(mnk *Monkey) (s string, f []string) {
+	if errs := mnk.Vald.Spec.Schemas.Validate(c.matchedSID, c.repJSON); len(errs) != 0 {
+		f = errs
+		return
+	}
+	s = "response validates JSON Schema"
+	return
+}
+
+func (c *tCapHTTP) ShowRequest(showf func(string, ...interface{})) error {
+	showf("%s", c.req)
+	return nil
+}
+
+func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
+	if c.rep == nil {
+		panic("FIXME")
+	}
+	showf("%s", c.rep)
+	return nil
+}
+
+func (c *tCapHTTP) Request() map[string]interface{} {
+	m := map[string]interface{}{
+		"method":  c.reqMethod,
+		"url":     c.reqUrl.String(),
+		"headers": c.reqHeaders,
+		// "content" as bytes?
+	}
+	if c.reqHasBody {
+		m["json"] = c.reqJSON
+	}
+	// TODO? Response *Response
+	// Response is the redirect response which caused this request
+	// to be created. This field is only populated during client
+	// redirects.
+	return m
+}
+
+func (c *tCapHTTP) Response() map[string]interface{} {
+	m := map[string]interface{}{
+		"request": c.Request(),
+		// FIXME: "error": c.repErr,
+		"status_code": c.repStatus,
+		"reason":      c.repReason,
+		"headers":     c.repHeaders,
+		// "content" as bytes?
+		// "history" :: []Rep (redirects)?
+	}
+	if c.repHasBody {
+		m["json"] = c.repJSON
+	}
+	// TODO? TLS *tls.ConnectionState
+	// TLS contains information about the TLS connection on which the
+	// response was received. It is nil for unencrypted responses.
+	// The pointer is shared between responses and should not be
+	// modified.
+	return m
+}
+
+func (c *tCapHTTP) request(r *http.Request) (err error) {
+	c.reqMethod = r.Method
+	c.reqUrl = cloneURL(r.URL)
+
+	c.reqHeaders = cloneHeader(r.Header)
+	if _, ok := c.reqHeaders[headerContentLength]; ok {
+		c.reqHeaders[headerContentLength] = []string{strconv.FormatInt(r.ContentLength, 10)}
+	}
+	if _, ok := c.reqHeaders[headerTransferEncoding]; ok {
+		c.reqHeaders[headerTransferEncoding] = r.TransferEncoding
+	}
+	if _, ok := c.reqHeaders[headerHost]; ok {
+		c.reqHeaders[headerHost] = []string{r.Host}
+	}
+
+	if r.Body != nil {
+		if c.reqBody, err = ioutil.ReadAll(r.Body); err != nil {
+			return
+		}
+		r.Body.Close()
+		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqBody))
+		if err = json.Unmarshal(c.reqBody, &c.reqJSON); err != nil {
+			return
+		}
+		c.reqHasBody = true
+	}
+
 	// TODO: output `curl` requests when showing counterexample
 	//   https://github.com/sethgrid/gencurl
 	//   https://github.com/moul/http2curl
-	dump, err := httputil.DumpRequestOut(r, false)
-	if err != nil {
-		// MUST log in caller
-		return err
+	if c.req, err = httputil.DumpRequestOut(r, false); err != nil {
+		return
 	}
-	// show(string(dump))
-	showf("%s", dump)
-	return nil
+	// TODO: move httputil.DumpRequestOut to Request() method
+
+	return
 }
 
-func (c *transportCapturer) ShowResponse(showf func(string, ...interface{})) error {
-	if r == nil {
-		panic("FIXME")
+func (c *tCapHTTP) response(r *http.Response) (err error) {
+	c.repHeaders = cloneHeader(r.Header)
+	if _, ok := c.repHeaders[headerContentLength]; ok {
+		c.repHeaders[headerContentLength] = []string{strconv.FormatInt(r.ContentLength, 10)}
+	}
+	if _, ok := c.repHeaders[headerTransferEncoding]; ok {
+		c.repHeaders[headerTransferEncoding] = r.TransferEncoding
 	}
 
-	dump, err := httputil.DumpResponse(r, false)
-	if err != nil {
-		// MUST log in caller
-		return err
+	if r.Body != nil {
+		if c.repBody, err = ioutil.ReadAll(r.Body); err != nil {
+			return
+		}
+		r.Body.Close()
+		r.Body = ioutil.NopCloser(bytes.NewReader(c.repBody))
+		if err = json.Unmarshal(c.repBody, &c.repJSON); err != nil {
+			return
+		}
+		c.repHasBody = true
 	}
-	// show(string(dump))
-	showf("%s", dump)
-	return nil
+
+	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
+		return
+	}
+	// TODO: move httputil.DumpResponse to Response() method
+
+	return
 }
 
-func (c *transportCapturer) request(r *http.Request) error {
-	return nil
-}
+func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
+	// FIXME: should we really do json decoding here + encoding as well?
 
-func (c *transportCapturer) response(r *http.Response) error {
-	return nil
-}
-
-var _ http.RoundTripper = (*transportCapturer)(nil)
-
-func (c *transportCapturer) RoundTrip(req *http.Request) (rep *http.Response, err error) {
 	if err = c.request(req); err != nil {
 		return
 	}
@@ -276,12 +421,14 @@ func (c *transportCapturer) RoundTrip(req *http.Request) (rep *http.Response, er
 	return
 }
 
+// FIXME: remove this global by attaching to OpenAPIv3 modeler
+var tcap *tCapHTTP
+
 func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	mnk.progress.state("🙈")
 	mnk.eid = act.EID
 
-	tcap := newHTTPTCap(mnk.progress.showf)
-
+	tcap = newHTTPTCap(mnk.progress.showf)
 	var nxt *RepCallDone
 	if nxt, err = tcap.makeRequest(act.GetRequest(), mnk.Cfg.Runtime.FinalHost); err != nil {
 		return
@@ -297,7 +444,7 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	return
 }
 
-func (c *transportCapturer) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDone, err error) {
+func (c *tCapHTTP) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDone, err error) {
 	req, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -317,11 +464,11 @@ func (c *transportCapturer) makeRequest(harReq *HAR_Request, host string) (nxt *
 		return
 	}
 
-	updateUserAgentHeader(req)
-	updateHostHeader(req, configured)
-	if err = updateURL(req, configured); err != nil {
-		return
-	}
+	maybeUpdateUserAgentHeader(req)
+	// NOTE: forces Request.Write to use req.URL.Host
+	req.Host = ""
+	req.URL.Scheme = configured.Scheme
+	req.URL.Host = configured.Host
 
 	log.Println("[NFO] ▼", harReq)
 	if err = c.ShowRequest(c.showf); err != nil {
@@ -340,9 +487,9 @@ func (c *transportCapturer) makeRequest(harReq *HAR_Request, host string) (nxt *
 		// FIXME: nxt.Response = resp
 		nxt.Success = true
 	} else {
-		c.err = err.Error()
-		log.Println("[NFO] ▲", c.err)
-		nxt.Reason = c.err
+		c.repErr = err.Error()
+		log.Println("[NFO] ▲", c.repErr)
+		nxt.Reason = c.repErr
 		nxt.Failure = true
 	}
 
@@ -352,142 +499,47 @@ func (c *transportCapturer) makeRequest(harReq *HAR_Request, host string) (nxt *
 	return
 }
 
-func updateURL(r *http.Request, configured *url.URL) (err error) {
-	URL, err := url.Parse(act.Request.URL)
-	if err != nil {
-		log.Println("[ERR] malformed URLs are unexpected:", err)
-		return
-	}
-
-	URL.Scheme = configured.Scheme
-	URL.Host = configured.Host
-	act.Request.URL = URL.String()
-	return
-}
-
-func updateUserAgentHeader(r *http.Request) {
-	for i := range act.Request.Headers {
-		if act.Request.Headers[i].Name == "User-Agent" {
-			if strings.HasPrefix(act.Request.Headers[i].Value, "FuzzyMonkey.co/") {
-				act.Request.Headers[i].Value = binTitle
-				break
+func maybeUpdateUserAgentHeader(r *http.Request) {
+	if hs, ok := r.Header[headerUserAgent]; ok {
+		replace := false
+		for _, h := range hs {
+			if strings.HasPrefix(h, "FuzzyMonkey.co/") {
+				replace = true
 			}
 		}
-	}
-}
-
-func updateHostHeader(r *http.Request, configured *url.URL) {
-	for i := range act.Request.Headers {
-		if act.Request.Headers[i].Name == "Host" {
-			act.Request.Headers[i].Value = configured.Host
-			break
+		if replace {
+			r.Header[headerUserAgent] = []string{binTitle}
 		}
 	}
 }
 
-func slValueFromHAR(entry *HAR_Entry) (r starlark.Value, err error) {
-	// FIXME: skip HAR entirely
-	req := starlark.NewDict(4)
-	method := starlark.String(entry.GetRequest().GetMethod())
-	if err = req.SetKey(starlark.String("method"), method); err != nil {
+func cloneHeader(src http.Header) (dst http.Header) {
+	if src == nil {
 		return
 	}
-	url := starlark.String(entry.GetRequest().GetURL())
-	if err = req.SetKey(starlark.String("url"), url); err != nil {
-		return
-	}
-	reqHs := entry.GetRequest().GetHeaders()
-	reqHeaders := starlark.NewDict(len(reqHs))
-	for _, h := range reqHs {
-		k, v := starlark.String(h.GetName()), starlark.String(h.GetValue())
-		// FIXME: turn v into []v, once HAR is out of the way
-		//     ContentLength int64
-		//     TransferEncoding []string
-		//     Host string
-		if err = reqHeaders.SetKey(k, v); err != nil {
-			return
+	dst = make(http.Header, len(src))
+	for h, hs := range src {
+		if hs == nil {
+			dst[h] = nil
+		} else {
+			values := make([]string, len(hs))
+			copy(values, hs)
+			dst[h] = values
 		}
 	}
-	if err = req.SetKey(starlark.String("headers"), reqHeaders); err != nil {
-		return
-	}
-	// req['content'] as bytes?
-	if txt := entry.GetRequest().GetPostData().GetText(); txt != "" {
-		var reqJSON interface{}
-		if err = json.Unmarshal([]byte(txt), &reqJSON); err != nil {
-			return
-		}
-		var valJSON starlark.Value
-		if valJSON, err = slValueFromInterface(reqJSON); err != nil {
-			return
-		}
-		if err = req.SetKey(starlark.String("json"), valJSON); err != nil {
-			return
-		}
-	} else {
-		if err = req.SetKey(starlark.String("json"), starlark.None); err != nil {
-			return
-		}
-	}
-	// TODO:
-	//     // Response is the redirect response which caused this request
-	//     // to be created. This field is only populated during client
-	//     // redirects.
-	//     Response *Response
-	//     // contains filtered or unexported fields
-
-	rep := starlark.NewDict(5)
-	statusCode := starlark.MakeUint(uint(entry.GetResponse().GetStatus()))
-	if err = rep.SetKey(starlark.String("status_code"), statusCode); err != nil {
-		return
-	}
-	reason := starlark.String(entry.GetResponse().GetStatusText())
-	if err = rep.SetKey(starlark.String("reason"), reason); err != nil {
-		return
-	}
-	repHs := entry.GetResponse().GetHeaders()
-	repHeaders := starlark.NewDict(len(repHs))
-	for _, h := range repHs {
-		k, v := starlark.String(h.GetName()), starlark.String(h.GetValue())
-		// FIXME: turn v into []v, once HAR is out of the way
-		//   ContentLength int64
-		//   TransferEncoding []string
-		if err = repHeaders.SetKey(k, v); err != nil {
-			return
-		}
-	}
-	if err = rep.SetKey(starlark.String("headers"), repHeaders); err != nil {
-		return
-	}
-	// rep['content'] as bytes?
-	if txt := entry.GetResponse().GetContent().GetText(); txt != "" {
-		var repJSON interface{}
-		if err = json.Unmarshal([]byte(txt), &repJSON); err != nil {
-			return
-		}
-		var valJSON starlark.Value
-		if valJSON, err = slValueFromInterface(repJSON); err != nil {
-			return
-		}
-		if err = rep.SetKey(starlark.String("json"), valJSON); err != nil {
-			return
-		}
-	} else {
-		if err = rep.SetKey(starlark.String("json"), starlark.None); err != nil {
-			return
-		}
-	}
-	// rep['history'][]Rep (redirects)?
-	if err = rep.SetKey(starlark.String("request"), req); err != nil {
-		return
-	}
-	//     // TLS contains information about the TLS connection on which the
-	//     // response was received. It is nil for unencrypted responses.
-	//     // The pointer is shared between responses and should not be
-	//     // modified.
-	//     TLS *tls.ConnectionState
-	// }
-
-	r = rep
 	return
+}
+
+// https://github.com/golang/go/blob/2c67cdf7cf59a685f3a5e705b6be85f32285acec/src/net/http/clone.go#L22
+func cloneURL(u *url.URL) *url.URL {
+	if u == nil {
+		return nil
+	}
+	u2 := new(url.URL)
+	*u2 = *u
+	if u.User != nil {
+		u2.User = new(url.Userinfo)
+		*u2.User = *u.User
+	}
+	return u2
 }

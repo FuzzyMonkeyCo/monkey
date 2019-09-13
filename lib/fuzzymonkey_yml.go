@@ -58,7 +58,7 @@ func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 	return
 }
 
-// Modeler describes any model
+// Modeler describes checkable models
 type Modeler interface {
 	SetSUTResetter(SUTResetter)
 	GetSUTResetter() SUTResetter
@@ -72,6 +72,8 @@ type SUTResetter interface {
 	Reset(context.Context) error
 	Stop(context.Context) error
 }
+
+var _ SUTResetter = (*SUTShell)(nil)
 
 type SUTShell struct {
 	start, reset, stop string
@@ -93,6 +95,7 @@ var registeredIRModels = map[string]ModelerFunc{
 		)
 
 		if file, found = d["file"]; !found || file.Type() != "string" {
+			// TODO: introduce specific error type so as to build `<key>(field = ...)` messages
 			return nil, errors.New("OpenAPIv3(file = ...) must be a string")
 		}
 		mo.File = file.(starlark.String).GoString()
@@ -202,16 +205,21 @@ func newSUTResetter(modelerName string, r starlark.StringDict) (SUTResetter, err
 	return resetter, nil
 }
 
+var _ Modeler = (*ModelOpenAPIv3)(nil)
+
 // ModelOpenAPIv3 describes OpenAPIv3 models
 type ModelOpenAPIv3 struct {
 	resetter SUTResetter
 
+	/// Fields editable on initial run
 	// File is a path within current directory pointing to a YAML spec
 	File string
 	// Host superseeds the spec's base URL
 	Host string
 	// HeaderAuthorization if non-empty is added to requests as bearer token
 	HeaderAuthorization string
+
+	// FIXME? tcap *tCapHTTP
 }
 
 func (m *ModelOpenAPIv3) SetSUTResetter(sr SUTResetter)   { m.resetter = sr }
