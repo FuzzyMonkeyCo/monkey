@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"reflect"
 
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
@@ -35,44 +36,53 @@ func DoExecREPL() error {
 	return nil
 }
 
-func slValueFromInterface(v interface{}) (starlark.Value, error) {
-	switch vv := v.(type) {
-	case nil:
+func slValueFromInterface(x interface{}) (starlark.Value, error) {
+	if x == nil {
 		return starlark.None, nil
-	case bool:
-		return starlark.Bool(vv), nil
-	case int64:
-		return starlark.MakeInt64(vv), nil
-	case float64:
-		return starlark.Float(vv), nil
-	case string:
-		return starlark.String(vv), nil
-	case []interface{}:
-		values := make([]starlark.Value, 0, len(vv))
-		for _, value := range vv {
-			var vvv starlark.Value
-			var err error
-			if vvv, err = slValueFromInterface(value); err != nil {
+	}
+	switch v := reflect.ValueOf(x); v.Kind() {
+	case reflect.Bool:
+		return starlark.Bool(v.Bool()), nil
+	case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64:
+		return starlark.MakeInt64(v.Int()), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
+		return starlark.MakeUint64(v.Uint()), nil
+	case reflect.Float32, reflect.Float64:
+		return starlark.Float(v.Float()), nil
+	case reflect.String:
+		return starlark.String(v.String()), nil
+	case reflect.Slice:
+		values := make([]starlark.Value, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			s, err := slValueFromInterface(v.Index(i).Interface())
+			if err != nil {
 				return nil, err
 			}
-			values = append(values, vvv)
+			values = append(values, s)
 		}
 		return starlark.NewList(values), nil
-	case map[string]interface{}:
-		values := starlark.NewDict(len(vv))
-		for key, value := range vv {
-			var vvv starlark.Value
-			var err error
-			if vvv, err = slValueFromInterface(value); err != nil {
+	case reflect.Map:
+		if v.Type().Key().Kind() != reflect.String {
+			return nil, fmt.Errorf("expected string keys: %T", x)
+		}
+		values := starlark.NewDict(v.Len())
+		for _, k := range v.MapKeys() {
+			value := v.MapIndex(k)
+			key := k.String()
+			if !printableASCII(key) {
+				return nil, fmt.Errorf("illegal string key: %q", key)
+			}
+			s, err := slValueFromInterface(value.Interface())
+			if err != nil {
 				return nil, err
 			}
-			if err = values.SetKey(starlark.String(key), vvv); err != nil {
+			if err = values.SetKey(starlark.String(key), s); err != nil {
 				return nil, err
 			}
 		}
 		return values, nil
 	default:
-		err := fmt.Errorf("not a JSON value: %v", v)
+		err := fmt.Errorf("not a JSON value: %T %+v", x, x)
 		return nil, err
 	}
 }

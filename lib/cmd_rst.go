@@ -32,10 +32,6 @@ var (
 func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 	mnk.progress.state("Resetting...")
 
-	if isHARReady() {
-		clearHAR()
-	}
-
 	var nxt Action
 	if nxt, err = ExecuteScript(mnk.Cfg, act.GetKind()); err != nil {
 		return
@@ -47,6 +43,7 @@ func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
 	return
 }
 
+// ExecuteScript TODO
 func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress, err error) {
 	log.Println("[DBG] >>> exec:", kind.String())
 	nxt = &RepResetProgress{Kind: kind}
@@ -139,6 +136,7 @@ func fmtExecError(k ExecKind, i int, c, e, s string) {
 	fmt.Printf("And the dumped environment %s\n", EnvID())
 }
 
+// SnapEnv TODO
 func SnapEnv(envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
@@ -185,6 +183,7 @@ func readEnv(envVar string) string {
 	return stdout.String()
 }
 
+// Shell TODO
 func Shell() string {
 	return "/bin/bash"
 }

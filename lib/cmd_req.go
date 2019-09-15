@@ -30,6 +30,8 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 	}
 
 	var reqrep CallCapturer = tcap
+	// FIXME: turn this into a sync.errgroup with additional tasks being
+	// triggers with match-all predicates andalso pure actions
 	for {
 		name, lambda := reqrep.CheckFirst()
 		if name == "" {
@@ -158,8 +160,10 @@ type CallCapturer interface {
 	CheckFirst() (string, CheckerFunc)
 }
 
+// CheckerFunc TODO
 type CheckerFunc func(*Monkey) (string, []string)
 
+// CallCaptureShower TODO
 type CallCaptureShower interface {
 	ShowRequest(func(string, ...interface{})) error
 	ShowResponse(func(string, ...interface{})) error
@@ -175,12 +179,14 @@ type tCapHTTP struct {
 	showf    func(string, ...interface{})
 	req, rep []byte
 
+	har *HAR_Entry // FIXME: ditch HAR collector
+
 	// Request/Response somewhat follow python's `requests` API
 
 	/// request
 	reqMethod  string
-	reqUrl     *url.URL
-	reqHeaders http.Header
+	reqURL     *url.URL
+	reqHeaders map[string][]string
 	reqHasBody bool
 	reqBody    []byte
 	reqJSON    interface{}
@@ -188,7 +194,7 @@ type tCapHTTP struct {
 	repErr     string
 	repStatus  int
 	repReason  string
-	repHeaders http.Header
+	repHeaders map[string][]string
 	repHasBody bool
 	repBody    []byte
 	repJSON    interface{}
@@ -244,15 +250,15 @@ func newHTTPTCap(showf func(string, ...interface{})) *tCapHTTP {
 		showf: showf,
 	}
 	c.firstChecks = []namedLambda{
-		{"HTTP code", c.checkFirst_HTTPCode},
-		{"valid JSON response", c.checkFirst_validJSONResponse},
-		{"response validates schema", c.checkFirst_validatesJSONSchema},
+		{"HTTP code", c.checkFirstHTTPCode},
+		{"valid JSON response", c.checkFirstValidJSONResponse},
+		{"response validates schema", c.checkFirstValidatesJSONSchema},
 		{"", nil},
 	}
 	return c
 }
 
-func (c *tCapHTTP) checkFirst_HTTPCode(mnk *Monkey) (s string, f []string) {
+func (c *tCapHTTP) checkFirstHTTPCode(mnk *Monkey) (s string, f []string) {
 	endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
 	var ok bool
 	// TODO: handle 1,2,3,4,5,XXX
@@ -265,7 +271,7 @@ func (c *tCapHTTP) checkFirst_HTTPCode(mnk *Monkey) (s string, f []string) {
 	return
 }
 
-func (c *tCapHTTP) checkFirst_validJSONResponse(mnk *Monkey) (s string, f []string) {
+func (c *tCapHTTP) checkFirstValidJSONResponse(mnk *Monkey) (s string, f []string) {
 	if !c.repHasBody {
 		f = append(f, "response body is empty")
 		return
@@ -276,7 +282,7 @@ func (c *tCapHTTP) checkFirst_validJSONResponse(mnk *Monkey) (s string, f []stri
 	return
 }
 
-func (c *tCapHTTP) checkFirst_validatesJSONSchema(mnk *Monkey) (s string, f []string) {
+func (c *tCapHTTP) checkFirstValidatesJSONSchema(mnk *Monkey) (s string, f []string) {
 	if errs := mnk.Vald.Spec.Schemas.Validate(c.matchedSID, c.repJSON); len(errs) != 0 {
 		f = errs
 		return
@@ -301,7 +307,7 @@ func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
 func (c *tCapHTTP) Request() map[string]interface{} {
 	m := map[string]interface{}{
 		"method":  c.reqMethod,
-		"url":     c.reqUrl.String(),
+		"url":     c.reqURL.String(),
 		"headers": c.reqHeaders,
 		// "content" as bytes?
 	}
@@ -338,7 +344,7 @@ func (c *tCapHTTP) Response() map[string]interface{} {
 
 func (c *tCapHTTP) request(r *http.Request) (err error) {
 	c.reqMethod = r.Method
-	c.reqUrl = cloneURL(r.URL)
+	c.reqURL = cloneURL(r.URL)
 
 	c.reqHeaders = cloneHeader(r.Header)
 	if _, ok := c.reqHeaders[headerContentLength]; ok {
@@ -363,18 +369,14 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 		c.reqHasBody = true
 	}
 
-	// TODO: output `curl` requests when showing counterexample
-	//   https://github.com/sethgrid/gencurl
-	//   https://github.com/moul/http2curl
-	if c.req, err = httputil.DumpRequestOut(r, false); err != nil {
-		return
-	}
-	// TODO: move httputil.DumpRequestOut to Request() method
-
 	return
 }
 
 func (c *tCapHTTP) response(r *http.Response) (err error) {
+	// FIXME c.repErr
+	c.repStatus = r.StatusCode
+	c.repReason = r.Status
+
 	c.repHeaders = cloneHeader(r.Header)
 	if _, ok := c.repHeaders[headerContentLength]; ok {
 		c.repHeaders[headerContentLength] = []string{strconv.FormatInt(r.ContentLength, 10)}
@@ -417,6 +419,10 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	elapsed := time.Since(start)
 	c.elapsed = elapsed
 
+	if c.har, err = harEntry(req, rep, elapsed); err != nil {
+		return
+	}
+
 	err = c.response(rep)
 	return
 }
@@ -428,7 +434,10 @@ func (act *ReqDoCall) exec(mnk *Monkey) (err error) {
 	mnk.progress.state("🙈")
 	mnk.eid = act.EID
 
-	tcap = newHTTPTCap(mnk.progress.showf)
+	tcap = newHTTPTCap(func(format string, s ...interface{}) {
+		// TODO: prepend with 2-space indentation (somehow doesn't work)
+		mnk.progress.showf(format, s)
+	})
 	var nxt *RepCallDone
 	if nxt, err = tcap.makeRequest(act.GetRequest(), mnk.Cfg.Runtime.FinalHost); err != nil {
 		return
@@ -471,6 +480,14 @@ func (c *tCapHTTP) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDo
 	req.URL.Host = configured.Host
 
 	log.Println("[NFO] ▼", harReq)
+	// TODO: output `curl` requests when showing counterexample
+	//   https://github.com/sethgrid/gencurl
+	//   https://github.com/moul/http2curl
+	// FIXME: info output in `curl` style with timings
+	if c.req, err = httputil.DumpRequestOut(req, false); err != nil {
+		return
+	}
+	// TODO: move httputil.DumpRequestOut to Request() method
 	if err = c.ShowRequest(c.showf); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -485,6 +502,7 @@ func (c *tCapHTTP) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDo
 		resp := c.Response()
 		log.Println("[NFO] ▲", resp)
 		// FIXME: nxt.Response = resp
+		nxt.Response = c.har
 		nxt.Success = true
 	} else {
 		c.repErr = err.Error()

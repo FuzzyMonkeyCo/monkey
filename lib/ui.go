@@ -7,6 +7,12 @@ import (
 	"github.com/superhawk610/bar"
 )
 
+const (
+	prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅
+	prefixSkipped   = "○" // ● • ‣ ◦ ⁃ ○ ◯ ⭕ 💮
+	prefixFailed    = "✖" // ⨯ × ✗ x X ☓ ✘
+)
+
 type progress struct {
 	bar           *bar.Bar
 	failed        bool
@@ -43,15 +49,15 @@ func (p *progress) err(s string) {
 
 func (p *progress) checksPassed() { p.nfo(" All checks passed.\n") }
 func (p *progress) checkPassed(s string) {
-	p.show(" " + ColorOK.Sprintf("✓") + " " + ColorNFO.Sprintf(s))
+	p.show(" " + ColorOK.Sprintf(prefixSucceeded) + " " + ColorNFO.Sprintf(s))
 }
 func (p *progress) checkSkipped(s string) {
-	p.show(" " + ColorWRN.Sprintf("◦") + " " + ColorNFO.Sprintf(s) + " skipped")
+	p.show(" " + ColorWRN.Sprintf(prefixSkipped) + " " + ColorNFO.Sprintf(s) + " skipped")
 }
 func (p *progress) checkFailed(ss []string) {
 	p.failed = true
 	for _, s := range ss {
-		p.show(" " + ColorERR.Sprintf("✗") + " " + ColorNFO.Sprintf(s))
+		p.show(" " + ColorERR.Sprintf(prefixFailed) + " " + ColorNFO.Sprintf(s))
 	}
 	p.nfo(" Found a bug!\n")
 }
@@ -106,6 +112,7 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	return
 }
 
+// TestsSucceeded TODO
 func (mnk *Monkey) TestsSucceeded() (success bool) {
 	p := mnk.progress
 

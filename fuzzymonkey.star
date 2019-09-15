@@ -24,6 +24,22 @@ OpenAPIv3(
 )
 
 
+## Ensure some general property
+
+# def generallyRootOfXSquaredIsX(State, response):
+#     x = response['id']
+#     if sqrt(x*x) != x:
+#         fail("sqrt({}) != {}".format(x*x, x))
+
+# TriggerActionAfterProbe(
+#     name = 'sqrt(x * x) == x',
+#     predicate = lambda State, response: True,
+#     action = generallyRootOfXSquaredIsX,
+# )
+
+
+## Express stateful properties
+
 # State is optional but has to be a Dict.
 State = {
     'posts': {},
@@ -96,4 +112,14 @@ TriggerActionAfterProbe(
         response['status_code'] in range(200, 299),
     ]),
     action = lambda State, response: None,
+)
+
+
+
+
+
+TriggerActionAfterProbe(
+    name = 'always failling',
+    predicate = lambda State, response: True,
+    action = lambda State, response: fail("Always fail!"),
 )

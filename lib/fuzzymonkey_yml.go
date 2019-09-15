@@ -75,14 +75,21 @@ type SUTResetter interface {
 
 var _ SUTResetter = (*SUTShell)(nil)
 
+// SUTShell TODO
 type SUTShell struct {
 	start, reset, stop string
 }
 
+// Start TODO
 func (s *SUTShell) Start(ctx context.Context) error { return nil }
-func (s *SUTShell) Reset(ctx context.Context) error { return nil }
-func (s *SUTShell) Stop(ctx context.Context) error  { return nil }
 
+// Reset TODO
+func (s *SUTShell) Reset(ctx context.Context) error { return nil }
+
+// Stop TODO
+func (s *SUTShell) Stop(ctx context.Context) error { return nil }
+
+// ModelerFunc TODO
 type ModelerFunc func(d starlark.StringDict) (Modeler, error)
 type slBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
 
@@ -222,8 +229,13 @@ type ModelOpenAPIv3 struct {
 	// FIXME? tcap *tCapHTTP
 }
 
-func (m *ModelOpenAPIv3) SetSUTResetter(sr SUTResetter)   { m.resetter = sr }
-func (m *ModelOpenAPIv3) GetSUTResetter() SUTResetter     { return m.resetter }
+// SetSUTResetter TODO
+func (m *ModelOpenAPIv3) SetSUTResetter(sr SUTResetter) { m.resetter = sr }
+
+// GetSUTResetter TODO
+func (m *ModelOpenAPIv3) GetSUTResetter() SUTResetter { return m.resetter }
+
+// Pretty TODO
 func (m *ModelOpenAPIv3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
 type modelState struct {
@@ -272,16 +284,19 @@ func (s *modelState) Truth() starlark.Bool                     { return s.d.Trut
 func (s *modelState) Hash() (uint32, error)                    { return s.d.Hash() }
 func (s *modelState) Attr(name string) (starlark.Value, error) { return s.d.Attr(name) }
 func (s *modelState) AttrNames() []string                      { return s.d.AttrNames() }
-func (x *modelState) CompareSameType(op syntax.Token, y_ starlark.Value, depth int) (bool, error) {
-	return x.d.CompareSameType(op, y_, depth)
+func (s *modelState) CompareSameType(op syntax.Token, ss starlark.Value, depth int) (bool, error) {
+	return s.d.CompareSameType(op, ss, depth)
 }
 func slValuePrintableASCII(k starlark.Value) bool {
 	key, ok := k.(starlark.String)
 	if !ok {
 		return false
 	}
+	return printableASCII(key.GoString())
+}
+func printableASCII(s string) bool {
 	l := 0
-	for _, c := range key.GoString() {
+	for _, c := range s {
 		if !(c <= unicode.MaxASCII && unicode.IsPrint(c)) {
 			return false
 		}
