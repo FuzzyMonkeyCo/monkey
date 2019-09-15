@@ -69,17 +69,22 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 			log.Println("[ERR]", err)
 			return
 		}
-		args := starlark.Tuple{userRTLang.ModelState, response}
 		userRTLang.Thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
 		for i, trigger := range userRTLang.Triggers {
 			checkN := &RepValidateProgress{Details: []string{fmt.Sprintf("user property #%d: %q", i, trigger.Name.GoString())}}
 			log.Println("[NFO] checking", checkN.Details[0])
+
+			args1 := starlark.Tuple{slValueCopy(userRTLang.ModelState), slValueCopy(response)}
+
 			var shouldBeBool starlark.Value
-			if shouldBeBool, err = starlark.Call(userRTLang.Thread, trigger.Predicate, args, nil); err == nil {
+			if shouldBeBool, err = starlark.Call(userRTLang.Thread, trigger.Predicate, args1, nil); err == nil {
 				if triggered, ok := shouldBeBool.(starlark.Bool); ok {
 					if triggered {
+
+						args2 := starlark.Tuple{slValueCopy(userRTLang.ModelState), slValueCopy(response)}
+
 						var newModelState starlark.Value
-						if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args, nil); err == nil {
+						if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args2, nil); err == nil {
 							switch newModelState := newModelState.(type) {
 							case starlark.NoneType:
 								checkN.Success = true
@@ -90,8 +95,8 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 								mnk.progress.checkPassed(checkN.Details[0])
 							default:
 								checkN.Failure = true
-								err = fmt.Errorf("expected action %q (of %s) to return a ModelState, got: %v",
-									trigger.Action.Name(), checkN.Details[0], newModelState)
+								err = fmt.Errorf("expected action %q (of %s) to return a ModelState, got: %T %v",
+									trigger.Action.Name(), checkN.Details[0], newModelState, newModelState)
 								e := err.Error()
 								checkN.Details = append(checkN.Details, e)
 								log.Println("[NFO]", err)

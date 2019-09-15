@@ -86,3 +86,56 @@ func slValueFromInterface(x interface{}) (starlark.Value, error) {
 		return nil, err
 	}
 }
+
+func slValueCopy(src starlark.Value) (dst starlark.Value) {
+	switch v := src.(type) {
+	case starlark.NoneType:
+		return starlark.None
+	case starlark.Bool:
+		return starlark.Bool(v)
+	case starlark.Int:
+		return starlark.MakeBigInt(v.BigInt())
+	case starlark.Float:
+		return starlark.Float(v)
+	case starlark.String:
+		return starlark.String(v.GoString())
+	case *starlark.List:
+		vs := make([]starlark.Value, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			vv := slValueCopy(v.Index(i))
+			vs = append(vs, vv)
+		}
+		return starlark.NewList(vs)
+	case starlark.Tuple:
+		vs := make([]starlark.Value, 0, v.Len())
+		for i := 0; i < v.Len(); i++ {
+			vv := slValueCopy(v.Index(i))
+			vs = append(vs, vv)
+		}
+		return starlark.Tuple(vs)
+	case *starlark.Dict:
+		vs := starlark.NewDict(v.Len())
+		for _, kv := range v.Items() {
+			k, v := kv.Index(0), kv.Index(1)
+			if !slValuePrintableASCII(k) {
+				panic("FIXME")
+			}
+			if err := vs.SetKey(k, v); err != nil {
+				panic(err)
+			}
+		}
+		return vs
+	// TODO: case *starlark.Set:
+	case *modelState:
+		vs := newModelState(v.Len())
+		for _, kv := range v.Items() {
+			k, v := kv.Index(0), kv.Index(1)
+			if err := vs.SetKey(k, v); err != nil {
+				panic(err)
+			}
+		}
+		return vs
+	default:
+		panic(fmt.Sprintf("FIXME: %T %+v", src, src))
+	}
+}

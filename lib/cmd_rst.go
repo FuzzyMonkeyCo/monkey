@@ -30,7 +30,7 @@ var (
 )
 
 func (act *ReqDoReset) exec(mnk *Monkey) (err error) {
-	mnk.progress.state("Resetting...")
+	mnk.progress.state("🙉")
 
 	var nxt Action
 	if nxt, err = ExecuteScript(mnk.Cfg, act.GetKind()); err != nil {

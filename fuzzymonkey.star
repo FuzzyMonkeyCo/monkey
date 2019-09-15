@@ -1,6 +1,6 @@
 # Invariants of our APIs expressed in a Python-like language
 
-print('THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','unset'))
+print('$THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','unset'))
 
 host, spec = 'https://jsonplaceholder.typicode.com/', None
 mode = Env('TESTING_WHAT')
@@ -115,11 +115,37 @@ TriggerActionAfterProbe(
 )
 
 
+## MISC
 
+### Sharing 1-2: ensure argument mutation doesn't corrupt model state
 
+def sharing_1_2(State, response):
+    if 'sharing' in State and State['sharing'] == 42:
+        fail("State['sharing'] must not already be set")
+    State['sharing'] = 42
+    if not ('sharing' in State and State['sharing'] == 42):
+        fail("State argument is not mutable")
 
 TriggerActionAfterProbe(
-    name = 'always failling',
+    name = 'sharing 1/2',
     predicate = lambda State, response: True,
-    action = lambda State, response: fail("Always fail!"),
+    action = sharing_1_2,
 )
+
+def sharing_2_2(State, response):
+    if 'sharing' in State and State['sharing'] == 42:
+        fail("State mutation must only happen through `return`")
+
+TriggerActionAfterProbe(
+    name = 'sharing 2/2',
+    predicate = lambda State, response: True,
+    action = sharing_2_2,
+)
+
+### A test that always fails
+
+# TriggerActionAfterProbe(
+#     name = 'always failling',
+#     predicate = lambda State, response: True,
+#     action = lambda State, response: fail("Always fail!"),
+# )
