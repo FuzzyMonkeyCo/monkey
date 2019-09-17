@@ -9,7 +9,8 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func init() {
+// InitExec TODO
+func InitExec() {
 	// non-standard dialect flags
 	///resolve.AllowNestedDef = true      // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
@@ -92,11 +93,11 @@ func slValueCopy(src starlark.Value) (dst starlark.Value) {
 	case starlark.NoneType:
 		return starlark.None
 	case starlark.Bool:
-		return starlark.Bool(v)
+		return v
 	case starlark.Int:
 		return starlark.MakeBigInt(v.BigInt())
 	case starlark.Float:
-		return starlark.Float(v)
+		return v
 	case starlark.String:
 		return starlark.String(v.GoString())
 	case *starlark.List:

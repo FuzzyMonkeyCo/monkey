@@ -90,11 +90,21 @@ func (s *SUTShell) Reset(ctx context.Context) error { return nil }
 func (s *SUTShell) Stop(ctx context.Context) error { return nil }
 
 // ModelerFunc TODO
-type ModelerFunc func(d starlark.StringDict) (Modeler, error)
+type ModelerFunc func(d starlark.StringDict) (Modeler, *ModelerError)
 type slBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
 
+// ModelerError TODO
+type ModelerError struct {
+	FieldRead, Want, Got string
+}
+
+func (me *ModelerError) Error(modelerName string) error {
+	return fmt.Errorf("%s(%s = ...) must be %s, got: %s",
+		modelerName, me.FieldRead, me.Want, me.Got)
+}
+
 var registeredIRModels = map[string]ModelerFunc{
-	"OpenAPIv3": func(d starlark.StringDict) (Modeler, error) {
+	"OpenAPIv3": func(d starlark.StringDict) (Modeler, *ModelerError) {
 		mo := &ModelOpenAPIv3{}
 		var (
 			found              bool
@@ -102,13 +112,14 @@ var registeredIRModels = map[string]ModelerFunc{
 		)
 
 		if file, found = d["file"]; !found || file.Type() != "string" {
-			// TODO: introduce specific error type so as to build `<key>(field = ...)` messages
-			return nil, errors.New("OpenAPIv3(file = ...) must be a string")
+			e := &ModelerError{FieldRead: "file", Want: "a string", Got: file.Type()}
+			return nil, e
 		}
 		mo.File = file.(starlark.String).GoString()
 
 		if host, found = d["host"]; found && host.Type() != "string" {
-			return nil, errors.New("OpenAPIv3(host = ...) must be a string")
+			e := &ModelerError{FieldRead: "host", Want: "a string", Got: host.Type()}
+			return nil, e
 		}
 		if found {
 			h := host.(starlark.String).GoString()
@@ -117,7 +128,8 @@ var registeredIRModels = map[string]ModelerFunc{
 		}
 
 		if hAuthz, found = d["header_authorization"]; found && hAuthz.Type() != "string" {
-			return nil, errors.New("OpenAPIv3(header_authorization = ...) must be a string")
+			e := &ModelerError{FieldRead: "header_authorization", Want: "a string", Got: hAuthz.Type()}
+			return nil, e
 		}
 		if found {
 			authz := hAuthz.(starlark.String).GoString()
@@ -129,7 +141,7 @@ var registeredIRModels = map[string]ModelerFunc{
 	},
 }
 
-func modelMaker(modeler ModelerFunc) slBuiltin {
+func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
 	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		fname := b.Name()
 		if args.Len() != 0 {
@@ -158,9 +170,9 @@ func modelMaker(modeler ModelerFunc) slBuiltin {
 				r[key] = v
 			}
 		}
-		mo, err := modeler(u)
-		if err != nil {
-			return nil, err
+		mo, modelerErr := modeler(u)
+		if modelerErr != nil {
+			return nil, modelerErr.Error(modelName)
 		}
 		resetter, err := newSUTResetter(fname, r)
 		if err != nil {
@@ -238,10 +250,6 @@ func (m *ModelOpenAPIv3) GetSUTResetter() SUTResetter { return m.resetter }
 // Pretty TODO
 func (m *ModelOpenAPIv3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
-type modelState struct {
-	d *starlark.Dict
-}
-
 var (
 	_ starlark.Value           = (*modelState)(nil)
 	_ starlark.HasAttrs        = (*modelState)(nil)
@@ -250,6 +258,10 @@ var (
 	_ starlark.Sequence        = (*modelState)(nil)
 	_ starlark.Comparable      = (*modelState)(nil)
 )
+
+type modelState struct {
+	d *starlark.Dict
+}
 
 func newModelState(size int) *modelState {
 	return &modelState{d: starlark.NewDict(size)}
@@ -302,10 +314,7 @@ func printableASCII(s string) bool {
 		}
 		l++
 	}
-	if l > 255 {
-		return false
-	}
-	return true
+	return !(l > 255)
 }
 
 var userRTLang struct {
@@ -378,7 +387,8 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 		if _, ok := UserCfg_Kind_value[modelName]; !ok {
 			return nil, fmt.Errorf("unexpected model kind: %q", modelName)
 		}
-		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, modelMaker(modeler))
+		builtin := modelMaker(modelName, modeler)
+		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
 	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
 	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
@@ -451,10 +461,8 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			}
 			break
 		}
-		for _, c := range key {
-			if !unicode.IsPrint(c) {
-				panic("FIXME")
-			}
+		if !printableASCII(key) {
+			panic("FIXME")
 		}
 	}
 	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))

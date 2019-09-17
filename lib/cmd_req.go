@@ -41,14 +41,15 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 		check := &RepValidateProgress{Details: []string{name}}
 		log.Println("[NFO] checking", check.Details[0])
 		success, failure := lambda(mnk)
-		if success != "" {
+		switch {
+		case success != "":
 			check.Success = true
 			mnk.progress.checkPassed(success)
-		} else if len(failure) != 0 {
+		case len(failure) != 0:
 			check.Details = append(check.Details, failure...)
 			log.Println(append([]string{"[NFO]"}, failure...))
 			mnk.progress.checkFailed(failure)
-		} else {
+		default:
 			mnk.progress.checkSkipped(check.Details[0])
 		}
 

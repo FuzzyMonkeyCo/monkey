@@ -53,6 +53,7 @@ var (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
+	lib.InitExec()
 	os.Exit(actualMain())
 }
 
