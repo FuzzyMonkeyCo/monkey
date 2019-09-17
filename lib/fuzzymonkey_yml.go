@@ -442,8 +442,7 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 				panic("FIXME")
 			}
 			ColorERR.Printf(">>> modelState: SetKey(%v, %v)\n", k, v)
-			// if err := userRTLang.ModelState.SetKey(k, v); err != nil {
-			if err := userRTLang.ModelState.SetKey(k, starlark.NewDict(0)); err != nil {
+			if err := userRTLang.ModelState.SetKey(k, slValueCopy(v)); err != nil {
 				panic(err)
 			}
 		}
