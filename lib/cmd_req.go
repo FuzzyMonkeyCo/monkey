@@ -3,6 +3,7 @@ package lib
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -75,14 +76,32 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 			checkN := &RepValidateProgress{Details: []string{fmt.Sprintf("user property #%d: %q", i, trigger.Name.GoString())}}
 			log.Println("[NFO] checking", checkN.Details[0])
 
-			args1 := starlark.Tuple{slValueCopy(userRTLang.ModelState), slValueCopy(response)}
+			var modelState1, response1 starlark.Value
+			if modelState1, err = slValueCopy(userRTLang.ModelState); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			if response1, err = slValueCopy(response); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			args1 := starlark.Tuple{modelState1, response1}
 
 			var shouldBeBool starlark.Value
 			if shouldBeBool, err = starlark.Call(userRTLang.Thread, trigger.Predicate, args1, nil); err == nil {
 				if triggered, ok := shouldBeBool.(starlark.Bool); ok {
 					if triggered {
 
-						args2 := starlark.Tuple{slValueCopy(userRTLang.ModelState), slValueCopy(response)}
+						var modelState2, response2 starlark.Value
+						if modelState2, err = slValueCopy(userRTLang.ModelState); err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+						if response2, err = slValueCopy(response); err != nil {
+							log.Println("[ERR]", err)
+							return
+						}
+						args2 := starlark.Tuple{modelState2, response2}
 
 						var newModelState starlark.Value
 						if newModelState, err = starlark.Call(userRTLang.Thread, trigger.Action, args2, nil); err == nil {
@@ -304,7 +323,7 @@ func (c *tCapHTTP) ShowRequest(showf func(string, ...interface{})) error {
 
 func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
 	if c.rep == nil {
-		panic("FIXME")
+		return errors.New("response is unset")
 	}
 	showf("%s", c.rep)
 	return nil

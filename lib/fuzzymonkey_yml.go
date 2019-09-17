@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,6 +12,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 	yaml "gopkg.in/yaml.v2"
@@ -142,10 +142,12 @@ var registeredIRModels = map[string]ModelerFunc{
 }
 
 func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
-	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
+		ret = starlark.None
 		fname := b.Name()
 		if args.Len() != 0 {
-			return nil, fmt.Errorf("%s(...) does not take positional arguments", fname)
+			err = fmt.Errorf("%s(...) does not take positional arguments", fname)
+			return
 		}
 
 		u := make(starlark.StringDict, len(kwargs))
@@ -153,12 +155,13 @@ func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
 		for _, kv := range kwargs {
 			k, v := kv.Index(0), kv.Index(1)
 			key := k.(starlark.String).GoString()
-			// FIXME: prempt Exec* fields + other Capitalized keys
 			reserved := false
+			if err = printableASCII(key); err != nil {
+				err = errors.Wrap(err, "illegal field")
+				log.Println("[ERR]", err)
+				return
+			}
 			for i, c := range key {
-				if !(c <= unicode.MaxASCII && unicode.IsPrint(c)) {
-					panic("FIXME: illegal")
-				}
 				if i == 0 && unicode.IsUpper(c) {
 					reserved = true
 					break
@@ -172,16 +175,18 @@ func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
 		}
 		mo, modelerErr := modeler(u)
 		if modelerErr != nil {
-			return nil, modelerErr.Error(modelName)
+			err = modelerErr.Error(modelName)
+			log.Println("[ERR]", err)
+			return
 		}
-		resetter, err := newSUTResetter(fname, r)
-		if err != nil {
-			return nil, err
+		var resetter SUTResetter
+		if resetter, err = newSUTResetter(fname, r); err != nil {
+			return
 		}
 		mo.SetSUTResetter(resetter)
 
 		userRTLang.Modelers = append(userRTLang.Modelers, mo)
-		return starlark.None, nil
+		return
 	}
 }
 
@@ -219,7 +224,7 @@ func newSUTResetter(modelerName string, r starlark.StringDict) (SUTResetter, err
 		resetter.stop = vv.GoString()
 	}
 	if len(r) != 0 {
-		return nil, fmt.Errorf("Unexpected arguments to %s(): %s", modelerName, strings.Join(r.Keys(), ", "))
+		return nil, fmt.Errorf("unexpected arguments to %s(): %s", modelerName, strings.Join(r.Keys(), ", "))
 	}
 	return resetter, nil
 }
@@ -268,14 +273,14 @@ func newModelState(size int) *modelState {
 }
 func (s *modelState) Clear() error { return s.d.Clear() }
 func (s *modelState) Delete(k starlark.Value) (starlark.Value, bool, error) {
-	if !slValuePrintableASCII(k) {
-		panic("FIXME: illegal")
+	if err := slValuePrintableASCII(k); err != nil {
+		return nil, false, err
 	}
 	return s.d.Delete(k)
 }
 func (s *modelState) Get(k starlark.Value) (starlark.Value, bool, error) {
-	if !slValuePrintableASCII(k) {
-		panic("FIXME: illegal")
+	if err := slValuePrintableASCII(k); err != nil {
+		return nil, false, err
 	}
 	return s.d.Get(k)
 }
@@ -284,8 +289,8 @@ func (s *modelState) Keys() []starlark.Value     { return s.d.Keys() }
 func (s *modelState) Len() int                   { return s.d.Len() }
 func (s *modelState) Iterate() starlark.Iterator { return s.d.Iterate() }
 func (s *modelState) SetKey(k, v starlark.Value) error {
-	if !slValuePrintableASCII(k) {
-		panic("FIXME: illegal")
+	if err := slValuePrintableASCII(k); err != nil {
+		return err
 	}
 	return s.d.SetKey(k, v)
 }
@@ -298,23 +303,6 @@ func (s *modelState) Attr(name string) (starlark.Value, error) { return s.d.Attr
 func (s *modelState) AttrNames() []string                      { return s.d.AttrNames() }
 func (s *modelState) CompareSameType(op syntax.Token, ss starlark.Value, depth int) (bool, error) {
 	return s.d.CompareSameType(op, ss, depth)
-}
-func slValuePrintableASCII(k starlark.Value) bool {
-	key, ok := k.(starlark.String)
-	if !ok {
-		return false
-	}
-	return printableASCII(key.GoString())
-}
-func printableASCII(s string) bool {
-	l := 0
-	for _, c := range s {
-		if !(c <= unicode.MaxASCII && unicode.IsPrint(c)) {
-			return false
-		}
-		l++
-	}
-	return !(l > 255)
 }
 
 var userRTLang struct {
@@ -411,7 +399,9 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	// Ensure at least one model was defined
 	ColorERR.Printf(">>> modelers: %v\n", userRTLang.Modelers)
 	if len(userRTLang.Modelers) == 0 {
-		panic("FIXME")
+		err = errors.New("no modelers are registered")
+		log.Println("[ERR]", err)
+		return
 	}
 
 	ColorERR.Printf(">>> envs: %+v\n", userRTLang.EnvRead)
@@ -422,15 +412,19 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	if state, ok := userRTLang.Globals[tState]; ok {
 		d, ok := state.(*starlark.Dict)
 		if !ok {
-			panic("FIXME")
+			err = fmt.Errorf("monkey State must be a dict, got: %s", state.Type())
+			log.Println("[ERR]", err)
+			return
 		}
 		delete(userRTLang.Globals, tState)
 		userRTLang.ModelState = newModelState(d.Len())
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
 			// Ensure State keys are all String.s
-			if !slValuePrintableASCII(k) {
-				panic("FIXME")
+			if err = slValuePrintableASCII(k); err != nil {
+				err = errors.Wrap(err, "illegal State key")
+				log.Println("[ERR]", err)
+				return
 			}
 			// Ensure State values are all literals
 			switch v.(type) {
@@ -439,29 +433,37 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 			case starlark.String:
 			case *starlark.List, *starlark.Dict, *starlark.Set:
 			default:
-				panic("FIXME")
+				err = fmt.Errorf("all initial State values must be litterals: State[%s] is %s", k.String(), v.Type())
+				log.Println("[ERR]", err)
+				return
 			}
 			ColorERR.Printf(">>> modelState: SetKey(%v, %v)\n", k, v)
-			if err := userRTLang.ModelState.SetKey(k, slValueCopy(v)); err != nil {
-				panic(err)
+			var vv starlark.Value
+			if vv, err = slValueCopy(v); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			if err = userRTLang.ModelState.SetKey(k, vv); err != nil {
+				log.Println("[ERR]", err)
+				return
 			}
 		}
 	} else {
 		userRTLang.ModelState = newModelState(0)
 	}
-	// TODO: ensure only lowercase things are exported
 	for key := range userRTLang.Globals {
-		if len(key) > 255 {
-			panic("FIXME")
+		if err = printableASCII(key); err != nil {
+			err = errors.Wrap(err, "illegal export")
+			log.Println("[ERR]", err)
+			return
 		}
 		for _, c := range key {
 			if unicode.IsUpper(c) {
-				panic("FIXME")
+				err = fmt.Errorf("user defined exports must not be uppercase: %q", key)
+				log.Println("[ERR]", err)
+				return
 			}
 			break
-		}
-		if !printableASCII(key) {
-			panic("FIXME")
 		}
 	}
 	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))

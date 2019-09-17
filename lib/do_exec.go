@@ -3,16 +3,17 @@ package lib
 import (
 	"fmt"
 	"reflect"
+	"unicode"
 
+	"github.com/pkg/errors"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
 
-// InitExec TODO
+// InitExec specifies Monkey's dialect flags
 func InitExec() {
-	// non-standard dialect flags
-	///resolve.AllowNestedDef = true      // def statements within function bodies
+	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
 	resolve.AllowFloat = true          // floating point
 	resolve.AllowSet = true            // sets
@@ -34,6 +35,28 @@ func DoExecREPL() error {
 	thread.Name = "REPL"
 	// repl.REPL(thread, globals)
 	repl.REPL(thread, starlark.StringDict{})
+	return nil
+}
+
+func slValuePrintableASCII(k starlark.Value) error {
+	key, ok := k.(starlark.String)
+	if !ok {
+		return fmt.Errorf("expected a string, got: %s", k.Type())
+	}
+	return printableASCII(key.GoString())
+}
+
+func printableASCII(s string) error {
+	l := 0
+	for _, c := range s {
+		if !(c <= unicode.MaxASCII && unicode.IsPrint(c)) {
+			return fmt.Errorf("string contains non-ASCII or non-printable characters: %q", s)
+		}
+		l++
+	}
+	if l > 255 {
+		return fmt.Errorf("string must be shorter than 256 characters: %q", s)
+	}
 	return nil
 }
 
@@ -70,8 +93,8 @@ func slValueFromInterface(x interface{}) (starlark.Value, error) {
 		for _, k := range v.MapKeys() {
 			value := v.MapIndex(k)
 			key := k.String()
-			if !printableASCII(key) {
-				return nil, fmt.Errorf("illegal string key: %q", key)
+			if err := printableASCII(key); err != nil {
+				return nil, errors.Wrap(err, "illegal string key")
 			}
 			s, err := slValueFromInterface(value.Interface())
 			if err != nil {
@@ -88,55 +111,71 @@ func slValueFromInterface(x interface{}) (starlark.Value, error) {
 	}
 }
 
-func slValueCopy(src starlark.Value) (dst starlark.Value) {
+func slValueCopy(src starlark.Value) (dst starlark.Value, err error) {
 	switch v := src.(type) {
 	case starlark.NoneType:
-		return starlark.None
+		dst = starlark.None
+		return
 	case starlark.Bool:
-		return v
+		dst = v
+		return
 	case starlark.Int:
-		return starlark.MakeBigInt(v.BigInt())
+		dst = starlark.MakeBigInt(v.BigInt())
+		return
 	case starlark.Float:
-		return v
+		dst = v
+		return
 	case starlark.String:
-		return starlark.String(v.GoString())
+		dst = starlark.String(v.GoString())
+		return
 	case *starlark.List:
 		vs := make([]starlark.Value, 0, v.Len())
 		for i := 0; i < v.Len(); i++ {
-			vv := slValueCopy(v.Index(i))
+			var vv starlark.Value
+			if vv, err = slValueCopy(v.Index(i)); err != nil {
+				return
+			}
 			vs = append(vs, vv)
 		}
-		return starlark.NewList(vs)
+		dst = starlark.NewList(vs)
+		return
 	case starlark.Tuple:
 		vs := make([]starlark.Value, 0, v.Len())
 		for i := 0; i < v.Len(); i++ {
-			vv := slValueCopy(v.Index(i))
+			var vv starlark.Value
+			if vv, err = slValueCopy(v.Index(i)); err != nil {
+				return
+			}
 			vs = append(vs, vv)
 		}
-		return starlark.Tuple(vs)
+		dst = starlark.Tuple(vs)
+		return
 	case *starlark.Dict:
 		vs := starlark.NewDict(v.Len())
 		for _, kv := range v.Items() {
 			k, v := kv.Index(0), kv.Index(1)
-			if !slValuePrintableASCII(k) {
-				panic("FIXME")
+			if err = slValuePrintableASCII(k); err != nil {
+				return
 			}
-			if err := vs.SetKey(k, v); err != nil {
-				panic(err)
+			if err = vs.SetKey(k, v); err != nil {
+				return
 			}
 		}
-		return vs
-	// TODO: case *starlark.Set:
+		dst = vs
+		return
 	case *modelState:
 		vs := newModelState(v.Len())
 		for _, kv := range v.Items() {
 			k, v := kv.Index(0), kv.Index(1)
-			if err := vs.SetKey(k, v); err != nil {
-				panic(err)
+			if err = vs.SetKey(k, v); err != nil {
+				return
 			}
 		}
-		return vs
+		dst = vs
+		return
 	default:
-		panic(fmt.Sprintf("FIXME: %T %+v", src, src))
+		// TODO: case *starlark.Set:
+		err = fmt.Errorf("unexpected %T: %+v", src, src)
+		return
 	}
 }
