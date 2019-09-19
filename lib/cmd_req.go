@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -437,8 +438,26 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 		return
 	}
 
+	t := &http.Transport{
+		Proxy: func(req *http.Request) (*url.URL, error) {
+			// TODO: snap the envs that ProxyFromEnvironment reads
+			log.Println("[NFO] HTTP proxying is work in progress...")
+			return nil, nil
+		},
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		// ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
 	start := time.Now()
-	if rep, err = http.DefaultTransport.RoundTrip(req); err != nil {
+	if rep, err = t.RoundTrip(req); err != nil {
 		return
 	}
 	elapsed := time.Since(start)
