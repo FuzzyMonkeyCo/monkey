@@ -56,8 +56,13 @@ func (p *progress) checkSkipped(s string) {
 }
 func (p *progress) checkFailed(ss []string) {
 	p.failed = true
-	for _, s := range ss {
-		p.show(" " + ColorERR.Sprintf(prefixFailed) + " " + ColorNFO.Sprintf(s))
+	if len(ss) > 0 {
+		p.show(" " + ColorERR.Sprintf(prefixFailed) + " " + ColorNFO.Sprintf(ss[0]))
+	}
+	if len(ss) > 1 {
+		for _, s := range ss[1:] {
+			p.show(ColorERR.Sprintf(s))
+		}
 	}
 	p.nfo(" Found a bug!\n")
 }

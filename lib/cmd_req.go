@@ -131,7 +131,7 @@ func (mnk *Monkey) castPostConditions(act *RepCallDone) (err error) {
 								checkN.Details = append(checkN.Details, err.Error())
 							}
 							log.Println("[NFO]", err)
-							mnk.progress.checkFailed(checkN.Details[1:])
+							mnk.progress.checkFailed(checkN.Details)
 						}
 					} else {
 						mnk.progress.checkSkipped(checkN.Details[0])
