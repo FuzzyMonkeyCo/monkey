@@ -1,6 +1,6 @@
 # Invariants of our APIs expressed in a Python-like language
 
-print('$THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','unset'))
+print('$THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','not set'))
 
 host, spec = 'https://jsonplaceholder.typicode.com/', None
 mode = Env('TESTING_WHAT')

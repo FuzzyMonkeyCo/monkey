@@ -11,6 +11,8 @@ import (
 	"go.starlark.net/starlark"
 )
 
+var registeredIRModels = make(map[string]ModelerFunc)
+
 // InitExec specifies Monkey's dialect flags
 func InitExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
@@ -21,19 +23,17 @@ func InitExec() {
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
+
+	RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
 }
 
 // DoExecREPL executes a Starlark Read-Eval-Print-Loop
 func DoExecREPL() error {
 	thread := &starlark.Thread{Load: repl.MakeLoad()}
-	// globals, err := loadCfg([]byte{}, false)
-	// if err != nil {
-	// 	return err
-	// }
+	// TODO: load user globals so user can try things
 
 	fmt.Println("Welcome to Starlark (go.starlark.net)")
 	thread.Name = "REPL"
-	// repl.REPL(thread, globals)
 	repl.REPL(thread, starlark.StringDict{})
 	return nil
 }

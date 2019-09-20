@@ -103,42 +103,51 @@ func (me *ModelerError) Error(modelerName string) error {
 		modelerName, me.FieldRead, me.Want, me.Got)
 }
 
-var registeredIRModels = map[string]ModelerFunc{
-	"OpenAPIv3": func(d starlark.StringDict) (Modeler, *ModelerError) {
-		mo := &ModelOpenAPIv3{}
-		var (
-			found              bool
-			file, host, hAuthz starlark.Value
-		)
+func RegisterModeler(name string, fn ModelerFunc) {
+	if _, ok := registeredIRModels[name]; ok {
+		panic(fmt.Sprintf("modeler %q is already registered", name))
+	}
+	registeredIRModels[name] = fn
+}
 
-		if file, found = d["file"]; !found || file.Type() != "string" {
-			e := &ModelerError{FieldRead: "file", Want: "a string", Got: file.Type()}
-			return nil, e
-		}
-		mo.File = file.(starlark.String).GoString()
+func modelerOpenAPIv3(d starlark.StringDict) (Modeler, *ModelerError) {
+	mo := &ModelOpenAPIv3{}
+	var (
+		found              bool
+		field              string
+		file, host, hAuthz starlark.Value
+	)
 
-		if host, found = d["host"]; found && host.Type() != "string" {
-			e := &ModelerError{FieldRead: "host", Want: "a string", Got: host.Type()}
-			return nil, e
-		}
-		if found {
-			h := host.(starlark.String).GoString()
-			mo.Host = h
-			addHost = &h
-		}
+	field = "file"
+	if file, found = d[field]; !found || file.Type() != "string" {
+		e := &ModelerError{FieldRead: field, Want: "a string", Got: file.Type()}
+		return nil, e
+	}
+	mo.File = file.(starlark.String).GoString()
 
-		if hAuthz, found = d["header_authorization"]; found && hAuthz.Type() != "string" {
-			e := &ModelerError{FieldRead: "header_authorization", Want: "a string", Got: hAuthz.Type()}
-			return nil, e
-		}
-		if found {
-			authz := hAuthz.(starlark.String).GoString()
-			mo.HeaderAuthorization = authz
-			addHeaderAuthorization = &authz
-		}
+	field = "host"
+	if host, found = d[field]; found && host.Type() != "string" {
+		e := &ModelerError{FieldRead: field, Want: "a string", Got: host.Type()}
+		return nil, e
+	}
+	if found {
+		h := host.(starlark.String).GoString()
+		mo.Host = h
+		addHost = &h
+	}
 
-		return mo, nil
-	},
+	field = "header_authorization"
+	if hAuthz, found = d[field]; found && hAuthz.Type() != "string" {
+		e := &ModelerError{FieldRead: field, Want: "a string", Got: hAuthz.Type()}
+		return nil, e
+	}
+	if found {
+		authz := hAuthz.(starlark.String).GoString()
+		mo.HeaderAuthorization = authz
+		addHeaderAuthorization = &authz
+	}
+
+	return mo, nil
 }
 
 func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
