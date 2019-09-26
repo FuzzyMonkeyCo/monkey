@@ -537,12 +537,14 @@ func (c *tCapHTTP) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDo
 		return
 	}
 
-	_, err = (&http.Client{
+	var r *http.Response
+	r, err = (&http.Client{
 		Transport: c,
 	}).Do(req)
 
 	nxt = &RepCallDone{TsDiff: uint64(c.elapsed)}
 	if err == nil {
+		r.Body.Close()
 		resp := c.Response()
 		log.Println("[NFO] ▲", resp)
 		// FIXME: nxt.Response = resp
