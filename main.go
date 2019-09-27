@@ -434,7 +434,8 @@ func retryOrReport() int {
 	const email = "ook@fuzzymonkey.co"
 	w := os.Stderr
 	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Fprintf(w, "\nYou may want to take a look at %s\n", lib.LogID())
+	fmt.Fprintf(w, "\nYou may want to run `monkey --update`.\n")
+	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", lib.LogID())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
