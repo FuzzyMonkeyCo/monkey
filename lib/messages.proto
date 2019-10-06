@@ -34,6 +34,55 @@ option (gogoproto.equal_all) = true;
 // https://godoc.org/github.com/gogo/protobuf/plugin/populate
 
 
+service FuzzyMonkey {
+  rpc Do(stream Clt) returns (stream Srv) {}
+}
+
+
+message Clt {
+  message Msg {
+    message Fuzz {}
+    message FuzzProgress {}
+    message SUTMetrics {}
+    message ResetProgress {}
+    message CallResponseRaw {}
+    message CallVerifProgress {}
+    message CallResponse {}
+    oneof msg {
+      // Initiates fuzzing
+      Fuzz fuzz = 1;
+      // Testing progress & end
+      FuzzProgress fuzz_progress = 2;
+      // Logs & observed SUT
+      SUTMetrics metrics = 3;
+      // SUT state resetting
+      ResetProgress reset_progress = 4;
+      // SUT call response
+      CallResponseRaw call_response_raw = 5;
+      // SUT call verifications
+      CallVerifProgress call_verif_progress = 6;
+      // SUT call response data
+      CallResponse call_response = 7;
+    }
+  }
+  Msg msg = 1;
+}
+
+message Srv {
+  message Msg {
+    message Call {}
+    message Reset {}
+    oneof msg {
+      // Try call to SUT
+      Call call = 1;
+      // Reset SUT state
+      Reset reset = 2;
+    }
+  }
+  Msg msg = 1;
+}
+
+
 message Msg {
   uint64 ts = 1;
   oneof msg {
