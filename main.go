@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/lib"
-	"github.com/docopt/docopt-go"
+	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
 )
@@ -53,22 +53,23 @@ var (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
+	lib.InitExec()
 	os.Exit(actualMain())
 }
 
 type params struct {
-	Fuzz, Shrink             bool
-	Lint, Schema             bool
-	Init, Env, Login, Logs   bool
-	Exec, Start, Reset, Stop bool
-	Update                   bool     `mapstructure:"--update"`
-	HideConfig               bool     `mapstructure:"--hide-config"`
-	ShowSpec                 bool     `mapstructure:"--show-spec"`
-	N                        uint32   `mapstructure:"--tests"`
-	Verbosity                uint8    `mapstructure:"-v"`
-	LogOffset                uint64   `mapstructure:"--previous"`
-	ValidateAgainst          string   `mapstructure:"--validate-against"`
-	EnvVars                  []string `mapstructure:"VAR"`
+	Fuzz, Shrink                   bool
+	Lint, Schema                   bool
+	Init, Env, Login, Logs         bool
+	Exec, Start, Reset, Stop, Repl bool
+	Update                         bool     `mapstructure:"--update"`
+	HideConfig                     bool     `mapstructure:"--hide-config"`
+	ShowSpec                       bool     `mapstructure:"--show-spec"`
+	N                              uint32   `mapstructure:"--tests"`
+	Verbosity                      uint8    `mapstructure:"-v"`
+	LogOffset                      uint64   `mapstructure:"--previous"`
+	ValidateAgainst                string   `mapstructure:"--validate-against"`
+	EnvVars                        []string `mapstructure:"VAR"`
 }
 
 func usage(binTitle string) (args *params, ret int) {
@@ -85,7 +86,7 @@ Usage:
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
   ` + B + ` [-vvv] schema [--validate-against=REF]
-  ` + B + ` [-vvv] exec (start | reset | stop)
+  ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] -h | --help
   ` + B + ` [-vvv]      --update
   ` + B + ` [-vvv] -V | --version
@@ -198,6 +199,12 @@ func actualMain() int {
 
 	if args.Exec {
 		switch {
+		case args.Repl:
+			if err := lib.DoExecREPL(); err != nil {
+				lib.ColorERR.Println(err)
+				return statusFailed
+			}
+			return statusOK
 		case args.Start:
 			return doExec(cfg, lib.ExecKind_start)
 		case args.Reset:
@@ -250,7 +257,12 @@ func actualMain() int {
 		return statusFailed
 	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
-	lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+	if cfg.N == 1 {
+		// TODO: find a "plural" lib
+		lib.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
+	} else {
+		lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+	}
 	return doFuzz(mnk)
 }
 
@@ -422,7 +434,8 @@ func retryOrReport() int {
 	const email = "ook@fuzzymonkey.co"
 	w := os.Stderr
 	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Fprintf(w, "\nYou may want to take a look at %s\n", lib.LogID())
+	fmt.Fprintf(w, "\nYou may want to run `monkey --update`.\n")
+	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", lib.LogID())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")

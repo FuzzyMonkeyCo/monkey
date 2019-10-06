@@ -1,24 +1,26 @@
 package lib
 
+var binTitle string
+
 type Monkey struct {
 	Cfg      *UserCfg
 	Vald     *Validator
-	Name     string
 	ws       *wsState
 	eid      eid
 	progress *progress
 }
 
 func NewMonkey(cfg *UserCfg, vald *Validator, name string) *Monkey {
+	binTitle = name
 	return &Monkey{
 		Cfg:  cfg,
 		Vald: vald,
-		Name: name,
 	}
 }
 
 type Action interface {
-	// TODO: isMsg_Msg() + split into req/rep interfaces
+	// TODO: split into req/rep interfaces
+	// FIXME: embed isMsg_Msg
 	exec(mnk *Monkey) (err error)
 }
 

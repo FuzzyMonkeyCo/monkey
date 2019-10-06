@@ -14,6 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// DoLint builds a valid spec IR
 func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err error) {
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
@@ -46,7 +47,7 @@ func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err er
 		// EmitDefaults: true,
 	}
 	stringified, err := jsoner.MarshalToString(vald.Spec)
-	log.Println("[DBG]", err, stringified[:37], "...")
+	log.Printf("[DBG] %+v %s...", err, stringified[:37])
 	return
 }
 

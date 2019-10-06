@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  0.0.0   feedb065        go1.12.7        amd64   linux
+monkey  0.0.0 feedb065  go1.12.7  amd64 linux
 
 Usage:
   monkey [-vvv] init [--with-magic]
@@ -19,7 +19,7 @@ Usage:
   monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] lint [--show-spec] [--hide-config]
   monkey [-vvv] schema [--validate-against=REF]
-  monkey [-vvv] exec (start | reset | stop)
+  monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] -h | --help
   monkey [-vvv]      --update
   monkey [-vvv] -V | --version
@@ -65,32 +65,52 @@ or the equivalent:
 sh <(curl -#fSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
 ```
 
-### Example `.fuzzymonkey.yml` file:
+Or simply install the [latest release from here](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
 
-```yaml
-# Identifies FuzzyMonkeyCo's configuration format
-version: 1
+### Configuration
 
-# Data describing Web APIs
-spec:
-  kind: OpenAPIv3
-  # Note: references to schemas in `file` are resolved relative to file's location.
-  file: openapi3.json
-  host: http://localhost:6773
-  authorization: Bearer some-token-here
-reset:
-  - curl --fail -X DELETE http://localhost:6773/api/1/items
+`monkey` uses Starlark as its configuration language: a Python-like non Turing-complete language developped at Google for the Bazel build system.
+From [https://github.com/bazelbuild/starlark](https://github.com/bazelbuild/starlark):
+> Starlark (formerly known as Skylark) is a language intended for use as a configuration language. It was designed for the Bazel build system, but may be useful for other projects as well. [...]
+>
+> Starlark is a dialect of Python. Like Python, it is a dynamically typed language with high-level data types, first-class functions with lexical scope, and garbage collection. Independent Starlark threads execute in parallel, so Starlark workloads scale well on parallel machines. Starlark is a small and simple language with a familiar and highly readable syntax. You can use it as an expressive notation for structured data, defining functions to eliminate repetition, or you can use it to add scripting capabilities to an existing application.
+> [...]
+> Design Principles
+> * Deterministic evaluation. Executing the same code twice will give the same results.
+> * Hermetic execution. Execution cannot access the file system, network, system clock. It is safe to execute untrusted code.
+> * Parallel evaluation. Modules can be loaded in parallel. To guarantee a thread-safe execution, shared data becomes immutable.
+> * Simplicity. We try to limit the number of concepts needed to understand the code. Users should be able to quickly read and write code, even if they are not expert. The language should avoid pitfalls as much as possible.
+> * Focus on tooling. We recognize that the source code will be read, analyzed, modified, by both humans and tools.
+> * Python-like. Python is a widely used language. Keeping the language similar to Python can reduce the learning curve and make the semantics more obvious to users.
+
+#### Example `.fuzzymonkey.star` file
+
+
+```python
+Spec(
+  # Data describing Web APIs
+  model = OpenAPIv3(
+    # Note: references to schemas in `file` are resolved relative to file's location.
+    file = 'openapi3.json',
+  ),
+  overrides = {
+    'host': 'http://localhost:6773',
+    'authorization': 'Bearer some-token-here',
+  },
+)
+
+SUT(reset = ["curl --fail -X DELETE http://localhost:6773/api/1/items"])
 ```
 
-### A more involved `.fuzzymonkey.yml`
+#### A more involved `.fuzzymonkey.star`
 
-```yaml
-version: 1
-
-documentation:
-  kind: OpenAPIv3
-  file: dist/openapi3v2.json
-  host: https://localhost:{{ env "CONTAINER_PORT" }}
+```python
+Spec(
+  model = OpenAPIv3(file='dist/openapi3v2.json')
+  overrides = {
+    'host': 'https://localhost:{{ env "CONTAINER_PORT" }}',
+  },
+)
 
 # Note: commands are executed in shells sharing the same environment variables,
 # with `set -e` and `set -o pipefail` flags on.
@@ -100,22 +120,27 @@ documentation:
 # Also, make sure that each test starts from a clean slate
 #   otherwise results will be unreliable.
 
-start:
-- CONTAINER_ID=$(docker run --rm -d -p 6773 cake_sample_master)
-- cmd="$(docker port $CONTAINER_ID 6773/tcp)"
-- CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")
-- host=localhost
-- |
-  until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
-      printf .
-      sleep 5
-  done
+SUT(
+  start = [
+    'CONTAINER_ID=$(docker run --rm -d -p 6773 cake_sample_master)',
+    'cmd="$(docker port $CONTAINER_ID 6773/tcp)"',
+    """CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")""",
+    'host=localhost',
+    '''
+    until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
+        printf .
+        sleep 5
+    done
+    ''',
 
-reset:
-- "[[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]"
+  reset = [
+    "[[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]",
+  ],
 
-stop:
-- docker stop --time 5 $CONTAINER_ID
+  stop = [
+    'docker stop --time 5 $CONTAINER_ID',
+  ],
+)
 ```
 
 ### Issues?

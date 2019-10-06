@@ -122,7 +122,7 @@ func (mnk *Monkey) Dial(URL string) error {
 		return err
 	}
 	headers := http.Header{
-		"User-Agent": {mnk.Name},
+		"User-Agent": {binTitle},
 		"X-Api-Key":  {mnk.Cfg.ApiKey},
 	}
 

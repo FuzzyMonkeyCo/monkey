@@ -12,62 +12,6 @@ import (
 	"time"
 )
 
-var (
-	clientReq    *http.Client
-	harCollector *HARRecorder
-)
-
-// HARSpecVersion ...
-const HARSpecVersion = "1.2"
-
-// HARRecorder logs every HTTP request and response
-type HARRecorder struct {
-	http.RoundTripper
-	Log *HAR_Log
-}
-
-// NewHAR is a handy HAR constructor
-func NewHAR(name string) *HAR_Log {
-	v := time.Now().Format("20060102150405")
-	return &HAR_Log{
-		Version: HARSpecVersion,
-		Creator: &HAR_Creator{
-			Version: v,
-			Name:    name,
-		},
-	}
-}
-
-// NewRecorder returns a new Recorder object that fulfills the http.RoundTripper interface
-func NewRecorder(name string) *HARRecorder {
-	return &HARRecorder{
-		RoundTripper: http.DefaultTransport,
-		Log:          NewHAR(name),
-	}
-}
-
-func newHARTransport(name string) {
-	harCollector = NewRecorder(name)
-	clientReq = &http.Client{Transport: harCollector}
-}
-
-func isHARReady() bool {
-	return clientReq != nil
-}
-
-func lastHAR() *HAR_Entry {
-	all := harCollector.Log.Entries
-	//FIXME: even less data actually needs to be sent
-	entry := all[len(all)-1]
-	// entry.Request = nil
-	return entry
-}
-
-func clearHAR() {
-	harCollector = nil
-	clientReq = nil
-}
-
 // Request converts a HAR Request struct to an net/http.Request struct
 func (r *HAR_Request) Request() (httpreq *http.Request, err error) {
 	dstr := r.PostData.data()
@@ -91,30 +35,23 @@ func (r *HAR_Request) Request() (httpreq *http.Request, err error) {
 	return httpreq, nil
 }
 
-// RoundTrip wraps the HTTP request
-func (c *HARRecorder) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	ent := &HAR_Entry{}
+func harEntry(req *http.Request, rep *http.Response, elapsed time.Duration) (ent *HAR_Entry, err error) {
+	ent = &HAR_Entry{}
 	if ent.Request, err = harRequest(req); err != nil {
 		return nil, err
 	}
 	// ent.Cache = TODO
 
-	startTime := time.Now()
-	if resp, err = c.RoundTripper.RoundTrip(req); err != nil {
-		return
-	}
-
 	ent.Timings = &HAR_Timings{}
-	ent.Timings.Wait = int64(time.Since(startTime))
+	ent.Timings.Wait = int64(elapsed)
 	ent.Time = ent.Timings.Wait
 
 	ent.Timings.Send = -1    //TODO
 	ent.Timings.Receive = -1 //TODO
 
-	ent.StartedDateTime = startTime.Format(time.RFC3339Nano)
-	ent.Response, err = harResponse(resp)
+	// ent.StartedDateTime = startTime.Format(time.RFC3339Nano)
+	ent.Response, err = harResponse(rep)
 
-	c.Log.Entries = append(c.Log.Entries, ent)
 	return
 }
 

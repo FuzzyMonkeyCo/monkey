@@ -7,6 +7,12 @@ import (
 	"github.com/superhawk610/bar"
 )
 
+const (
+	prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅
+	prefixSkipped   = "○" // ● • ‣ ◦ ⁃ ○ ◯ ⭕ 💮
+	prefixFailed    = "✖" // ⨯ × ✗ x X ☓ ✘
+)
+
 type progress struct {
 	bar           *bar.Bar
 	failed        bool
@@ -32,9 +38,10 @@ func (p *progress) state(s string) {
 	advancement := 1 + int(p.lastLane.GetTotalCallsCount())
 	p.bar.Update(advancement, bar.Context{bar.Ctx("state", s)})
 }
-func (p *progress) show(s string) { p.bar.Interrupt(s) }
-func (p *progress) nfo(s string)  { p.show(ColorNFO.Sprintf("%s", s)) }
-func (p *progress) wrn(s string)  { p.show(ColorWRN.Sprintf("%s", s)) }
+func (p *progress) show(s string)                         { p.bar.Interrupt(s) }
+func (p *progress) showf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
+func (p *progress) nfo(s string)                          { p.show(ColorNFO.Sprintf("%s", s)) }
+func (p *progress) wrn(s string)                          { p.show(ColorWRN.Sprintf("%s", s)) }
 func (p *progress) err(s string) {
 	p.show(ColorERR.Sprintf("%s", s))
 	p.failed = true
@@ -42,12 +49,20 @@ func (p *progress) err(s string) {
 
 func (p *progress) checksPassed() { p.nfo(" All checks passed.\n") }
 func (p *progress) checkPassed(s string) {
-	p.show(" " + ColorOK.Sprintf("✓") + " " + ColorNFO.Sprintf(s))
+	p.show(" " + ColorOK.Sprintf(prefixSucceeded) + " " + ColorNFO.Sprintf(s))
+}
+func (p *progress) checkSkipped(s string) {
+	p.show(" " + ColorWRN.Sprintf(prefixSkipped) + " " + ColorNFO.Sprintf(s) + " skipped")
 }
 func (p *progress) checkFailed(ss []string) {
 	p.failed = true
-	for _, s := range ss {
-		p.show(" " + ColorERR.Sprintf("✗") + " " + ColorNFO.Sprintf(s))
+	if len(ss) > 0 {
+		p.show(" " + ColorERR.Sprintf(prefixFailed) + " " + ColorNFO.Sprintf(ss[0]))
+	}
+	if len(ss) > 1 {
+		for _, s := range ss[1:] {
+			p.show(ColorERR.Sprintf(s))
+		}
 	}
 	p.nfo(" Found a bug!\n")
 }
@@ -102,6 +117,7 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	return
 }
 
+// TestsSucceeded TODO
 func (mnk *Monkey) TestsSucceeded() (success bool) {
 	p := mnk.progress
 
