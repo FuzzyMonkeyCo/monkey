@@ -8,7 +8,7 @@ require (
 	github.com/fatih/color v0.0.0-20181010231311-3f9d52f7176a
 	github.com/getkin/kin-openapi v0.2.0
 	github.com/gogo/protobuf v1.2.1
-	github.com/golang/protobuf v1.3.2 // indirect
+	github.com/golang/protobuf v1.3.2
 	github.com/googleapis/gnostic v0.3.0
 	github.com/gorilla/websocket v0.0.0-20181206070239-95ba29eb981b
 	github.com/hashicorp/logutils v1.0.0

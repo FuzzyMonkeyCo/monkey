@@ -41,13 +41,43 @@ service FuzzyMonkey {
 
 message Clt {
   message Msg {
-    message Fuzz {}
+    message Fuzz {
+      message Resetter {
+        message SUTShell {
+          string start = 1;
+          string rst = 2;
+          string stop = 3;
+        }
+        oneof resetter {
+          SUTShell sut_shell = 1;
+        }
+      }
+      Resetter resetter = 1;
+      message Model {
+        message OpenAPIv3 {
+          string file = 1;
+          string host = 2;
+          string header_authorization = 3;
+        }
+        oneof model {
+          OpenAPIv3 openapiv3 = 1;
+        }
+      }
+      Model model = 2;
+    }
+
     message FuzzProgress {}
+
     message SUTMetrics {}
+
     message ResetProgress {}
+
     message CallResponseRaw {}
+
     message CallVerifProgress {}
+
     message CallResponse {}
+
     oneof msg {
       // Initiates fuzzing
       Fuzz fuzz = 1;
@@ -176,7 +206,7 @@ message RepCallResult {
 }
 
 message UserCfg {
-  uint32 version = 1;
+  // uint32 version = 1;
   string api_key = 2;
   repeated string usage = 3;
   bytes seed = 4;

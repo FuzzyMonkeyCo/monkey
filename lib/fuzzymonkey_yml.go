@@ -6,7 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/url"
+	// "net/url"
 	"os"
 	"strings"
 	"time"
@@ -15,14 +15,11 @@ import (
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
-	yaml "gopkg.in/yaml.v2"
+	// yaml "gopkg.in/yaml.v2"
 )
 
 const (
-	// LocalCfg is the path of Monkey's config file
-	LocalCfg = ".fuzzymonkey.yml"
-
-	lastCfgVersion = 1
+	// lastCfgVersion = 1
 	defaultCfgHost = "http://localhost:3000"
 )
 
@@ -31,35 +28,57 @@ var addHeaderAuthorization, addHost *string
 
 // NewCfg parses Monkey configuration, optionally pretty-printing it
 func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
-	fd, err := os.Open(LocalCfg)
-	if err != nil {
+	const localCfg = "fuzzymonkey.star"
+	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
 		log.Println("[ERR]", err)
-		errFmt := "You must provide a readable %s file in the current directory.\n"
-		ColorERR.Printf(errFmt, LocalCfg)
+		ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
 		return
 	}
-	defer fd.Close()
 
-	var config []byte
-	if config, err = ioutil.ReadAll(fd); err != nil {
-		log.Println("[ERR]", err)
-		return
+	userRTLang.Globals = make(starlark.StringDict, 2+len(registeredIRModels))
+	for modelName, modeler := range registeredIRModels {
+		if _, ok := UserCfg_Kind_value[modelName]; !ok {
+			err = fmt.Errorf("unexpected model kind: %q", modelName)
+			return
+		}
+		builtin := modelMaker(modelName, modeler)
+		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
+	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
+	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
+	userRTLang.Thread = &starlark.Thread{
+		Name:  "cfg",
+		Print: func(_ *starlark.Thread, msg string) { ColorWRN.Println(msg) },
+	}
+	userRTLang.EnvRead = make(map[string]string)
+	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
 
 	start := time.Now()
-	if _, err = loadCfg(config, showCfg); err != nil {
+	if err = loadCfg(localCfg, showCfg); err != nil {
 		return
 	}
-	log.Println(">>>", time.Since(start))
+	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
-	if cfg, err = parseCfg(config, showCfg); err == nil {
-		cfg.Usage = os.Args
+	if len(userRTLang.Modelers) > 1 {
+		err = errors.New("defining more than one modelers is not yet supported")
+		log.Println("[ERR]", err)
+		return
 	}
+	modeler := userRTLang.Modelers[0]
+	fmt.Printf(">>> modeler = %+v\n", modeler)
+	fmt.Printf(">>> %+v\n", &Clt_Msg_Fuzz{
+		Resetter: &Clt_Msg_Fuzz_Resetter{Resetter: modeler.GetSUTResetter().ToProto()},
+		Model:    &Clt_Msg_Fuzz_Model{Model: modeler.ToProto()},
+	})
+
+	cfg.Usage = os.Args
 	return
 }
 
 // Modeler describes checkable models
 type Modeler interface {
+	ToProto() isClt_Msg_Fuzz_Model_Model
+
 	SetSUTResetter(SUTResetter)
 	GetSUTResetter() SUTResetter
 
@@ -68,6 +87,8 @@ type Modeler interface {
 
 // SUTResetter describes ways to reset the system under test to a known initial state
 type SUTResetter interface {
+	ToProto() isClt_Msg_Fuzz_Resetter_Resetter
+
 	Start(context.Context) error
 	Reset(context.Context) error
 	Stop(context.Context) error
@@ -78,6 +99,14 @@ var _ SUTResetter = (*SUTShell)(nil)
 // SUTShell TODO
 type SUTShell struct {
 	start, reset, stop string
+}
+
+func (s *SUTShell) ToProto() isClt_Msg_Fuzz_Resetter_Resetter {
+	return &Clt_Msg_Fuzz_Resetter_SutShell{&Clt_Msg_Fuzz_Resetter_SUTShell{
+		Start: s.start,
+		Rst:   s.reset,
+		Stop:  s.stop,
+	}}
 }
 
 // Start TODO
@@ -255,6 +284,15 @@ type ModelOpenAPIv3 struct {
 	// FIXME? tcap *tCapHTTP
 }
 
+// ToProto TODO
+func (m *ModelOpenAPIv3) ToProto() isClt_Msg_Fuzz_Model_Model {
+	return &Clt_Msg_Fuzz_Model_Openapiv3{&Clt_Msg_Fuzz_Model_OpenAPIv3{
+		File:                m.File,
+		Host:                m.Host,
+		HeaderAuthorization: m.HeaderAuthorization,
+	}}
+}
+
 // SetSUTResetter TODO
 func (m *ModelOpenAPIv3) SetSUTResetter(sr SUTResetter) { m.resetter = sr }
 
@@ -376,25 +414,7 @@ func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args sta
 	return starlark.None, nil
 }
 
-func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err error) {
-	const localCfg = "fuzzymonkey.star"
-
-	userRTLang.Globals = make(starlark.StringDict, 2+len(registeredIRModels))
-	for modelName, modeler := range registeredIRModels {
-		if _, ok := UserCfg_Kind_value[modelName]; !ok {
-			return nil, fmt.Errorf("unexpected model kind: %q", modelName)
-		}
-		builtin := modelMaker(modelName, modeler)
-		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, builtin)
-	}
-	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
-	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
-	userRTLang.Thread = &starlark.Thread{
-		Name:  "cfg",
-		Print: func(_ *starlark.Thread, msg string) { ColorWRN.Println(msg) },
-	}
-	userRTLang.EnvRead = make(map[string]string)
-	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
+func loadCfg(localCfg string, showCfg bool) (err error) {
 	if userRTLang.Globals, err = starlark.ExecFile(userRTLang.Thread, localCfg, nil, userRTLang.Globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
@@ -480,116 +500,116 @@ func loadCfg(config []byte, showCfg bool) (globals starlark.StringDict, err erro
 	return
 }
 
-func parseCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
-	var vsn struct {
-		V interface{} `yaml:"version"`
-	}
-	if vsnErr := yaml.Unmarshal(config, &vsn); vsnErr != nil {
-		const errFmt = "field 'version' missing! Try `version: %d`"
-		err = fmt.Errorf(errFmt, lastCfgVersion)
-		log.Println("[ERR]", err)
-		ColorERR.Println(err)
-		return
-	}
+// func parseCfg(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+// 	var vsn struct {
+// 		V interface{} `yaml:"version"`
+// 	}
+// 	if vsnErr := yaml.Unmarshal(config, &vsn); vsnErr != nil {
+// 		const errFmt = "field 'version' missing! Try `version: %d`"
+// 		err = fmt.Errorf(errFmt, lastCfgVersion)
+// 		log.Println("[ERR]", err)
+// 		ColorERR.Println(err)
+// 		return
+// 	}
 
-	version, ok := vsn.V.(int)
-	if !ok || !knownVersion(version) {
-		err = fmt.Errorf("bad version: `%#v'", vsn.V)
-		log.Println("[ERR]", err)
-		ColorERR.Println(err)
-		return
-	}
+// 	version, ok := vsn.V.(int)
+// 	if !ok || !knownVersion(version) {
+// 		err = fmt.Errorf("bad version: `%#v'", vsn.V)
+// 		log.Println("[ERR]", err)
+// 		ColorERR.Println(err)
+// 		return
+// 	}
 
-	type cfgParser func(config []byte, showCfg bool) (cfg *UserCfg, err error)
-	cfgParsers := []cfgParser{
-		parseCfgV001,
-	}
+// 	type cfgParser func(config []byte, showCfg bool) (cfg *UserCfg, err error)
+// 	cfgParsers := []cfgParser{
+// 		parseCfgV001,
+// 	}
 
-	return cfgParsers[version-1](config, showCfg)
-}
+// 	return cfgParsers[version-1](config, showCfg)
+// }
 
-func knownVersion(v int) bool {
-	return 0 < v && v <= lastCfgVersion
-}
+// func knownVersion(v int) bool {
+// 	return 0 < v && v <= lastCfgVersion
+// }
 
-func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
-	var userConf struct {
-		Version uint32   `yaml:"version"`
-		Start   []string `yaml:"start"`
-		Reset   []string `yaml:"reset"`
-		Stop    []string `yaml:"stop"`
-		Spec    struct {
-			File           string       `yaml:"file"`
-			Kind           string       `yaml:"kind"`
-			KindIdentified UserCfg_Kind `yaml:"-"`
-			Host           string       `yaml:"host"`
-			HeaderAuthz    *string      `yaml:"authorization"`
-		} `yaml:"spec"`
-	}
+// func parseCfgV001(config []byte, showCfg bool) (cfg *UserCfg, err error) {
+// 	var userConf struct {
+// 		Version uint32   `yaml:"version"`
+// 		Start   []string `yaml:"start"`
+// 		Reset   []string `yaml:"reset"`
+// 		Stop    []string `yaml:"stop"`
+// 		Spec    struct {
+// 			File           string       `yaml:"file"`
+// 			Kind           string       `yaml:"kind"`
+// 			KindIdentified UserCfg_Kind `yaml:"-"`
+// 			Host           string       `yaml:"host"`
+// 			HeaderAuthz    *string      `yaml:"authorization"`
+// 		} `yaml:"spec"`
+// 	}
 
-	if err = yaml.UnmarshalStrict(config, &userConf); err != nil {
-		log.Println("[ERR]", err)
-		ColorERR.Println("Failed to parse", LocalCfg)
-		r := strings.NewReplacer("not found", "unknown")
-		for _, e := range strings.Split(err.Error(), "\n") {
-			if end := strings.Index(e, " in type struct"); end != -1 {
-				ColorERR.Println(r.Replace(e[:end]))
-			}
-		}
-		return
-	}
+// 	if err = yaml.UnmarshalStrict(config, &userConf); err != nil {
+// 		log.Println("[ERR]", err)
+// 		ColorERR.Println("Failed to parse", LocalCfg)
+// 		r := strings.NewReplacer("not found", "unknown")
+// 		for _, e := range strings.Split(err.Error(), "\n") {
+// 			if end := strings.Index(e, " in type struct"); end != -1 {
+// 				ColorERR.Println(r.Replace(e[:end]))
+// 			}
+// 		}
+// 		return
+// 	}
 
-	expectedKind := UserCfg_OpenAPIv3
-	if userConf.Spec.Kind != expectedKind.String() {
-		err = errors.New("spec's kind must be set to OpenAPIv3")
-		log.Println("[ERR]", err)
-		ColorERR.Println(err)
-		return
-	}
-	userConf.Spec.KindIdentified = expectedKind
+// 	expectedKind := UserCfg_OpenAPIv3
+// 	if userConf.Spec.Kind != expectedKind.String() {
+// 		err = errors.New("spec's kind must be set to OpenAPIv3")
+// 		log.Println("[ERR]", err)
+// 		ColorERR.Println(err)
+// 		return
+// 	}
+// 	userConf.Spec.KindIdentified = expectedKind
 
-	if userConf.Spec.Host == "" {
-		def := defaultCfgHost
-		log.Printf("[NFO] field 'host' is empty/unset: using %q\n", def)
-		userConf.Spec.Host = def
-	}
-	if !strings.Contains(userConf.Spec.Host, "{{") {
-		if _, err = url.ParseRequestURI(userConf.Spec.Host); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-	}
+// 	if userConf.Spec.Host == "" {
+// 		def := defaultCfgHost
+// 		log.Printf("[NFO] field 'host' is empty/unset: using %q\n", def)
+// 		userConf.Spec.Host = def
+// 	}
+// 	if !strings.Contains(userConf.Spec.Host, "{{") {
+// 		if _, err = url.ParseRequestURI(userConf.Spec.Host); err != nil {
+// 			log.Println("[ERR]", err)
+// 			return
+// 		}
+// 	}
 
-	if userConf.Spec.HeaderAuthz != nil {
-		addHeaderAuthorization = userConf.Spec.HeaderAuthz
-	}
+// 	if userConf.Spec.HeaderAuthz != nil {
+// 		addHeaderAuthorization = userConf.Spec.HeaderAuthz
+// 	}
 
-	if showCfg {
-		ColorNFO.Println("Config:")
-		enc := yaml.NewEncoder(os.Stderr)
-		defer enc.Close()
-		if err = enc.Encode(userConf); err != nil {
-			log.Println("[ERR]", err)
-			ColorERR.Printf("Failed to pretty-print %s: %#v\n", LocalCfg, err)
-			return
-		}
-	}
+// 	if showCfg {
+// 		ColorNFO.Println("Config:")
+// 		enc := yaml.NewEncoder(os.Stderr)
+// 		defer enc.Close()
+// 		if err = enc.Encode(userConf); err != nil {
+// 			log.Println("[ERR]", err)
+// 			ColorERR.Printf("Failed to pretty-print %s: %#v\n", LocalCfg, err)
+// 			return
+// 		}
+// 	}
 
-	cfg = &UserCfg{
-		Version: userConf.Version,
-		File:    userConf.Spec.File,
-		Kind:    userConf.Spec.KindIdentified,
-		Runtime: &UserCfg_Runtime{
-			Host: userConf.Spec.Host,
-		},
-		Exec: &UserCfg_Exec{
-			Start:  userConf.Start,
-			Reset_: userConf.Reset,
-			Stop:   userConf.Stop,
-		},
-	}
-	return
-}
+// 	cfg = &UserCfg{
+// 		Version: userConf.Version,
+// 		File:    userConf.Spec.File,
+// 		Kind:    userConf.Spec.KindIdentified,
+// 		Runtime: &UserCfg_Runtime{
+// 			Host: userConf.Spec.Host,
+// 		},
+// 		Exec: &UserCfg_Exec{
+// 			Start:  userConf.Start,
+// 			Reset_: userConf.Reset,
+// 			Stop:   userConf.Stop,
+// 		},
+// 	}
+// 	return
+// }
 
 func (cfg *UserCfg) script(kind ExecKind) []string {
 	return map[ExecKind][]string{

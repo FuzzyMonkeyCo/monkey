@@ -192,7 +192,7 @@ func actualMain() int {
 		return statusFailed
 	}
 	if args.Lint {
-		e := fmt.Sprintf("%s is a valid v%d configuration", lib.LocalCfg, cfg.Version)
+		e := "Configuration is valid."
 		log.Println("[NFO]", e)
 		lib.ColorNFO.Println(e)
 	}
