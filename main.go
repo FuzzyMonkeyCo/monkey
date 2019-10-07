@@ -186,7 +186,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	cfg, err := lib.NewCfg(args.Lint && !args.HideConfig)
+	mnk, err := lib.NewCfg(binTitle, args.Lint && !args.HideConfig)
 	if err != nil {
 		lib.ColorERR.Println(err)
 		return statusFailed

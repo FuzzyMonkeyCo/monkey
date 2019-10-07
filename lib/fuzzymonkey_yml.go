@@ -26,8 +26,9 @@ const (
 // FIXME: use new Modeler intf struc to pass these
 var addHeaderAuthorization, addHost *string
 
-// NewCfg parses Monkey configuration, optionally pretty-printing it
-func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
+// NewMonkey parses and optionally pretty-prints configuration
+func NewMonkey(name string, showCfg bool) (mnk *monkey, err error) {
+	binTitle = name
 	const localCfg = "fuzzymonkey.star"
 	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
 		log.Println("[ERR]", err)
@@ -59,19 +60,9 @@ func NewCfg(showCfg bool) (cfg *UserCfg, err error) {
 	}
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
-	if len(userRTLang.Modelers) > 1 {
-		err = errors.New("defining more than one modelers is not yet supported")
-		log.Println("[ERR]", err)
-		return
+	mnk = &monkey{
+		usage: os.Args,
 	}
-	modeler := userRTLang.Modelers[0]
-	fmt.Printf(">>> modeler = %+v\n", modeler)
-	fmt.Printf(">>> %+v\n", &Clt_Msg_Fuzz{
-		Resetter: &Clt_Msg_Fuzz_Resetter{Resetter: modeler.GetSUTResetter().ToProto()},
-		Model:    &Clt_Msg_Fuzz_Model{Model: modeler.ToProto()},
-	})
-
-	cfg.Usage = os.Args
 	return
 }
 
@@ -350,17 +341,6 @@ func (s *modelState) Attr(name string) (starlark.Value, error) { return s.d.Attr
 func (s *modelState) AttrNames() []string                      { return s.d.AttrNames() }
 func (s *modelState) CompareSameType(op syntax.Token, ss starlark.Value, depth int) (bool, error) {
 	return s.d.CompareSameType(op, ss, depth)
-}
-
-var userRTLang struct {
-	Thread     *starlark.Thread
-	Globals    starlark.StringDict
-	ModelState *modelState
-	// EnvRead holds all the envs looked up on initial run
-	EnvRead  map[string]string
-	Triggers []triggerActionAfterProbe
-
-	Modelers []Modeler
 }
 
 // TODO: turn these into methods of userRTLang

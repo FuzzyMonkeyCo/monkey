@@ -64,6 +64,11 @@ message Clt {
         }
       }
       Model model = 2;
+      string api_key = 3;
+      repeated string usage = 4;
+      bytes seed = 5;
+      uint32 n = 6;
+      repeated uint32 EIDs = 7;
     }
 
     message FuzzProgress {}
