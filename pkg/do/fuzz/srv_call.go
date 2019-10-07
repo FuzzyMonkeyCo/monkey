@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg"
 )
 
 type msgCall struct{ fm.Srv_Msg_Call_ }
 
-func (msg *msgCall) do(mnk *fm.monkey) (err error) {
+func (msg *msgCall) do(mnk *pkg.monkey) (err error) {
 	mnk.progress.state("🙈")
 	mnk.eid = act.EID
 
@@ -32,7 +32,7 @@ func (msg *msgCall) do(mnk *fm.monkey) (err error) {
 	return
 }
 
-func (mnk *fm.monkey) castPostConditions(act *msgCallResponseRaw) (err error) {
+func (mnk *pkg.monkey) castPostConditions(act *msgCallResponseRaw) (err error) {
 	if act.Failure {
 		log.Println("[DBG] call failed, skipping checks")
 		return

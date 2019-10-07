@@ -8,7 +8,7 @@ import (
 
 // SUTResetter describes ways to reset the system under test to a known initial state
 type SUTResetter interface {
-	ToProto() fm.isClt_Msg_Fuzz_Resetter_Resetter
+	ToProto() fm.Clt_Msg_Fuzz_Resetter
 
 	Start(context.Context) error
 	Reset(context.Context) error

@@ -6,13 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-
 	"go.starlark.net/starlark"
 )
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, showCfg bool) (mnk *fm.monkey, err error) {
+func NewMonkey(name string, showCfg bool) (mnk *pkg.monkey, err error) {
 	binTitle = name
 	const localCfg = "fuzzymonkey.star"
 	if _, err = os.Stat(localCfg); os.IsNotExist(err) {

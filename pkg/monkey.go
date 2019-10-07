@@ -1,6 +1,7 @@
-package fm
+package pkg
 
 import (
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"go.starlark.net/starlark"
 )
 
@@ -19,5 +20,5 @@ type monkey struct {
 	envRead  map[string]string
 	triggers []triggerActionAfterProbe
 
-	modelers []Modeler
+	modelers []modeler.Modeler
 }

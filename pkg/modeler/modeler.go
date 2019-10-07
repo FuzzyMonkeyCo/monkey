@@ -1,4 +1,4 @@
-package modelers
+package modeler
 
 import (
 	"io"
@@ -9,7 +9,7 @@ import (
 
 // Modeler describes checkable models
 type Modeler interface {
-	ToProto() fm.isClt_Msg_Fuzz_Model_Model
+	ToProto() fm.Clt_Msg_Fuzz_Model
 
 	SetSUTResetter(reset.SUTResetter)
 	GetSUTResetter() reset.SUTResetter
