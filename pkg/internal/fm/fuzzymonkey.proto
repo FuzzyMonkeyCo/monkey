@@ -1,0 +1,113 @@
+syntax = "proto3";
+package fm;
+
+option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// See: https://github.com/gogo/protobuf/blob/master/extensions.md
+// Enable custom Size method (Required by Marshal and Unmarshal)
+option (gogoproto.sizer_all) = true;
+// Enable custom Marshal method
+option (gogoproto.marshaler_all) = true;
+// stable_marshaler
+// Enable custom Unmarshal method
+option (gogoproto.unmarshaler_all) = true;
+//option (gogoproto.gostring_all) = true;
+//option (gogoproto.goproto_stringer_all) = false;
+//option (gogoproto.stringer_all) =  true;
+
+// Generate func (this *ProtoMessage) Equal(that interface{}) bool
+option (gogoproto.equal_all) = true;
+// Don't generate XXX_unrecognized
+//option (gogoproto.goproto_unrecognized_all) = true;
+// jsontag, moretags: https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
+
+//FIXME
+//option (gogoproto.goproto_testgen_all) = true;
+//option (gogoproto.goproto_benchgen_all) = true;
+// https://godoc.org/github.com/gogo/protobuf/plugin/populate
+
+
+service FuzzyMonkey {
+  rpc Do(stream Clt) returns (stream Srv) {}
+}
+
+
+message Clt {
+  message Msg {
+    message Fuzz {
+      message Resetter {
+        message SUTShell {
+          string start = 1;
+          string rst = 2;
+          string stop = 3;
+        }
+        oneof resetter {
+          SUTShell sut_shell = 1;
+        }
+      }
+      Resetter resetter = 1;
+      message Model {
+        message OpenAPIv3 {
+          string file = 1;
+          string host = 2;
+          string header_authorization = 3;
+        }
+        oneof model {
+          OpenAPIv3 openapiv3 = 1;
+        }
+      }
+      Model model = 2;
+      string api_key = 3;
+      repeated string usage = 4;
+      bytes seed = 5;
+      uint32 n = 6;
+      repeated uint32 EIDs = 7;
+    }
+
+    message FuzzProgress {}
+
+    message SUTMetrics {}
+
+    message ResetProgress {}
+
+    message CallResponseRaw {}
+
+    message CallVerifProgress {}
+
+    message CallResponse {}
+
+    oneof msg {
+      // Initiates fuzzing
+      Fuzz fuzz = 1;
+      // Testing progress & end
+      FuzzProgress fuzz_progress = 2;
+      // Logs & observed SUT
+      SUTMetrics metrics = 3;
+      // SUT state resetting
+      ResetProgress reset_progress = 4;
+      // SUT call response
+      CallResponseRaw call_response_raw = 5;
+      // SUT call verifications
+      CallVerifProgress call_verif_progress = 6;
+      // SUT call response data
+      CallResponse call_response = 7;
+    }
+  }
+  Msg msg = 1;
+}
+
+message Srv {
+  message Msg {
+    message Call {}
+    message Reset {}
+    oneof msg {
+      // Try call to SUT
+      Call call = 1;
+      // Reset SUT state
+      Reset reset = 2;
+    }
+  }
+  Msg msg = 1;
+}

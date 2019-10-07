@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/lib"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
@@ -19,22 +20,6 @@ import (
 //go:generate echo Let's go bananas!
 
 const (
-	/// CLI statuses
-	statusOK     = 0
-	statusFailed = 1
-	// Something happened during linting
-	statusFailedLint = 2
-	// `binName` executable could not be upgraded
-	statusFailedUpdate = 3
-	// Some external dependency is missing (probably bash)
-	statusFailedRequire = 5
-	// Fuzzing found a bug!
-	statusFailedFuzz = 6
-	// A user command (start, reset, stop) failed
-	statusFailedExec = 7
-	// Validating payload against schema failed
-	statusFailedSchema = 9
-
 	binName    = "monkey"
 	binSHA     = "feedb065"
 	binVersion = "0.0.0"
@@ -122,19 +107,19 @@ Try:
 	if err != nil {
 		// Usage shown: bad args
 		lib.ColorERR.Println(err)
-		ret = statusFailed
+		ret = code.Failed
 		return
 	}
 
 	if opts["--version"].(bool) {
 		fmt.Println(binTitle)
-		return // ret = statusOK
+		return // ret = code.OK
 	}
 
 	args = &params{}
 	if err := mapstructure.WeakDecode(opts, args); err != nil {
 		lib.ColorERR.Println(err)
-		return nil, statusFailed
+		return nil, code.Failed
 	}
 	return
 }
@@ -175,7 +160,7 @@ func actualMain() int {
 	if args.Init || args.Login {
 		// FIXME: implement init & login
 		lib.ColorERR.Println("Action not implemented yet")
-		return statusFailed
+		return code.Failed
 	}
 
 	if args.Update {
@@ -186,10 +171,10 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	mnk, err := lib.NewCfg(binTitle, args.Lint && !args.HideConfig)
+	mnk, err := lib.NewMonkey(binTitle, args.Lint && !args.HideConfig)
 	if err != nil {
 		lib.ColorERR.Println(err)
-		return statusFailed
+		return code.Failed
 	}
 	if args.Lint {
 		e := "Configuration is valid."
@@ -202,9 +187,9 @@ func actualMain() int {
 		case args.Repl:
 			if err := lib.DoExecREPL(); err != nil {
 				lib.ColorERR.Println(err)
-				return statusFailed
+				return code.Failed
 			}
-			return statusOK
+			return code.OK
 		case args.Start:
 			return doExec(cfg, lib.ExecKind_start)
 		case args.Reset:
@@ -224,13 +209,13 @@ func actualMain() int {
 	// Always lint before fuzzing
 	vald, err := lib.DoLint(docPath, blob, args.ShowSpec)
 	if err != nil {
-		return statusFailedLint
+		return code.FailedLint
 	}
 	if args.Lint {
 		err := fmt.Errorf("%s is a valid %v specification", docPath, cfg.Kind)
 		log.Println("[NFO]", err)
 		lib.ColorNFO.Println(err)
-		return statusOK
+		return code.OK
 	}
 
 	if args.Schema {
@@ -241,20 +226,20 @@ func actualMain() int {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
 		lib.ColorERR.Println(err)
-		return statusFailed
+		return code.Failed
 	}
 
 	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
 	eids, err := vald.FilterEndpoints(os.Args)
 	if err != nil {
 		lib.ColorERR.Println(err)
-		return statusFailed
+		return code.Failed
 	}
 	cfg.EIDs = eids
 	cfg.N = args.N
 	if cfg.N == 0 {
 		lib.ColorERR.Println("No tests to run.")
-		return statusFailed
+		return code.Failed
 	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
 	if cfg.N == 1 {
@@ -294,7 +279,7 @@ func doLogs(offset uint64) int {
 	f, err := os.Open(fn)
 	if err != nil {
 		lib.ColorERR.Println(err)
-		return statusFailed
+		return code.Failed
 	}
 	defer f.Close()
 
@@ -302,7 +287,7 @@ func doLogs(offset uint64) int {
 		lib.ColorERR.Println(err)
 		return retryOrReport()
 	}
-	return statusOK
+	return code.OK
 }
 
 func doUpdate() int {
@@ -320,10 +305,10 @@ func doUpdate() int {
 		fmt.Println("A version newer than", binVersion, "is out:", latest)
 		if err := rel.ReplaceCurrentRelease(latest); err != nil {
 			fmt.Println("The update failed 🙈 please try again")
-			return statusFailedUpdate
+			return code.FailedUpdate
 		}
 	}
-	return statusOK
+	return code.OK
 }
 
 func doEnv(vars []string) int {
@@ -335,17 +320,17 @@ func doEnv(vars []string) int {
 		for key := range all {
 			penv(key)
 		}
-		return statusOK
+		return code.OK
 	}
 
 	for _, key := range vars {
 		if printed, ok := all[key]; !ok || printed {
-			return statusFailed
+			return code.Failed
 		}
 		all[key] = true
 		penv(key)
 	}
-	return statusOK
+	return code.OK
 }
 
 func doSchema(vald *lib.Validator, ref string) int {
@@ -355,7 +340,7 @@ func doSchema(vald *lib.Validator, ref string) int {
 		log.Printf("[NFO] found %d refs\n", refsCount)
 		lib.ColorNFO.Printf("Found %d refs\n", refsCount)
 		vald.WriteAbsoluteReferences(os.Stdout)
-		return statusOK
+		return code.OK
 	}
 
 	if err := vald.ValidateAgainstSchema(ref); err != nil {
@@ -370,16 +355,16 @@ func doSchema(vald *lib.Validator, ref string) int {
 		default:
 			lib.ColorERR.Println(err)
 		}
-		return statusFailedSchema
+		return code.FailedSchema
 	}
 	lib.ColorNFO.Println("Payload is valid")
-	return statusOK
+	return code.OK
 }
 
 func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
 		log.Println(lib.Shell(), "is required")
-		return statusFailedRequire
+		return code.FailedRequire
 	}
 	if err := lib.SnapEnv(lib.EnvID()); err != nil {
 		return retryOrReport()
@@ -391,15 +376,15 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 		lib.ColorERR.Println(err)
 	}
 	if err != nil || act.Failure || !act.Success {
-		return statusFailedExec
+		return code.FailedExec
 	}
-	return statusOK
+	return code.OK
 }
 
 func doFuzz(mnk *lib.Monkey) int {
 	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
 		log.Println("[ERR]", lib.Shell(), "is required")
-		return statusFailedRequire
+		return code.FailedRequire
 	}
 
 	if err := lib.SnapEnv(lib.EnvID()); err != nil {
@@ -415,16 +400,16 @@ func doFuzz(mnk *lib.Monkey) int {
 		return retryOrReportThenCleanup(err)
 	}
 	if mnk.TestsSucceeded() {
-		return statusOK
+		return code.OK
 	}
-	return statusFailedFuzz
+	return code.FailedFuzz
 }
 
 func retryOrReportThenCleanup(err error) int {
 	defer lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	if lib.HadExecError {
 		lib.ColorERR.Println(err)
-		return statusFailedExec
+		return code.FailedExec
 	}
 	return retryOrReport()
 }
@@ -439,5 +424,5 @@ func retryOrReport() int {
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
-	return statusFailed
+	return code.Failed
 }

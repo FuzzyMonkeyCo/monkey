@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,7 +8,6 @@ import (
 	// "net/url"
 	"os"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/pkg/errors"
@@ -25,89 +23,6 @@ const (
 
 // FIXME: use new Modeler intf struc to pass these
 var addHeaderAuthorization, addHost *string
-
-// NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, showCfg bool) (mnk *monkey, err error) {
-	binTitle = name
-	const localCfg = "fuzzymonkey.star"
-	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
-		log.Println("[ERR]", err)
-		ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
-		return
-	}
-
-	userRTLang.Globals = make(starlark.StringDict, 2+len(registeredIRModels))
-	for modelName, modeler := range registeredIRModels {
-		if _, ok := UserCfg_Kind_value[modelName]; !ok {
-			err = fmt.Errorf("unexpected model kind: %q", modelName)
-			return
-		}
-		builtin := modelMaker(modelName, modeler)
-		userRTLang.Globals[modelName] = starlark.NewBuiltin(modelName, builtin)
-	}
-	userRTLang.Globals[tEnv] = starlark.NewBuiltin(tEnv, bEnv)
-	userRTLang.Globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, bTriggerActionAfterProbe)
-	userRTLang.Thread = &starlark.Thread{
-		Name:  "cfg",
-		Print: func(_ *starlark.Thread, msg string) { ColorWRN.Println(msg) },
-	}
-	userRTLang.EnvRead = make(map[string]string)
-	userRTLang.Triggers = make([]triggerActionAfterProbe, 0)
-
-	start := time.Now()
-	if err = loadCfg(localCfg, showCfg); err != nil {
-		return
-	}
-	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
-
-	mnk = &monkey{
-		usage: os.Args,
-	}
-	return
-}
-
-// Modeler describes checkable models
-type Modeler interface {
-	ToProto() isClt_Msg_Fuzz_Model_Model
-
-	SetSUTResetter(SUTResetter)
-	GetSUTResetter() SUTResetter
-
-	Pretty(w io.Writer) (n int, err error)
-}
-
-// SUTResetter describes ways to reset the system under test to a known initial state
-type SUTResetter interface {
-	ToProto() isClt_Msg_Fuzz_Resetter_Resetter
-
-	Start(context.Context) error
-	Reset(context.Context) error
-	Stop(context.Context) error
-}
-
-var _ SUTResetter = (*SUTShell)(nil)
-
-// SUTShell TODO
-type SUTShell struct {
-	start, reset, stop string
-}
-
-func (s *SUTShell) ToProto() isClt_Msg_Fuzz_Resetter_Resetter {
-	return &Clt_Msg_Fuzz_Resetter_SutShell{&Clt_Msg_Fuzz_Resetter_SUTShell{
-		Start: s.start,
-		Rst:   s.reset,
-		Stop:  s.stop,
-	}}
-}
-
-// Start TODO
-func (s *SUTShell) Start(ctx context.Context) error { return nil }
-
-// Reset TODO
-func (s *SUTShell) Reset(ctx context.Context) error { return nil }
-
-// Stop TODO
-func (s *SUTShell) Stop(ctx context.Context) error { return nil }
 
 // ModelerFunc TODO
 type ModelerFunc func(d starlark.StringDict) (Modeler, *ModelerError)
@@ -170,7 +85,7 @@ func modelerOpenAPIv3(d starlark.StringDict) (Modeler, *ModelerError) {
 	return mo, nil
 }
 
-func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
+func (mnk *monkey) modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
 	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
 		ret = starlark.None
 		fname := b.Name()
@@ -214,7 +129,7 @@ func modelMaker(modelName string, modeler ModelerFunc) slBuiltin {
 		}
 		mo.SetSUTResetter(resetter)
 
-		userRTLang.Modelers = append(userRTLang.Modelers, mo)
+		mnk.modelers = append(mnk.modelers, mo)
 		return
 	}
 }
@@ -343,7 +258,7 @@ func (s *modelState) CompareSameType(op syntax.Token, ss starlark.Value, depth i
 	return s.d.CompareSameType(op, ss, depth)
 }
 
-// TODO: turn these into methods of userRTLang
+// TODO: turn these into methods of *monkey
 const (
 	tEnv                     = "Env"
 	tExecReset               = "ExecReset"
@@ -353,7 +268,7 @@ const (
 	tTriggerActionAfterProbe = "TriggerActionAfterProbe"
 )
 
-func bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (mnk *monkey) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var env, def starlark.String
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &env, &def); err != nil {
 		return nil, err
@@ -364,7 +279,7 @@ func bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs 
 	if !ok {
 		return def, nil
 	}
-	userRTLang.EnvRead[envStr] = read
+	mnk.envRead[envStr] = read
 	return starlark.String(read), nil
 }
 
@@ -374,7 +289,7 @@ type triggerActionAfterProbe struct {
 	Predicate, Action *starlark.Function
 }
 
-func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (mnk *monkey) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var trigger triggerActionAfterProbe
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"name?", &trigger.Name,
@@ -390,12 +305,12 @@ func bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args sta
 		trigger.Name = starlark.String(trigger.Action.Name())
 		// TODO: complain if trigger.Name == "lambda"
 	}
-	userRTLang.Triggers = append(userRTLang.Triggers, trigger)
+	mnk.triggers = append(mnk.triggers, trigger)
 	return starlark.None, nil
 }
 
-func loadCfg(localCfg string, showCfg bool) (err error) {
-	if userRTLang.Globals, err = starlark.ExecFile(userRTLang.Thread, localCfg, nil, userRTLang.Globals); err != nil {
+func (mnk *monkey) loadCfg(localCfg string, showCfg bool) (err error) {
+	if mnk.globals, err = starlark.ExecFile(mnk.thread, localCfg, nil, mnk.globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
@@ -406,27 +321,27 @@ func loadCfg(localCfg string, showCfg bool) (err error) {
 	}
 
 	// Ensure at least one model was defined
-	ColorERR.Printf(">>> modelers: %v\n", userRTLang.Modelers)
-	if len(userRTLang.Modelers) == 0 {
+	ColorERR.Printf(">>> modelers: %v\n", mnk.modelers)
+	if len(mnk.modelers) == 0 {
 		err = errors.New("no modelers are registered")
 		log.Println("[ERR]", err)
 		return
 	}
 
-	ColorERR.Printf(">>> envs: %+v\n", userRTLang.EnvRead)
-	ColorERR.Printf(">>> trigs: %+v\n", userRTLang.Triggers)
-	delete(userRTLang.Globals, tEnv)
-	delete(userRTLang.Globals, tTriggerActionAfterProbe)
+	ColorERR.Printf(">>> envs: %+v\n", mnk.envRead)
+	ColorERR.Printf(">>> trigs: %+v\n", mnk.triggers)
+	delete(mnk.globals, tEnv)
+	delete(mnk.globals, tTriggerActionAfterProbe)
 
-	if state, ok := userRTLang.Globals[tState]; ok {
+	if state, ok := mnk.globals[tState]; ok {
 		d, ok := state.(*starlark.Dict)
 		if !ok {
 			err = fmt.Errorf("monkey State must be a dict, got: %s", state.Type())
 			log.Println("[ERR]", err)
 			return
 		}
-		delete(userRTLang.Globals, tState)
-		userRTLang.ModelState = newModelState(d.Len())
+		delete(mnk.globals, tState)
+		mnk.modelState = newModelState(d.Len())
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
 			// Ensure State keys are all String.s
@@ -452,15 +367,15 @@ func loadCfg(localCfg string, showCfg bool) (err error) {
 				log.Println("[ERR]", err)
 				return
 			}
-			if err = userRTLang.ModelState.SetKey(k, vv); err != nil {
+			if err = mnk.modelState.SetKey(k, vv); err != nil {
 				log.Println("[ERR]", err)
 				return
 			}
 		}
 	} else {
-		userRTLang.ModelState = newModelState(0)
+		mnk.modelState = newModelState(0)
 	}
-	for key := range userRTLang.Globals {
+	for key := range mnk.globals {
 		if err = printableASCII(key); err != nil {
 			err = errors.Wrap(err, "illegal export")
 			log.Println("[ERR]", err)
@@ -475,8 +390,8 @@ func loadCfg(localCfg string, showCfg bool) (err error) {
 			break
 		}
 	}
-	log.Println("[NFO] starlark cfg globals:", len(userRTLang.Globals.Keys()))
-	ColorERR.Printf(">>> globals: %#v\n", userRTLang.Globals)
+	log.Println("[NFO] starlark cfg globals:", len(mnk.globals.Keys()))
+	ColorERR.Printf(">>> globals: %#v\n", mnk.globals)
 	return
 }
 
