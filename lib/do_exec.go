@@ -11,8 +11,6 @@ import (
 	"go.starlark.net/starlark"
 )
 
-var registeredIRModels = make(map[string]ModelerFunc)
-
 // InitExec specifies Monkey's dialect flags
 func InitExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies

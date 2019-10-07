@@ -1,25 +1,26 @@
-package modelers
+package reset
 
 import (
 	"context"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/do/fuzz/reset"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-var _ reset.SUTResetter = (*SUTShell)(nil)
+var _ SUTResetter = (*SUTShell)(nil)
 
 // SUTShell TODO
 type SUTShell struct {
 	start, reset, stop string
 }
 
-func (s *SUTShell) ToProto() fm.isClt_Msg_Fuzz_Resetter_Resetter {
-	return &fm.Clt_Msg_Fuzz_Resetter_SutShell{&fm.Clt_Msg_Fuzz_Resetter_SUTShell{
-		Start: s.start,
-		Rst:   s.reset,
-		Stop:  s.stop,
-	}}
+// ToProto TODO
+func (s *SUTShell) ToProto() *fm.Clt_Msg_Fuzz_Resetter {
+	return &fm.Clt_Msg_Fuzz_Resetter{
+		Resetter: &fm.Clt_Msg_Fuzz_Resetter_SutShell{&fm.Clt_Msg_Fuzz_Resetter_SUTShell{
+			Start: s.start,
+			Rst:   s.reset,
+			Stop:  s.stop,
+		}}}
 }
 
 // Start TODO

@@ -1,4 +1,4 @@
-package lib
+package call
 
 import (
 	"bytes"
@@ -14,8 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/FuzzyMonkeyCo/monkey/pkg/do/fuzz/call"
 )
 
 var (
@@ -26,9 +24,9 @@ var (
 )
 
 var (
-	_ call.Capturer      = (*tCapHTTP)(nil)
-	_ call.CaptureShower = (*tCapHTTP)(nil)
-	_ http.RoundTripper  = (*tCapHTTP)(nil)
+	_ Capturer          = (*tCapHTTP)(nil)
+	_ CaptureShower     = (*tCapHTTP)(nil)
+	_ http.RoundTripper = (*tCapHTTP)(nil)
 )
 
 type tCapHTTP struct {
