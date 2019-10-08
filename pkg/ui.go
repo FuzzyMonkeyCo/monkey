@@ -1,4 +1,4 @@
-package lib
+package pkg
 
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] >>> FuzzProgress %+v", act)

@@ -1,4 +1,4 @@
-package lib
+package pkg
 
 // HAR 1.2 spec handling with nanoseconds & protobuf
 // https://github.com/cardigann/harhar

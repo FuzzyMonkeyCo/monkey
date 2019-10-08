@@ -1,4 +1,4 @@
-package lib
+package update
 
 import (
 	"crypto/sha256"

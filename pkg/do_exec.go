@@ -1,4 +1,4 @@
-package lib
+package pkg
 
 import (
 	"go.starlark.net/repl"
