@@ -1,72 +1,5 @@
 package lib
 
-import (
-	"log"
-	"time"
-
-	"github.com/superhawk610/bar"
-)
-
-const (
-	prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅
-	prefixSkipped   = "○" // ● • ‣ ◦ ⁃ ○ ◯ ⭕ 💮
-	prefixFailed    = "✖" // ⨯ × ✗ x X ☓ ✘
-)
-
-type progress struct {
-	bar           *bar.Bar
-	failed        bool
-	start         time.Time
-	lastLane      FuzzProgress
-	shrinkingFrom *FuzzProgress
-}
-
-func newProgress(n uint32) *progress {
-	return &progress{
-		bar: bar.NewWithOpts(
-			// bar.WithDebug(),
-			bar.WithDimensions(int(n), 37),
-			bar.WithDisplay("", "█", "█", " ", "|"),
-			// bar.WithFormat(":state :percent :bar :rate ops/s :eta"),
-			bar.WithFormat(":state :bar :rate ops/s :eta"),
-		),
-		start: time.Now(),
-	}
-}
-
-func (p *progress) state(s string) {
-	advancement := 1 + int(p.lastLane.GetTotalCallsCount())
-	p.bar.Update(advancement, bar.Context{bar.Ctx("state", s)})
-}
-func (p *progress) show(s string)                         { p.bar.Interrupt(s) }
-func (p *progress) showf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
-func (p *progress) nfo(s string)                          { p.show(ColorNFO.Sprintf("%s", s)) }
-func (p *progress) wrn(s string)                          { p.show(ColorWRN.Sprintf("%s", s)) }
-func (p *progress) err(s string) {
-	p.show(ColorERR.Sprintf("%s", s))
-	p.failed = true
-}
-
-func (p *progress) checksPassed() { p.nfo(" All checks passed.\n") }
-func (p *progress) checkPassed(s string) {
-	p.show(" " + ColorOK.Sprintf(prefixSucceeded) + " " + ColorNFO.Sprintf(s))
-}
-func (p *progress) checkSkipped(s string) {
-	p.show(" " + ColorWRN.Sprintf(prefixSkipped) + " " + ColorNFO.Sprintf(s) + " skipped")
-}
-func (p *progress) checkFailed(ss []string) {
-	p.failed = true
-	if len(ss) > 0 {
-		p.show(" " + ColorERR.Sprintf(prefixFailed) + " " + ColorNFO.Sprintf(ss[0]))
-	}
-	if len(ss) > 1 {
-		for _, s := range ss[1:] {
-			p.show(ColorERR.Sprintf(s))
-		}
-	}
-	p.nfo(" Found a bug!\n")
-}
-
 func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	log.Printf("[ERR] >>> FuzzProgress %+v", act)
 	last := mnk.progress.lastLane
@@ -102,12 +35,6 @@ func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
 	// 	str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
 	// }
 
-	///////SO let's compute a diff of act - lastLane and display in accordance
-	/////// be smart on diffing bools!
-	if act.GetShrinking() && mnk.progress.shrinkingFrom == nil {
-		mnk.progress.shrinkingFrom = &mnk.progress.lastLane
-		str += "Shrinking: "
-	}
 	// case act.GetTotalTestsCount() == 0:
 	// 	// Avoids getting in below case
 	// case act.GetTotalTestsCount() != mnk.progress.lastLane.GetTotalTestsCount():
@@ -139,12 +66,8 @@ func (mnk *Monkey) TestsSucceeded() (success bool) {
 	case p.lastLane.GetFailure():
 		success = false
 		var d, m uint32
-		if p.shrinkingFrom == nil {
-			d = p.lastLane.GetTotalTestsCount()
-		} else {
-			d = p.shrinkingFrom.GetTotalTestsCount()
-			m = p.lastLane.GetTotalTestsCount() - d
-		}
+		d = p.lastLane.GetTotalTestsCount()
+		m = 0
 		testCalls := p.lastLane.GetTestCallsCount()
 		ColorERR.Printf("A bug reproducible in %d HTTP %s was detected after %d",
 			testCalls, plural("request", testCalls), d)

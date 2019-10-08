@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/lib"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
@@ -58,7 +59,7 @@ type params struct {
 }
 
 func usage(binTitle string) (args *params, ret int) {
-	B := lib.ColorNFO.Sprintf(binName)
+	B := as.ColorNFO.Sprintf(binName)
 	usage := binTitle + `
 
 Usage:
@@ -106,7 +107,7 @@ Try:
 	opts, err := docopt.ParseDoc(usage)
 	if err != nil {
 		// Usage shown: bad args
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		ret = code.Failed
 		return
 	}
@@ -118,7 +119,7 @@ Try:
 
 	args = &params{}
 	if err := mapstructure.WeakDecode(opts, args); err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return nil, code.Failed
 	}
 	return
@@ -145,7 +146,7 @@ func actualMain() int {
 	}
 	logCatchall, err := os.OpenFile(lib.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return retryOrReport()
 	}
 	defer logCatchall.Close()
@@ -159,7 +160,7 @@ func actualMain() int {
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login
-		lib.ColorERR.Println("Action not implemented yet")
+		as.ColorERR.Println("Action not implemented yet")
 		return code.Failed
 	}
 
@@ -173,20 +174,20 @@ func actualMain() int {
 
 	mnk, err := lib.NewMonkey(binTitle, args.Lint && !args.HideConfig)
 	if err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return code.Failed
 	}
 	if args.Lint {
 		e := "Configuration is valid."
 		log.Println("[NFO]", e)
-		lib.ColorNFO.Println(e)
+		as.ColorNFO.Println(e)
 	}
 
 	if args.Exec {
 		switch {
 		case args.Repl:
 			if err := lib.DoExecREPL(); err != nil {
-				lib.ColorERR.Println(err)
+				as.ColorERR.Println(err)
 				return code.Failed
 			}
 			return code.OK
@@ -214,7 +215,7 @@ func actualMain() int {
 	if args.Lint {
 		err := fmt.Errorf("%s is a valid %v specification", docPath, cfg.Kind)
 		log.Println("[NFO]", err)
-		lib.ColorNFO.Println(err)
+		as.ColorNFO.Println(err)
 		return code.OK
 	}
 
@@ -225,28 +226,28 @@ func actualMain() int {
 	if cfg.ApiKey = os.Getenv(envAPIKey); cfg.ApiKey == "" {
 		err = fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return code.Failed
 	}
 
-	lib.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
+	as.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
 	eids, err := vald.FilterEndpoints(os.Args)
 	if err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return code.Failed
 	}
 	cfg.EIDs = eids
 	cfg.N = args.N
 	if cfg.N == 0 {
-		lib.ColorERR.Println("No tests to run.")
+		as.ColorERR.Println("No tests to run.")
 		return code.Failed
 	}
 	mnk := lib.NewMonkey(cfg, vald, binTitle)
 	if cfg.N == 1 {
 		// TODO: find a "plural" lib
-		lib.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
+		as.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
 	} else {
-		lib.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
+		as.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
 	}
 	return doFuzz(mnk)
 }
@@ -254,7 +255,7 @@ func actualMain() int {
 func ensureDeleted(path string) {
 	if err := os.Remove(path); err != nil && os.IsExist(err) {
 		log.Println("[ERR]", err)
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		panic(err)
 	}
 }
@@ -278,13 +279,13 @@ func doLogs(offset uint64) int {
 	os.Stderr.WriteString(fn + "\n")
 	f, err := os.Open(fn)
 	if err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return code.Failed
 	}
 	defer f.Close()
 
 	if _, err := io.Copy(os.Stdout, f); err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return retryOrReport()
 	}
 	return code.OK
@@ -338,7 +339,7 @@ func doSchema(vald *lib.Validator, ref string) int {
 	refsCount := len(refs)
 	if ref == "" {
 		log.Printf("[NFO] found %d refs\n", refsCount)
-		lib.ColorNFO.Printf("Found %d refs\n", refsCount)
+		as.ColorNFO.Printf("Found %d refs\n", refsCount)
 		vald.WriteAbsoluteReferences(os.Stdout)
 		return code.OK
 	}
@@ -347,17 +348,17 @@ func doSchema(vald *lib.Validator, ref string) int {
 		switch err {
 		case lib.ErrInvalidPayload:
 		case lib.ErrNoSuchRef:
-			lib.ColorERR.Printf("No such $ref '%s'\n", ref)
+			as.ColorERR.Printf("No such $ref '%s'\n", ref)
 			if refsCount > 0 {
 				fmt.Println("Try one of:")
 				vald.WriteAbsoluteReferences(os.Stdout)
 			}
 		default:
-			lib.ColorERR.Println(err)
+			as.ColorERR.Println(err)
 		}
 		return code.FailedSchema
 	}
-	lib.ColorNFO.Println("Payload is valid")
+	as.ColorNFO.Println("Payload is valid")
 	return code.OK
 }
 
@@ -373,7 +374,7 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 
 	act, err := lib.ExecuteScript(cfg, kind)
 	if err != nil {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 	}
 	if err != nil || act.Failure || !act.Success {
 		return code.FailedExec
@@ -406,9 +407,9 @@ func doFuzz(mnk *lib.Monkey) int {
 }
 
 func retryOrReportThenCleanup(err error) int {
-	defer lib.ColorWRN.Println("You might want to run $", binName, "exec stop")
+	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	if lib.HadExecError {
-		lib.ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
 	return retryOrReport()

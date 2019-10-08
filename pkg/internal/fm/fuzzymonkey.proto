@@ -48,6 +48,11 @@ message Clt {
         }
       }
       Resetter resetter = 1;
+      enum ModelKind {
+        UNKNOWN = 0;
+        OpenAPIv3 = 1;
+      }
+      ModelKind model_kind = 2;
       message Model {
         message OpenAPIv3 {
           string file = 1;
@@ -58,12 +63,12 @@ message Clt {
           OpenAPIv3 openapiv3 = 1;
         }
       }
-      Model model = 2;
-      string api_key = 3;
-      repeated string usage = 4;
-      bytes seed = 5;
-      uint32 n = 6;
-      repeated uint32 EIDs = 7;
+      Model model = 3;
+      string api_key = 4;
+      repeated string usage = 5;
+      bytes seed = 6;
+      uint32 n = 7;
+      repeated uint32 EIDs = 8;
     }
 
     message FuzzProgress {}
