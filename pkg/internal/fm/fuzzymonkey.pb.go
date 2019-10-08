@@ -43,7 +43,7 @@ func (x Clt_Msg_Fuzz_ModelKind) String() string {
 	return proto.EnumName(Clt_Msg_Fuzz_ModelKind_name, int32(x))
 }
 func (Clt_Msg_Fuzz_ModelKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0, 0}
 }
 
 type Clt struct {
@@ -57,7 +57,7 @@ func (m *Clt) Reset()         { *m = Clt{} }
 func (m *Clt) String() string { return proto.CompactTextString(m) }
 func (*Clt) ProtoMessage()    {}
 func (*Clt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0}
 }
 func (m *Clt) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -112,7 +112,7 @@ func (m *Clt_Msg) Reset()         { *m = Clt_Msg{} }
 func (m *Clt_Msg) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg) ProtoMessage()    {}
 func (*Clt_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0}
 }
 func (m *Clt_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -410,7 +410,7 @@ type Clt_Msg_Fuzz struct {
 	ApiKey               string                 `protobuf:"bytes,4,opt,name=api_key,json=apiKey,proto3" json:"api_key,omitempty"`
 	Usage                []string               `protobuf:"bytes,5,rep,name=usage" json:"usage,omitempty"`
 	Seed                 []byte                 `protobuf:"bytes,6,opt,name=seed,proto3" json:"seed,omitempty"`
-	N                    uint32                 `protobuf:"varint,7,opt,name=n,proto3" json:"n,omitempty"`
+	Intensity            uint32                 `protobuf:"varint,7,opt,name=intensity,proto3" json:"intensity,omitempty"`
 	EIDs                 []uint32               `protobuf:"varint,8,rep,packed,name=EIDs" json:"EIDs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
 	XXX_unrecognized     []byte                 `json:"-"`
@@ -421,7 +421,7 @@ func (m *Clt_Msg_Fuzz) Reset()         { *m = Clt_Msg_Fuzz{} }
 func (m *Clt_Msg_Fuzz) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -492,9 +492,9 @@ func (m *Clt_Msg_Fuzz) GetSeed() []byte {
 	return nil
 }
 
-func (m *Clt_Msg_Fuzz) GetN() uint32 {
+func (m *Clt_Msg_Fuzz) GetIntensity() uint32 {
 	if m != nil {
-		return m.N
+		return m.Intensity
 	}
 	return 0
 }
@@ -519,7 +519,7 @@ func (m *Clt_Msg_Fuzz_Resetter) Reset()         { *m = Clt_Msg_Fuzz_Resetter{} }
 func (m *Clt_Msg_Fuzz_Resetter) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -643,7 +643,7 @@ func (m *Clt_Msg_Fuzz_Resetter_SUTShell) Reset()         { *m = Clt_Msg_Fuzz_Res
 func (m *Clt_Msg_Fuzz_Resetter_SUTShell) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter_SUTShell) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter_SUTShell) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter_SUTShell) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -706,7 +706,7 @@ func (m *Clt_Msg_Fuzz_Model) Reset()         { *m = Clt_Msg_Fuzz_Model{} }
 func (m *Clt_Msg_Fuzz_Model) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0, 1}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0, 1}
 }
 func (m *Clt_Msg_Fuzz_Model) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -830,7 +830,7 @@ func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) Reset()         { *m = Clt_Msg_Fuzz_Model
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 0, 1, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 0, 1, 0}
 }
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -890,7 +890,7 @@ func (m *Clt_Msg_FuzzProgress) Reset()         { *m = Clt_Msg_FuzzProgress{} }
 func (m *Clt_Msg_FuzzProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_FuzzProgress) ProtoMessage()    {}
 func (*Clt_Msg_FuzzProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 1}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 1}
 }
 func (m *Clt_Msg_FuzzProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -929,7 +929,7 @@ func (m *Clt_Msg_SUTMetrics) Reset()         { *m = Clt_Msg_SUTMetrics{} }
 func (m *Clt_Msg_SUTMetrics) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_SUTMetrics) ProtoMessage()    {}
 func (*Clt_Msg_SUTMetrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 2}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 2}
 }
 func (m *Clt_Msg_SUTMetrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -968,7 +968,7 @@ func (m *Clt_Msg_ResetProgress) Reset()         { *m = Clt_Msg_ResetProgress{} }
 func (m *Clt_Msg_ResetProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_ResetProgress) ProtoMessage()    {}
 func (*Clt_Msg_ResetProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 3}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 3}
 }
 func (m *Clt_Msg_ResetProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -998,16 +998,19 @@ func (m *Clt_Msg_ResetProgress) XXX_DiscardUnknown() {
 var xxx_messageInfo_Clt_Msg_ResetProgress proto.InternalMessageInfo
 
 type Clt_Msg_CallResponseRaw struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	// Types that are valid to be assigned to Output:
+	//	*Clt_Msg_CallResponseRaw_HttpResponse_
+	Output               isClt_Msg_CallResponseRaw_Output `protobuf_oneof:"output"`
+	XXX_NoUnkeyedLiteral struct{}                         `json:"-"`
+	XXX_unrecognized     []byte                           `json:"-"`
+	XXX_sizecache        int32                            `json:"-"`
 }
 
 func (m *Clt_Msg_CallResponseRaw) Reset()         { *m = Clt_Msg_CallResponseRaw{} }
 func (m *Clt_Msg_CallResponseRaw) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponseRaw) ProtoMessage()    {}
 func (*Clt_Msg_CallResponseRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 4}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 4}
 }
 func (m *Clt_Msg_CallResponseRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1036,6 +1039,211 @@ func (m *Clt_Msg_CallResponseRaw) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Clt_Msg_CallResponseRaw proto.InternalMessageInfo
 
+type isClt_Msg_CallResponseRaw_Output interface {
+	isClt_Msg_CallResponseRaw_Output()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Clt_Msg_CallResponseRaw_HttpResponse_ struct {
+	HttpResponse *Clt_Msg_CallResponseRaw_HttpResponse `protobuf:"bytes,1,opt,name=http_response,json=httpResponse,oneof"`
+}
+
+func (*Clt_Msg_CallResponseRaw_HttpResponse_) isClt_Msg_CallResponseRaw_Output() {}
+
+func (m *Clt_Msg_CallResponseRaw) GetOutput() isClt_Msg_CallResponseRaw_Output {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+func (m *Clt_Msg_CallResponseRaw) GetHttpResponse() *Clt_Msg_CallResponseRaw_HttpResponse {
+	if x, ok := m.GetOutput().(*Clt_Msg_CallResponseRaw_HttpResponse_); ok {
+		return x.HttpResponse
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Clt_Msg_CallResponseRaw) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Clt_Msg_CallResponseRaw_OneofMarshaler, _Clt_Msg_CallResponseRaw_OneofUnmarshaler, _Clt_Msg_CallResponseRaw_OneofSizer, []interface{}{
+		(*Clt_Msg_CallResponseRaw_HttpResponse_)(nil),
+	}
+}
+
+func _Clt_Msg_CallResponseRaw_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Clt_Msg_CallResponseRaw)
+	// output
+	switch x := m.Output.(type) {
+	case *Clt_Msg_CallResponseRaw_HttpResponse_:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.HttpResponse); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Clt_Msg_CallResponseRaw.Output has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Clt_Msg_CallResponseRaw_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Clt_Msg_CallResponseRaw)
+	switch tag {
+	case 1: // output.http_response
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Clt_Msg_CallResponseRaw_HttpResponse)
+		err := b.DecodeMessage(msg)
+		m.Output = &Clt_Msg_CallResponseRaw_HttpResponse_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Clt_Msg_CallResponseRaw_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Clt_Msg_CallResponseRaw)
+	// output
+	switch x := m.Output.(type) {
+	case *Clt_Msg_CallResponseRaw_HttpResponse_:
+		s := proto.Size(x.HttpResponse)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type Clt_Msg_CallResponseRaw_HttpResponse struct {
+	// FIXME string error
+	StatusCode           uint32                                                        `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
+	Reason               string                                                        `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	Headers              map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues `protobuf:"bytes,3,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	Body                 []byte                                                        `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                                      `json:"-"`
+	XXX_unrecognized     []byte                                                        `json:"-"`
+	XXX_sizecache        int32                                                         `json:"-"`
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) Reset()         { *m = Clt_Msg_CallResponseRaw_HttpResponse{} }
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) String() string { return proto.CompactTextString(m) }
+func (*Clt_Msg_CallResponseRaw_HttpResponse) ProtoMessage()    {}
+func (*Clt_Msg_CallResponseRaw_HttpResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 4, 0}
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.Merge(dst, src)
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse proto.InternalMessageInfo
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetStatusCode() uint32 {
+	if m != nil {
+		return m.StatusCode
+	}
+	return 0
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetHeaders() map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetBody() []byte {
+	if m != nil {
+		return m.Body
+	}
+	return nil
+}
+
+type Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues struct {
+	Values               []string `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Reset() {
+	*m = Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues{}
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) String() string {
+	return proto.CompactTextString(m)
+}
+func (*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) ProtoMessage() {}
+func (*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 4, 0, 0}
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.Merge(dst, src)
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues proto.InternalMessageInfo
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) GetValues() []string {
+	if m != nil {
+		return m.Values
+	}
+	return nil
+}
+
 type Clt_Msg_CallVerifProgress struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1046,7 +1254,7 @@ func (m *Clt_Msg_CallVerifProgress) Reset()         { *m = Clt_Msg_CallVerifProg
 func (m *Clt_Msg_CallVerifProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallVerifProgress) ProtoMessage()    {}
 func (*Clt_Msg_CallVerifProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 5}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 5}
 }
 func (m *Clt_Msg_CallVerifProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1085,7 +1293,7 @@ func (m *Clt_Msg_CallResponse) Reset()         { *m = Clt_Msg_CallResponse{} }
 func (m *Clt_Msg_CallResponse) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponse) ProtoMessage()    {}
 func (*Clt_Msg_CallResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{0, 0, 6}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{0, 0, 6}
 }
 func (m *Clt_Msg_CallResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1125,7 +1333,7 @@ func (m *Srv) Reset()         { *m = Srv{} }
 func (m *Srv) String() string { return proto.CompactTextString(m) }
 func (*Srv) ProtoMessage()    {}
 func (*Srv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{1}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1}
 }
 func (m *Srv) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1175,7 +1383,7 @@ func (m *Srv_Msg) Reset()         { *m = Srv_Msg{} }
 func (m *Srv_Msg) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg) ProtoMessage()    {}
 func (*Srv_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{1, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0}
 }
 func (m *Srv_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1317,6 +1525,7 @@ func _Srv_Msg_OneofSizer(msg proto.Message) (n int) {
 }
 
 type Srv_Msg_Call struct {
+	EId                  uint32   `protobuf:"varint,1,opt,name=eId,proto3" json:"eId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -1326,7 +1535,7 @@ func (m *Srv_Msg_Call) Reset()         { *m = Srv_Msg_Call{} }
 func (m *Srv_Msg_Call) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call) ProtoMessage()    {}
 func (*Srv_Msg_Call) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{1, 0, 0}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0, 0}
 }
 func (m *Srv_Msg_Call) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1355,6 +1564,259 @@ func (m *Srv_Msg_Call) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Srv_Msg_Call proto.InternalMessageInfo
 
+func (m *Srv_Msg_Call) GetEId() uint32 {
+	if m != nil {
+		return m.EId
+	}
+	return 0
+}
+
+type Srv_Msg_Call_Input struct {
+	// Types that are valid to be assigned to Input:
+	//	*Srv_Msg_Call_Input_HttpRequest_
+	Input                isSrv_Msg_Call_Input_Input `protobuf_oneof:"input"`
+	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
+	XXX_unrecognized     []byte                     `json:"-"`
+	XXX_sizecache        int32                      `json:"-"`
+}
+
+func (m *Srv_Msg_Call_Input) Reset()         { *m = Srv_Msg_Call_Input{} }
+func (m *Srv_Msg_Call_Input) String() string { return proto.CompactTextString(m) }
+func (*Srv_Msg_Call_Input) ProtoMessage()    {}
+func (*Srv_Msg_Call_Input) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0, 0, 0}
+}
+func (m *Srv_Msg_Call_Input) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Srv_Msg_Call_Input) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Srv_Msg_Call_Input.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Srv_Msg_Call_Input) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Srv_Msg_Call_Input.Merge(dst, src)
+}
+func (m *Srv_Msg_Call_Input) XXX_Size() int {
+	return m.Size()
+}
+func (m *Srv_Msg_Call_Input) XXX_DiscardUnknown() {
+	xxx_messageInfo_Srv_Msg_Call_Input.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Srv_Msg_Call_Input proto.InternalMessageInfo
+
+type isSrv_Msg_Call_Input_Input interface {
+	isSrv_Msg_Call_Input_Input()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Srv_Msg_Call_Input_HttpRequest_ struct {
+	HttpRequest *Srv_Msg_Call_Input_HttpRequest `protobuf:"bytes,1,opt,name=http_request,json=httpRequest,oneof"`
+}
+
+func (*Srv_Msg_Call_Input_HttpRequest_) isSrv_Msg_Call_Input_Input() {}
+
+func (m *Srv_Msg_Call_Input) GetInput() isSrv_Msg_Call_Input_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+func (m *Srv_Msg_Call_Input) GetHttpRequest() *Srv_Msg_Call_Input_HttpRequest {
+	if x, ok := m.GetInput().(*Srv_Msg_Call_Input_HttpRequest_); ok {
+		return x.HttpRequest
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Srv_Msg_Call_Input) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Srv_Msg_Call_Input_OneofMarshaler, _Srv_Msg_Call_Input_OneofUnmarshaler, _Srv_Msg_Call_Input_OneofSizer, []interface{}{
+		(*Srv_Msg_Call_Input_HttpRequest_)(nil),
+	}
+}
+
+func _Srv_Msg_Call_Input_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Srv_Msg_Call_Input)
+	// input
+	switch x := m.Input.(type) {
+	case *Srv_Msg_Call_Input_HttpRequest_:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.HttpRequest); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Srv_Msg_Call_Input.Input has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Srv_Msg_Call_Input_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Srv_Msg_Call_Input)
+	switch tag {
+	case 1: // input.http_request
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Srv_Msg_Call_Input_HttpRequest)
+		err := b.DecodeMessage(msg)
+		m.Input = &Srv_Msg_Call_Input_HttpRequest_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Srv_Msg_Call_Input_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Srv_Msg_Call_Input)
+	// input
+	switch x := m.Input.(type) {
+	case *Srv_Msg_Call_Input_HttpRequest_:
+		s := proto.Size(x.HttpRequest)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type Srv_Msg_Call_Input_HttpRequest struct {
+	Method               string                                                  `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
+	Url                  string                                                  `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Headers              map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues `protobuf:"bytes,3,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	Body                 []byte                                                  `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                                `json:"-"`
+	XXX_unrecognized     []byte                                                  `json:"-"`
+	XXX_sizecache        int32                                                   `json:"-"`
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest) Reset()         { *m = Srv_Msg_Call_Input_HttpRequest{} }
+func (m *Srv_Msg_Call_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
+func (*Srv_Msg_Call_Input_HttpRequest) ProtoMessage()    {}
+func (*Srv_Msg_Call_Input_HttpRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0, 0, 0, 0}
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Srv_Msg_Call_Input_HttpRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest.Merge(dst, src)
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest proto.InternalMessageInfo
+
+func (m *Srv_Msg_Call_Input_HttpRequest) GetMethod() string {
+	if m != nil {
+		return m.Method
+	}
+	return ""
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest) GetUrl() string {
+	if m != nil {
+		return m.Url
+	}
+	return ""
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest) GetHeaders() map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest) GetBody() []byte {
+	if m != nil {
+		return m.Body
+	}
+	return nil
+}
+
+type Srv_Msg_Call_Input_HttpRequest_HeaderValues struct {
+	Values               []string `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) Reset() {
+	*m = Srv_Msg_Call_Input_HttpRequest_HeaderValues{}
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) String() string {
+	return proto.CompactTextString(m)
+}
+func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) ProtoMessage() {}
+func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0, 0, 0, 0, 0}
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest_HeaderValues.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest_HeaderValues.Merge(dst, src)
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Size() int {
+	return m.Size()
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_DiscardUnknown() {
+	xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest_HeaderValues.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Srv_Msg_Call_Input_HttpRequest_HeaderValues proto.InternalMessageInfo
+
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) GetValues() []string {
+	if m != nil {
+		return m.Values
+	}
+	return nil
+}
+
 type Srv_Msg_Reset struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1365,7 +1827,7 @@ func (m *Srv_Msg_Reset) Reset()         { *m = Srv_Msg_Reset{} }
 func (m *Srv_Msg_Reset) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Reset) ProtoMessage()    {}
 func (*Srv_Msg_Reset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_f8398c54e887c746, []int{1, 0, 1}
+	return fileDescriptor_fuzzymonkey_690e2fe366120d44, []int{1, 0, 1}
 }
 func (m *Srv_Msg_Reset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1406,11 +1868,18 @@ func init() {
 	proto.RegisterType((*Clt_Msg_SUTMetrics)(nil), "fm.Clt.Msg.SUTMetrics")
 	proto.RegisterType((*Clt_Msg_ResetProgress)(nil), "fm.Clt.Msg.ResetProgress")
 	proto.RegisterType((*Clt_Msg_CallResponseRaw)(nil), "fm.Clt.Msg.CallResponseRaw")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_HttpResponse)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse")
+	proto.RegisterMapType((map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse.HeadersEntry")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse.HeaderValues")
 	proto.RegisterType((*Clt_Msg_CallVerifProgress)(nil), "fm.Clt.Msg.CallVerifProgress")
 	proto.RegisterType((*Clt_Msg_CallResponse)(nil), "fm.Clt.Msg.CallResponse")
 	proto.RegisterType((*Srv)(nil), "fm.Srv")
 	proto.RegisterType((*Srv_Msg)(nil), "fm.Srv.Msg")
 	proto.RegisterType((*Srv_Msg_Call)(nil), "fm.Srv.Msg.Call")
+	proto.RegisterType((*Srv_Msg_Call_Input)(nil), "fm.Srv.Msg.Call.Input")
+	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest)(nil), "fm.Srv.Msg.Call.Input.HttpRequest")
+	proto.RegisterMapType((map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "fm.Srv.Msg.Call.Input.HttpRequest.HeadersEntry")
+	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "fm.Srv.Msg.Call.Input.HttpRequest.HeaderValues")
 	proto.RegisterType((*Srv_Msg_Reset)(nil), "fm.Srv.Msg.Reset")
 	proto.RegisterEnum("fm.Clt_Msg_Fuzz_ModelKind", Clt_Msg_Fuzz_ModelKind_name, Clt_Msg_Fuzz_ModelKind_value)
 }
@@ -1684,7 +2153,7 @@ func (this *Clt_Msg_Fuzz) Equal(that interface{}) bool {
 	if !bytes.Equal(this.Seed, that1.Seed) {
 		return false
 	}
-	if this.N != that1.N {
+	if this.Intensity != that1.Intensity {
 		return false
 	}
 	if len(this.EIDs) != len(that1.EIDs) {
@@ -1971,6 +2440,112 @@ func (this *Clt_Msg_CallResponseRaw) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
+	if that1.Output == nil {
+		if this.Output != nil {
+			return false
+		}
+	} else if this.Output == nil {
+		return false
+	} else if !this.Output.Equal(that1.Output) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallResponseRaw_HttpResponse_) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse_)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse_)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.HttpResponse.Equal(that1.HttpResponse) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallResponseRaw_HttpResponse) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.StatusCode != that1.StatusCode {
+		return false
+	}
+	if this.Reason != that1.Reason {
+		return false
+	}
+	if len(this.Headers) != len(that1.Headers) {
+		return false
+	}
+	for i := range this.Headers {
+		if !this.Headers[i].Equal(that1.Headers[i]) {
+			return false
+		}
+	}
+	if !bytes.Equal(this.Body, that1.Body) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Values) != len(that1.Values) {
+		return false
+	}
+	for i := range this.Values {
+		if this.Values[i] != that1.Values[i] {
+			return false
+		}
+	}
 	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
 		return false
 	}
@@ -2150,6 +2725,139 @@ func (this *Srv_Msg_Call) Equal(that interface{}) bool {
 		return this == nil
 	} else if this == nil {
 		return false
+	}
+	if this.EId != that1.EId {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Srv_Msg_Call_Input) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Srv_Msg_Call_Input)
+	if !ok {
+		that2, ok := that.(Srv_Msg_Call_Input)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.Input == nil {
+		if this.Input != nil {
+			return false
+		}
+	} else if this.Input == nil {
+		return false
+	} else if !this.Input.Equal(that1.Input) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Srv_Msg_Call_Input_HttpRequest_) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Srv_Msg_Call_Input_HttpRequest_)
+	if !ok {
+		that2, ok := that.(Srv_Msg_Call_Input_HttpRequest_)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.HttpRequest.Equal(that1.HttpRequest) {
+		return false
+	}
+	return true
+}
+func (this *Srv_Msg_Call_Input_HttpRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Srv_Msg_Call_Input_HttpRequest)
+	if !ok {
+		that2, ok := that.(Srv_Msg_Call_Input_HttpRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Method != that1.Method {
+		return false
+	}
+	if this.Url != that1.Url {
+		return false
+	}
+	if len(this.Headers) != len(that1.Headers) {
+		return false
+	}
+	for i := range this.Headers {
+		if !this.Headers[i].Equal(that1.Headers[i]) {
+			return false
+		}
+	}
+	if !bytes.Equal(this.Body, that1.Body) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Srv_Msg_Call_Input_HttpRequest_HeaderValues) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Srv_Msg_Call_Input_HttpRequest_HeaderValues)
+	if !ok {
+		that2, ok := that.(Srv_Msg_Call_Input_HttpRequest_HeaderValues)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Values) != len(that1.Values) {
+		return false
+	}
+	for i := range this.Values {
+		if this.Values[i] != that1.Values[i] {
+			return false
+		}
 	}
 	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
 		return false
@@ -2404,10 +3112,10 @@ func (m *Clt_Msg_Fuzz) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Seed)))
 		i += copy(dAtA[i:], m.Seed)
 	}
-	if m.N != 0 {
+	if m.Intensity != 0 {
 		dAtA[i] = 0x38
 		i++
-		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.N))
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Intensity))
 	}
 	if len(m.EIDs) > 0 {
 		dAtA13 := make([]byte, len(m.EIDs)*10)
@@ -2672,6 +3380,129 @@ func (m *Clt_Msg_CallResponseRaw) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Output != nil {
+		nn18, err := m.Output.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn18
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.HttpResponse != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpResponse.Size()))
+		n19, err := m.HttpResponse.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.StatusCode != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.StatusCode))
+	}
+	if len(m.Reason) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Reason)))
+		i += copy(dAtA[i:], m.Reason)
+	}
+	if len(m.Headers) > 0 {
+		for k := range m.Headers {
+			dAtA[i] = 0x1a
+			i++
+			v := m.Headers[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovFuzzymonkey(uint64(msgSize))
+			}
+			mapSize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + msgSize
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
+				n20, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n20
+			}
+		}
+	}
+	if len(m.Body) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Body)))
+		i += copy(dAtA[i:], m.Body)
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Values) > 0 {
+		for _, s := range m.Values {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -2739,11 +3570,11 @@ func (m *Srv) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Msg.Size()))
-		n18, err := m.Msg.MarshalTo(dAtA[i:])
+		n21, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n18
+		i += n21
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -2767,11 +3598,11 @@ func (m *Srv_Msg) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Msg != nil {
-		nn19, err := m.Msg.MarshalTo(dAtA[i:])
+		nn22, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn19
+		i += nn22
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -2785,11 +3616,11 @@ func (m *Srv_Msg_Call_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Call.Size()))
-		n20, err := m.Call.MarshalTo(dAtA[i:])
+		n23, err := m.Call.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n23
 	}
 	return i, nil
 }
@@ -2799,11 +3630,11 @@ func (m *Srv_Msg_Reset_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Reset_.Size()))
-		n21, err := m.Reset_.MarshalTo(dAtA[i:])
+		n24, err := m.Reset_.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n21
+		i += n24
 	}
 	return i, nil
 }
@@ -2822,6 +3653,156 @@ func (m *Srv_Msg_Call) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.EId != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.EId))
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Srv_Msg_Call_Input) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Srv_Msg_Call_Input) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Input != nil {
+		nn25, err := m.Input.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn25
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.HttpRequest != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpRequest.Size()))
+		n26, err := m.HttpRequest.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
+	return i, nil
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Method) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Method)))
+		i += copy(dAtA[i:], m.Method)
+	}
+	if len(m.Url) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Url)))
+		i += copy(dAtA[i:], m.Url)
+	}
+	if len(m.Headers) > 0 {
+		for k := range m.Headers {
+			dAtA[i] = 0x1a
+			i++
+			v := m.Headers[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovFuzzymonkey(uint64(msgSize))
+			}
+			mapSize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + msgSize
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
+				n27, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n27
+			}
+		}
+	}
+	if len(m.Body) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Body)))
+		i += copy(dAtA[i:], m.Body)
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Values) > 0 {
+		for _, s := range m.Values {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -3004,8 +3985,8 @@ func (m *Clt_Msg_Fuzz) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovFuzzymonkey(uint64(l))
 	}
-	if m.N != 0 {
-		n += 1 + sovFuzzymonkey(uint64(m.N))
+	if m.Intensity != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.Intensity))
 	}
 	if len(m.EIDs) > 0 {
 		l = 0
@@ -3164,6 +4145,75 @@ func (m *Clt_Msg_CallResponseRaw) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Output != nil {
+		n += m.Output.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.HttpResponse != nil {
+		l = m.HttpResponse.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.StatusCode != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.StatusCode))
+	}
+	l = len(m.Reason)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if len(m.Headers) > 0 {
+		for k, v := range m.Headers {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovFuzzymonkey(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	l = len(m.Body)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Values) > 0 {
+		for _, s := range m.Values {
+			l = len(s)
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -3255,6 +4305,91 @@ func (m *Srv_Msg_Call) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.EId != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.EId))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Srv_Msg_Call_Input) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Input != nil {
+		n += m.Input.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.HttpRequest != nil {
+		l = m.HttpRequest.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Method)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	l = len(m.Url)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if len(m.Headers) > 0 {
+		for k, v := range m.Headers {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovFuzzymonkey(uint64(l))
+			}
+			mapEntrySize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + l
+			n += mapEntrySize + 1 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	l = len(m.Body)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Values) > 0 {
+		for _, s := range m.Values {
+			l = len(s)
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -3850,9 +4985,9 @@ func (m *Clt_Msg_Fuzz) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 7:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field N", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Intensity", wireType)
 			}
-			m.N = 0
+			m.Intensity = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowFuzzymonkey
@@ -3862,7 +4997,7 @@ func (m *Clt_Msg_Fuzz) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.N |= (uint32(b) & 0x7F) << shift
+				m.Intensity |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4586,6 +5721,371 @@ func (m *Clt_Msg_CallResponseRaw) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: CallResponseRaw: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HttpResponse", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Clt_Msg_CallResponseRaw_HttpResponse{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Output = &Clt_Msg_CallResponseRaw_HttpResponse_{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HttpResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HttpResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StatusCode", wireType)
+			}
+			m.StatusCode = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StatusCode |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Reason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = make(map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+			}
+			var mapkey string
+			var mapvalue *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Headers[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Body = append(m.Body[:0], dAtA[iNdEx:postIndex]...)
+			if m.Body == nil {
+				m.Body = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HeaderValues: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HeaderValues: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Values = append(m.Values, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
@@ -4938,6 +6438,451 @@ func (m *Srv_Msg_Call) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: Call: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EId", wireType)
+			}
+			m.EId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.EId |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Srv_Msg_Call_Input) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Input: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Input: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HttpRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Srv_Msg_Call_Input_HttpRequest{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Input = &Srv_Msg_Call_Input_HttpRequest_{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Srv_Msg_Call_Input_HttpRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HttpRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HttpRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Method", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Method = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Url", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Url = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Headers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Headers == nil {
+				m.Headers = make(map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues)
+			}
+			var mapkey string
+			var mapvalue *Srv_Msg_Call_Input_HttpRequest_HeaderValues
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Srv_Msg_Call_Input_HttpRequest_HeaderValues{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Headers[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Body", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Body = append(m.Body[:0], dAtA[iNdEx:postIndex]...)
+			if m.Body == nil {
+				m.Body = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HeaderValues: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HeaderValues: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Values = append(m.Values, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
@@ -5117,60 +7062,77 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_f8398c54e887c746)
+	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_690e2fe366120d44)
 }
 
-var fileDescriptor_fuzzymonkey_f8398c54e887c746 = []byte{
-	// 815 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x55, 0xdd, 0x6e, 0xeb, 0x44,
-	0x10, 0xb6, 0x9b, 0xb8, 0x89, 0xa7, 0x49, 0x7f, 0xb6, 0x47, 0x90, 0xb3, 0x70, 0xaa, 0x92, 0x0b,
-	0x28, 0x02, 0x12, 0x68, 0xc5, 0x05, 0x57, 0xd0, 0xf4, 0x70, 0x94, 0xaa, 0x4a, 0x7b, 0xb4, 0xe5,
-	0x80, 0xc4, 0x4d, 0xe4, 0x36, 0x6b, 0xc7, 0xaa, 0xed, 0xb5, 0x76, 0x37, 0xa9, 0x92, 0xf7, 0x80,
-	0x7b, 0xee, 0x78, 0x06, 0x9e, 0x00, 0xee, 0x78, 0x04, 0xd4, 0x27, 0xe0, 0x11, 0xd0, 0x8e, 0xdd,
-	0x64, 0x93, 0x96, 0xab, 0xcc, 0xce, 0x7c, 0x33, 0xfb, 0xe5, 0x1b, 0xcf, 0x2c, 0x7c, 0x94, 0xdf,
-	0x45, 0xdd, 0x38, 0xd3, 0x5c, 0x66, 0x41, 0xd2, 0x0d, 0xd3, 0x6e, 0x38, 0x99, 0xcf, 0x67, 0xa9,
-	0xc8, 0xee, 0xf8, 0xac, 0x93, 0x4b, 0xa1, 0x05, 0xd9, 0x08, 0x53, 0xfa, 0x45, 0x14, 0xeb, 0xf1,
-	0xe4, 0xa6, 0x73, 0x2b, 0xd2, 0x6e, 0x24, 0x22, 0xd1, 0xc5, 0xd0, 0xcd, 0x24, 0xc4, 0x13, 0x1e,
-	0xd0, 0x2a, 0x52, 0xda, 0xff, 0xfa, 0x50, 0x39, 0x4b, 0x34, 0x79, 0x05, 0x95, 0x54, 0x45, 0x2d,
-	0xf7, 0xd0, 0x3d, 0xda, 0x3a, 0xde, 0xea, 0x84, 0x69, 0xe7, 0x2c, 0xd1, 0x9d, 0x81, 0x8a, 0x98,
-	0xf1, 0xd3, 0xbf, 0x7c, 0xa8, 0x0c, 0x54, 0x44, 0x3e, 0x86, 0xaa, 0xb9, 0xb6, 0xc4, 0xed, 0x5a,
-	0xb8, 0xce, 0x9b, 0xc9, 0x7c, 0xde, 0x77, 0x18, 0xc6, 0xc9, 0xb7, 0xd0, 0x34, 0xbf, 0xc3, 0x5c,
-	0x8a, 0x48, 0x72, 0xa5, 0x5a, 0x1b, 0x98, 0xd0, 0x5a, 0x4f, 0x78, 0x5b, 0xc6, 0xfb, 0x0e, 0x6b,
-	0x84, 0xd6, 0x99, 0x1c, 0x43, 0x2d, 0xe5, 0x5a, 0xc6, 0xb7, 0xaa, 0x55, 0xc1, 0xd4, 0xf7, 0xec,
-	0xd4, 0xeb, 0x77, 0x3f, 0x0c, 0x8a, 0x68, 0xdf, 0x61, 0x8f, 0x40, 0xd2, 0x83, 0x6d, 0xc9, 0x15,
-	0xd7, 0xcb, 0x5b, 0xab, 0x98, 0xfa, 0xd2, 0x4e, 0x65, 0x06, 0x61, 0x5d, 0xdb, 0x94, 0xb6, 0x83,
-	0x9c, 0xc3, 0xde, 0x6d, 0x90, 0x24, 0x43, 0xc9, 0x55, 0x2e, 0x32, 0xc5, 0x87, 0x32, 0xb8, 0x6f,
-	0x79, 0x58, 0xe6, 0x03, 0xbb, 0xcc, 0x59, 0x90, 0x24, 0xac, 0xc4, 0xb0, 0xe0, 0xbe, 0xef, 0xb0,
-	0x9d, 0xdb, 0x55, 0x17, 0xb9, 0x82, 0x7d, 0x2c, 0x35, 0xe5, 0x32, 0x0e, 0x97, 0x9c, 0x36, 0xb1,
-	0xd8, 0xab, 0xf5, 0x62, 0x3f, 0x1a, 0x94, 0xc5, 0x0b, 0x69, 0xac, 0x38, 0x8d, 0xa8, 0x2b, 0xdc,
-	0x5a, 0xb5, 0xa7, 0xa2, 0xda, 0xbc, 0x8c, 0xa8, 0x36, 0x29, 0xfa, 0x8b, 0x07, 0x55, 0xa3, 0x3a,
-	0xf9, 0x1a, 0xea, 0xf8, 0xb7, 0x35, 0x97, 0x65, 0x2b, 0x5f, 0xae, 0x77, 0xa6, 0x10, 0x4a, 0x73,
-	0xc9, 0x16, 0x50, 0xf2, 0x0d, 0x40, 0x2a, 0x46, 0x3c, 0x19, 0xde, 0xc5, 0xd9, 0x08, 0x5b, 0xba,
-	0x7d, 0x4c, 0x9f, 0x24, 0x0e, 0x0c, 0xe4, 0x22, 0xce, 0x46, 0xcc, 0x4f, 0x1f, 0x4d, 0xf2, 0x39,
-	0x78, 0x78, 0x78, 0xae, 0x9b, 0xcb, 0x2c, 0x56, 0x80, 0xc8, 0xfb, 0x50, 0x0b, 0xf2, 0x78, 0x78,
-	0xc7, 0x67, 0xd8, 0x42, 0x9f, 0x6d, 0x06, 0x79, 0x7c, 0xc1, 0x67, 0xe4, 0x05, 0x78, 0x13, 0x15,
-	0x44, 0xbc, 0xe5, 0x1d, 0x56, 0x8e, 0x7c, 0x56, 0x1c, 0x08, 0x81, 0xaa, 0xe2, 0x7c, 0x84, 0xd2,
-	0x36, 0x18, 0xda, 0xa4, 0x01, 0x6e, 0x86, 0x02, 0x35, 0x99, 0x9b, 0x19, 0xc4, 0xf7, 0xe7, 0xaf,
-	0x55, 0xab, 0x7e, 0x58, 0x39, 0x6a, 0x32, 0xb4, 0xe9, 0x6f, 0x2e, 0xd4, 0x1f, 0xff, 0x24, 0x39,
-	0x05, 0x5f, 0x4d, 0xf4, 0x50, 0x8d, 0x79, 0x92, 0x94, 0x92, 0xb4, 0xff, 0x57, 0x12, 0xf3, 0xfd,
-	0x5d, 0x1b, 0x64, 0xdf, 0x61, 0x75, 0x35, 0xd1, 0x68, 0xd3, 0x37, 0x50, 0x7f, 0xf4, 0x1b, 0x9e,
-	0x4a, 0x07, 0x52, 0x63, 0x29, 0x9f, 0x15, 0x07, 0xb2, 0x0b, 0x15, 0xa9, 0x34, 0x0a, 0xe7, 0x33,
-	0x63, 0x22, 0x73, 0x2d, 0x72, 0x54, 0xc5, 0x67, 0x68, 0xf7, 0x60, 0xd9, 0x1c, 0xfa, 0x87, 0x0b,
-	0x1e, 0x2a, 0x43, 0xbe, 0x03, 0x5f, 0xe4, 0x3c, 0x0b, 0xf2, 0x78, 0x7a, 0x52, 0x12, 0x3c, 0x7c,
-	0x5e, 0xc4, 0xce, 0x55, 0xce, 0xb3, 0xd3, 0xb7, 0xe7, 0xd3, 0x93, 0xbe, 0xc3, 0x96, 0x49, 0x34,
-	0x04, 0x7f, 0x11, 0x31, 0x17, 0x87, 0x71, 0xc2, 0x4b, 0x7e, 0x68, 0x1b, 0xdf, 0x58, 0x2c, 0xf8,
-	0xa1, 0x4d, 0xbe, 0x82, 0x17, 0x63, 0x1e, 0x8c, 0xb8, 0x1c, 0x06, 0x13, 0x3d, 0x16, 0x32, 0x9e,
-	0x07, 0x3a, 0x16, 0x59, 0x49, 0x78, 0xbf, 0x88, 0x9d, 0xda, 0xa1, 0x5e, 0xad, 0x6c, 0x75, 0xfb,
-	0x13, 0xf0, 0x17, 0xdf, 0x02, 0xd9, 0x82, 0xda, 0xbb, 0xcb, 0x8b, 0xcb, 0xab, 0x9f, 0x2e, 0x77,
-	0x1d, 0xd2, 0xb4, 0xa8, 0xec, 0xba, 0x74, 0x1b, 0x1a, 0xf6, 0x32, 0xa0, 0x0d, 0x80, 0xe5, 0x84,
-	0xd3, 0x1d, 0x68, 0xae, 0x0c, 0x2d, 0xdd, 0x83, 0x9d, 0xb5, 0xf1, 0xa3, 0xfb, 0xb0, 0xf7, 0x64,
-	0x88, 0x4c, 0x59, 0x1b, 0xd7, 0xf3, 0x70, 0xc7, 0xb5, 0x7f, 0x75, 0xa1, 0x72, 0x2d, 0xa7, 0xcf,
-	0xac, 0xbc, 0x6b, 0x39, 0x5d, 0xae, 0xbc, 0x7c, 0xb1, 0xf1, 0xcc, 0x0c, 0xd9, 0x1b, 0xaf, 0x84,
-	0xe1, 0xac, 0x99, 0x8d, 0x67, 0xe2, 0xe4, 0x53, 0xf0, 0xb0, 0x6b, 0xe5, 0xa6, 0xdb, 0xb3, 0x81,
-	0x48, 0xbf, 0xef, 0xb0, 0x02, 0x41, 0x37, 0xa1, 0x6a, 0x52, 0x69, 0x0d, 0x3c, 0x8c, 0x94, 0xc4,
-	0x8e, 0x3f, 0x83, 0x2d, 0x23, 0xc3, 0x6c, 0x80, 0x3b, 0x9d, 0x7c, 0x08, 0x1b, 0xaf, 0x05, 0xa9,
-	0x95, 0x4d, 0xa6, 0xb5, 0xb2, 0x62, 0xdb, 0x39, 0x72, 0xbf, 0x74, 0x7b, 0xa7, 0xbf, 0x3f, 0x1c,
-	0xb8, 0x7f, 0x3e, 0x1c, 0xb8, 0x7f, 0x3f, 0x1c, 0xb8, 0xff, 0x3c, 0x1c, 0xb8, 0x3f, 0x77, 0xad,
-	0xcd, 0x6f, 0xd5, 0x39, 0x13, 0xdd, 0xe2, 0x91, 0xe8, 0xae, 0x3d, 0x20, 0x37, 0x9b, 0xf8, 0x04,
-	0x9c, 0xfc, 0x17, 0x00, 0x00, 0xff, 0xff, 0x97, 0xeb, 0x31, 0x8d, 0x5a, 0x06, 0x00, 0x00,
+var fileDescriptor_fuzzymonkey_690e2fe366120d44 = []byte{
+	// 1085 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0x23, 0xc5,
+	0x13, 0xf7, 0x78, 0x3c, 0xb1, 0x5d, 0xb6, 0xf3, 0xd1, 0x59, 0xed, 0xdf, 0x3b, 0xff, 0xdd, 0x10,
+	0x72, 0x58, 0x8c, 0x00, 0x1b, 0x12, 0xad, 0x04, 0x5c, 0x20, 0xf6, 0x66, 0xb1, 0x15, 0x25, 0x59,
+	0x75, 0xd8, 0x45, 0xe2, 0x62, 0x4d, 0xe2, 0xb6, 0x3d, 0xca, 0x78, 0x7a, 0xb6, 0xbb, 0xc7, 0x2b,
+	0xe7, 0x05, 0x38, 0xf1, 0x10, 0x20, 0x81, 0x90, 0xb8, 0x22, 0x0e, 0xbc, 0x00, 0x1c, 0x79, 0x04,
+	0x94, 0x17, 0x01, 0x75, 0x4d, 0x3b, 0xee, 0x7c, 0xc0, 0x2e, 0x07, 0x4e, 0x53, 0xd5, 0xf5, 0xab,
+	0xea, 0x9a, 0x5f, 0x55, 0x75, 0x37, 0xbc, 0x99, 0x9c, 0x8d, 0x5a, 0x61, 0xac, 0x98, 0x88, 0x83,
+	0xa8, 0x35, 0x9c, 0xb4, 0x86, 0xe9, 0xf9, 0xf9, 0x6c, 0xc2, 0xe3, 0x33, 0x36, 0x6b, 0x26, 0x82,
+	0x2b, 0x4e, 0xf2, 0xc3, 0x89, 0xff, 0xde, 0x28, 0x54, 0xe3, 0xf4, 0xa4, 0x79, 0xca, 0x27, 0xad,
+	0x11, 0x1f, 0xf1, 0x16, 0x9a, 0x4e, 0xd2, 0x21, 0x6a, 0xa8, 0xa0, 0x94, 0xb9, 0x6c, 0x7d, 0x5f,
+	0x03, 0xb7, 0x13, 0x29, 0xf2, 0x00, 0xdc, 0x89, 0x1c, 0xd5, 0x9d, 0x4d, 0xa7, 0x51, 0xd9, 0xae,
+	0x34, 0x87, 0x93, 0x66, 0x27, 0x52, 0xcd, 0x03, 0x39, 0xa2, 0x7a, 0xdd, 0xff, 0xb3, 0x0a, 0xee,
+	0x81, 0x1c, 0x91, 0x87, 0x50, 0xd0, 0xdb, 0x1a, 0xdc, 0xaa, 0x85, 0x6b, 0x3e, 0x49, 0xcf, 0xcf,
+	0xbb, 0x39, 0x8a, 0x76, 0xf2, 0x09, 0xd4, 0xf4, 0xb7, 0x9f, 0x08, 0x3e, 0x12, 0x4c, 0xca, 0x7a,
+	0x1e, 0x1d, 0xea, 0xd7, 0x1d, 0x9e, 0x1a, 0x7b, 0x37, 0x47, 0xab, 0x43, 0x4b, 0x27, 0xdb, 0x50,
+	0x9c, 0x30, 0x25, 0xc2, 0x53, 0x59, 0x77, 0xd1, 0xf5, 0xae, 0xed, 0x7a, 0xfc, 0xec, 0xf3, 0x83,
+	0xcc, 0xda, 0xcd, 0xd1, 0x39, 0x90, 0xb4, 0x61, 0x59, 0x30, 0xc9, 0xd4, 0x62, 0xd7, 0x02, 0xba,
+	0xde, 0xb3, 0x5d, 0xa9, 0x46, 0x58, 0xdb, 0xd6, 0x84, 0xbd, 0x40, 0x7a, 0xb0, 0x76, 0x1a, 0x44,
+	0x51, 0x5f, 0x30, 0x99, 0xf0, 0x58, 0xb2, 0xbe, 0x08, 0x5e, 0xd6, 0x3d, 0x0c, 0xf3, 0x7f, 0x3b,
+	0x4c, 0x27, 0x88, 0x22, 0x6a, 0x30, 0x34, 0x78, 0xd9, 0xcd, 0xd1, 0x95, 0xd3, 0xab, 0x4b, 0xe4,
+	0x08, 0xd6, 0x31, 0xd4, 0x94, 0x89, 0x70, 0xb8, 0xc8, 0x69, 0x09, 0x83, 0x3d, 0xb8, 0x1e, 0xec,
+	0xb9, 0x46, 0x59, 0x79, 0x61, 0x1a, 0x57, 0x16, 0x35, 0xa9, 0x57, 0x72, 0xab, 0x17, 0x6f, 0x92,
+	0x6a, 0xe7, 0xa5, 0x49, 0xb5, 0x93, 0xf2, 0xbf, 0xf3, 0xa0, 0xa0, 0x59, 0x27, 0x8f, 0xa0, 0x84,
+	0xbf, 0xad, 0x98, 0x30, 0xa5, 0xbc, 0x77, 0xbd, 0x32, 0x19, 0x51, 0x8a, 0x09, 0x7a, 0x09, 0x25,
+	0x1f, 0x01, 0x4c, 0xf8, 0x80, 0x45, 0xfd, 0xb3, 0x30, 0x1e, 0x60, 0x49, 0x97, 0xb7, 0xfd, 0x1b,
+	0x8e, 0x07, 0x1a, 0xb2, 0x1f, 0xc6, 0x03, 0x5a, 0x9e, 0xcc, 0x45, 0xf2, 0x2e, 0x78, 0xa8, 0xdc,
+	0x56, 0xcd, 0x85, 0x17, 0xcd, 0x40, 0xe4, 0x7f, 0x50, 0x0c, 0x92, 0xb0, 0x7f, 0xc6, 0x66, 0x58,
+	0xc2, 0x32, 0x5d, 0x0a, 0x92, 0x70, 0x9f, 0xcd, 0xc8, 0x1d, 0xf0, 0x52, 0x19, 0x8c, 0x58, 0xdd,
+	0xdb, 0x74, 0x1b, 0x65, 0x9a, 0x29, 0x84, 0x40, 0x41, 0x32, 0x36, 0x40, 0x6a, 0xab, 0x14, 0x65,
+	0x72, 0x1f, 0xca, 0x7a, 0x58, 0x62, 0x19, 0xaa, 0x19, 0x12, 0x55, 0xa3, 0x8b, 0x05, 0xed, 0xb1,
+	0xd7, 0x7b, 0x2c, 0xeb, 0xa5, 0x4d, 0xb7, 0x51, 0xa3, 0x28, 0xfb, 0xdf, 0x38, 0x50, 0x9a, 0xff,
+	0x34, 0xd9, 0x85, 0xb2, 0x4c, 0x55, 0x5f, 0x8e, 0x59, 0x14, 0x19, 0x8a, 0xb6, 0xfe, 0x96, 0x22,
+	0xdd, 0x8f, 0xc7, 0x1a, 0xd9, 0xcd, 0xd1, 0x92, 0x4c, 0x15, 0xca, 0xfe, 0x13, 0x28, 0xcd, 0xd7,
+	0x75, 0xde, 0x52, 0x05, 0x42, 0x61, 0xa8, 0x32, 0xcd, 0x14, 0xb2, 0x0a, 0xae, 0x90, 0x0a, 0x89,
+	0x2c, 0x53, 0x2d, 0xe2, 0x9f, 0x28, 0x9e, 0x20, 0x4b, 0x65, 0x8a, 0x72, 0x1b, 0x16, 0xc5, 0xf2,
+	0x7f, 0x71, 0xc0, 0x43, 0xa6, 0xc8, 0xa7, 0x50, 0xe6, 0x09, 0x8b, 0x83, 0x24, 0x9c, 0xee, 0x98,
+	0x04, 0x37, 0x6f, 0x27, 0xb5, 0x79, 0x94, 0xb0, 0x78, 0xf7, 0x69, 0x6f, 0xba, 0xd3, 0xcd, 0xd1,
+	0x85, 0x93, 0x3f, 0x84, 0xf2, 0xa5, 0x45, 0x6f, 0x3c, 0x0c, 0x23, 0x66, 0xf2, 0x43, 0x59, 0xaf,
+	0x8d, 0xf9, 0x65, 0x7e, 0x28, 0x93, 0x0f, 0xe0, 0xce, 0x98, 0x05, 0x03, 0x26, 0xfa, 0x41, 0xaa,
+	0xc6, 0x5c, 0x84, 0xe7, 0x81, 0x0a, 0x79, 0x6c, 0x12, 0x5e, 0xcf, 0x6c, 0xbb, 0xb6, 0xa9, 0x5d,
+	0x34, 0xa5, 0xdf, 0x7a, 0x0b, 0xca, 0x97, 0xbd, 0x41, 0x2a, 0x50, 0x7c, 0x76, 0xb8, 0x7f, 0x78,
+	0xf4, 0xc5, 0xe1, 0x6a, 0x8e, 0xd4, 0xac, 0x54, 0x56, 0x1d, 0x7f, 0x19, 0xaa, 0xf6, 0xe1, 0xe0,
+	0x57, 0x01, 0x16, 0x13, 0xef, 0xaf, 0x40, 0xed, 0xca, 0x10, 0xfb, 0x3f, 0xbb, 0xb0, 0xd2, 0xb9,
+	0x31, 0x7c, 0xb5, 0xb1, 0x52, 0xc9, 0x62, 0x56, 0x32, 0x8a, 0x1a, 0xff, 0x30, 0xc3, 0xcd, 0xae,
+	0x52, 0x89, 0x3d, 0x3b, 0x63, 0x4b, 0xf7, 0x7f, 0xcd, 0x43, 0xd5, 0x06, 0x90, 0x37, 0xa0, 0x22,
+	0x55, 0xa0, 0x52, 0xd9, 0x3f, 0xe5, 0x83, 0x2c, 0x7e, 0x8d, 0x42, 0xb6, 0xd4, 0xe1, 0x03, 0x46,
+	0xee, 0xc2, 0x92, 0x60, 0x81, 0xe4, 0xb1, 0x21, 0xd0, 0x68, 0xe4, 0x08, 0x8a, 0x19, 0x4d, 0xfa,
+	0x68, 0x73, 0x1b, 0x95, 0xed, 0x47, 0xaf, 0x9b, 0x54, 0xb3, 0x9b, 0xf9, 0xed, 0xc5, 0x4a, 0xcc,
+	0xe8, 0x3c, 0x8a, 0xae, 0xd3, 0x09, 0x1f, 0x64, 0xa3, 0x52, 0xa5, 0x28, 0xfb, 0x0f, 0xa1, 0x9a,
+	0x81, 0x9f, 0x07, 0x51, 0xca, 0xa4, 0x4e, 0x66, 0x8a, 0x52, 0xdd, 0xc1, 0xc9, 0x31, 0x9a, 0xff,
+	0x62, 0x8e, 0xcb, 0x82, 0xea, 0x96, 0xd4, 0x53, 0x97, 0xb5, 0x81, 0x16, 0xc9, 0x3e, 0x78, 0x88,
+	0x35, 0x47, 0xf8, 0xbf, 0x4d, 0x36, 0xdb, 0x9f, 0x66, 0x31, 0x3e, 0xce, 0x7f, 0xe8, 0xb4, 0x4b,
+	0xb0, 0xc4, 0x53, 0x95, 0xa4, 0xca, 0x5f, 0x87, 0xb5, 0x1b, 0x47, 0x9f, 0x2e, 0xbe, 0x1d, 0xb6,
+	0xed, 0xe1, 0xcd, 0xb4, 0xf5, 0x53, 0x01, 0xdc, 0x63, 0x31, 0xbd, 0xe5, 0xa2, 0x3a, 0x16, 0xd3,
+	0xc5, 0x45, 0xf5, 0x75, 0xe1, 0xf2, 0xa2, 0xd2, 0x47, 0x9f, 0x7d, 0x51, 0x19, 0x1c, 0x26, 0xad,
+	0x2f, 0x2a, 0x6d, 0x27, 0x6f, 0x83, 0x87, 0xc3, 0x65, 0xfe, 0x6e, 0xcd, 0x06, 0x62, 0x97, 0x75,
+	0x73, 0x34, 0x43, 0xf8, 0xdf, 0xba, 0x50, 0xd0, 0xbe, 0x9a, 0x23, 0xd6, 0x1b, 0x98, 0x8a, 0x6b,
+	0xd1, 0xff, 0xca, 0x05, 0xaf, 0x17, 0x27, 0xa9, 0x22, 0x9f, 0x41, 0xd5, 0xf4, 0xdd, 0x8b, 0x94,
+	0x49, 0x65, 0x1f, 0x1d, 0xf6, 0xfe, 0x4d, 0x44, 0x1b, 0xbe, 0x10, 0xd9, 0xcd, 0xd1, 0xca, 0x78,
+	0xa1, 0xfa, 0x3f, 0xe6, 0xa1, 0x62, 0x99, 0x75, 0x01, 0x27, 0x4c, 0x8d, 0xf9, 0xc0, 0xd4, 0xc6,
+	0x68, 0x3a, 0x99, 0x54, 0x44, 0xf3, 0x33, 0x24, 0x15, 0x11, 0xe9, 0x5d, 0xef, 0xaf, 0xd6, 0xab,
+	0x77, 0xff, 0x0f, 0x3a, 0xeb, 0xec, 0x95, 0x9d, 0xb5, 0x77, 0xb5, 0xb3, 0x5e, 0x3f, 0xcd, 0x9b,
+	0x3d, 0x55, 0x04, 0x2f, 0xd4, 0x60, 0xbf, 0x08, 0x1e, 0x96, 0xcd, 0xb4, 0xcd, 0xf6, 0x3b, 0x50,
+	0xd1, 0x47, 0xc9, 0xec, 0x00, 0xdf, 0x49, 0xe4, 0x3e, 0xe4, 0x1f, 0x73, 0x52, 0x34, 0x3d, 0xec,
+	0x17, 0xcd, 0x96, 0x5b, 0xb9, 0x86, 0xf3, 0xbe, 0xd3, 0xde, 0xfd, 0xe1, 0x62, 0xc3, 0xf9, 0xed,
+	0x62, 0xc3, 0xf9, 0xfd, 0x62, 0xc3, 0xf9, 0xe3, 0x62, 0xc3, 0xf9, 0xb2, 0x65, 0xbd, 0xa6, 0xac,
+	0x38, 0x1d, 0xde, 0xca, 0x1e, 0x5e, 0xad, 0x6b, 0x8f, 0xb2, 0x93, 0x25, 0x7c, 0x56, 0xed, 0xfc,
+	0x15, 0x00, 0x00, 0xff, 0xff, 0xee, 0xbd, 0x39, 0x7d, 0xae, 0x09, 0x00, 0x00,
 }

@@ -67,7 +67,7 @@ message Clt {
       string api_key = 4;
       repeated string usage = 5;
       bytes seed = 6;
-      uint32 n = 7;
+      uint32 intensity = 7;
       repeated uint32 EIDs = 8;
     }
 
@@ -77,7 +77,21 @@ message Clt {
 
     message ResetProgress {}
 
-    message CallResponseRaw {}
+    message CallResponseRaw {
+      message HttpResponse {
+        // FIXME string error
+        uint32 status_code = 1;
+        string reason = 2;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string,HeaderValues> headers = 3;
+        bytes body = 4;
+      }
+      oneof output {
+        HttpResponse http_response = 1;
+      }
+    }
 
     message CallVerifProgress {}
 
@@ -105,8 +119,27 @@ message Clt {
 
 message Srv {
   message Msg {
-    message Call {}
-    message Reset {}
+    message Call {
+      uint32 eId = 1;
+      message Input {
+        message HttpRequest {
+          string method = 1;
+          string url = 2;
+          message HeaderValues {
+            repeated string values = 1;
+          }
+          map<string,HeaderValues> headers = 3;
+          bytes body = 4;
+        }
+        oneof input {
+          HttpRequest http_request = 1;
+        }
+      }
+    }
+
+    message Reset {
+      // bool as_final_step = 1;
+    }
     oneof msg {
       // Try call to SUT
       Call call = 1;
