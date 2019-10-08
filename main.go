@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/lib"
+	"github.com/FuzzyMonkeyCo/monkey/pkg"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	docopt "github.com/docopt/docopt-go"
@@ -39,7 +39,7 @@ var (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
-	lib.InitExec()
+	pkg.InitExec()
 	os.Exit(actualMain())
 }
 
@@ -141,10 +141,10 @@ func actualMain() int {
 		return doLogs(offset)
 	}
 
-	if err := lib.MakePwdID(binName, 0); err != nil {
+	if err := pkg.MakePwdID(binName, 0); err != nil {
 		return retryOrReport()
 	}
-	logCatchall, err := os.OpenFile(lib.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
+	logCatchall, err := os.OpenFile(pkg.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return retryOrReport()
@@ -156,7 +156,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, lib.LogID(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, pkg.LogID(), args)
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login
@@ -172,7 +172,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	mnk, err := lib.NewMonkey(binTitle, args.Lint && !args.HideConfig)
+	mnk, err := pkg.NewMonkey(binTitle, args.Lint && !args.HideConfig)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -186,17 +186,17 @@ func actualMain() int {
 	if args.Exec {
 		switch {
 		case args.Repl:
-			if err := lib.DoExecREPL(); err != nil {
+			if err := pkg.DoExecREPL(); err != nil {
 				as.ColorERR.Println(err)
 				return code.Failed
 			}
 			return code.OK
 		case args.Start:
-			return doExec(cfg, lib.ExecKind_start)
+			return doExec(cfg, pkg.ExecKind_start)
 		case args.Reset:
-			return doExec(cfg, lib.ExecKind_reset)
+			return doExec(cfg, pkg.ExecKind_reset)
 		case args.Stop:
-			return doExec(cfg, lib.ExecKind_stop)
+			return doExec(cfg, pkg.ExecKind_stop)
 		default:
 			return retryOrReport()
 		}
@@ -208,7 +208,7 @@ func actualMain() int {
 	}
 
 	// Always lint before fuzzing
-	vald, err := lib.DoLint(docPath, blob, args.ShowSpec)
+	vald, err := pkg.DoLint(docPath, blob, args.ShowSpec)
 	if err != nil {
 		return code.FailedLint
 	}
@@ -242,7 +242,7 @@ func actualMain() int {
 		as.ColorERR.Println("No tests to run.")
 		return code.Failed
 	}
-	mnk := lib.NewMonkey(cfg, vald, binTitle)
+	mnk := pkg.NewMonkey(cfg, vald, binTitle)
 	if cfg.N == 1 {
 		// TODO: find a "plural" lib
 		as.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
@@ -271,11 +271,11 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 }
 
 func doLogs(offset uint64) int {
-	if err := lib.MakePwdID(binName, offset); err != nil {
+	if err := pkg.MakePwdID(binName, offset); err != nil {
 		return retryOrReport()
 	}
 
-	fn := lib.LogID()
+	fn := pkg.LogID()
 	os.Stderr.WriteString(fn + "\n")
 	f, err := os.Open(fn)
 	if err != nil {
@@ -292,7 +292,7 @@ func doLogs(offset uint64) int {
 }
 
 func doUpdate() int {
-	rel := &lib.GithubRelease{
+	rel := &update.GithubRelease{
 		Slug:   githubSlug,
 		Name:   binName,
 		Client: clientUtils,
@@ -334,7 +334,7 @@ func doEnv(vars []string) int {
 	return code.OK
 }
 
-func doSchema(vald *lib.Validator, ref string) int {
+func doSchema(vald *pkg.Validator, ref string) int {
 	refs := vald.Refs
 	refsCount := len(refs)
 	if ref == "" {
@@ -346,8 +346,8 @@ func doSchema(vald *lib.Validator, ref string) int {
 
 	if err := vald.ValidateAgainstSchema(ref); err != nil {
 		switch err {
-		case lib.ErrInvalidPayload:
-		case lib.ErrNoSuchRef:
+		case pkg.ErrInvalidPayload:
+		case pkg.ErrNoSuchRef:
 			as.ColorERR.Printf("No such $ref '%s'\n", ref)
 			if refsCount > 0 {
 				fmt.Println("Try one of:")
@@ -362,17 +362,17 @@ func doSchema(vald *lib.Validator, ref string) int {
 	return code.OK
 }
 
-func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
-	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
-		log.Println(lib.Shell(), "is required")
+func doExec(cfg *pkg.UserCfg, kind pkg.ExecKind) int {
+	if _, err := os.Stat(pkg.Shell()); os.IsNotExist(err) {
+		log.Println(pkg.Shell(), "is required")
 		return code.FailedRequire
 	}
-	if err := lib.SnapEnv(lib.EnvID()); err != nil {
+	if err := pkg.SnapEnv(pkg.EnvID()); err != nil {
 		return retryOrReport()
 	}
-	defer ensureDeleted(lib.EnvID())
+	defer ensureDeleted(pkg.EnvID())
 
-	act, err := lib.ExecuteScript(cfg, kind)
+	act, err := pkg.ExecuteScript(cfg, kind)
 	if err != nil {
 		as.ColorERR.Println(err)
 	}
@@ -382,22 +382,22 @@ func doExec(cfg *lib.UserCfg, kind lib.ExecKind) int {
 	return code.OK
 }
 
-func doFuzz(mnk *lib.Monkey) int {
-	if _, err := os.Stat(lib.Shell()); os.IsNotExist(err) {
-		log.Println("[ERR]", lib.Shell(), "is required")
+func doFuzz(mnk *pkg.Monkey) int {
+	if _, err := os.Stat(pkg.Shell()); os.IsNotExist(err) {
+		log.Println("[ERR]", pkg.Shell(), "is required")
 		return code.FailedRequire
 	}
 
-	if err := lib.SnapEnv(lib.EnvID()); err != nil {
+	if err := pkg.SnapEnv(pkg.EnvID()); err != nil {
 		return retryOrReport()
 	}
-	defer ensureDeleted(lib.EnvID())
+	defer ensureDeleted(pkg.EnvID())
 
 	if err := mnk.Dial(wsURL); err != nil {
 		return retryOrReport()
 	}
 
-	if err := mnk.FuzzingLoop(lib.Action(&lib.DoFuzz{})); err != nil {
+	if err := mnk.FuzzingLoop(pkg.Action(&pkg.DoFuzz{})); err != nil {
 		return retryOrReportThenCleanup(err)
 	}
 	if mnk.TestsSucceeded() {
@@ -408,7 +408,7 @@ func doFuzz(mnk *lib.Monkey) int {
 
 func retryOrReportThenCleanup(err error) int {
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if lib.HadExecError {
+	if pkg.HadExecError {
 		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
@@ -421,7 +421,7 @@ func retryOrReport() int {
 	w := os.Stderr
 	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
 	fmt.Fprintf(w, "\nYou may want to run `monkey --update`.\n")
-	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", lib.LogID())
+	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", pkg.LogID())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
