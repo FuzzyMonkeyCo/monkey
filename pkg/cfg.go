@@ -111,9 +111,12 @@ func (rt *runtime) modelMaker(modelName string, mdlr ModelerFunc) slBuiltin {
 				r[key] = v
 			}
 		}
-		mo, modelerErr := mdlr(u)
-		if modelerErr != nil {
-			err = modelerErr.Error(modelName)
+		mo, err := mdlr(u)
+		if err != nil {
+			if modelerErr, ok := err.(*ModelerError); ok {
+				modelerErr.SetModelerName(modelName)
+				err = modelerErr
+			}
 			log.Println("[ERR]", err)
 			return
 		}

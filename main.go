@@ -408,8 +408,8 @@ func doFuzz(mnk *pkg.Monkey) int {
 
 func retryOrReportThenCleanup(err error) int {
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if pkg.HadExecError {
-		as.ColorERR.Println(err)
+	if resetErr, ok := err.(*pkg.ResetError); ok {
+		resetErr.Pretty(as.ColorERR.Println, as.ColorWRN.Println, as.ColorERR.Println)
 		return code.FailedExec
 	}
 	return retryOrReport()

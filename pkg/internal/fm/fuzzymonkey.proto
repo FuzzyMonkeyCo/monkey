@@ -75,7 +75,17 @@ message Clt {
 
     message SUTMetrics {}
 
-    message ResetProgress {}
+    message ResetProgress {
+      enum Status {
+        NOOP = 0;
+        started = 1;
+        ended = 2;
+        failed = 3;
+      }
+      Status status = 1;
+      uint64 ts_diff = 2;
+      repeated string reason = 3;
+    }
 
     message CallResponseRaw {
       message HttpResponse {

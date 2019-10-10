@@ -9,23 +9,38 @@ import (
 
 var registeredIRModels = make(map[string]ModelerFunc)
 
-// ModelerFunc TODO
-type ModelerFunc func(d starlark.StringDict) (modeler.Modeler, *ModelerError)
-
-// ModelerError TODO
-type ModelerError struct {
-	FieldRead, Want, Got string
-}
-
-func (me *ModelerError) Error(modelerName string) error {
-	return fmt.Errorf("%s(%s = ...) must be %s, got: %s",
-		modelerName, me.FieldRead, me.Want, me.Got)
-}
-
 // RegisterModeler TODO
 func RegisterModeler(name string, fn ModelerFunc) {
 	if _, ok := registeredIRModels[name]; ok {
 		panic(fmt.Sprintf("modeler %q is already registered", name))
 	}
 	registeredIRModels[name] = fn
+}
+
+// ModelerFunc TODO
+type ModelerFunc func(d starlark.StringDict) (modeler.Modeler, *ModelerError)
+
+var _ error = (*ModelerError)(nil)
+
+// ModelerError TODO
+type ModelerError struct {
+	modelerName          string
+	fieldRead, want, got string
+}
+
+func NewModelerError(fieldRead, want, got string) *ModelerError {
+	return &ModelerError{
+		fieldRead: fieldRead,
+		want:      want,
+		got:       got,
+	}
+}
+
+func (me *ModelerError) SetModelerName(name string) {
+	me.modelerName = name
+}
+
+func (me *ModelerError) Error() string {
+	return fmt.Sprintf("%s(%s = ...) must be %s, got: %s",
+		me.modelerName, me.fieldRead, me.want, me.got)
 }
