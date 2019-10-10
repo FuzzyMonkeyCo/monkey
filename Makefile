@@ -26,7 +26,7 @@ devdeps:
 
 pkg/internal/fm/fuzzymonkey.pb.go: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
 pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
-	$(PROTOC) --gogofast_out=. $^
+	$(PROTOC) --gogofast_out=plugins=grpc:. $^
 #	FIXME: don't have this github.com/ folder created in the first place
 	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
 

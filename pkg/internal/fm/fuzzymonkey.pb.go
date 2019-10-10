@@ -10,6 +10,11 @@ import _ "github.com/gogo/protobuf/gogoproto"
 
 import bytes "bytes"
 
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2956,6 +2961,111 @@ func (this *Srv_Msg_Reset) Equal(that interface{}) bool {
 	}
 	return true
 }
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// FuzzyMonkeyClient is the client API for FuzzyMonkey service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type FuzzyMonkeyClient interface {
+	Do(ctx context.Context, opts ...grpc.CallOption) (FuzzyMonkey_DoClient, error)
+}
+
+type fuzzyMonkeyClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewFuzzyMonkeyClient(cc *grpc.ClientConn) FuzzyMonkeyClient {
+	return &fuzzyMonkeyClient{cc}
+}
+
+func (c *fuzzyMonkeyClient) Do(ctx context.Context, opts ...grpc.CallOption) (FuzzyMonkey_DoClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_FuzzyMonkey_serviceDesc.Streams[0], "/fm.FuzzyMonkey/Do", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &fuzzyMonkeyDoClient{stream}
+	return x, nil
+}
+
+type FuzzyMonkey_DoClient interface {
+	Send(*Clt) error
+	Recv() (*Srv, error)
+	grpc.ClientStream
+}
+
+type fuzzyMonkeyDoClient struct {
+	grpc.ClientStream
+}
+
+func (x *fuzzyMonkeyDoClient) Send(m *Clt) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *fuzzyMonkeyDoClient) Recv() (*Srv, error) {
+	m := new(Srv)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// FuzzyMonkeyServer is the server API for FuzzyMonkey service.
+type FuzzyMonkeyServer interface {
+	Do(FuzzyMonkey_DoServer) error
+}
+
+func RegisterFuzzyMonkeyServer(s *grpc.Server, srv FuzzyMonkeyServer) {
+	s.RegisterService(&_FuzzyMonkey_serviceDesc, srv)
+}
+
+func _FuzzyMonkey_Do_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(FuzzyMonkeyServer).Do(&fuzzyMonkeyDoServer{stream})
+}
+
+type FuzzyMonkey_DoServer interface {
+	Send(*Srv) error
+	Recv() (*Clt, error)
+	grpc.ServerStream
+}
+
+type fuzzyMonkeyDoServer struct {
+	grpc.ServerStream
+}
+
+func (x *fuzzyMonkeyDoServer) Send(m *Srv) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *fuzzyMonkeyDoServer) Recv() (*Clt, error) {
+	m := new(Clt)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+var _FuzzyMonkey_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "fm.FuzzyMonkey",
+	HandlerType: (*FuzzyMonkeyServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Do",
+			Handler:       _FuzzyMonkey_Do_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
+	Metadata: "pkg/internal/fm/fuzzymonkey.proto",
+}
+
 func (m *Clt) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
