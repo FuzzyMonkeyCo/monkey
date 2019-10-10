@@ -73,7 +73,7 @@ message Clt {
 
     message FuzzProgress {}
 
-    message SUTMetrics {}
+    message Metrics {}
 
     message ResetProgress {
       enum Status {
@@ -113,7 +113,7 @@ message Clt {
       // Testing progress & end
       FuzzProgress fuzz_progress = 2;
       // Logs & observed SUT
-      SUTMetrics metrics = 3;
+      Metrics metrics = 3;
       // SUT state resetting
       ResetProgress reset_progress = 4;
       // SUT call response

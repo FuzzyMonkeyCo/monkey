@@ -15,6 +15,7 @@ import (
 
 var (
 	errSUTShellUndecided = errors.New("unhandled Reset() case in SUTShell")
+	errNoScript          = errors.New("no usable script for SUTShell")
 
 	_ SUTResetter = (*SUTShell)(nil)
 )
@@ -22,7 +23,7 @@ var (
 // SUTShell TODO
 type SUTShell struct {
 	fm.Clt_Msg_Fuzz_Resetter_SUTShell
-	is_not_first_run bool
+	isNotFirstRun bool
 }
 
 // ToProto TODO
@@ -33,28 +34,38 @@ func (s *SUTShell) ToProto() *fm.Clt_Msg_Fuzz_Resetter {
 		}}
 }
 
-// Reset TODO
-func (s *SUTShell) Reset(ctx context.Context) error {
-	shellCmds, err := s.commands()
-	if err != nil {
-		return err
-	}
-
-	return s.exec(shellCmds)
-	// var stderr bytes.Buffer
-	// if err = s.executeCommand(&stderr, shellCmds); err != nil {
-	// 	fmtExecError(shellCmds, err.Error(), stderr.String())
-	// 	return
-	// }
-
-	return nil
+// ExecStart TODO
+func (s *SUTShell) ExecStart(ctx context.Context, clt fm.Client) error {
+	return s.exec(ctx, clt, s.Start)
 }
 
-// Terminate TODO
-func (s *SUTShell) Terminate(ctx context.Context) error {
-	if len(s.Stop) != 0 {
-		return s.exec(s.Stop)
+// ExecReset TODO
+func (s *SUTShell) ExecReset(ctx context.Context, clt fm.Client) error {
+	return s.exec(ctx, clt, s.Rst)
+}
+
+// ExecStop TODO
+func (s *SUTShell) ExecStop(ctx context.Context, clt fm.Client) error {
+	return s.exec(ctx, clt, s.Stop)
+}
+
+func (s *SUTShell) exec(ctx context.Context, clt fm.Client, script string) error {
+	if len(script) == 0 {
+		return errNoScript
 	}
+
+	if clt != nil {
+		if err := clt.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_ResetProgress_{
+					ResetProgress: &fm.Clt_Msg_ResetProgress{
+						Status: fm.Clt_Msg_ResetProgress_started,
+					}}}}); err != nil {
+			log.Println("[ERR]", err)
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -66,7 +77,7 @@ func (s *SUTShell) commands() (cmds string, err error) {
 		return
 
 	case len(s.Start) != 0 && len(s.Rst) != 0 && len(s.Stop) != 0:
-		if s.is_not_first_run {
+		if s.isNotFirstRun {
 			log.Println("[NFO] running SUTShell.Rst")
 			cmds = s.Rst
 			return
@@ -74,7 +85,7 @@ func (s *SUTShell) commands() (cmds string, err error) {
 
 		log.Println("[NFO] running SUTShell.Start then SUTShell.Rst")
 		cmds = s.Start + "\n" + s.Rst
-		s.is_not_first_run = true
+		s.isNotFirstRun = true
 		return
 
 	case len(s.Start) != 0 && len(s.Rst) == 0 && len(s.Stop) != 0:
