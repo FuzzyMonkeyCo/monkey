@@ -13,7 +13,7 @@ const (
 	prefixFailed    = "✖" // ⨯ × ✗ x X ☓ ✘
 )
 
-var _ Progresser = (*cliProgress)(nil)
+var _ Progresser = (*Cli)(nil)
 
 type cliProgress struct {
 	maxTestsCount                                      uint32

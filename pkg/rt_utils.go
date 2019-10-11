@@ -7,7 +7,6 @@ import (
 
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
-	"go.starlark.net/syntax"
 )
 
 func slValuePrintableASCII(k starlark.Value) error {

@@ -16,6 +16,8 @@ type SUTResetter interface {
 	ExecStart(context.Context, fm.Client) error
 	ExecReset(context.Context, fm.Client) error
 	ExecStop(context.Context, fm.Client) error
+
+	Terminate(context.Context, fm.Client) error
 }
 
 // NewFromKwargs TODO
@@ -63,35 +65,27 @@ func NewFromKwargs(modelerName string, r starlark.StringDict) (SUTResetter, erro
 	return resetter, nil
 }
 
+
 var _ error = (*Error)(nil)
 
 // Error TODO
 type Error struct {
-	cmds []string
 	bt   []string
 }
 
 // NewError TODO
-func NewError(cmds, bt []string) *Error {
+func NewError(bt []string) *Error {
 	return &Error{
-		cmds: cmds,
 		bt:   bt,
 	}
 }
 
-// Error TODO
-func (re *Error) Error() string {
-	return "script failed during Reset"
+func (re *Error) reason() []string {
+	return re.bt
 }
 
-// Pretty TODO
-func (re *Error) Pretty(i, w, e func(a ...interface{}) (n int, err error)) (n int, err error) {
-	if n, err = i("Script failed during Reset:"); err != nil {
-		return
-	}
-	if n, err = w(strings.Join(re.cmds, "\n")); err != nil {
-		return
-	}
-	n, err = e(strings.Join(re.bt, "\n"))
-	return
+// Error TODO
+func (re *Error) Error() string {
+	return fmt.Sprintf("script failed during Reset:\n%s",
+		strings.Join(re.bt, "\n"))
 }

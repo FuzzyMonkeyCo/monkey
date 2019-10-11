@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -13,17 +14,20 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 	"github.com/pkg/errors"
+	"go.starlark.net/repl"
+	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
 
-// TODO: turn these into methods of *runtime
-const (
-	tEnv                     = "Env"
-	tState                   = "State"
-	tTriggerActionAfterProbe = "TriggerActionAfterProbe"
-)
+var rtBuiltins = map[string]rtBuiltin{
+	"Env":                     rt.bEnv,
+	"TriggerActionAfterProbe": rt.bTriggerActionAfterProbe,
+}
 
 type runtime struct {
+	EIDs     []uint32
+	Ntensity uint32
+
 	thread     *starlark.Thread
 	globals    starlark.StringDict
 	modelState *modelState
@@ -33,11 +37,13 @@ type runtime struct {
 
 	modelers []modeler.Modeler
 
+	client   *fm.Client
+
 	progress ui.Progresser
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, showCfg bool) (rt *runtime, err error) {
+func NewMonkey(name string) (rt *runtime, err error) {
 	binTitle = name
 	const localCfg = "fuzzymonkey.star"
 	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
@@ -56,8 +62,11 @@ func NewMonkey(name string, showCfg bool) (rt *runtime, err error) {
 		builtin := rt.modelMaker(modelName, modeler)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
-	rt.globals[tEnv] = starlark.NewBuiltin(tEnv, rt.bEnv)
-	rt.globals[tTriggerActionAfterProbe] = starlark.NewBuiltin(tTriggerActionAfterProbe, rt.bTriggerActionAfterProbe)
+
+	for t, b := range rtBuiltins {
+		rt.globals[t] = starlark.NewBuiltin(t, b)
+	}
+
 	rt.thread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { as.ColorWRN.Println(msg) },
@@ -68,18 +77,109 @@ func NewMonkey(name string, showCfg bool) (rt *runtime, err error) {
 	rt.progress = ui.NewCLIProgress()
 
 	start := time.Now()
-	if err = rt.loadCfg(localCfg, showCfg); err != nil {
+	if err = rt.loadCfg(localCfg); err != nil {
 		return
 	}
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
-	// FIXME: rt.usage = os.Args
 	return
 }
 
-type slBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
+// InitExec specifies Monkey's dialect flags
+func InitExec() {
+	resolve.AllowNestedDef = false     // def statements within function bodies
+	resolve.AllowLambda = true         // lambda x, y: (x,y)
+	resolve.AllowFloat = true          // floating point
+	resolve.AllowSet = true            // sets
+	resolve.AllowGlobalReassign = true // reassignment to top-level names
+	//> Starlark programs cannot be Turing complete
+	//> unless the -recursion flag is specified.
+	resolve.AllowRecursion = false
 
-func (rt *runtime) modelMaker(modelName string, mdlr ModelerFunc) slBuiltin {
+	RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
+}
+
+// JustExecREPL executes a Starlark Read-Eval-Print Loop
+func (rt *runtime) JustExecREPL() error {
+	rt.thread.Load = repl.MakeLoad()
+	fmt.Println("Welcome to Starlark (go.starlark.net)")
+	rt.thread.Name = "REPL"
+	repl.REPL(rt.thread, rt.globals)
+	return nil
+}
+
+// JustExecStart only executes SUT 'start'
+func (rt *runtime) JustExecStart() error {
+	resetter := rt.modelers[0].GetSUTResetter()
+	return resetter.ExecStart(context.Background(), nil)
+}
+
+// JustExecReset only executes SUT 'reset'
+func (rt *runtime) JustExecReset() error {
+	resetter := rt.modelers[0].GetSUTResetter()
+	return resetter.ExecReset(context.Background(), nil)
+}
+
+// JustExecStop only executes SUT 'stop'
+func (rt *runtime) JustExecStop() error {
+	resetter := rt.modelers[0].GetSUTResetter()
+	return resetter.ExecStop(context.Background(), nil)
+}
+
+// ExecReset resets SUT
+func (rt *runtime) reset(ctx context.Context) error {
+	if err := rt.clt.Send(&fm.Clt{
+		Msg: &fm.Clt_Msg{
+			Msg: &fm.Clt_Msg_ResetProgress_{
+				ResetProgress: &fm.Clt_Msg_ResetProgress{
+					Status: fm.Clt_Msg_ResetProgress_started,
+				}}}}); err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+
+	resetter := rt.modelers[0].GetSUTResetter()
+	start := time.Now()
+	err := resetter.ExecReset(ctx, rt.client)
+	elapsed := uint64(time.Since(start))
+
+	if err != nil {
+		var reason []string
+		if resetErr, ok := err.(*Error); ok {
+			reason = resetErr.reason()
+		} else {
+			reason = strings.Split(err.Error(), "\n")
+		}
+
+		if err2 := clt.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_ResetProgress_{
+					ResetProgress: &fm.Clt_Msg_ResetProgress{
+						Status: fm.Clt_Msg_ResetProgress_failed,
+						TsDiff: elapsed,
+						Reason: reason,
+					}}}}); err != nil {
+			log.Println("[ERR]", err2)
+			// nothing to continue on
+		}
+		return err
+	}
+
+	if err = clt.Send(&fm.Clt{
+		Msg: &fm.Clt_Msg{
+			Msg: &fm.Clt_Msg_ResetProgress_{
+				ResetProgress: &fm.Clt_Msg_ResetProgress{
+					Status: fm.Clt_Msg_ResetProgress_ended,
+					TsDiff: elapsed,
+				}}}}); err != nil {
+		log.Println("[ERR]", err)
+	}
+	return err
+}
+
+type rtBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
+
+func (rt *runtime) modelMaker(modelName string, mdlr ModelerFunc) rtBuiltin {
 	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
 		ret = starlark.None
 		fname := b.Name()
@@ -172,7 +272,7 @@ func (rt *runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Bui
 	return starlark.None, nil
 }
 
-func (rt *runtime) loadCfg(localCfg string, showCfg bool) (err error) {
+func (rt *runtime) loadCfg(localCfg string) (err error) {
 	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, nil, rt.globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
@@ -193,9 +293,12 @@ func (rt *runtime) loadCfg(localCfg string, showCfg bool) (err error) {
 
 	as.ColorERR.Printf(">>> envs: %+v\n", rt.envRead)
 	as.ColorERR.Printf(">>> trigs: %+v\n", rt.triggers)
-	delete(rt.globals, tEnv)
-	delete(rt.globals, tTriggerActionAfterProbe)
 
+	for _, t := range rtBuiltins {
+		delete(rt.globals, t)
+	}
+
+	const tState = "State"
 	if state, ok := rt.globals[tState]; ok {
 		d, ok := state.(*starlark.Dict)
 		if !ok {

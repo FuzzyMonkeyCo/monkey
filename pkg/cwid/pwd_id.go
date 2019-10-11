@@ -1,4 +1,4 @@
-package pkg
+package cwid
 
 import (
 	"fmt"
@@ -16,11 +16,11 @@ const pwdIDDigits = 20
 
 var pwdID string
 
-func EnvID() string {
+func EnvFile() string {
 	return pwdID + ".env"
 }
 
-func LogID() string {
+func LogFile() string {
 	return pwdID + ".log"
 }
 

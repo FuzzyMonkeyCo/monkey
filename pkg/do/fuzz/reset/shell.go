@@ -9,13 +9,20 @@ import (
 	"os"
 	"os/exec"
 	"time"
+	"strings"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
+)
+
+const (
+	timeoutSUTShellShort = 200 * time.Millisecond
+	timeoutSUTShellLong  = 2 * time.Minute
 )
 
 var (
 	errSUTShellUndecided = errors.New("unhandled Reset() case in SUTShell")
-	errNoScript          = errors.New("no usable script for SUTShell")
+	errSUTShellNoScript          = errors.New("no usable script for SUTShell")
 
 	_ SUTResetter = (*SUTShell)(nil)
 )
@@ -36,37 +43,44 @@ func (s *SUTShell) ToProto() *fm.Clt_Msg_Fuzz_Resetter {
 
 // ExecStart TODO
 func (s *SUTShell) ExecStart(ctx context.Context, clt fm.Client) error {
-	return s.exec(ctx, clt, s.Start)
+	return s.exec(ctx, s.Start)
 }
 
 // ExecReset TODO
 func (s *SUTShell) ExecReset(ctx context.Context, clt fm.Client) error {
-	return s.exec(ctx, clt, s.Rst)
-}
-
-// ExecStop TODO
-func (s *SUTShell) ExecStop(ctx context.Context, clt fm.Client) error {
-	return s.exec(ctx, clt, s.Stop)
-}
-
-func (s *SUTShell) exec(ctx context.Context, clt fm.Client, script string) error {
-	if len(script) == 0 {
-		return errNoScript
+	if clt == nil {
+		return s.exec(ctx, s.Rst)
 	}
 
-	if clt != nil {
-		if err := clt.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_ResetProgress_{
-					ResetProgress: &fm.Clt_Msg_ResetProgress{
-						Status: fm.Clt_Msg_ResetProgress_started,
-					}}}}); err != nil {
+	cmds, err := s.commands()
+	if err != nil {
+		return err
+	}
+
+	if !s.isNotFirstRun {
+		s.isNotFirstRun = true
+		if _, err := os.Stat(s.shell()); os.IsNotExist(err) {
+			err = fmt.Errorf("shell %s is required", s.shell())
 			log.Println("[ERR]", err)
+			return err
+		}
+		if err := s.snapEnv(ctx, cwid.EnvFile()); err != nil {
 			return err
 		}
 	}
 
-	return nil
+	return s.exec(ctx, cmds)
+}
+
+// ExecStop TODO
+func (s *SUTShell) ExecStop(ctx context.Context, clt fm.Client) error {
+	return s.exec(ctx, s.Stop)
+}
+
+// Terminate cleans up after resetter
+func (s *SUTShell) Terminate(ctx context.Context, clt fm.Client) error {
+	// TODO: maybe run s.Stop
+	return os.Remove(cwid.EnvFile())
 }
 
 func (s *SUTShell) commands() (cmds string, err error) {
@@ -85,7 +99,6 @@ func (s *SUTShell) commands() (cmds string, err error) {
 
 		log.Println("[NFO] running SUTShell.Start then SUTShell.Rst")
 		cmds = s.Start + "\n" + s.Rst
-		s.isNotFirstRun = true
 		return
 
 	case len(s.Start) != 0 && len(s.Rst) == 0 && len(s.Stop) != 0:
@@ -100,74 +113,43 @@ func (s *SUTShell) commands() (cmds string, err error) {
 	}
 }
 
-// ExecuteScript TODO
-func ExecuteScript(cfg *UserCfg, kind ExecKind) (nxt *RepResetProgress, err error) {
-	log.Println("[DBG] >>> exec:", kind.String())
-	nxt = &RepResetProgress{Kind: kind}
-	shellCmds := cfg.script(kind)
-	if len(shellCmds) == 0 {
-		return
+func (s *SUTShell) exec(ctx context.Context, cmds string) error {
+	if len(cmds) == 0 {
+		return errSUTShellNoScript
 	}
 
-	wasStopped = kind == ExecKind_stop
-
-	var stderr bytes.Buffer
-	for i, shellCmd := range shellCmds {
-		if err = executeCommand(nxt, &stderr, shellCmd); err != nil {
-			fmtExecError(kind, i+1, shellCmd, err.Error(), stderr.String())
-			HadExecError = true
-			nxt.Failure = true
-			return
-		}
-	}
-	nxt.Success = true
-
-	isRunning = kind != ExecKind_stop
-	if err = maybeFinalizeConf(cfg, kind); err != nil {
-		HadExecError = true
-		return nil, err
-	}
-	return
-}
-
-func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string) (err error) {
-	const (
-		timeoutShort = 200 * time.Millisecond
-		timeoutLong  = 2 * time.Minute
-	)
-
-	ctx, cancel := context.WithTimeout(context.Background(), timeoutLong)
+	ctx, cancel := context.WithTimeout(ctx, timeoutSUTShellLong)
 	defer cancel()
 
 	var script bytes.Buffer
-	fmt.Fprintln(&script, "source", EnvID(), ">/dev/null 2>&1")
+	fmt.Fprintln(&script, "source", cwid.EnvFile(), ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
 	fmt.Fprintln(&script, "set -o nounset")
 	fmt.Fprintln(&script, "set -o pipefail")
 	fmt.Fprintln(&script, "set -o xtrace")
-	fmt.Fprintln(&script, shellCmd)
+	fmt.Fprintln(&script, cmds)
 	fmt.Fprintln(&script, "set +o xtrace")
 	fmt.Fprintln(&script, "set +o pipefail")
 	fmt.Fprintln(&script, "set +o nounset")
 	fmt.Fprintln(&script, "set +o errtrace")
 	fmt.Fprintln(&script, "set +o errexit")
-	fmt.Fprintln(&script, "declare -p >", EnvID())
+	fmt.Fprintln(&script, "declare -p >", cwid.EnvFile())
 
-	exe := exec.CommandContext(ctx, Shell(), "--", "/dev/stdin")
+	var stderr bytes.Buffer
+	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = os.Stdout
-	exe.Stderr = stderr
-	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
+	exe.Stdout = os.Stdout // TODO: plug Progresser here
+	exe.Stderr = &stderr // TODO: same as above
+	log.Printf("[DBG] within %s $ %s\n", timeoutSUTShellLong, script.Bytes())
 
 	ch := make(chan error)
-	start := time.Now()
 	// https://github.com/golang/go/issues/18874
 	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
 	// Racing for ctx.Done() is a workaround to ^
 	go func() {
 		<-ctx.Done()
-		e := fmt.Errorf("Timed out after %s", time.Since(start))
+		e := errors.New("script timed out")
 		ch <- e
 		log.Println("[DBG]", e)
 	}()
@@ -176,30 +158,17 @@ func executeCommand(nxt *RepResetProgress, stderr *bytes.Buffer, shellCmd string
 		ch <- e
 		log.Println("[DBG] execution error:", e)
 	}()
-	err = <-ch
-	nxt.TsDiff += uint64(time.Since(start))
-
-	if err != nil {
-		log.Println("[ERR]", stderr.String()+"\n"+err.Error())
-		return
+	if err := <-ch; err != nil {
+		// TODO: mux stderr+stdout and fwd to server to track progress
+		reason := stderr.String()+"\n"+err.Error()
+		log.Println("[ERR]", reason)
+		return NewError(strings.Split(reason, "\n"))
 	}
 	log.Println("[NFO]", stderr.String())
-	return
+	return nil
 }
 
-func fmtExecError(k ExecKind, i int, c, e, s string) {
-	kind := k.String()
-	fmt.Printf("Command #%d failed during step '%s' with %s\n", i, kind, e)
-	fmt.Printf("Command:\n%s\n", c)
-	fmt.Printf("Stderr:\n%s\n", s)
-	fmt.Printf("Note that your commands are run with %s", Shell())
-	fmt.Println(" along with some shell flags.")
-	fmt.Printf("If you're curious, have a look at %s\n", LogID())
-	fmt.Printf("And the dumped environment %s\n", EnvID())
-}
-
-// SnapEnv TODO
-func SnapEnv(envSerializedPath string) (err error) {
+func (s *SUTShell) snapEnv(ctx context.Context, envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -207,15 +176,15 @@ func SnapEnv(envSerializedPath string) (err error) {
 	}
 	defer envFile.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
+	ctx, cancel := context.WithTimeout(ctx, timeoutSUTShellShort)
 	defer cancel()
 
 	var script bytes.Buffer
 	fmt.Fprintln(&script, "declare -p") // bash specific
-	exe := exec.CommandContext(ctx, Shell(), "--", "/dev/stdin")
+	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
+	log.Printf("[DBG] within %s $ %s\n", timeoutSUTShellShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
@@ -226,26 +195,6 @@ func SnapEnv(envSerializedPath string) (err error) {
 	return
 }
 
-func readEnv(envVar string) string {
-	ctx, cancel := context.WithTimeout(context.Background(), timeoutShort)
-	defer cancel()
-
-	cmd := "source " + EnvID() + " >/dev/null 2>&1 " +
-		"&& set -o nounset " +
-		"&& printf $" + envVar
-	var stdout bytes.Buffer
-	exe := exec.CommandContext(ctx, Shell(), "-c", cmd)
-	exe.Stdout = &stdout
-	log.Printf("[DBG] whithin %s $ %s\n", timeoutShort, cmd)
-
-	if err := exe.Run(); err != nil {
-		log.Println("[ERR]", err)
-		return ""
-	}
-	return stdout.String()
-}
-
-// Shell TODO
-func Shell() string {
+func (s *SUTShell)shell() string {
 	return "/bin/bash"
 }

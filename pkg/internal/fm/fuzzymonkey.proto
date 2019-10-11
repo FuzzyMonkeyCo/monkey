@@ -64,14 +64,11 @@ message Clt {
         }
       }
       Model model = 3;
-      string api_key = 4;
-      repeated string usage = 5;
-      bytes seed = 6;
-      uint32 intensity = 7;
-      repeated uint32 EIDs = 8;
+      repeated string usage = 4;
+      bytes seed = 5;
+      uint32 intensity = 6;
+      repeated uint32 EIDs = 7;
     }
-
-    message FuzzProgress {}
 
     message Metrics {}
 
@@ -108,20 +105,18 @@ message Clt {
     message CallResponse {}
 
     oneof msg {
-      // Initiates fuzzing
+      // Initiates testing
       Fuzz fuzz = 1;
-      // Testing progress & end
-      FuzzProgress fuzz_progress = 2;
       // Logs & observed SUT
-      Metrics metrics = 3;
+      Metrics metrics = 2;
       // SUT state resetting
-      ResetProgress reset_progress = 4;
+      ResetProgress reset_progress = 3;
       // SUT call response
-      CallResponseRaw call_response_raw = 5;
+      CallResponseRaw call_response_raw = 4;
       // SUT call verifications
-      CallVerifProgress call_verif_progress = 6;
+      CallVerifProgress call_verif_progress = 5;
       // SUT call response data
-      CallResponse call_response = 7;
+      CallResponse call_response = 6;
     }
   }
   Msg msg = 1;
@@ -150,11 +145,16 @@ message Srv {
     message Reset {
       // bool as_final_step = 1;
     }
+
+    message FuzzProgress {}
+
     oneof msg {
       // Try call to SUT
       Call call = 1;
+      // Testing progress & end
+      FuzzProgress fuzz_progress = 2;
       // Reset SUT state
-      Reset reset = 2;
+      Reset reset = 3;
     }
   }
   Msg msg = 1;

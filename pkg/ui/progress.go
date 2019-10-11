@@ -15,4 +15,6 @@ type Progresser interface {
 	ChecksPassed()
 
 	Showf(string, ...interface{})
+
+	Terminate() error
 }

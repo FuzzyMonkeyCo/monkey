@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
@@ -25,7 +27,6 @@ const (
 	binSHA     = "feedb065"
 	binVersion = "0.0.0"
 	githubSlug = "FuzzyMonkeyCo/" + binName
-	wsURL      = "ws://api.dev.fuzzymonkey.co:7077/1/fuzz"
 
 	// Environment variables used
 	envAPIKey = "FUZZYMONKEY_API_KEY"
@@ -39,7 +40,6 @@ var (
 
 func main() {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
-	pkg.InitExec()
 	os.Exit(actualMain())
 }
 
@@ -49,7 +49,6 @@ type params struct {
 	Init, Env, Login, Logs         bool
 	Exec, Start, Reset, Stop, Repl bool
 	Update                         bool     `mapstructure:"--update"`
-	HideConfig                     bool     `mapstructure:"--hide-config"`
 	ShowSpec                       bool     `mapstructure:"--show-spec"`
 	N                              uint32   `mapstructure:"--tests"`
 	Verbosity                      uint8    `mapstructure:"-v"`
@@ -70,7 +69,7 @@ Usage:
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
-  ` + B + ` [-vvv] lint [--show-spec] [--hide-config]
+  ` + B + ` [-vvv] lint [--show-spec]
   ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] -h | --help
@@ -84,7 +83,6 @@ Options:
   -h, --help                     Show this screen
   -U, --update                   Ensures ` + B + ` is current
   -V, --version                  Show version
-  --hide-config                  Do not show YAML configuration while linting
   --seed=SEED                    Use specific parameters for the RNG
   --validate-against=REF         Schema $ref to validate STDIN against
   --tag=TAG                      Labels that can help classification
@@ -100,6 +98,7 @@ Options:
 Try:
      export FUZZYMONKEY_API_KEY=42
   ` + B + ` --update
+  ` + B + ` exec reset
   ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
@@ -114,7 +113,8 @@ Try:
 
 	if opts["--version"].(bool) {
 		fmt.Println(binTitle)
-		return // ret = code.OK
+		ret = code.OK
+		return
 	}
 
 	args = &params{}
@@ -141,10 +141,10 @@ func actualMain() int {
 		return doLogs(offset)
 	}
 
-	if err := pkg.MakePwdID(binName, 0); err != nil {
+	if err := cwid.MakePwdID(binName, 0); err != nil {
 		return retryOrReport()
 	}
-	logCatchall, err := os.OpenFile(pkg.LogID(), os.O_WRONLY|os.O_CREATE, 0640)
+	logCatchall, err := os.OpenFile(cwid.LogFile(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return retryOrReport()
@@ -156,7 +156,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, pkg.LogID(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, cwid.LogFile(), args)
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login
@@ -172,7 +172,9 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	mnk, err := pkg.NewMonkey(binTitle, args.Lint && !args.HideConfig)
+	pkg.InitExec()
+
+	rt, err := pkg.NewMonkey(binTitle)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -184,22 +186,22 @@ func actualMain() int {
 	}
 
 	if args.Exec {
+		var fn func() error
 		switch {
-		case args.Repl:
-			if err := pkg.DoExecREPL(); err != nil {
-				as.ColorERR.Println(err)
-				return code.Failed
-			}
-			return code.OK
 		case args.Start:
-			return doExec(cfg, pkg.ExecKind_start)
+			fn = rt.JustExecStart
 		case args.Reset:
-			return doExec(cfg, pkg.ExecKind_reset)
+			fn = rt.JustExecReset
 		case args.Stop:
-			return doExec(cfg, pkg.ExecKind_stop)
+			fn = rt.JustExecStop
 		default:
-			return retryOrReport()
+			fn = rt.JustExecREPL
 		}
+		if err := fn(); err != nil {
+			as.ColorERR.Println(err)
+			return code.FailedExec
+		}
+		return code.OK
 	}
 
 	docPath, blob, err := cfg.FindThenReadBlob()
@@ -222,42 +224,7 @@ func actualMain() int {
 	if args.Schema {
 		return doSchema(vald, args.ValidateAgainst)
 	}
-
-	if cfg.ApiKey = os.Getenv(envAPIKey); cfg.ApiKey == "" {
-		err = fmt.Errorf("$%s is unset", envAPIKey)
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
-		return code.Failed
-	}
-
-	as.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
-	eids, err := vald.FilterEndpoints(os.Args)
-	if err != nil {
-		as.ColorERR.Println(err)
-		return code.Failed
-	}
-	cfg.EIDs = eids
-	cfg.N = args.N
-	if cfg.N == 0 {
-		as.ColorERR.Println("No tests to run.")
-		return code.Failed
-	}
-	mnk := pkg.NewMonkey(cfg, vald, binTitle)
-	if cfg.N == 1 {
-		// TODO: find a "plural" lib
-		as.ColorNFO.Printf("\n Running %d test...\n\n", cfg.N)
-	} else {
-		as.ColorNFO.Printf("\n Running %d tests...\n\n", cfg.N)
-	}
-	return doFuzz(mnk)
-}
-
-func ensureDeleted(path string) {
-	if err := os.Remove(path); err != nil && os.IsExist(err) {
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
-		panic(err)
-	}
+	return doFuzz(rt)
 }
 
 func logLevel(verbosity uint8) logutils.LogLevel {
@@ -271,11 +238,11 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 }
 
 func doLogs(offset uint64) int {
-	if err := pkg.MakePwdID(binName, offset); err != nil {
+	if err := cwid.MakePwdID(binName, offset); err != nil {
 		return retryOrReport()
 	}
 
-	fn := pkg.LogID()
+	fn := cwid.LogFile()
 	os.Stderr.WriteString(fn + "\n")
 	f, err := os.Open(fn)
 	if err != nil {
@@ -362,45 +329,40 @@ func doSchema(vald *pkg.Validator, ref string) int {
 	return code.OK
 }
 
-func doExec(cfg *pkg.UserCfg, kind pkg.ExecKind) int {
-	if _, err := os.Stat(pkg.Shell()); os.IsNotExist(err) {
-		log.Println(pkg.Shell(), "is required")
-		return code.FailedRequire
-	}
-	if err := pkg.SnapEnv(pkg.EnvID()); err != nil {
-		return retryOrReport()
-	}
-	defer ensureDeleted(pkg.EnvID())
-
-	act, err := pkg.ExecuteScript(cfg, kind)
-	if err != nil {
+func doFuzz(rt *pkg.runtime) int {
+	var apiKey string
+	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
+		err := fmt.Errorf("$%s is unset", envAPIKey)
+		log.Println("[ERR]", err)
 		as.ColorERR.Println(err)
-	}
-	if err != nil || act.Failure || !act.Success {
-		return code.FailedExec
-	}
-	return code.OK
-}
-
-func doFuzz(mnk *pkg.Monkey) int {
-	if _, err := os.Stat(pkg.Shell()); os.IsNotExist(err) {
-		log.Println("[ERR]", pkg.Shell(), "is required")
-		return code.FailedRequire
+		return code.Failed
 	}
 
-	if err := pkg.SnapEnv(pkg.EnvID()); err != nil {
+	as.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
+	if rt.EIDs, err = vald.FilterEndpoints(os.Args); err != nil {
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
+	rt.Ntensity = args.N
+	if args.N == 0 {
+		as.ColorERR.Println("No tests to run.")
+		return code.Failed
+	}
+	as.ColorNFO.Printf("\n Running tests...\n\n")
+
+	closer, err := rt.Dial(context.Background(), binTitle, apiKey)
+	if err != nil {
 		return retryOrReport()
 	}
-	defer ensureDeleted(pkg.EnvID())
+	defer closer()
 
-	if err := mnk.Dial(wsURL); err != nil {
-		return retryOrReport()
-	}
-
-	if err := mnk.FuzzingLoop(pkg.Action(&pkg.DoFuzz{})); err != nil {
+	if err := rt.Fuzz(ctx); err != nil {
 		return retryOrReportThenCleanup(err)
 	}
-	if mnk.TestsSucceeded() {
+	fmt.Println()
+	fmt.Println()
+	if rt.TestsSucceeded() {
 		return code.OK
 	}
 	return code.FailedFuzz
@@ -408,8 +370,8 @@ func doFuzz(mnk *pkg.Monkey) int {
 
 func retryOrReportThenCleanup(err error) int {
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if resetErr, ok := err.(*pkg.Error); ok {
-		resetErr.Pretty(as.ColorERR.Println, as.ColorWRN.Println, as.ColorERR.Println)
+	if _, ok := err.(*reset.Error); ok {
+		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
 	return retryOrReport()
@@ -421,7 +383,7 @@ func retryOrReport() int {
 	w := os.Stderr
 	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
 	fmt.Fprintf(w, "\nYou may want to run `monkey --update`.\n")
-	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", pkg.LogID())
+	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")

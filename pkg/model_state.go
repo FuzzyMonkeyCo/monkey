@@ -1,11 +1,6 @@
 package pkg
 
 import (
-	"fmt"
-	"reflect"
-	"unicode"
-
-	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 )
