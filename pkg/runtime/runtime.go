@@ -1,4 +1,4 @@
-package pkg
+package runtime
 
 import (
 	"context"
@@ -14,8 +14,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 	"github.com/pkg/errors"
-	"go.starlark.net/repl"
-	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
 
@@ -37,7 +35,7 @@ type runtime struct {
 
 	modelers []modeler.Modeler
 
-	client   *fm.Client
+	client *fm.Client
 
 	progress ui.Progresser
 }
@@ -74,8 +72,6 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	rt.envRead = make(map[string]string)
 	rt.triggers = make([]triggerActionAfterProbe, 0)
 
-	rt.progress = ui.NewCLIProgress()
-
 	start := time.Now()
 	if err = rt.loadCfg(localCfg); err != nil {
 		return
@@ -83,98 +79,6 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
 	return
-}
-
-// InitExec specifies Monkey's dialect flags
-func InitExec() {
-	resolve.AllowNestedDef = false     // def statements within function bodies
-	resolve.AllowLambda = true         // lambda x, y: (x,y)
-	resolve.AllowFloat = true          // floating point
-	resolve.AllowSet = true            // sets
-	resolve.AllowGlobalReassign = true // reassignment to top-level names
-	//> Starlark programs cannot be Turing complete
-	//> unless the -recursion flag is specified.
-	resolve.AllowRecursion = false
-
-	RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
-}
-
-// JustExecREPL executes a Starlark Read-Eval-Print Loop
-func (rt *runtime) JustExecREPL() error {
-	rt.thread.Load = repl.MakeLoad()
-	fmt.Println("Welcome to Starlark (go.starlark.net)")
-	rt.thread.Name = "REPL"
-	repl.REPL(rt.thread, rt.globals)
-	return nil
-}
-
-// JustExecStart only executes SUT 'start'
-func (rt *runtime) JustExecStart() error {
-	resetter := rt.modelers[0].GetSUTResetter()
-	return resetter.ExecStart(context.Background(), nil)
-}
-
-// JustExecReset only executes SUT 'reset'
-func (rt *runtime) JustExecReset() error {
-	resetter := rt.modelers[0].GetSUTResetter()
-	return resetter.ExecReset(context.Background(), nil)
-}
-
-// JustExecStop only executes SUT 'stop'
-func (rt *runtime) JustExecStop() error {
-	resetter := rt.modelers[0].GetSUTResetter()
-	return resetter.ExecStop(context.Background(), nil)
-}
-
-// ExecReset resets SUT
-func (rt *runtime) reset(ctx context.Context) error {
-	if err := rt.clt.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress_{
-				ResetProgress: &fm.Clt_Msg_ResetProgress{
-					Status: fm.Clt_Msg_ResetProgress_started,
-				}}}}); err != nil {
-		log.Println("[ERR]", err)
-		return err
-	}
-
-	resetter := rt.modelers[0].GetSUTResetter()
-	start := time.Now()
-	err := resetter.ExecReset(ctx, rt.client)
-	elapsed := uint64(time.Since(start))
-
-	if err != nil {
-		var reason []string
-		if resetErr, ok := err.(*Error); ok {
-			reason = resetErr.reason()
-		} else {
-			reason = strings.Split(err.Error(), "\n")
-		}
-
-		if err2 := clt.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_ResetProgress_{
-					ResetProgress: &fm.Clt_Msg_ResetProgress{
-						Status: fm.Clt_Msg_ResetProgress_failed,
-						TsDiff: elapsed,
-						Reason: reason,
-					}}}}); err != nil {
-			log.Println("[ERR]", err2)
-			// nothing to continue on
-		}
-		return err
-	}
-
-	if err = clt.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress_{
-				ResetProgress: &fm.Clt_Msg_ResetProgress{
-					Status: fm.Clt_Msg_ResetProgress_ended,
-					TsDiff: elapsed,
-				}}}}); err != nil {
-		log.Println("[ERR]", err)
-	}
-	return err
 }
 
 type rtBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)

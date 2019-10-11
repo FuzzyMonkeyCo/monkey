@@ -1,4 +1,4 @@
-package pkg
+package runtime
 
 import (
 	"context"
@@ -42,6 +42,8 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		return err
 	}
 
+	rt.progress = ui.NewCli()
+
 	for {
 		srv, err := stream.Recv()
 		if err == io.EOF {
@@ -52,7 +54,6 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 				return err
 			}
 			return nil
-			mnk.progress.bar.Done()
 		}
 		if err != nil {
 			log.Println("[ERR]", err)
@@ -62,8 +63,11 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		log.Println(srv)
 		switch msg := srv.GetMsg().(type) {
 		case *fm.Srv_Msg_Call:
+			if err := rt.call(ctx); err != nil {
+				return err
+			}
 		case *fm.Srv_Msg_Reset:
-			if err := rt.reset(); err != nil {
+			if err := rt.reset(ctx); err != nil {
 				return err
 			}
 		default:
@@ -73,14 +77,3 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 	}
 }
-
-// 		case *Msg_FuzzProgress:
-// 			done := msg.GetFuzzProgress()
-// 			if err = done.exec(mnk); err != nil {
-// 				return
-// 			}
-// 			if done.GetFailure() || done.GetSuccess() {
-// 				return
-// 			}
-
-// mnk.progress = newProgress(mnk.Cfg.N)
