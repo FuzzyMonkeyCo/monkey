@@ -1,4 +1,4 @@
-package call
+package caller_http
 
 import (
 	"bytes"
@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 )
 
 var (
@@ -86,6 +88,10 @@ type tCapHTTP struct {
 	// FIXME: not sure about this
 	firstChecks []namedLambda
 	matchedSID  sid
+}
+
+func (c *tCapHTTP) ToProto() *fm.Clt_Msg_CallResponseRaw {
+	return &fm.Clt_Msg_CallResponseRaw{}
 }
 
 type namedLambda struct {
@@ -377,7 +383,7 @@ func maybeUpdateUserAgentHeader(r *http.Request) {
 			}
 		}
 		if replace {
-			r.Header[headerUserAgent] = []string{binTitle}
+			r.Header[headerUserAgent] = []string{runtime.BinTitle()}
 		}
 	}
 }

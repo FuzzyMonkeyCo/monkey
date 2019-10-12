@@ -1,4 +1,4 @@
-package pkg
+package runtime
 
 import (
 	"go.starlark.net/starlark"

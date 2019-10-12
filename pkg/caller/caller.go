@@ -1,16 +1,18 @@
-package call
+package caller
 
 import (
-	"github.com/FuzzyMonkeyCo/monkey/pkg/do/fuzz"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 // Capturer is not CastCapturer {Request(), ..Wait?}
 type Capturer interface {
+	ToProto() *fm.Clt_Msg_CallResponseRaw
+
 	Request() map[string]interface{}
 	Response() map[string]interface{}
 
 	// FIXME: really not sure that this belongs here:
-	CheckFirst() (string, fuzz.CheckerFunc)
+	CheckFirst() (string, CheckerFunc)
 }
 
 // CaptureShower TODO

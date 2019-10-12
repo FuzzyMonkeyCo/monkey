@@ -3,16 +3,19 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
+	"os"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 )
 
 func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
 	closer func() error,
 	err error,
 ) {
-	if rt.clt, closer, err = fm.NewClient(ctx); err != nil {
+	if rt.client, closer, err = fm.NewClient(ctx, ua, apiKey); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return
@@ -20,18 +23,18 @@ func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
 
 func (rt *runtime) Fuzz(ctx context.Context) error {
 	defer func() {
-		if err := rt.clt.CloseSend(); err != nil {
+		if err := rt.client.CloseSend(); err != nil {
 			log.Println("[ERR]", err)
 		}
 	}()
 
 	log.Printf("[DBG] 🡱  initial msg...")
-	if err := rt.clt.Send(&fm.Clt{
+	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_Fuzz_{
 				Fuzz: &fm.Clt_Msg_Fuzz{
-					Resetter:  rt.modelers[0].GetSUTResetter().ToProto(),
-					ModelKind: "OpenAPIv3",
+					Resetter:  rt.modelers[0].GetResetter().ToProto(),
+					ModelKind: fm.Clt_Msg_Fuzz_OpenAPIv3,
 					Model:     rt.modelers[0].ToProto(),
 					Usage:     os.Args,
 					Seed:      []byte{42, 42, 42},
@@ -45,9 +48,9 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	rt.progress = ui.NewCli()
 
 	for {
-		srv, err := stream.Recv()
+		srv, err := rt.client.Recv()
 		if err == io.EOF {
-			if err := rt.modelers[0].GetSUTResetter().Terminate(ctx, nil); err != nil {
+			if err := rt.modelers[0].GetResetter().Terminate(ctx, nil); err != nil {
 				return err
 			}
 			if err := rt.progress.Terminate(); err != nil {
@@ -61,13 +64,17 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 
 		log.Println(srv)
-		switch msg := srv.GetMsg().(type) {
-		case *fm.Srv_Msg_Call:
-			if err := rt.call(ctx); err != nil {
+		msg := srv.GetMsg().GetMsg()
+		switch msg := msg.(type) {
+		case *fm.Srv_Msg_Call_:
+			// rt.progress.state("🙈") 🙉 🙊 🐵
+			cllr := msg
+			if err := rt.call(ctx, cllr); err != nil {
 				return err
 			}
-		case *fm.Srv_Msg_Reset:
-			if err := rt.reset(ctx); err != nil {
+		case *fm.Srv_Msg_Reset_:
+			rsttr := rt.modelers[0].GetResetter()
+			if err := rt.reset(ctx, rsttr); err != nil {
 				return err
 			}
 		default:

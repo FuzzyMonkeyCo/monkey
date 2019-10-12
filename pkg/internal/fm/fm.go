@@ -9,11 +9,6 @@ import (
 
 const grpcHost = "api.dev.fuzzymonkey.co"
 
-type cltDoer interface {
-	isSrv_Msg_Msg()
-	do() (err error)
-}
-
 // Client is the gRPC clt-srv dialogue handler
 type Client = FuzzyMonkey_DoClient
 

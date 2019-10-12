@@ -6,7 +6,7 @@ GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
 
 all: SHELL = /bin/bash
-all: pkg/internal/fm/fuzzymonkey.pb.go lib/messages.pb.go lint
+all: pkg/internal/fm/fuzzymonkey.pb.go lint
 	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
 
@@ -29,12 +29,6 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	$(PROTOC) --gogofast_out=plugins=grpc:. $^
 #	FIXME: don't have this github.com/ folder created in the first place
 	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
-
-lib/messages.pb.go: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
-lib/messages.pb.go: lib/messages.proto
-	$(PROTOC) --gogofast_out=. $^
-#	FIXME: don't have this github.com/ folder created in the first place
-	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >$@
 
 lint:
 	gofmt -s -w *.go */*.go */*/*.go */*/*/*.go

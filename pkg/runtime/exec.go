@@ -2,13 +2,13 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
 )
 
-// InitExec specifies Monkey's dialect flags
-func InitExec() {
+func init() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
 	resolve.AllowFloat = true          // floating point
@@ -17,8 +17,6 @@ func InitExec() {
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
-
-	RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
@@ -32,18 +30,18 @@ func (rt *runtime) JustExecREPL() error {
 
 // JustExecStart only executes SUT 'start'
 func (rt *runtime) JustExecStart() error {
-	resetter := rt.modelers[0].GetSUTResetter()
+	resetter := rt.modelers[0].GetResetter()
 	return resetter.ExecStart(context.Background(), nil)
 }
 
 // JustExecReset only executes SUT 'reset'
 func (rt *runtime) JustExecReset() error {
-	resetter := rt.modelers[0].GetSUTResetter()
+	resetter := rt.modelers[0].GetResetter()
 	return resetter.ExecReset(context.Background(), nil)
 }
 
 // JustExecStop only executes SUT 'stop'
 func (rt *runtime) JustExecStop() error {
-	resetter := rt.modelers[0].GetSUTResetter()
+	resetter := rt.modelers[0].GetResetter()
 	return resetter.ExecStop(context.Background(), nil)
 }

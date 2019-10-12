@@ -38,13 +38,13 @@ message Clt {
   message Msg {
     message Fuzz {
       message Resetter {
-        message SUTShell {
+        message Shell {
           string start = 1;
           string rst = 2;
           string stop = 3;
         }
         oneof resetter {
-          SUTShell sut_shell = 1;
+          Shell shell = 1;
         }
       }
       Resetter resetter = 1;

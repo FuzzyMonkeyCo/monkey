@@ -1,14 +1,19 @@
-package openapiv3
+package modeler_openapiv3
 
 import (
-	"github.com/FuzzyMonkeyCo/monkey/pkg/do/fuzz/reset"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 )
+
+func init() {
+	runtime.RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
+}
 
 var _ modeler.Modeler = (*ModelOpenAPIv3)(nil)
 
 // ModelOpenAPIv3 describes OpenAPIv3 models
 type ModelOpenAPIv3 struct {
-	resetter reset.SUTResetter
+	resetter resetter.Resetter
 
 	/// Fields editable on initial run
 	// File is a path within current directory pointing to a YAML spec
@@ -30,11 +35,11 @@ func (m *ModelOpenAPIv3) ToProto() *fm.Clt_Msg_Fuzz_Model {
 	}}
 }
 
-// SetSUTResetter TODO
-func (m *ModelOpenAPIv3) SetSUTResetter(sr reset.SUTResetter) { m.resetter = sr }
+// SetResetter TODO
+func (m *ModelOpenAPIv3) SetResetter(sr resetter.Resetter) { m.resetter = sr }
 
-// GetSUTResetter TODO
-func (m *ModelOpenAPIv3) GetSUTResetter() reset.SUTResetter { return m.resetter }
+// GetResetter TODO
+func (m *ModelOpenAPIv3) GetResetter() resetter.Resetter { return m.resetter }
 
 // Pretty TODO
 func (m *ModelOpenAPIv3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }

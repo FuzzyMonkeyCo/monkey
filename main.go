@@ -15,6 +15,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
+	monkey "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
@@ -172,9 +173,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	pkg.InitExec()
-
-	rt, err := pkg.NewMonkey(binTitle)
+	rt, err := monkey.NewMonkey(binTitle)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -329,7 +328,7 @@ func doSchema(vald *pkg.Validator, ref string) int {
 	return code.OK
 }
 
-func doFuzz(rt *pkg.runtime) int {
+func doFuzz(rt *runtime.runtime) int {
 	var apiKey string
 	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
 		err := fmt.Errorf("$%s is unset", envAPIKey)

@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,17 +8,30 @@ import (
 	"unicode"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/do/fuzz/reset"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
-var rtBuiltins = map[string]rtBuiltin{
-	"Env":                     rt.bEnv,
-	"TriggerActionAfterProbe": rt.bTriggerActionAfterProbe,
+var (
+	registeredIRModels = make(map[string]modeler.Func)
+	binTitle           string
+)
+
+// RegisterModeler TODO
+func RegisterModeler(name string, fn modeler.Func) {
+	if _, ok := registeredIRModels[name]; ok {
+		panic(fmt.Sprintf("modeler %q is already registered", name))
+	}
+	registeredIRModels[name] = fn
+}
+
+// Bintitle TODO
+func Bintitle() string {
+	return binTitle
 }
 
 type runtime struct {
@@ -35,7 +47,7 @@ type runtime struct {
 
 	modelers []modeler.Modeler
 
-	client *fm.Client
+	client fm.Client
 
 	progress ui.Progresser
 }
@@ -61,7 +73,7 @@ func NewMonkey(name string) (rt *runtime, err error) {
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
 
-	for t, b := range rtBuiltins {
+	for t, b := range rt.builtins() {
 		rt.globals[t] = starlark.NewBuiltin(t, b)
 	}
 
@@ -81,10 +93,27 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	return
 }
 
-type rtBuiltin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error)
+func (rt *runtime) builtins() map[string]builtin {
+	return map[string]builtin{
+		"Env":                     rt.bEnv,
+		"TriggerActionAfterProbe": rt.bTriggerActionAfterProbe,
+	}
+}
 
-func (rt *runtime) modelMaker(modelName string, mdlr ModelerFunc) rtBuiltin {
-	return func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
+type builtin func(
+	th *starlark.Thread,
+	b *starlark.Builtin,
+	args starlark.Tuple,
+	kwargs []starlark.Tuple,
+) (starlark.Value, error)
+
+func (rt *runtime) modelMaker(modelName string, mdlr modeler.Func) builtin {
+	return func(
+		th *starlark.Thread,
+		b *starlark.Builtin,
+		args starlark.Tuple,
+		kwargs []starlark.Tuple,
+	) (ret starlark.Value, err error) {
 		ret = starlark.None
 		fname := b.Name()
 		if args.Len() != 0 {
@@ -117,18 +146,18 @@ func (rt *runtime) modelMaker(modelName string, mdlr ModelerFunc) rtBuiltin {
 		}
 		mo, err := mdlr(u)
 		if err != nil {
-			if modelerErr, ok := err.(*ModelerError); ok {
+			if modelerErr, ok := err.(*modeler.Error); ok {
 				modelerErr.SetModelerName(modelName)
 				err = modelerErr
 			}
 			log.Println("[ERR]", err)
 			return
 		}
-		var resetter reset.SUTResetter
-		if resetter, err = reset.NewFromKwargs(fname, r); err != nil {
+		var rsttr resetter.Resetter
+		if rsttr, err = newFromKwargs(fname, r); err != nil {
 			return
 		}
-		mo.SetSUTResetter(resetter)
+		mo.SetResetter(rsttr)
 
 		rt.modelers = append(rt.modelers, mo)
 		return
@@ -198,7 +227,7 @@ func (rt *runtime) loadCfg(localCfg string) (err error) {
 	as.ColorERR.Printf(">>> envs: %+v\n", rt.envRead)
 	as.ColorERR.Printf(">>> trigs: %+v\n", rt.triggers)
 
-	for _, t := range rtBuiltins {
+	for t := range rt.builtins() {
 		delete(rt.globals, t)
 	}
 
