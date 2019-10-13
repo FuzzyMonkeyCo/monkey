@@ -16,5 +16,8 @@ type Progresser interface {
 
 	Showf(string, ...interface{})
 
+	// Before(Event, io.Writer)
+	// After(Event, io.Writer)
+
 	Terminate() error
 }

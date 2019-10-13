@@ -45,7 +45,7 @@ type runtime struct {
 	envRead  map[string]string
 	triggers []triggerActionAfterProbe
 
-	modelers []modeler.Modeler
+	models []modeler.Modeler
 
 	client fm.Client
 
@@ -159,7 +159,7 @@ func (rt *runtime) modelMaker(modelName string, mdlr modeler.Func) builtin {
 		}
 		mo.SetResetter(rsttr)
 
-		rt.modelers = append(rt.modelers, mo)
+		rt.models = append(rt.models, mo)
 		return
 	}
 }
@@ -217,8 +217,8 @@ func (rt *runtime) loadCfg(localCfg string) (err error) {
 	}
 
 	// Ensure at least one model was defined
-	as.ColorERR.Printf(">>> modelers: %v\n", rt.modelers)
-	if len(rt.modelers) == 0 {
+	as.ColorERR.Printf(">>> modelers: %v\n", rt.models)
+	if len(rt.models) == 0 {
 		err = errors.New("no modelers are registered")
 		log.Println("[ERR]", err)
 		return

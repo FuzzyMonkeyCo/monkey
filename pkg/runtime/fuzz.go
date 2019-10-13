@@ -33,9 +33,9 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_Fuzz_{
 				Fuzz: &fm.Clt_Msg_Fuzz{
-					Resetter:  rt.modelers[0].GetResetter().ToProto(),
+					Resetter:  rt.models[0].GetResetter().ToProto(),
 					ModelKind: fm.Clt_Msg_Fuzz_OpenAPIv3,
-					Model:     rt.modelers[0].ToProto(),
+					Model:     rt.models[0].ToProto(),
 					Usage:     os.Args,
 					Seed:      []byte{42, 42, 42},
 					Intensity: rt.Ntensity,
@@ -50,7 +50,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	for {
 		srv, err := rt.client.Recv()
 		if err == io.EOF {
-			if err := rt.modelers[0].GetResetter().Terminate(ctx, nil); err != nil {
+			if err := rt.models[0].GetResetter().Terminate(ctx, nil); err != nil {
 				return err
 			}
 			if err := rt.progress.Terminate(); err != nil {
@@ -68,13 +68,12 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		switch msg := msg.(type) {
 		case *fm.Srv_Msg_Call_:
 			// rt.progress.state("🙈") 🙉 🙊 🐵
-			cllr := msg
-			if err := rt.call(ctx, cllr); err != nil {
+			// rt.progress.Before(ui.Call)
+			if err := rt.call(ctx, msg); err != nil {
 				return err
 			}
 		case *fm.Srv_Msg_Reset_:
-			rsttr := rt.modelers[0].GetResetter()
-			if err := rt.reset(ctx, rsttr); err != nil {
+			if err := rt.reset(ctx, msg); err != nil {
 				return err
 			}
 		default:

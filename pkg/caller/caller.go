@@ -11,6 +11,7 @@ type Capturer interface {
 	Request() map[string]interface{}
 	Response() map[string]interface{}
 
+	// Check(...) ...
 	// FIXME: really not sure that this belongs here:
 	CheckFirst() (string, CheckerFunc)
 }

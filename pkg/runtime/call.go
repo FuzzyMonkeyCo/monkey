@@ -7,11 +7,18 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-// CheckerFunc TODO
+// CheckerFunc TODO // func() (string, []string)
 type CheckerFunc func(*runtime.runtime) (string, []string)
 
-func (rt *runtime) call(ctx context.Context, cllr caller.Caller) (err error) {
+func (rt *runtime) call(ctx context.Context, msg int) (err error) {
 	// mnk.eid = act.EID
+
+	// cllr := ... msg
+	// ... := cllr.Call()
+	// send raw
+	// go through cllr checks
+	// go through mdlr checks
+	// send nonraw
 
 	tcap = newHTTPTCap(func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)

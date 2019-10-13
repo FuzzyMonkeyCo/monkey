@@ -12,7 +12,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context, rsst resetter.Resetter) error {
+func (rt *runtime) reset(ctx context.Context, msg int) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_ResetProgress_{
@@ -23,6 +23,7 @@ func (rt *runtime) reset(ctx context.Context, rsst resetter.Resetter) error {
 		return err
 	}
 
+	rsttr := rt.models[0].GetResetter()
 	start := time.Now()
 	err := rsttr.ExecReset(ctx, rt.client)
 	elapsed := uint64(time.Since(start))

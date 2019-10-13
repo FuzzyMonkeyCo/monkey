@@ -16,6 +16,8 @@ type Modeler interface {
 	SetResetter(resetter.Resetter)
 	GetResetter() resetter.Resetter
 
+	// Check(...) ...
+
 	Pretty(w io.Writer) (n int, err error)
 }
 
