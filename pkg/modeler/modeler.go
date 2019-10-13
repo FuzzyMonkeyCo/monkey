@@ -9,20 +9,21 @@ import (
 	"go.starlark.net/starlark"
 )
 
-// Modeler describes checkable models
-type Modeler interface {
+// Interface describes checkable models
+type Interface interface {
 	ToProto() *fm.Clt_Msg_Fuzz_Model
 
-	SetResetter(resetter.Resetter)
-	GetResetter() resetter.Resetter
+	NewFromKwargs(starlark.StringDict) (Interface, *Error)
+
+	SetResetter(resetter.Interface)
+	GetResetter() resetter.Interface
+
+	NewCaller() Caller
 
 	// Check(...) ...
 
 	Pretty(w io.Writer) (n int, err error)
 }
-
-// Func TODO
-type Func func(d starlark.StringDict) (Modeler, *Error)
 
 var _ error = (*Error)(nil)
 

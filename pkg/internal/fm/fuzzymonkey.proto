@@ -55,8 +55,11 @@ message Clt {
       ModelKind model_kind = 2;
       message Model {
         message OpenAPIv3 {
+          // File is a path within current directory pointing to a YAML spec
           string file = 1;
+          // Host superseeds the spec's base URL
           string host = 2;
+          // HeaderAuthorization if non-empty is added to requests as bearer token
           string header_authorization = 3;
         }
         oneof model {
@@ -85,19 +88,22 @@ message Clt {
     }
 
     message CallResponseRaw {
-      message HttpResponse {
-        // FIXME string error
-        uint32 status_code = 1;
-        string reason = 2;
-        message HeaderValues {
-          repeated string values = 1;
+      message Output {
+        message HttpResponse {
+          // FIXME string error
+          uint32 status_code = 1;
+          string reason = 2;
+          message HeaderValues {
+            repeated string values = 1;
+          }
+          map<string,HeaderValues> headers = 3;
+          bytes body = 4;
         }
-        map<string,HeaderValues> headers = 3;
-        bytes body = 4;
+        oneof output {
+          HttpResponse http_response = 1;
+        }
       }
-      oneof output {
-        HttpResponse http_response = 1;
-      }
+      Output output = 1;
     }
 
     message CallVerifProgress {}
@@ -125,7 +131,6 @@ message Clt {
 message Srv {
   message Msg {
     message Call {
-      uint32 eId = 1;
       message Input {
         message HttpRequest {
           string method = 1;
@@ -140,6 +145,8 @@ message Srv {
           HttpRequest http_request = 1;
         }
       }
+      Input input = 1;
+      uint32 eId = 2;
     }
 
     message Reset {

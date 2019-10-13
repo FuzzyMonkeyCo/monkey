@@ -48,7 +48,7 @@ func (x Clt_Msg_Fuzz_ModelKind) String() string {
 	return proto.EnumName(Clt_Msg_Fuzz_ModelKind_name, int32(x))
 }
 func (Clt_Msg_Fuzz_ModelKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0}
 }
 
 type Clt_Msg_ResetProgress_Status int32
@@ -77,7 +77,7 @@ func (x Clt_Msg_ResetProgress_Status) String() string {
 	return proto.EnumName(Clt_Msg_ResetProgress_Status_name, int32(x))
 }
 func (Clt_Msg_ResetProgress_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 2, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 2, 0}
 }
 
 type Clt struct {
@@ -91,7 +91,7 @@ func (m *Clt) Reset()         { *m = Clt{} }
 func (m *Clt) String() string { return proto.CompactTextString(m) }
 func (*Clt) ProtoMessage()    {}
 func (*Clt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0}
 }
 func (m *Clt) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -145,7 +145,7 @@ func (m *Clt_Msg) Reset()         { *m = Clt_Msg{} }
 func (m *Clt_Msg) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg) ProtoMessage()    {}
 func (*Clt_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0}
 }
 func (m *Clt_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -423,7 +423,7 @@ func (m *Clt_Msg_Fuzz) Reset()         { *m = Clt_Msg_Fuzz{} }
 func (m *Clt_Msg_Fuzz) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -514,7 +514,7 @@ func (m *Clt_Msg_Fuzz_Resetter) Reset()         { *m = Clt_Msg_Fuzz_Resetter{} }
 func (m *Clt_Msg_Fuzz_Resetter) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -638,7 +638,7 @@ func (m *Clt_Msg_Fuzz_Resetter_Shell) Reset()         { *m = Clt_Msg_Fuzz_Resett
 func (m *Clt_Msg_Fuzz_Resetter_Shell) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter_Shell) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter_Shell) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter_Shell) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -701,7 +701,7 @@ func (m *Clt_Msg_Fuzz_Model) Reset()         { *m = Clt_Msg_Fuzz_Model{} }
 func (m *Clt_Msg_Fuzz_Model) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0, 1}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 1}
 }
 func (m *Clt_Msg_Fuzz_Model) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -813,8 +813,11 @@ func _Clt_Msg_Fuzz_Model_OneofSizer(msg proto.Message) (n int) {
 }
 
 type Clt_Msg_Fuzz_Model_OpenAPIv3 struct {
-	File                 string   `protobuf:"bytes,1,opt,name=file,proto3" json:"file,omitempty"`
-	Host                 string   `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	// File is a path within current directory pointing to a YAML spec
+	File string `protobuf:"bytes,1,opt,name=file,proto3" json:"file,omitempty"`
+	// Host superseeds the spec's base URL
+	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	// HeaderAuthorization if non-empty is added to requests as bearer token
 	HeaderAuthorization  string   `protobuf:"bytes,3,opt,name=header_authorization,json=headerAuthorization,proto3" json:"header_authorization,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -825,7 +828,7 @@ func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) Reset()         { *m = Clt_Msg_Fuzz_Model
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 0, 1, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 1, 0}
 }
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -885,7 +888,7 @@ func (m *Clt_Msg_Metrics) Reset()         { *m = Clt_Msg_Metrics{} }
 func (m *Clt_Msg_Metrics) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Metrics) ProtoMessage()    {}
 func (*Clt_Msg_Metrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 1}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 1}
 }
 func (m *Clt_Msg_Metrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -927,7 +930,7 @@ func (m *Clt_Msg_ResetProgress) Reset()         { *m = Clt_Msg_ResetProgress{} }
 func (m *Clt_Msg_ResetProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_ResetProgress) ProtoMessage()    {}
 func (*Clt_Msg_ResetProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 2}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 2}
 }
 func (m *Clt_Msg_ResetProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -978,19 +981,17 @@ func (m *Clt_Msg_ResetProgress) GetReason() []string {
 }
 
 type Clt_Msg_CallResponseRaw struct {
-	// Types that are valid to be assigned to Output:
-	//	*Clt_Msg_CallResponseRaw_HttpResponse_
-	Output               isClt_Msg_CallResponseRaw_Output `protobuf_oneof:"output"`
-	XXX_NoUnkeyedLiteral struct{}                         `json:"-"`
-	XXX_unrecognized     []byte                           `json:"-"`
-	XXX_sizecache        int32                            `json:"-"`
+	Output               *Clt_Msg_CallResponseRaw_Output `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
+	XXX_unrecognized     []byte                          `json:"-"`
+	XXX_sizecache        int32                           `json:"-"`
 }
 
 func (m *Clt_Msg_CallResponseRaw) Reset()         { *m = Clt_Msg_CallResponseRaw{} }
 func (m *Clt_Msg_CallResponseRaw) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponseRaw) ProtoMessage()    {}
 func (*Clt_Msg_CallResponseRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 3}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3}
 }
 func (m *Clt_Msg_CallResponseRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1019,77 +1020,126 @@ func (m *Clt_Msg_CallResponseRaw) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Clt_Msg_CallResponseRaw proto.InternalMessageInfo
 
-type isClt_Msg_CallResponseRaw_Output interface {
-	isClt_Msg_CallResponseRaw_Output()
-	Equal(interface{}) bool
-	MarshalTo([]byte) (int, error)
-	Size() int
-}
-
-type Clt_Msg_CallResponseRaw_HttpResponse_ struct {
-	HttpResponse *Clt_Msg_CallResponseRaw_HttpResponse `protobuf:"bytes,1,opt,name=http_response,json=httpResponse,oneof"`
-}
-
-func (*Clt_Msg_CallResponseRaw_HttpResponse_) isClt_Msg_CallResponseRaw_Output() {}
-
-func (m *Clt_Msg_CallResponseRaw) GetOutput() isClt_Msg_CallResponseRaw_Output {
+func (m *Clt_Msg_CallResponseRaw) GetOutput() *Clt_Msg_CallResponseRaw_Output {
 	if m != nil {
 		return m.Output
 	}
 	return nil
 }
 
-func (m *Clt_Msg_CallResponseRaw) GetHttpResponse() *Clt_Msg_CallResponseRaw_HttpResponse {
-	if x, ok := m.GetOutput().(*Clt_Msg_CallResponseRaw_HttpResponse_); ok {
+type Clt_Msg_CallResponseRaw_Output struct {
+	// Types that are valid to be assigned to Output:
+	//	*Clt_Msg_CallResponseRaw_Output_HttpResponse_
+	Output               isClt_Msg_CallResponseRaw_Output_Output `protobuf_oneof:"output"`
+	XXX_NoUnkeyedLiteral struct{}                                `json:"-"`
+	XXX_unrecognized     []byte                                  `json:"-"`
+	XXX_sizecache        int32                                   `json:"-"`
+}
+
+func (m *Clt_Msg_CallResponseRaw_Output) Reset()         { *m = Clt_Msg_CallResponseRaw_Output{} }
+func (m *Clt_Msg_CallResponseRaw_Output) String() string { return proto.CompactTextString(m) }
+func (*Clt_Msg_CallResponseRaw_Output) ProtoMessage()    {}
+func (*Clt_Msg_CallResponseRaw_Output) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0}
+}
+func (m *Clt_Msg_CallResponseRaw_Output) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallResponseRaw_Output) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallResponseRaw_Output.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallResponseRaw_Output) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output.Merge(dst, src)
+}
+func (m *Clt_Msg_CallResponseRaw_Output) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallResponseRaw_Output) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallResponseRaw_Output proto.InternalMessageInfo
+
+type isClt_Msg_CallResponseRaw_Output_Output interface {
+	isClt_Msg_CallResponseRaw_Output_Output()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Clt_Msg_CallResponseRaw_Output_HttpResponse_ struct {
+	HttpResponse *Clt_Msg_CallResponseRaw_Output_HttpResponse `protobuf:"bytes,1,opt,name=http_response,json=httpResponse,oneof"`
+}
+
+func (*Clt_Msg_CallResponseRaw_Output_HttpResponse_) isClt_Msg_CallResponseRaw_Output_Output() {}
+
+func (m *Clt_Msg_CallResponseRaw_Output) GetOutput() isClt_Msg_CallResponseRaw_Output_Output {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_Output) GetHttpResponse() *Clt_Msg_CallResponseRaw_Output_HttpResponse {
+	if x, ok := m.GetOutput().(*Clt_Msg_CallResponseRaw_Output_HttpResponse_); ok {
 		return x.HttpResponse
 	}
 	return nil
 }
 
 // XXX_OneofFuncs is for the internal use of the proto package.
-func (*Clt_Msg_CallResponseRaw) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
-	return _Clt_Msg_CallResponseRaw_OneofMarshaler, _Clt_Msg_CallResponseRaw_OneofUnmarshaler, _Clt_Msg_CallResponseRaw_OneofSizer, []interface{}{
-		(*Clt_Msg_CallResponseRaw_HttpResponse_)(nil),
+func (*Clt_Msg_CallResponseRaw_Output) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Clt_Msg_CallResponseRaw_Output_OneofMarshaler, _Clt_Msg_CallResponseRaw_Output_OneofUnmarshaler, _Clt_Msg_CallResponseRaw_Output_OneofSizer, []interface{}{
+		(*Clt_Msg_CallResponseRaw_Output_HttpResponse_)(nil),
 	}
 }
 
-func _Clt_Msg_CallResponseRaw_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
-	m := msg.(*Clt_Msg_CallResponseRaw)
+func _Clt_Msg_CallResponseRaw_Output_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Clt_Msg_CallResponseRaw_Output)
 	// output
 	switch x := m.Output.(type) {
-	case *Clt_Msg_CallResponseRaw_HttpResponse_:
+	case *Clt_Msg_CallResponseRaw_Output_HttpResponse_:
 		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.HttpResponse); err != nil {
 			return err
 		}
 	case nil:
 	default:
-		return fmt.Errorf("Clt_Msg_CallResponseRaw.Output has unexpected type %T", x)
+		return fmt.Errorf("Clt_Msg_CallResponseRaw_Output.Output has unexpected type %T", x)
 	}
 	return nil
 }
 
-func _Clt_Msg_CallResponseRaw_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
-	m := msg.(*Clt_Msg_CallResponseRaw)
+func _Clt_Msg_CallResponseRaw_Output_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Clt_Msg_CallResponseRaw_Output)
 	switch tag {
 	case 1: // output.http_response
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
-		msg := new(Clt_Msg_CallResponseRaw_HttpResponse)
+		msg := new(Clt_Msg_CallResponseRaw_Output_HttpResponse)
 		err := b.DecodeMessage(msg)
-		m.Output = &Clt_Msg_CallResponseRaw_HttpResponse_{msg}
+		m.Output = &Clt_Msg_CallResponseRaw_Output_HttpResponse_{msg}
 		return true, err
 	default:
 		return false, nil
 	}
 }
 
-func _Clt_Msg_CallResponseRaw_OneofSizer(msg proto.Message) (n int) {
-	m := msg.(*Clt_Msg_CallResponseRaw)
+func _Clt_Msg_CallResponseRaw_Output_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Clt_Msg_CallResponseRaw_Output)
 	// output
 	switch x := m.Output.(type) {
-	case *Clt_Msg_CallResponseRaw_HttpResponse_:
+	case *Clt_Msg_CallResponseRaw_Output_HttpResponse_:
 		s := proto.Size(x.HttpResponse)
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
@@ -1101,29 +1151,33 @@ func _Clt_Msg_CallResponseRaw_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-type Clt_Msg_CallResponseRaw_HttpResponse struct {
+type Clt_Msg_CallResponseRaw_Output_HttpResponse struct {
 	// FIXME string error
-	StatusCode           uint32                                                        `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
-	Reason               string                                                        `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
-	Headers              map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues `protobuf:"bytes,3,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
-	Body                 []byte                                                        `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                                                      `json:"-"`
-	XXX_unrecognized     []byte                                                        `json:"-"`
-	XXX_sizecache        int32                                                         `json:"-"`
+	StatusCode           uint32                                                               `protobuf:"varint,1,opt,name=status_code,json=statusCode,proto3" json:"status_code,omitempty"`
+	Reason               string                                                               `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	Headers              map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues `protobuf:"bytes,3,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	Body                 []byte                                                               `protobuf:"bytes,4,opt,name=body,proto3" json:"body,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                                                             `json:"-"`
+	XXX_unrecognized     []byte                                                               `json:"-"`
+	XXX_sizecache        int32                                                                `json:"-"`
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) Reset()         { *m = Clt_Msg_CallResponseRaw_HttpResponse{} }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) String() string { return proto.CompactTextString(m) }
-func (*Clt_Msg_CallResponseRaw_HttpResponse) ProtoMessage()    {}
-func (*Clt_Msg_CallResponseRaw_HttpResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 3, 0}
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) Reset() {
+	*m = Clt_Msg_CallResponseRaw_Output_HttpResponse{}
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Unmarshal(b []byte) error {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*Clt_Msg_CallResponseRaw_Output_HttpResponse) ProtoMessage() {}
+func (*Clt_Msg_CallResponseRaw_Output_HttpResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0, 0}
+}
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalTo(b)
@@ -1133,69 +1187,69 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Marshal(b []byte, determinist
 		return b[:n], nil
 	}
 }
-func (dst *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.Merge(dst, src)
+func (dst *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse.Merge(dst, src)
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_Size() int {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse.DiscardUnknown(m)
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse proto.InternalMessageInfo
+var xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse proto.InternalMessageInfo
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetStatusCode() uint32 {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) GetStatusCode() uint32 {
 	if m != nil {
 		return m.StatusCode
 	}
 	return 0
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetReason() string {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) GetReason() string {
 	if m != nil {
 		return m.Reason
 	}
 	return ""
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetHeaders() map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) GetHeaders() map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues {
 	if m != nil {
 		return m.Headers
 	}
 	return nil
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) GetBody() []byte {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) GetBody() []byte {
 	if m != nil {
 		return m.Body
 	}
 	return nil
 }
 
-type Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues struct {
+type Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues struct {
 	Values               []string `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Reset() {
-	*m = Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues{}
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Reset() {
+	*m = Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{}
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) String() string {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) String() string {
 	return proto.CompactTextString(m)
 }
-func (*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) ProtoMessage() {}
-func (*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 3, 0, 0}
+func (*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) ProtoMessage() {}
+func (*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0, 0, 0}
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Unmarshal(b []byte) error {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.Marshal(b, m, deterministic)
+		return xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalTo(b)
@@ -1205,19 +1259,19 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Marshal(b []byte
 		return b[:n], nil
 	}
 }
-func (dst *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.Merge(dst, src)
+func (dst *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues.Merge(dst, src)
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_Size() int {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Size() int {
 	return m.Size()
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) XXX_DiscardUnknown() {
-	xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues.DiscardUnknown(m)
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues proto.InternalMessageInfo
+var xxx_messageInfo_Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues proto.InternalMessageInfo
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) GetValues() []string {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) GetValues() []string {
 	if m != nil {
 		return m.Values
 	}
@@ -1234,7 +1288,7 @@ func (m *Clt_Msg_CallVerifProgress) Reset()         { *m = Clt_Msg_CallVerifProg
 func (m *Clt_Msg_CallVerifProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallVerifProgress) ProtoMessage()    {}
 func (*Clt_Msg_CallVerifProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 4}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 4}
 }
 func (m *Clt_Msg_CallVerifProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1273,7 +1327,7 @@ func (m *Clt_Msg_CallResponse) Reset()         { *m = Clt_Msg_CallResponse{} }
 func (m *Clt_Msg_CallResponse) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponse) ProtoMessage()    {}
 func (*Clt_Msg_CallResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{0, 0, 5}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 5}
 }
 func (m *Clt_Msg_CallResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1313,7 +1367,7 @@ func (m *Srv) Reset()         { *m = Srv{} }
 func (m *Srv) String() string { return proto.CompactTextString(m) }
 func (*Srv) ProtoMessage()    {}
 func (*Srv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1}
 }
 func (m *Srv) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1364,7 +1418,7 @@ func (m *Srv_Msg) Reset()         { *m = Srv_Msg{} }
 func (m *Srv_Msg) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg) ProtoMessage()    {}
 func (*Srv_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0}
 }
 func (m *Srv_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1536,17 +1590,18 @@ func _Srv_Msg_OneofSizer(msg proto.Message) (n int) {
 }
 
 type Srv_Msg_Call struct {
-	EId                  uint32   `protobuf:"varint,1,opt,name=eId,proto3" json:"eId,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Input                *Srv_Msg_Call_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
+	EId                  uint32              `protobuf:"varint,2,opt,name=eId,proto3" json:"eId,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
 }
 
 func (m *Srv_Msg_Call) Reset()         { *m = Srv_Msg_Call{} }
 func (m *Srv_Msg_Call) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call) ProtoMessage()    {}
 func (*Srv_Msg_Call) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0}
 }
 func (m *Srv_Msg_Call) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1575,6 +1630,13 @@ func (m *Srv_Msg_Call) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Srv_Msg_Call proto.InternalMessageInfo
 
+func (m *Srv_Msg_Call) GetInput() *Srv_Msg_Call_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
 func (m *Srv_Msg_Call) GetEId() uint32 {
 	if m != nil {
 		return m.EId
@@ -1595,7 +1657,7 @@ func (m *Srv_Msg_Call_Input) Reset()         { *m = Srv_Msg_Call_Input{} }
 func (m *Srv_Msg_Call_Input) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call_Input) ProtoMessage()    {}
 func (*Srv_Msg_Call_Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1720,7 +1782,7 @@ func (m *Srv_Msg_Call_Input_HttpRequest) Reset()         { *m = Srv_Msg_Call_Inp
 func (m *Srv_Msg_Call_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call_Input_HttpRequest) ProtoMessage()    {}
 func (*Srv_Msg_Call_Input_HttpRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1792,7 +1854,7 @@ func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) String() string {
 }
 func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) ProtoMessage() {}
 func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1838,7 +1900,7 @@ func (m *Srv_Msg_Reset) Reset()         { *m = Srv_Msg_Reset{} }
 func (m *Srv_Msg_Reset) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Reset) ProtoMessage()    {}
 func (*Srv_Msg_Reset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 1}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 1}
 }
 func (m *Srv_Msg_Reset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1877,7 +1939,7 @@ func (m *Srv_Msg_FuzzProgress) Reset()         { *m = Srv_Msg_FuzzProgress{} }
 func (m *Srv_Msg_FuzzProgress) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_FuzzProgress) ProtoMessage()    {}
 func (*Srv_Msg_FuzzProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_e0fb6633d21283ad, []int{1, 0, 2}
+	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 2}
 }
 func (m *Srv_Msg_FuzzProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1917,9 +1979,10 @@ func init() {
 	proto.RegisterType((*Clt_Msg_Metrics)(nil), "fm.Clt.Msg.Metrics")
 	proto.RegisterType((*Clt_Msg_ResetProgress)(nil), "fm.Clt.Msg.ResetProgress")
 	proto.RegisterType((*Clt_Msg_CallResponseRaw)(nil), "fm.Clt.Msg.CallResponseRaw")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw_HttpResponse)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse")
-	proto.RegisterMapType((map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse.HeadersEntry")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.HttpResponse.HeaderValues")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output)(nil), "fm.Clt.Msg.CallResponseRaw.Output")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse")
+	proto.RegisterMapType((map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse.HeadersEntry")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse.HeaderValues")
 	proto.RegisterType((*Clt_Msg_CallVerifProgress)(nil), "fm.Clt.Msg.CallVerifProgress")
 	proto.RegisterType((*Clt_Msg_CallResponse)(nil), "fm.Clt.Msg.CallResponse")
 	proto.RegisterType((*Srv)(nil), "fm.Srv")
@@ -2454,6 +2517,33 @@ func (this *Clt_Msg_CallResponseRaw) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
+	if !this.Output.Equal(that1.Output) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallResponseRaw_Output) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_Output)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallResponseRaw_Output)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
 	if that1.Output == nil {
 		if this.Output != nil {
 			return false
@@ -2468,14 +2558,14 @@ func (this *Clt_Msg_CallResponseRaw) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Clt_Msg_CallResponseRaw_HttpResponse_) Equal(that interface{}) bool {
+func (this *Clt_Msg_CallResponseRaw_Output_HttpResponse_) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse_)
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_Output_HttpResponse_)
 	if !ok {
-		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse_)
+		that2, ok := that.(Clt_Msg_CallResponseRaw_Output_HttpResponse_)
 		if ok {
 			that1 = &that2
 		} else {
@@ -2492,14 +2582,14 @@ func (this *Clt_Msg_CallResponseRaw_HttpResponse_) Equal(that interface{}) bool 
 	}
 	return true
 }
-func (this *Clt_Msg_CallResponseRaw_HttpResponse) Equal(that interface{}) bool {
+func (this *Clt_Msg_CallResponseRaw_Output_HttpResponse) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse)
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_Output_HttpResponse)
 	if !ok {
-		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse)
+		that2, ok := that.(Clt_Msg_CallResponseRaw_Output_HttpResponse)
 		if ok {
 			that1 = &that2
 		} else {
@@ -2533,14 +2623,14 @@ func (this *Clt_Msg_CallResponseRaw_HttpResponse) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Equal(that interface{}) bool {
+func (this *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
 	}
 
-	that1, ok := that.(*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+	that1, ok := that.(*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)
 	if !ok {
-		that2, ok := that.(Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+		that2, ok := that.(Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)
 		if ok {
 			that1 = &that2
 		} else {
@@ -2762,6 +2852,9 @@ func (this *Srv_Msg_Call) Equal(that interface{}) bool {
 	if that1 == nil {
 		return this == nil
 	} else if this == nil {
+		return false
+	}
+	if !this.Input.Equal(that1.Input) {
 		return false
 	}
 	if this.EId != that1.EId {
@@ -3532,11 +3625,14 @@ func (m *Clt_Msg_CallResponseRaw) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Output != nil {
-		nn17, err := m.Output.MarshalTo(dAtA[i:])
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Output.Size()))
+		n17, err := m.Output.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn17
+		i += n17
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3544,21 +3640,7 @@ func (m *Clt_Msg_CallResponseRaw) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_) MarshalTo(dAtA []byte) (int, error) {
-	i := 0
-	if m.HttpResponse != nil {
-		dAtA[i] = 0xa
-		i++
-		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpResponse.Size()))
-		n18, err := m.HttpResponse.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n18
-	}
-	return i, nil
-}
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) Marshal() (dAtA []byte, err error) {
+func (m *Clt_Msg_CallResponseRaw_Output) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3568,7 +3650,49 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) Marshal() (dAtA []byte, err error
 	return dAtA[:n], nil
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *Clt_Msg_CallResponseRaw_Output) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Output != nil {
+		nn18, err := m.Output.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn18
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.HttpResponse != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpResponse.Size()))
+		n19, err := m.HttpResponse.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3604,11 +3728,11 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) MarshalTo(dAtA []byte) (int, erro
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
-				n19, err := v.MarshalTo(dAtA[i:])
+				n20, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n19
+				i += n20
 			}
 		}
 	}
@@ -3624,7 +3748,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) MarshalTo(dAtA []byte) (int, erro
 	return i, nil
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Marshal() (dAtA []byte, err error) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -3634,7 +3758,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Marshal() (dAtA []by
 	return dAtA[:n], nil
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) MarshalTo(dAtA []byte) (int, error) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -3721,11 +3845,11 @@ func (m *Srv) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Msg.Size()))
-		n20, err := m.Msg.MarshalTo(dAtA[i:])
+		n21, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n20
+		i += n21
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3749,11 +3873,11 @@ func (m *Srv_Msg) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Msg != nil {
-		nn21, err := m.Msg.MarshalTo(dAtA[i:])
+		nn22, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn21
+		i += nn22
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3767,11 +3891,11 @@ func (m *Srv_Msg_Call_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Call.Size()))
-		n22, err := m.Call.MarshalTo(dAtA[i:])
+		n23, err := m.Call.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n22
+		i += n23
 	}
 	return i, nil
 }
@@ -3781,11 +3905,11 @@ func (m *Srv_Msg_FuzzProgress_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.FuzzProgress.Size()))
-		n23, err := m.FuzzProgress.MarshalTo(dAtA[i:])
+		n24, err := m.FuzzProgress.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n24
 	}
 	return i, nil
 }
@@ -3795,11 +3919,11 @@ func (m *Srv_Msg_Reset_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Reset_.Size()))
-		n24, err := m.Reset_.MarshalTo(dAtA[i:])
+		n25, err := m.Reset_.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n25
 	}
 	return i, nil
 }
@@ -3818,8 +3942,18 @@ func (m *Srv_Msg_Call) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.Input != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Input.Size()))
+		n26, err := m.Input.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n26
+	}
 	if m.EId != 0 {
-		dAtA[i] = 0x8
+		dAtA[i] = 0x10
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.EId))
 	}
@@ -3845,11 +3979,11 @@ func (m *Srv_Msg_Call_Input) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Input != nil {
-		nn25, err := m.Input.MarshalTo(dAtA[i:])
+		nn27, err := m.Input.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn25
+		i += nn27
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3863,11 +3997,11 @@ func (m *Srv_Msg_Call_Input_HttpRequest_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpRequest.Size()))
-		n26, err := m.HttpRequest.MarshalTo(dAtA[i:])
+		n28, err := m.HttpRequest.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n28
 	}
 	return i, nil
 }
@@ -3918,11 +4052,11 @@ func (m *Srv_Msg_Call_Input_HttpRequest) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
-				n27, err := v.MarshalTo(dAtA[i:])
+				n29, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n27
+				i += n29
 			}
 		}
 	}
@@ -4316,6 +4450,22 @@ func (m *Clt_Msg_CallResponseRaw) Size() (n int) {
 	var l int
 	_ = l
 	if m.Output != nil {
+		l = m.Output.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Clt_Msg_CallResponseRaw_Output) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Output != nil {
 		n += m.Output.Size()
 	}
 	if m.XXX_unrecognized != nil {
@@ -4324,7 +4474,7 @@ func (m *Clt_Msg_CallResponseRaw) Size() (n int) {
 	return n
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_) Size() (n int) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4336,7 +4486,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse_) Size() (n int) {
 	}
 	return n
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) Size() (n int) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4372,7 +4522,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) Size() (n int) {
 	return n
 }
 
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Size() (n int) {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4487,6 +4637,10 @@ func (m *Srv_Msg_Call) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.Input != nil {
+		l = m.Input.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
 	if m.EId != 0 {
 		n += 1 + sovFuzzymonkey(uint64(m.EId))
 	}
@@ -5872,6 +6026,90 @@ func (m *Clt_Msg_CallResponseRaw) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Output", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Output == nil {
+				m.Output = &Clt_Msg_CallResponseRaw_Output{}
+			}
+			if err := m.Output.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Clt_Msg_CallResponseRaw_Output) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Output: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Output: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HttpResponse", wireType)
 			}
 			var msglen int
@@ -5896,11 +6134,11 @@ func (m *Clt_Msg_CallResponseRaw) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &Clt_Msg_CallResponseRaw_HttpResponse{}
+			v := &Clt_Msg_CallResponseRaw_Output_HttpResponse{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
-			m.Output = &Clt_Msg_CallResponseRaw_HttpResponse_{v}
+			m.Output = &Clt_Msg_CallResponseRaw_Output_HttpResponse_{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5924,7 +6162,7 @@ func (m *Clt_Msg_CallResponseRaw) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse) Unmarshal(dAtA []byte) error {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6028,10 +6266,10 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Headers == nil {
-				m.Headers = make(map[string]*Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues)
+				m.Headers = make(map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)
 			}
 			var mapkey string
-			var mapvalue *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues
+			var mapvalue *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues
 			for iNdEx < postIndex {
 				entryPreIndex := iNdEx
 				var wire uint64
@@ -6102,7 +6340,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) Unmarshal(dAtA []byte) error {
 					if postmsgIndex > l {
 						return io.ErrUnexpectedEOF
 					}
-					mapvalue = &Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues{}
+					mapvalue = &Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{}
 					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
 						return err
 					}
@@ -6177,7 +6415,7 @@ func (m *Clt_Msg_CallResponseRaw_HttpResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Clt_Msg_CallResponseRaw_HttpResponse_HeaderValues) Unmarshal(dAtA []byte) error {
+func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -6620,6 +6858,39 @@ func (m *Srv_Msg_Call) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Input", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Input == nil {
+				m.Input = &Srv_Msg_Call_Input{}
+			}
+			if err := m.Input.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field EId", wireType)
 			}
@@ -7294,81 +7565,83 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_e0fb6633d21283ad)
+	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_9dd8a582123f3792)
 }
 
-var fileDescriptor_fuzzymonkey_e0fb6633d21283ad = []byte{
-	// 1144 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0x1b, 0x45,
-	0x14, 0xf7, 0x7a, 0xbd, 0x76, 0xfc, 0x6c, 0xa7, 0xee, 0xa4, 0x2a, 0xee, 0xd2, 0xa6, 0xc1, 0x87,
-	0x12, 0x04, 0xac, 0x21, 0x55, 0xa1, 0x70, 0x81, 0xda, 0x2d, 0xd8, 0x8a, 0x12, 0x47, 0x13, 0x51,
-	0x24, 0x2e, 0xd6, 0x26, 0x3b, 0x6b, 0xaf, 0xb2, 0xde, 0xdd, 0xee, 0xcc, 0xba, 0x72, 0xee, 0x88,
-	0x2f, 0xc0, 0x27, 0xe0, 0x80, 0x90, 0xb8, 0x71, 0xe0, 0xc0, 0x17, 0x80, 0x0b, 0x12, 0x9f, 0x00,
-	0xa1, 0x7c, 0x11, 0xd0, 0xbc, 0x19, 0xc7, 0xeb, 0x24, 0xa5, 0xe5, 0xc0, 0xed, 0xbd, 0x99, 0xdf,
-	0x7b, 0xf3, 0x7b, 0x7f, 0xe6, 0xcd, 0xc0, 0x1b, 0xc9, 0xc9, 0xb8, 0x13, 0x44, 0x82, 0xa5, 0x91,
-	0x1b, 0x76, 0xfc, 0x69, 0xc7, 0xcf, 0x4e, 0x4f, 0xe7, 0xd3, 0x38, 0x3a, 0x61, 0x73, 0x27, 0x49,
-	0x63, 0x11, 0x93, 0xa2, 0x3f, 0xb5, 0xdf, 0x1d, 0x07, 0x62, 0x92, 0x1d, 0x39, 0xc7, 0xf1, 0xb4,
-	0x33, 0x8e, 0xc7, 0x71, 0x07, 0xb7, 0x8e, 0x32, 0x1f, 0x35, 0x54, 0x50, 0x52, 0x26, 0xed, 0xdf,
-	0x1b, 0x60, 0xf6, 0x42, 0x41, 0xee, 0x80, 0x39, 0xe5, 0xe3, 0x96, 0xb1, 0x65, 0x6c, 0xd7, 0x76,
-	0x6a, 0x8e, 0x3f, 0x75, 0x7a, 0xa1, 0x70, 0xf6, 0xf8, 0x98, 0xca, 0x75, 0xfb, 0xfb, 0x06, 0x98,
-	0x7b, 0x7c, 0x4c, 0xee, 0x41, 0x49, 0x1e, 0xab, 0x71, 0xcd, 0x1c, 0xce, 0xf9, 0x2c, 0x3b, 0x3d,
-	0xed, 0x17, 0x28, 0xee, 0x93, 0x0e, 0x54, 0xa6, 0x4c, 0xa4, 0xc1, 0x31, 0x6f, 0x15, 0x11, 0xba,
-	0x91, 0x87, 0xee, 0xa9, 0xad, 0x7e, 0x81, 0x2e, 0x50, 0xa4, 0x0b, 0xeb, 0x29, 0xe3, 0x4c, 0x8c,
-	0x92, 0x34, 0x1e, 0xa7, 0x8c, 0xf3, 0x96, 0x89, 0x76, 0xb7, 0xf2, 0x76, 0x54, 0x22, 0x0e, 0x34,
-	0xa0, 0x5f, 0xa0, 0x8d, 0x34, 0xbf, 0x40, 0x06, 0x70, 0xfd, 0xd8, 0x0d, 0xc3, 0x51, 0xca, 0x78,
-	0x12, 0x47, 0x9c, 0x8d, 0x52, 0xf7, 0x79, 0xab, 0x84, 0x6e, 0x5e, 0xcf, 0xbb, 0xe9, 0xb9, 0x61,
-	0x48, 0x35, 0x86, 0xba, 0xcf, 0xfb, 0x05, 0x7a, 0xed, 0x78, 0x75, 0x89, 0x0c, 0x61, 0x03, 0x5d,
-	0xcd, 0x58, 0x1a, 0xf8, 0x4b, 0x4e, 0x16, 0x3a, 0xbb, 0x73, 0xd1, 0xd9, 0x53, 0x89, 0xca, 0xf1,
-	0x42, 0x1a, 0x2b, 0x8b, 0xe4, 0x13, 0x68, 0xac, 0x70, 0x6b, 0x95, 0xd1, 0x55, 0xeb, 0x45, 0xbc,
-	0xfa, 0x05, 0x5a, 0xcf, 0x93, 0xb2, 0xff, 0x2e, 0x41, 0x49, 0xa6, 0x98, 0x3c, 0x80, 0x35, 0x0c,
-	0x5b, 0xb0, 0x54, 0x97, 0xe1, 0xd6, 0xc5, 0x32, 0xa8, 0x44, 0x09, 0x96, 0xd2, 0x73, 0x28, 0xf9,
-	0x08, 0x60, 0x1a, 0x7b, 0x2c, 0x1c, 0x9d, 0x04, 0x91, 0x87, 0x45, 0x59, 0xdf, 0xb1, 0x2f, 0x19,
-	0xee, 0x49, 0xc8, 0x6e, 0x10, 0x79, 0xb4, 0x3a, 0x5d, 0x88, 0xe4, 0x1d, 0xb0, 0x50, 0xd1, 0x25,
-	0xb9, 0x79, 0xb5, 0x15, 0x55, 0x20, 0x72, 0x03, 0xac, 0x8c, 0xbb, 0x63, 0xd6, 0x2a, 0x6d, 0x99,
-	0xdb, 0x55, 0xaa, 0x14, 0x42, 0xa0, 0xc4, 0x19, 0xf3, 0x30, 0x83, 0x75, 0x8a, 0x32, 0xb9, 0x0d,
-	0x55, 0xd9, 0xcf, 0x11, 0x0f, 0xc4, 0x1c, 0xf3, 0xd1, 0xa0, 0xcb, 0x05, 0x69, 0xf1, 0x64, 0xf0,
-	0x98, 0xb7, 0x2a, 0x5b, 0xe6, 0x76, 0x83, 0xa2, 0x6c, 0x7f, 0x6b, 0xc0, 0xda, 0x22, 0x36, 0xf2,
-	0x21, 0x58, 0x7c, 0xc2, 0xc2, 0x50, 0x67, 0xe1, 0xee, 0x0b, 0xb3, 0xe0, 0x1c, 0x4a, 0x58, 0xbf,
-	0x40, 0x15, 0xde, 0xee, 0x81, 0x85, 0x2b, 0x92, 0x2a, 0x17, 0x6e, 0x2a, 0xd0, 0x43, 0x95, 0x2a,
-	0x85, 0x34, 0xc1, 0x4c, 0xb9, 0xc0, 0x14, 0x55, 0xa9, 0x14, 0x91, 0xbc, 0x88, 0x13, 0x8c, 0xbf,
-	0x4a, 0x51, 0xee, 0xc2, 0xb2, 0x0c, 0xf6, 0x2f, 0x06, 0x58, 0x98, 0x03, 0xf2, 0x29, 0x54, 0xe3,
-	0x84, 0x45, 0x6e, 0x12, 0xcc, 0xee, 0x6b, 0x5e, 0x5b, 0x57, 0xa7, 0xcb, 0x19, 0x26, 0x2c, 0x7a,
-	0x74, 0x30, 0x98, 0xdd, 0xef, 0x17, 0xe8, 0xd2, 0xc8, 0xf6, 0xa1, 0x7a, 0xbe, 0x23, 0x0f, 0xf6,
-	0x83, 0x90, 0x69, 0x7e, 0x28, 0xcb, 0xb5, 0x49, 0x7c, 0xce, 0x0f, 0x65, 0xf2, 0x3e, 0xdc, 0x98,
-	0x30, 0xd7, 0x63, 0xe9, 0xc8, 0xcd, 0xc4, 0x24, 0x4e, 0x83, 0x53, 0x57, 0x04, 0x71, 0xa4, 0x09,
-	0x6f, 0xa8, 0xbd, 0x47, 0xf9, 0xad, 0x6e, 0x45, 0x17, 0xb5, 0xfd, 0x26, 0x54, 0xcf, 0xab, 0x4e,
-	0x6a, 0x50, 0xf9, 0x62, 0x7f, 0x77, 0x7f, 0xf8, 0xe5, 0x7e, 0xb3, 0x40, 0x1a, 0x39, 0x2a, 0x4d,
-	0xc3, 0xae, 0x42, 0x45, 0x5f, 0x5c, 0xfb, 0x27, 0x03, 0x1a, 0x2b, 0x97, 0x91, 0x3c, 0x84, 0x32,
-	0x17, 0xae, 0xc8, 0x38, 0x72, 0x5d, 0x5f, 0x8d, 0x7a, 0x05, 0xea, 0x1c, 0x22, 0x8e, 0x6a, 0x3c,
-	0x79, 0x0d, 0x2a, 0x82, 0x8f, 0xbc, 0xc0, 0xf7, 0x31, 0xa4, 0x12, 0x2d, 0x0b, 0xfe, 0x38, 0xf0,
-	0x7d, 0x72, 0x13, 0xca, 0x29, 0x73, 0x39, 0x86, 0x21, 0x3b, 0x49, 0x6b, 0xed, 0x0f, 0xa0, 0xac,
-	0x5c, 0x90, 0x35, 0x28, 0xed, 0x0f, 0x87, 0x07, 0xcd, 0x82, 0xe4, 0x8d, 0xc5, 0x63, 0x5e, 0xd3,
-	0x20, 0x55, 0xb0, 0x58, 0xe4, 0x31, 0xaf, 0x59, 0x24, 0x00, 0x65, 0xdf, 0x0d, 0x42, 0xe6, 0x35,
-	0x4d, 0xfb, 0x67, 0x13, 0xae, 0xf5, 0x2e, 0xdd, 0xf3, 0xc6, 0x44, 0x88, 0x64, 0x79, 0x2d, 0x55,
-	0xcd, 0xb6, 0xff, 0x65, 0x5c, 0x38, 0x7d, 0x21, 0x92, 0xfc, 0x35, 0x9d, 0xe4, 0x74, 0xfb, 0xd7,
-	0x22, 0xd4, 0xf3, 0x00, 0x72, 0x17, 0x6a, 0x2a, 0xd0, 0xd1, 0x71, 0xec, 0x29, 0xff, 0x0d, 0x0a,
-	0x6a, 0xa9, 0x17, 0x7b, 0x2c, 0x17, 0xa6, 0xaa, 0xa8, 0xd6, 0xc8, 0x10, 0x2a, 0xaa, 0x6e, 0x1c,
-	0xe3, 0xaf, 0xed, 0x3c, 0x78, 0x55, 0x52, 0x4e, 0x5f, 0xd9, 0x3d, 0x89, 0x44, 0x3a, 0xa7, 0x0b,
-	0x2f, 0xb2, 0x71, 0x8e, 0x62, 0x6f, 0x8e, 0x13, 0xb1, 0x4e, 0x51, 0xb6, 0xef, 0x41, 0x5d, 0x81,
-	0x9f, 0xba, 0x61, 0xc6, 0xb8, 0x24, 0x33, 0x43, 0xa9, 0x65, 0xa8, 0x9c, 0x2b, 0xcd, 0x7e, 0xb6,
-	0xc0, 0x29, 0xa7, 0xf2, 0x8e, 0x9c, 0xb0, 0xb9, 0xee, 0x4b, 0x29, 0x92, 0x5d, 0xb0, 0x10, 0xab,
-	0xe7, 0xfd, 0x7f, 0x25, 0xab, 0xce, 0xa7, 0xca, 0xc7, 0xc7, 0xc5, 0x87, 0x46, 0x77, 0x0d, 0xca,
-	0x71, 0x26, 0x92, 0x4c, 0xd8, 0x1b, 0x70, 0xfd, 0xd2, 0x94, 0xb5, 0xd7, 0xa1, 0x9e, 0x77, 0xdb,
-	0xb5, 0xf0, 0x01, 0x6b, 0x7f, 0x6d, 0x81, 0x79, 0x98, 0xce, 0xae, 0x78, 0xcf, 0x0e, 0xd3, 0xd9,
-	0xf2, 0x3d, 0xfb, 0xb3, 0x74, 0xfe, 0x9e, 0xc9, 0x29, 0x9b, 0x7f, 0xcf, 0x34, 0x0e, 0x49, 0xcb,
-	0xf7, 0x4c, 0xee, 0xcb, 0xf1, 0x2d, 0xdf, 0xb5, 0xe5, 0x4b, 0x50, 0x5c, 0x8e, 0xef, 0x85, 0x81,
-	0xbc, 0xdb, 0xb9, 0x47, 0xa0, 0xee, 0xe7, 0x74, 0xf2, 0x16, 0x58, 0x38, 0x2e, 0xf4, 0x0c, 0xbd,
-	0x9e, 0x37, 0xc4, 0xeb, 0x21, 0xc7, 0x13, 0x22, 0xec, 0xef, 0x4c, 0x28, 0xc9, 0xc3, 0x65, 0x92,
-	0xd9, 0xc0, 0xd3, 0x2d, 0x23, 0x45, 0xfb, 0x1b, 0x13, 0xac, 0x41, 0x94, 0x64, 0x82, 0x7c, 0x0e,
-	0x75, 0xdd, 0xb8, 0xcf, 0x32, 0xc6, 0x85, 0x0e, 0xa0, 0x7d, 0x31, 0x00, 0x07, 0xd1, 0x3a, 0xe1,
-	0x88, 0xec, 0x17, 0x68, 0x6d, 0xb2, 0x54, 0xed, 0x1f, 0x8b, 0x50, 0xcb, 0x6d, 0xcb, 0x0e, 0x98,
-	0x32, 0x31, 0x89, 0x3d, 0x5d, 0x5c, 0xad, 0x49, 0x32, 0x59, 0x1a, 0x2e, 0xa6, 0x62, 0x96, 0x86,
-	0x64, 0x70, 0xb1, 0x41, 0x3b, 0x2f, 0x3f, 0xfd, 0x7f, 0x68, 0xcd, 0x93, 0x97, 0xb6, 0xe6, 0x93,
-	0xd5, 0xd6, 0x7c, 0x75, 0x9a, 0x97, 0x9b, 0xb2, 0x02, 0x56, 0x20, 0xc1, 0x76, 0x05, 0x2c, 0x2c,
-	0x9b, 0xec, 0xc3, 0x7c, 0xe1, 0x75, 0x1f, 0xee, 0xbc, 0x0d, 0x35, 0xb9, 0x3c, 0xdf, 0xc3, 0xff,
-	0x19, 0xb9, 0x0d, 0xc5, 0xc7, 0x31, 0xa9, 0xe8, 0x4b, 0x61, 0x57, 0x34, 0x85, 0x76, 0x61, 0xdb,
-	0x78, 0xcf, 0xe8, 0x3e, 0xfa, 0xe1, 0x6c, 0xd3, 0xf8, 0xed, 0x6c, 0xd3, 0xf8, 0xe3, 0x6c, 0xd3,
-	0xf8, 0xeb, 0x6c, 0xd3, 0xf8, 0xaa, 0x93, 0xfb, 0xc5, 0xe5, 0xfc, 0xf4, 0xe2, 0x8e, 0xfa, 0xf0,
-	0x75, 0x2e, 0x7c, 0x06, 0x8f, 0xca, 0xf8, 0x9d, 0xbb, 0xff, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x1b, 0xb9, 0x7c, 0x6e, 0x26, 0x0a, 0x00, 0x00,
+var fileDescriptor_fuzzymonkey_9dd8a582123f3792 = []byte{
+	// 1173 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0x1b, 0x55,
+	0x10, 0xf7, 0x7a, 0xbd, 0x76, 0x3c, 0xfe, 0x53, 0xf7, 0xa5, 0x2a, 0xee, 0xd2, 0xa6, 0xc1, 0x87,
+	0x12, 0x04, 0xac, 0x21, 0x15, 0x50, 0x2a, 0x24, 0xa8, 0xdd, 0x82, 0xad, 0x2a, 0x71, 0xf5, 0x22,
+	0x82, 0xc4, 0xc5, 0xda, 0x64, 0xdf, 0xda, 0xab, 0xac, 0x77, 0xcd, 0xbe, 0xb7, 0x2e, 0xce, 0x91,
+	0x0b, 0x17, 0x4e, 0x88, 0x0f, 0x01, 0xe2, 0x06, 0x37, 0x8e, 0x9c, 0x38, 0xf6, 0xc2, 0x1d, 0xe5,
+	0x8b, 0x80, 0xde, 0xbc, 0xe7, 0x78, 0xed, 0xb4, 0x04, 0x90, 0xb8, 0xcd, 0xcc, 0xfb, 0xcd, 0xec,
+	0xef, 0xcd, 0xcc, 0x9b, 0x59, 0x78, 0x65, 0x7a, 0x32, 0x6a, 0x07, 0x91, 0x60, 0x49, 0xe4, 0x86,
+	0x6d, 0x7f, 0xd2, 0xf6, 0xd3, 0xd3, 0xd3, 0xf9, 0x24, 0x8e, 0x4e, 0xd8, 0xdc, 0x99, 0x26, 0xb1,
+	0x88, 0x49, 0xde, 0x9f, 0xd8, 0x6f, 0x8e, 0x02, 0x31, 0x4e, 0x8f, 0x9c, 0xe3, 0x78, 0xd2, 0x1e,
+	0xc5, 0xa3, 0xb8, 0x8d, 0x47, 0x47, 0xa9, 0x8f, 0x1a, 0x2a, 0x28, 0x29, 0x97, 0xd6, 0x0f, 0x75,
+	0x30, 0xbb, 0xa1, 0x20, 0xb7, 0xc0, 0x9c, 0xf0, 0x51, 0xd3, 0xd8, 0x36, 0x76, 0x2a, 0xbb, 0x15,
+	0xc7, 0x9f, 0x38, 0xdd, 0x50, 0x38, 0x7b, 0x7c, 0x44, 0xa5, 0xdd, 0xfe, 0xaa, 0x0e, 0xe6, 0x1e,
+	0x1f, 0x91, 0x3b, 0x50, 0x90, 0x9f, 0xd5, 0xb8, 0x46, 0x06, 0xe7, 0x7c, 0x9c, 0x9e, 0x9e, 0xf6,
+	0x72, 0x14, 0xcf, 0x49, 0x1b, 0x4a, 0x13, 0x26, 0x92, 0xe0, 0x98, 0x37, 0xf3, 0x08, 0xdd, 0xcc,
+	0x42, 0xf7, 0xd4, 0x51, 0x2f, 0x47, 0x17, 0x28, 0xd2, 0x81, 0x7a, 0xc2, 0x38, 0x13, 0xc3, 0x69,
+	0x12, 0x8f, 0x12, 0xc6, 0x79, 0xd3, 0x44, 0xbf, 0x1b, 0x59, 0x3f, 0x2a, 0x11, 0x4f, 0x34, 0xa0,
+	0x97, 0xa3, 0xb5, 0x24, 0x6b, 0x20, 0x7d, 0xb8, 0x7a, 0xec, 0x86, 0xe1, 0x30, 0x61, 0x7c, 0x1a,
+	0x47, 0x9c, 0x0d, 0x13, 0xf7, 0x69, 0xb3, 0x80, 0x61, 0x5e, 0xce, 0x86, 0xe9, 0xba, 0x61, 0x48,
+	0x35, 0x86, 0xba, 0x4f, 0x7b, 0x39, 0x7a, 0xe5, 0x78, 0xd5, 0x44, 0x06, 0xb0, 0x89, 0xa1, 0x66,
+	0x2c, 0x09, 0xfc, 0x25, 0x27, 0x0b, 0x83, 0xdd, 0x5a, 0x0f, 0x76, 0x28, 0x51, 0x19, 0x5e, 0x48,
+	0x63, 0xc5, 0x48, 0x3e, 0x84, 0xda, 0x0a, 0xb7, 0x66, 0x11, 0x43, 0x35, 0x5f, 0xc4, 0xab, 0x97,
+	0xa3, 0xd5, 0x2c, 0x29, 0xfb, 0xcf, 0x02, 0x14, 0x64, 0x8a, 0xc9, 0x3b, 0xb0, 0x81, 0xd7, 0x16,
+	0x2c, 0xd1, 0x65, 0xb8, 0xb1, 0x5e, 0x06, 0x95, 0x28, 0xc1, 0x12, 0x7a, 0x0e, 0x25, 0xef, 0x03,
+	0x4c, 0x62, 0x8f, 0x85, 0xc3, 0x93, 0x20, 0xf2, 0xb0, 0x28, 0xf5, 0x5d, 0xfb, 0x82, 0xe3, 0x9e,
+	0x84, 0x3c, 0x0e, 0x22, 0x8f, 0x96, 0x27, 0x0b, 0x91, 0xbc, 0x01, 0x16, 0x2a, 0xba, 0x24, 0xd7,
+	0x9f, 0xef, 0x45, 0x15, 0x88, 0x5c, 0x03, 0x2b, 0xe5, 0xee, 0x88, 0x35, 0x0b, 0xdb, 0xe6, 0x4e,
+	0x99, 0x2a, 0x85, 0x10, 0x28, 0x70, 0xc6, 0x3c, 0xcc, 0x60, 0x95, 0xa2, 0x4c, 0x6e, 0x42, 0x59,
+	0xf6, 0x73, 0xc4, 0x03, 0x31, 0xc7, 0x7c, 0xd4, 0xe8, 0xd2, 0x20, 0x3d, 0x1e, 0xf5, 0x1f, 0xf2,
+	0x66, 0x69, 0xdb, 0xdc, 0xa9, 0x51, 0x94, 0xed, 0xef, 0x0c, 0xd8, 0x58, 0xdc, 0x8d, 0xbc, 0x07,
+	0x16, 0x1f, 0xb3, 0x30, 0xd4, 0x59, 0xb8, 0xfd, 0xc2, 0x2c, 0x38, 0x07, 0x12, 0xd6, 0xcb, 0x51,
+	0x85, 0xb7, 0xbb, 0x60, 0xa1, 0x45, 0x52, 0xe5, 0xc2, 0x4d, 0x04, 0x46, 0x28, 0x53, 0xa5, 0x90,
+	0x06, 0x98, 0x09, 0x17, 0x98, 0xa2, 0x32, 0x95, 0x22, 0x92, 0x17, 0xf1, 0x14, 0xef, 0x5f, 0xa6,
+	0x28, 0x77, 0x60, 0x59, 0x06, 0xfb, 0x17, 0x03, 0x2c, 0xcc, 0x01, 0xf9, 0x08, 0xca, 0xf1, 0x94,
+	0x45, 0xee, 0x34, 0x98, 0xdd, 0xd5, 0xbc, 0xb6, 0x9f, 0x9f, 0x2e, 0x67, 0x30, 0x65, 0xd1, 0x83,
+	0x27, 0xfd, 0xd9, 0xdd, 0x5e, 0x8e, 0x2e, 0x9d, 0x6c, 0x1f, 0xca, 0xe7, 0x27, 0xf2, 0xc3, 0x7e,
+	0x10, 0x32, 0xcd, 0x0f, 0x65, 0x69, 0x1b, 0xc7, 0xe7, 0xfc, 0x50, 0x26, 0x6f, 0xc3, 0xb5, 0x31,
+	0x73, 0x3d, 0x96, 0x0c, 0xdd, 0x54, 0x8c, 0xe3, 0x24, 0x38, 0x75, 0x45, 0x10, 0x47, 0x9a, 0xf0,
+	0xa6, 0x3a, 0x7b, 0x90, 0x3d, 0xea, 0x94, 0x74, 0x51, 0x5b, 0xaf, 0x42, 0xf9, 0xbc, 0xea, 0xa4,
+	0x02, 0xa5, 0x4f, 0xf7, 0x1f, 0xef, 0x0f, 0x3e, 0xdb, 0x6f, 0xe4, 0x48, 0x2d, 0x43, 0xa5, 0x61,
+	0xd8, 0x65, 0x28, 0xe9, 0x87, 0x6b, 0xff, 0x64, 0x40, 0x6d, 0xe5, 0x31, 0x92, 0x7b, 0x50, 0xe4,
+	0xc2, 0x15, 0x29, 0x47, 0xae, 0xf5, 0xd5, 0x5b, 0xaf, 0x40, 0x9d, 0x03, 0xc4, 0x51, 0x8d, 0x27,
+	0x2f, 0x41, 0x49, 0xf0, 0xa1, 0x17, 0xf8, 0x3e, 0x5e, 0xa9, 0x40, 0x8b, 0x82, 0x3f, 0x0c, 0x7c,
+	0x9f, 0x5c, 0x87, 0x62, 0xc2, 0x5c, 0x8e, 0xd7, 0x90, 0x9d, 0xa4, 0xb5, 0xd6, 0xbb, 0x50, 0x54,
+	0x21, 0xc8, 0x06, 0x14, 0xf6, 0x07, 0x83, 0x27, 0x8d, 0x9c, 0xe4, 0x8d, 0xc5, 0x63, 0x5e, 0xc3,
+	0x20, 0x65, 0xb0, 0x58, 0xe4, 0x31, 0xaf, 0x91, 0x27, 0x00, 0x45, 0xdf, 0x0d, 0x42, 0xe6, 0x35,
+	0x4c, 0xfb, 0xdb, 0x02, 0x5c, 0x59, 0x7b, 0xfa, 0xe4, 0x3e, 0x14, 0xe3, 0x54, 0x4c, 0x53, 0xa1,
+	0x8b, 0xd5, 0xfa, 0x9b, 0x39, 0xe1, 0x0c, 0x10, 0x49, 0xb5, 0x87, 0xfd, 0xab, 0x09, 0x45, 0x65,
+	0x22, 0x87, 0x50, 0x1b, 0x0b, 0x31, 0x5d, 0xbe, 0x6e, 0x15, 0xad, 0x7d, 0x79, 0x34, 0xa7, 0x27,
+	0xc4, 0x34, 0xfb, 0xe8, 0xc7, 0x19, 0xdd, 0xfe, 0x3d, 0x0f, 0xd5, 0x2c, 0x80, 0xdc, 0x86, 0x8a,
+	0x4a, 0xdb, 0xf0, 0x38, 0xf6, 0xd4, 0x67, 0x6a, 0x14, 0x94, 0xa9, 0x1b, 0x7b, 0x2c, 0x93, 0x34,
+	0xd5, 0x1f, 0x5a, 0x23, 0x87, 0x50, 0x52, 0x5d, 0xc0, 0x31, 0x9b, 0x95, 0xdd, 0x0f, 0xfe, 0x25,
+	0x37, 0xa7, 0xa7, 0xdc, 0x1f, 0x45, 0x22, 0x99, 0xd3, 0x45, 0x30, 0xd9, 0x8d, 0x47, 0xb1, 0x37,
+	0xc7, 0x31, 0x5b, 0xa5, 0x28, 0xdb, 0x77, 0xa0, 0xaa, 0xc0, 0x87, 0x6e, 0x98, 0x32, 0x2e, 0x39,
+	0xcd, 0x50, 0x6a, 0x1a, 0xaa, 0x90, 0x4a, 0xb3, 0xbf, 0x5c, 0xe0, 0x54, 0x50, 0xf9, 0xf0, 0x4e,
+	0xd8, 0x5c, 0x37, 0xbb, 0x14, 0x09, 0x05, 0x0b, 0xb1, 0x7a, 0x89, 0xfc, 0x47, 0xce, 0x8a, 0x06,
+	0x55, 0xa1, 0xee, 0xe7, 0xef, 0x19, 0x9d, 0x8d, 0x45, 0xd9, 0xed, 0x4d, 0xb8, 0x7a, 0x61, 0x82,
+	0xdb, 0x75, 0xa8, 0x66, 0xa3, 0x77, 0x2c, 0x5c, 0x8e, 0xad, 0x9f, 0x2d, 0x30, 0x0f, 0x92, 0xd9,
+	0x73, 0x76, 0xe5, 0x41, 0x32, 0x5b, 0xee, 0xca, 0x6f, 0xac, 0xf3, 0x5d, 0x29, 0x27, 0x78, 0x76,
+	0x57, 0x6a, 0x1c, 0x72, 0x97, 0xbb, 0x52, 0x9e, 0xcb, 0xd5, 0x20, 0x77, 0xe6, 0x72, 0xcb, 0xe4,
+	0x97, 0xab, 0x61, 0xe1, 0x20, 0xe7, 0x46, 0x66, 0xc1, 0x54, 0xfd, 0x8c, 0x4e, 0x5e, 0x03, 0x0b,
+	0x47, 0x91, 0x9e, 0xcf, 0x57, 0xb3, 0x8e, 0xf8, 0xf4, 0xe4, 0xe8, 0x43, 0x84, 0xfd, 0xcc, 0x84,
+	0x82, 0xfc, 0xb8, 0x9c, 0xe9, 0x41, 0xb4, 0xec, 0xfb, 0xeb, 0xeb, 0xec, 0x9c, 0xbe, 0x3c, 0xa5,
+	0x0a, 0x24, 0x2b, 0xc3, 0xfa, 0x6a, 0x6b, 0xd4, 0xa8, 0x14, 0xed, 0xaf, 0x4d, 0xb0, 0x10, 0x42,
+	0x3e, 0x81, 0xaa, 0xee, 0xfd, 0x2f, 0x52, 0xc6, 0x57, 0x1e, 0xd2, 0xc5, 0x80, 0xba, 0x3c, 0x88,
+	0xec, 0xe5, 0x68, 0x65, 0xbc, 0x54, 0xed, 0x1f, 0xf3, 0x50, 0xc9, 0x1c, 0xcb, 0xb6, 0x99, 0x30,
+	0x31, 0x8e, 0x3d, 0xdd, 0x11, 0x5a, 0x93, 0x64, 0xd2, 0x24, 0x5c, 0xcc, 0xe7, 0x34, 0x09, 0x49,
+	0x7f, 0xbd, 0xb9, 0xdb, 0x97, 0x7f, 0xfd, 0x7f, 0xe8, 0xe7, 0x93, 0x4b, 0xfb, 0xf9, 0xd1, 0x6a,
+	0x3f, 0xff, 0x73, 0x9a, 0x17, 0x5b, 0xb8, 0xa4, 0x0b, 0x68, 0x97, 0xc0, 0xc2, 0x22, 0xcb, 0xae,
+	0xcd, 0xb6, 0x89, 0xee, 0xda, 0xdd, 0xd7, 0xa1, 0x22, 0xcd, 0xf3, 0x3d, 0xfc, 0x53, 0x24, 0x37,
+	0x21, 0xff, 0x30, 0x26, 0x25, 0xfd, 0x92, 0xec, 0x92, 0xa6, 0xd0, 0xca, 0xed, 0x18, 0x6f, 0x19,
+	0x9d, 0x07, 0xdf, 0x9f, 0x6d, 0x19, 0xbf, 0x9d, 0x6d, 0x19, 0xcf, 0xce, 0xb6, 0x8c, 0x3f, 0xce,
+	0xb6, 0x8c, 0xcf, 0xdb, 0x99, 0xff, 0xc9, 0x4c, 0x9c, 0x6e, 0xdc, 0x56, 0xbf, 0x9e, 0xed, 0xb5,
+	0xdf, 0xd2, 0xa3, 0x22, 0xfe, 0x58, 0xde, 0xfd, 0x2b, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x99, 0xb6,
+	0x40, 0xb0, 0x0a, 0x00, 0x00,
 }

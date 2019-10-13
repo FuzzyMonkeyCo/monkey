@@ -8,8 +8,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-// Resetter describes ways to reset the system under test to a known initial state
-type Resetter interface {
+// Interface describes ways to reset the system under test to a known initial state
+type Interface interface {
 	ToProto() *fm.Clt_Msg_Fuzz_Resetter
 
 	ExecStart(context.Context, fm.Client) error

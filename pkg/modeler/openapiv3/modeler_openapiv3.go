@@ -1,51 +1,45 @@
 package modeler_openapiv3
 
 import (
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	"go.starlark.net/starlark"
 )
 
 func init() {
-	runtime.RegisterModeler("OpenAPIv3", modelerOpenAPIv3)
+	runtime.RegisterModeler("OpenAPIv3", (*oa3)(nil))
 }
 
-var _ modeler.Modeler = (*ModelOpenAPIv3)(nil)
+var _ modeler.Interface = (*oa3)(nil)
 
-// ModelOpenAPIv3 describes OpenAPIv3 models
-type ModelOpenAPIv3 struct {
+type oa3 struct {
+	fm.Clt_Msg_Fuzz_Model_Openapiv3
+
 	resetter resetter.Resetter
 
-	/// Fields editable on initial run
-	// File is a path within current directory pointing to a YAML spec
-	File string
-	// Host superseeds the spec's base URL
-	Host string
-	// HeaderAuthorization if non-empty is added to requests as bearer token
-	HeaderAuthorization string
-
-	// FIXME? tcap *tCapHTTP
+	tcap *tCapHTTP
 }
 
 // ToProto TODO
-func (m *ModelOpenAPIv3) ToProto() *fm.Clt_Msg_Fuzz_Model {
-	return &Clt_Msg_Fuzz_Model_Openapiv3{&Clt_Msg_Fuzz_Model_OpenAPIv3{
-		File:                m.File,
-		Host:                m.Host,
-		HeaderAuthorization: m.HeaderAuthorization,
-	}}
+func (m *oa3) ToProto() *fm.Clt_Msg_Fuzz_Model {
+	return &fm.Clt_Msg_Fuzz_Model{
+		Model: &fm.Clt_Msg_Fuzz_Model_Openapiv3_{
+			&m.Clt_Msg_Fuzz_Model_Openapiv3,
+		}}
 }
 
 // SetResetter TODO
-func (m *ModelOpenAPIv3) SetResetter(sr resetter.Resetter) { m.resetter = sr }
+func (m *oa3) SetResetter(sr resetter.Resetter) { m.resetter = sr }
 
 // GetResetter TODO
-func (m *ModelOpenAPIv3) GetResetter() resetter.Resetter { return m.resetter }
+func (m *oa3) GetResetter() resetter.Resetter { return m.resetter }
 
 // Pretty TODO
-func (m *ModelOpenAPIv3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
+func (m *oa3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
-func modelerOpenAPIv3(d starlark.StringDict) (modeler.Modeler, *modeler.Error) {
-	mo := &ModelOpenAPIv3{}
+func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
+	mo := &oa3{}
 	var (
 		found              bool
 		field              string
@@ -77,7 +71,7 @@ func modelerOpenAPIv3(d starlark.StringDict) (modeler.Modeler, *modeler.Error) {
 	}
 	if found {
 		authz := hAuthz.(starlark.String).GoString()
-		mo.HeaderAuthorization = authz
+		mo.Header_Authorization = authz
 		addHeaderAuthorization = &authz
 	}
 

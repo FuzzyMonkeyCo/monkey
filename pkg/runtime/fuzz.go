@@ -69,11 +69,11 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		case *fm.Srv_Msg_Call_:
 			// rt.progress.state("🙈") 🙉 🙊 🐵
 			// rt.progress.Before(ui.Call)
-			if err := rt.call(ctx, msg); err != nil {
+			if err := rt.call(ctx, msg.GetEId(), msg.GetInput()); err != nil {
 				return err
 			}
 		case *fm.Srv_Msg_Reset_:
-			if err := rt.reset(ctx, msg); err != nil {
+			if err := rt.reset(ctx); err != nil {
 				return err
 			}
 		default:

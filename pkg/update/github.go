@@ -191,3 +191,7 @@ func (rel *GithubRelease) fetchLatestSum(URL string) (sum string, err error) {
 	log.Println("[ERR]", err)
 	return
 }
+
+func newStatusError(expectedCode int, got string) error {
+	return fmt.Errorf("expected status %d but got '%v'", expectedCode, got)
+}

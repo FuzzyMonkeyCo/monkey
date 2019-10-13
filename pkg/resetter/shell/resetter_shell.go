@@ -25,10 +25,10 @@ var (
 	errUndecided = errors.New("unhandled Reset() case")
 	errNoScript  = errors.New("no usable script")
 
-	_ resetter.Resetter = (*Shell)(nil)
+	_ resetter.Interface = (*Shell)(nil)
 )
 
-// Shell implements resetter.Resetter
+// Shell implements resetter.Interface
 type Shell struct {
 	fm.Clt_Msg_Fuzz_Resetter_Shell
 	isNotFirstRun bool

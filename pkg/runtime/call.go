@@ -2,16 +2,15 @@ package runtime
 
 import (
 	"context"
+	"log"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/caller"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 // CheckerFunc TODO // func() (string, []string)
-type CheckerFunc func(*runtime.runtime) (string, []string)
+type CheckerFunc func(*runtime) (string, []string)
 
-func (rt *runtime) call(ctx context.Context, msg int) (err error) {
-	// mnk.eid = act.EID
+func (rt *runtime) call(ctx context.Context, eId uint32, msg int) (err error) {
 
 	// cllr := ... msg
 	// ... := cllr.Call()
@@ -20,12 +19,18 @@ func (rt *runtime) call(ctx context.Context, msg int) (err error) {
 	// go through mdlr checks
 	// send nonraw
 
-	tcap = newHTTPTCap(func(format string, s ...interface{}) {
+	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Showf(format, s)
-	})
-	var nxt *RepCallDone
-	if nxt, err = tcap.makeRequest(act.GetRequest()); err != nil {
+	}
+
+	mdlr := rt.models[0]
+	var cllr modeler.Caller
+	if cllr, err = mdlr.NewCaller(msg, showf); err != nil {
+		return
+	}
+
+	if err = cllr.Do(); err != nil && err != ErrCallFailed {
 		return
 	}
 
@@ -38,17 +43,16 @@ func (rt *runtime) call(ctx context.Context, msg int) (err error) {
 		return err
 	}
 
-	err = mnk.castPostConditions(nxt)
-	// mnk.eid = 0
-	return
-}
-
-func (mnk *pkg.monkey) castPostConditions(act *msgCallResponseRaw) (err error) {
-	if act.Failure {
+	if err == ErrCallFailed {
 		log.Println("[DBG] call failed, skipping checks")
 		return
 	}
 
+	err = rt.callChecks(mdlr, cllr)
+	return
+}
+
+func (rt *runtime) callChecks(mdlr modeler.Interface, cllr modeler.Caller) (err error) {
 	var reqrep CallCapturer = tcap
 	// FIXME: turn this into a sync.errgroup with additional tasks being
 	// triggers with match-all predicates andalso pure actions

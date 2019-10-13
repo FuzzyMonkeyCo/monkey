@@ -10,24 +10,12 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
-var (
-	registeredIRModels = make(map[string]modeler.Func)
-	binTitle           string
-)
-
-// RegisterModeler TODO
-func RegisterModeler(name string, fn modeler.Func) {
-	if _, ok := registeredIRModels[name]; ok {
-		panic(fmt.Sprintf("modeler %q is already registered", name))
-	}
-	registeredIRModels[name] = fn
-}
+var binTitle string
 
 // Bintitle TODO
 func Bintitle() string {
@@ -45,7 +33,7 @@ type runtime struct {
 	envRead  map[string]string
 	triggers []triggerActionAfterProbe
 
-	models []modeler.Modeler
+	models []modeler.Interface
 
 	client fm.Client
 
@@ -91,118 +79,6 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
 	return
-}
-
-func (rt *runtime) builtins() map[string]builtin {
-	return map[string]builtin{
-		"Env":                     rt.bEnv,
-		"TriggerActionAfterProbe": rt.bTriggerActionAfterProbe,
-	}
-}
-
-type builtin func(
-	th *starlark.Thread,
-	b *starlark.Builtin,
-	args starlark.Tuple,
-	kwargs []starlark.Tuple,
-) (starlark.Value, error)
-
-func (rt *runtime) modelMaker(modelName string, mdlr modeler.Func) builtin {
-	return func(
-		th *starlark.Thread,
-		b *starlark.Builtin,
-		args starlark.Tuple,
-		kwargs []starlark.Tuple,
-	) (ret starlark.Value, err error) {
-		ret = starlark.None
-		fname := b.Name()
-		if args.Len() != 0 {
-			err = fmt.Errorf("%s(...) does not take positional arguments", fname)
-			return
-		}
-
-		u := make(starlark.StringDict, len(kwargs))
-		r := make(starlark.StringDict, len(kwargs))
-		for _, kv := range kwargs {
-			k, v := kv.Index(0), kv.Index(1)
-			key := k.(starlark.String).GoString()
-			reserved := false
-			if err = printableASCII(key); err != nil {
-				err = errors.Wrap(err, "illegal field")
-				log.Println("[ERR]", err)
-				return
-			}
-			for i, c := range key {
-				if i == 0 && unicode.IsUpper(c) {
-					reserved = true
-					break
-				}
-			}
-			if !reserved {
-				u[key] = v
-			} else {
-				r[key] = v
-			}
-		}
-		mo, err := mdlr(u)
-		if err != nil {
-			if modelerErr, ok := err.(*modeler.Error); ok {
-				modelerErr.SetModelerName(modelName)
-				err = modelerErr
-			}
-			log.Println("[ERR]", err)
-			return
-		}
-		var rsttr resetter.Resetter
-		if rsttr, err = newFromKwargs(fname, r); err != nil {
-			return
-		}
-		mo.SetResetter(rsttr)
-
-		rt.models = append(rt.models, mo)
-		return
-	}
-}
-
-func (rt *runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	var env, def starlark.String
-	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &env, &def); err != nil {
-		return nil, err
-	}
-	envStr := env.GoString()
-	// FIXME: actually maybe read env from Exec shell? These shells should inherit user env anyway?
-	read, ok := os.LookupEnv(envStr)
-	if !ok {
-		return def, nil
-	}
-	rt.envRead[envStr] = read
-	return starlark.String(read), nil
-}
-
-type triggerActionAfterProbe struct {
-	Name              starlark.String
-	Probe             starlark.Tuple
-	Predicate, Action *starlark.Function
-}
-
-func (rt *runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	var trigger triggerActionAfterProbe
-	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"name?", &trigger.Name,
-		"probe", &trigger.Probe,
-		"predicate", &trigger.Predicate,
-		"action", &trigger.Action,
-	); err != nil {
-		return nil, err
-	}
-	// TODO: enforce arities
-	log.Println("[NFO] registering", b.Name(), trigger)
-	if name := trigger.Name.GoString(); name == "" {
-		trigger.Name = starlark.String(trigger.Action.Name())
-		// TODO: complain if trigger.Name == "lambda"
-	}
-	rt.triggers = append(rt.triggers, trigger)
-	return starlark.None, nil
 }
 
 func (rt *runtime) loadCfg(localCfg string) (err error) {

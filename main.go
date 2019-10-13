@@ -203,11 +203,6 @@ func actualMain() int {
 		return code.OK
 	}
 
-	docPath, blob, err := cfg.FindThenReadBlob()
-	if err != nil {
-		return retryOrReport()
-	}
-
 	// Always lint before fuzzing
 	vald, err := pkg.DoLint(docPath, blob, args.ShowSpec)
 	if err != nil {

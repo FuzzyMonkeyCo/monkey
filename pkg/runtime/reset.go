@@ -12,7 +12,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context, msg int) error {
+func (rt *runtime) reset(ctx context.Context) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_ResetProgress_{
@@ -62,7 +62,7 @@ func (rt *runtime) reset(ctx context.Context, msg int) error {
 	return err
 }
 
-func newFromKwargs(modelerName string, r starlark.StringDict) (resetter.Resetter, error) {
+func newFromKwargs(modelerName string, r starlark.StringDict) (resetter.Interface, error) {
 	const (
 		tExecReset = "ExecReset"
 		tExecStart = "ExecStart"

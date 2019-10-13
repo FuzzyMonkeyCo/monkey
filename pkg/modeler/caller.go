@@ -1,11 +1,11 @@
-package caller
+package modeler
 
 import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-// Capturer is not CastCapturer {Request(), ..Wait?}
-type Capturer interface {
+// Caller TODO
+type Caller interface {
 	ToProto() *fm.Clt_Msg_CallResponseRaw
 
 	Request() map[string]interface{}

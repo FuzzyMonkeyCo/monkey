@@ -1,4 +1,4 @@
-package caller_http
+package modeler_openapiv3
 
 import (
 	"bytes"
@@ -105,7 +105,7 @@ func (c *tCapHTTP) CheckFirst() (string, fuzz.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func newHTTPTCap(showf func(string, ...interface{})) *tCapHTTP {
+func NewCaller(showf func(string, ...interface{})) *tCapHTTP {
 	c := &tCapHTTP{
 		showf: showf,
 	}
