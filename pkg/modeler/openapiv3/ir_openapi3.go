@@ -1,4 +1,4 @@
-package pkg
+package modeler_openapiv3
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
@@ -29,7 +30,7 @@ var xxx2uint32 = map[string]uint32{
 	"5XX":     5,
 }
 
-func newSpecFromOA3(doc *openapi3.Swagger) (vald *Validator, err error) {
+func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
@@ -50,7 +51,7 @@ func newSpecFromOA3(doc *openapi3.Swagger) (vald *Validator, err error) {
 	return
 }
 
-func (vald *Validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) error {
+func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef) error {
 	schemas := make(schemasJSON, len(docSchemas))
 	for name, docSchema := range docSchemas {
 		schemas[name] = vald.schemaFromOA3(docSchema.Value)
@@ -72,7 +73,7 @@ func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
 	doc.Components.Schemas = seededSchemas
 }
 
-func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
+func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
 	i, paths := 0, make([]string, len(docPaths))
 	for path := range docPaths {
 		paths[i] = path
@@ -99,9 +100,9 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
 			outputs := vald.outputsFromOA3(docOp.Responses)
 			method := methodFromOA3(docMethod)
-			vald.Spec.Endpoints[eid(1+j+l)] = &Endpoint{
-				Endpoint: &Endpoint_Json{
-					&EndpointJSON{
+			vald.Spec.Endpoints[eid(1+j+l)] = &fm.Endpoint{
+				Endpoint: &fm.Endpoint_Json{
+					&fm.EndpointJSON{
 						Method:       method,
 						PathPartials: pathFromOA3(basePath, path),
 						Inputs:       inputs,
@@ -114,7 +115,7 @@ func (vald *Validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 }
 
 // For testing
-func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*Endpoint) {
+func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*fm.Endpoint) {
 	doc.Paths = make(openapi3.Paths, len(es))
 	for _, e := range es {
 		endpoint := e.GetJson()
@@ -134,7 +135,7 @@ func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*Endpoint) {
 	}
 }
 
-func (vald *Validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openapi3.RequestBodyRef) {
+func (vald *validator) inputBodyFromOA3(inputs *[]*fm.ParamJSON, docReqBody *openapi3.RequestBodyRef) {
 	if docReqBody != nil {
 		//FIXME: handle .Ref
 		docBody := docReqBody.Value
@@ -142,7 +143,7 @@ func (vald *Validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openap
 			if mime == mimeJSON {
 				docSchema := ct.Schema
 				schema := vald.schemaOrRefFromOA3(docSchema)
-				param := &ParamJSON{
+				param := &fm.ParamJSON{
 					IsRequired: docBody.Required,
 					SID:        vald.ensureMapped(docSchema.Ref, schema),
 					Name:       "",
@@ -156,7 +157,7 @@ func (vald *Validator) inputBodyFromOA3(inputs *[]*ParamJSON, docReqBody *openap
 }
 
 // For testing
-func (sm schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
+func (sm schemap) inputBodyToOA3(inputs []*fm.ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
 	if len(inputs) > 0 {
 		body := inputs[0]
 		if body != nil && isInputBody(body) {
@@ -171,7 +172,7 @@ func (sm schemap) inputBodyToOA3(inputs []*ParamJSON) (reqBodyRef *openapi3.Requ
 	return
 }
 
-func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Parameters) {
+func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
 	i, names := 0, make([]string, paramsCount)
@@ -201,7 +202,7 @@ func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Pa
 		}
 		docSchema := docParam.Schema
 		schema := vald.schemaOrRefFromOA3(docSchema)
-		param := &ParamJSON{
+		param := &fm.ParamJSON{
 			IsRequired: docParam.Required,
 			SID:        vald.ensureMapped(docSchema.Ref, schema),
 			Name:       docParam.Name,
@@ -212,7 +213,7 @@ func (vald *Validator) inputsFromOA3(inputs *[]*ParamJSON, docParams openapi3.Pa
 }
 
 // For testing
-func (sm schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) {
+func (sm schemap) inputsToOA3(inputs []*fm.ParamJSON) (params openapi3.Parameters) {
 	for _, input := range inputs {
 		if isInputBody(input) {
 			continue
@@ -243,7 +244,7 @@ func (sm schemap) inputsToOA3(inputs []*ParamJSON) (params openapi3.Parameters) 
 	return
 }
 
-func (vald *Validator) outputsFromOA3(docResponses openapi3.Responses) (
+func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
@@ -298,14 +299,14 @@ func (sm schemap) contentToOA3(SID sid) openapi3.Content {
 	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
-func (vald *Validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
+func (vald *validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
 	if ref := s.Ref; ref != "" {
 		return schemaJSON{"$ref": ref}
 	}
 	return vald.schemaFromOA3(s.Value)
 }
 
-func (vald *Validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
+func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	schema = make(schemaJSON)
 
 	// "enum"
@@ -550,9 +551,9 @@ func ensureSchemaType(types interface{}, t string) []string {
 	return append(ts, t)
 }
 
-func pathFromOA3(basePath, path string) (partials []*PathPartial) {
+func pathFromOA3(basePath, path string) (partials []*fm.PathPartial) {
 	if basePath != "/" {
-		p := &PathPartial{Pp: &PathPartial_Part{basePath}}
+		p := &fm.PathPartial{Pp: &fm.PathPartial_Part{basePath}}
 		partials = append(partials, p)
 	}
 
@@ -562,9 +563,9 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 		var p PathPartial
 		if isCurly || i%2 != 0 {
 			// TODO (vendor): ensure path params are part of inputs
-			p.Pp = &PathPartial_Ptr{part}
+			p.Pp = &fm.PathPartial_Ptr{part}
 		} else {
-			p.Pp = &PathPartial_Part{part}
+			p.Pp = &fm.PathPartial_Part{part}
 		}
 		partials = append(partials, &p)
 	}
@@ -574,14 +575,14 @@ func pathFromOA3(basePath, path string) (partials []*PathPartial) {
 		part2 := partials[1].GetPart()
 		if part1 != "" && part2 != "" {
 			partials = partials[1:]
-			partials[0] = &PathPartial{Pp: &PathPartial_Part{part1 + part2}}
+			partials[0] = &fm.PathPartial{Pp: &fm.PathPartial_Part{part1 + part2}}
 			return
 		}
 	}
 	return
 }
 
-func pathToOA3(partials []*PathPartial) (s string) {
+func pathToOA3(partials []*fm.PathPartial) (s string) {
 	for _, p := range partials {
 		part := p.GetPart()
 		if part != "" {
@@ -642,15 +643,15 @@ func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err er
 	return
 }
 
-func isInputBody(input *ParamJSON) bool {
+func isInputBody(input *fm.ParamJSON) bool {
 	return input.GetName() == "" && input.GetKind() == ParamJSON_body
 }
 
-func methodFromOA3(docMethod string) EndpointJSON_Method {
+func methodFromOA3(docMethod string) fm.EndpointJSON_Method {
 	return EndpointJSON_Method(EndpointJSON_Method_value[docMethod])
 }
 
-func methodToOA3(m EndpointJSON_Method, op *openapi3.Operation, p *openapi3.PathItem) {
+func methodToOA3(m fm.EndpointJSON_Method, op *openapi3.Operation, p *openapi3.PathItem) {
 	switch m {
 	case EndpointJSON_CONNECT:
 		p.Connect = op

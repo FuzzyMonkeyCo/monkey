@@ -2,23 +2,23 @@ package runtime
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/gogo/protobuf/types"
+	"go.starlark.net/starlark"
 )
 
-// CheckerFunc TODO // func() (string, []string)
-type CheckerFunc func(*runtime) (string, []string)
+var (
+	ErrCallFailed  = errors.New("call to SUT unexpectedly failed")
+	ErrCheckFailed = errors.New("call check failed")
+)
 
-func (rt *runtime) call(ctx context.Context, eId uint32, msg int) (err error) {
-
-	// cllr := ... msg
-	// ... := cllr.Call()
-	// send raw
-	// go through cllr checks
-	// go through mdlr checks
-	// send nonraw
-
+func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Showf(format, s)
@@ -30,8 +30,9 @@ func (rt *runtime) call(ctx context.Context, eId uint32, msg int) (err error) {
 		return
 	}
 
-	if err = cllr.Do(); err != nil && err != ErrCallFailed {
-		return
+	var errCall error
+	if errCall = cllr.Do(ctx); errCall != nil && errCall != ErrCallFailed {
+		return errCall
 	}
 
 	if err = rt.client.Send(&fm.Clt{
@@ -40,161 +41,225 @@ func (rt *runtime) call(ctx context.Context, eId uint32, msg int) (err error) {
 				CallResponseRaw: cllr.ToProto(),
 			}}}); err != nil {
 		log.Println("[ERR]", err)
-		return err
-	}
-
-	if err == ErrCallFailed {
-		log.Println("[DBG] call failed, skipping checks")
 		return
 	}
 
-	err = rt.callChecks(mdlr, cllr)
-	return
-}
-
-func (rt *runtime) callChecks(mdlr modeler.Interface, cllr modeler.Caller) (err error) {
-	var reqrep CallCapturer = tcap
-	// FIXME: turn this into a sync.errgroup with additional tasks being
-	// triggers with match-all predicates andalso pure actions
-	for {
-		name, lambda := reqrep.CheckFirst()
-		if name == "" {
-			break
-		}
-
-		check := &RepValidateProgress{Details: []string{name}}
-		log.Println("[NFO] checking", check.Details[0])
-		success, failure := lambda(mnk)
-		switch {
-		case success != "":
-			check.Success = true
-			mnk.progress.checkPassed(success)
-		case len(failure) != 0:
-			check.Details = append(check.Details, failure...)
-			log.Println(append([]string{"[NFO]"}, failure...))
-			mnk.progress.checkFailed(failure)
-		default:
-			mnk.progress.checkSkipped(check.Details[0])
-		}
-
-		if err = mnk.ws.cast(check); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		if check.Failure {
-			return
-		}
+	if errCall == ErrCallFailed {
+		log.Println("[DBG] call failed, skipping checks")
+		return ErrCallFailed
 	}
 
-	// Check #N: user-provided postconditions
-	{
-		log.Printf("[NFO] checking %d user properties", len(mnk.triggers))
-		var response starlark.Value
-		if response, err = slValueFromInterface(reqrep.Response()); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		mnk.thread.Print = func(_ *starlark.Thread, msg string) { mnk.progress.wrn(msg) }
-		for i, trigger := range mnk.triggers {
-			checkN := &RepValidateProgress{Details: []string{fmt.Sprintf("user property #%d: %q", i, trigger.Name.GoString())}}
-			log.Println("[NFO] checking", checkN.Details[0])
-
-			var modelState1, response1 starlark.Value
-			if modelState1, err = slValueCopy(mnk.modelState); err != nil {
-				log.Println("[ERR]", err)
-				return
-			}
-			if response1, err = slValueCopy(response); err != nil {
-				log.Println("[ERR]", err)
-				return
-			}
-			args1 := starlark.Tuple{modelState1, response1}
-
-			var shouldBeBool starlark.Value
-			if shouldBeBool, err = starlark.Call(mnk.thread, trigger.Predicate, args1, nil); err == nil {
-				if triggered, ok := shouldBeBool.(starlark.Bool); ok {
-					if triggered {
-
-						var modelState2, response2 starlark.Value
-						if modelState2, err = slValueCopy(mnk.modelState); err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-						if response2, err = slValueCopy(response); err != nil {
-							log.Println("[ERR]", err)
-							return
-						}
-						args2 := starlark.Tuple{modelState2, response2}
-
-						var newModelState starlark.Value
-						if newModelState, err = starlark.Call(mnk.thread, trigger.Action, args2, nil); err == nil {
-							switch newModelState := newModelState.(type) {
-							case starlark.NoneType:
-								checkN.Success = true
-								mnk.progress.checkPassed(checkN.Details[0])
-							case *modelState:
-								mnk.modelState = newModelState
-								checkN.Success = true
-								mnk.progress.checkPassed(checkN.Details[0])
-							default:
-								checkN.Failure = true
-								err = fmt.Errorf("expected action %q (of %s) to return a ModelState, got: %T %v",
-									trigger.Action.Name(), checkN.Details[0], newModelState, newModelState)
-								e := err.Error()
-								checkN.Details = append(checkN.Details, e)
-								log.Println("[NFO]", err)
-								mnk.progress.checkFailed([]string{e})
-							}
-						} else {
-							checkN.Failure = true
-							//TODO: split on \n.s or you know create a type better than []string
-							if evalErr, ok := err.(*starlark.EvalError); ok {
-								checkN.Details = append(checkN.Details, evalErr.Backtrace())
-							} else {
-								checkN.Details = append(checkN.Details, err.Error())
-							}
-							log.Println("[NFO]", err)
-							mnk.progress.checkFailed(checkN.Details)
-						}
-					} else {
-						mnk.progress.checkSkipped(checkN.Details[0])
-					}
-				} else {
-					checkN.Failure = true
-					err = fmt.Errorf("expected predicate to return a Bool, got: %v", shouldBeBool)
-					e := err.Error()
-					checkN.Details = append(checkN.Details, e)
-					log.Println("[NFO]", err)
-					mnk.progress.checkFailed([]string{e})
-				}
-			} else {
-				checkN.Failure = true
-				//TODO: split on \n.s or you know create a type better than []string
-				if evalErr, ok := err.(*starlark.EvalError); ok {
-					checkN.Details = append(checkN.Details, evalErr.Backtrace())
-				} else {
-					checkN.Details = append(checkN.Details, err.Error())
-				}
-				log.Println("[NFO]", err)
-				mnk.progress.checkFailed(checkN.Details[1:])
-			}
-			if err = mnk.ws.cast(checkN); err != nil {
-				log.Println("[ERR]", err)
-				return
-			}
-			if checkN.Failure {
-				return
-			}
-		}
+	// Just the amount of checks needed to be able to call cllr.Response()
+	if err = rt.firstChecks(mdlr, cllr); err != nil {
+		return
 	}
 
-	// Check #Z: all checks passed
-	checkZ := &RepCallResult{} //FIXME:Response: enumFromGo(jsonData)}
-	if err = mnk.ws.cast(checkZ); err != nil {
+	callResponse := cllr.Response()
+	// Actionable response data parsed...
+	if err = rt.client.Send(&fm.Clt{
+		Msg: &fm.Clt_Msg{
+			Msg: &fm.Clt_Msg_CallVerifProgress_{
+				CallVerifProgress: &fm.Clt_Msg_CallVerifProgress{
+					Status:   fm.Clt_Msg_CallVerifProgress_data,
+					Response: callResponse,
+				}}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
+
+	if err = rt.userChecks(callResponse); err != nil {
+		return
+	}
+
+	// Through all checks: we're done
+	if err = rt.client.Send(&fm.Clt{
+		Msg: &fm.Clt_Msg{
+			Msg: &fm.Clt_Msg_CallVerifProgress_{
+				CallVerifProgress: &fm.Clt_Msg_CallVerifProgress{},
+			}}}); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
 	log.Println("[DBG] checks passed")
-	mnk.progress.checksPassed()
+	rt.progress.ChecksPassed()
 	return
+}
+
+// FIXME: turn this into a sync.errgroup with additional tasks being
+// triggers with match-all predicates andalso pure actions
+func (rt *runtime) firstChecks(mdlr modeler.Interface, cllr modeler.Caller) (err error) {
+	for {
+		var lambda modeler.CheckerFunc
+		v := &fm.Clt_Msg_CallVerifProgress{}
+		v.Name, lambda = cllr.CheckFirst()
+		if lambda == nil {
+			return
+		}
+		log.Println("[NFO] checking", v.Name)
+
+		v.Status = fm.Clt_Msg_CallVerifProgress_start
+		if err = rt.client.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_CallVerifProgress_{
+					CallVerifProgress: v,
+				}}}); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+
+		success, failure := lambda()
+		switch {
+		case success != "":
+			v.Status = fm.Clt_Msg_CallVerifProgress_success
+			v.Reason = []string{success}
+			rt.progress.CheckPassed(success)
+		case len(failure) != 0:
+			v.Status = fm.Clt_Msg_CallVerifProgress_failure
+			v.Reason = failure
+			log.Println(append([]string{"[NFO]"}, failure...))
+			rt.progress.CheckFailed(failure)
+		default:
+			v.Status = fm.Clt_Msg_CallVerifProgress_skipped
+			rt.progress.CheckSkipped(v.Name)
+		}
+
+		if err = rt.client.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_CallVerifProgress_{
+					CallVerifProgress: v,
+				}}}); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+
+		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
+			err = ErrCheckFailed
+			log.Println("[ERR]", err)
+			return
+		}
+	}
+}
+
+func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
+	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
+	var response starlark.Value
+	//FIXME: replace response copies by calls to this
+	if response, err = slValueFromInterface(callResponse); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	rt.thread.Print = func(_ *starlark.Thread, msg string) { rt.progress.Showf("%s", msg) }
+
+	for i, trggr := range rt.triggers {
+		v := &fm.Clt_Msg_CallVerifProgress{}
+		v.Name = fmt.Sprintf("user property #%d: %q", i, trggr.name.GoString())
+		log.Println("[NFO] checking", v.Name)
+
+		v.Status = fm.Clt_Msg_CallVerifProgress_start
+		if err = rt.client.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_CallVerifProgress_{
+					CallVerifProgress: v,
+				}}}); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+
+		var modelState1, response1 starlark.Value
+		if modelState1, err = slValueCopy(rt.modelState); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		if response1, err = slValueCopy(response); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		args1 := starlark.Tuple{modelState1, response1}
+
+		var shouldBeBool starlark.Value
+		if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err == nil {
+			if triggered, ok := shouldBeBool.(starlark.Bool); ok {
+				if triggered {
+
+					var modelState2, response2 starlark.Value
+					if modelState2, err = slValueCopy(rt.modelState); err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+					if response2, err = slValueCopy(response); err != nil {
+						log.Println("[ERR]", err)
+						return
+					}
+					args2 := starlark.Tuple{modelState2, response2}
+
+					var newModelState starlark.Value
+					if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err == nil {
+						switch newModelState := newModelState.(type) {
+						case starlark.NoneType:
+							v.Status = fm.Clt_Msg_CallVerifProgress_success
+							rt.progress.CheckPassed(v.Name)
+						case *modelState:
+							v.Status = fm.Clt_Msg_CallVerifProgress_success
+							rt.modelState = newModelState
+							rt.progress.CheckPassed(v.Name)
+						default:
+							v.Status = fm.Clt_Msg_CallVerifProgress_failure
+							err = fmt.Errorf(
+								"expected action %q (of %s) to return a ModelState, got: %T %v",
+								trggr.act.Name(), v.Name, newModelState, newModelState,
+							)
+							v.Reason = strings.Split(err.Error(), "\n")
+							log.Println("[NFO]", err)
+							rt.progress.CheckFailed(v.Reason)
+						}
+					} else {
+						v.Status = fm.Clt_Msg_CallVerifProgress_failure
+						maybeEvalError(v, err)
+						log.Println("[NFO]", err)
+						rt.progress.CheckFailed(v.Reason)
+					}
+				} else {
+					v.Status = fm.Clt_Msg_CallVerifProgress_skipped
+					rt.progress.CheckSkipped(v.Name)
+				}
+			} else {
+				v.Status = fm.Clt_Msg_CallVerifProgress_failure
+				err = fmt.Errorf("expected predicate to return a Bool, got: %v", shouldBeBool)
+				v.Reason = strings.Split(err.Error(), "\n")
+				log.Println("[NFO]", err)
+				rt.progress.CheckFailed(v.Reason)
+			}
+		} else {
+			v.Status = fm.Clt_Msg_CallVerifProgress_failure
+			maybeEvalError(v, err)
+			log.Println("[NFO]", err)
+			rt.progress.CheckFailed(v.Reason)
+		}
+
+		if err = rt.client.Send(&fm.Clt{
+			Msg: &fm.Clt_Msg{
+				Msg: &fm.Clt_Msg_CallVerifProgress_{
+					CallVerifProgress: v,
+				}}}); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+
+		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
+			err = ErrCheckFailed
+			log.Println("[ERR]", err)
+			return
+		}
+	}
+	return
+}
+
+func maybeEvalError(v *fm.Clt_Msg_CallVerifProgress, err error) {
+	if e, ok := err.(*starlark.EvalError); ok {
+		// TODO: think about a dedicated type
+		v.Reason = strings.Split(e.Backtrace(), "\n")
+		return
+	}
+	v.Reason = strings.Split(err.Error(), "\n")
 }

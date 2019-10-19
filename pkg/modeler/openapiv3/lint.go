@@ -1,21 +1,27 @@
-package pkg
+package modeler_openapiv3
 
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gogo/protobuf/jsonpb"
 	openapi_v3 "github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
 	"gopkg.in/yaml.v2"
 )
 
-// DoLint builds a valid spec IR
-func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err error) {
+// Lint TODO
+func (m *oa3) Lint(showSpec bool) (err error) {
+	var blob []byte
+	if blob, err = ioutil.ReadFile(m.File); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
 	log.Printf("[NFO] reading info in %dB", len(blob))
 	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
 		return
@@ -37,17 +43,11 @@ func DoLint(docPath string, blob []byte, showSpec bool) (vald *Validator, err er
 	}
 
 	log.Println("[NFO] last validation pass")
-	if vald, err = newSpecFromOA3(doc); err != nil {
+	if m.vald, err = newSpecFromOA3(doc); err != nil {
 		return
 	}
 
-	log.Println("[DBG] serializing the protobuf")
-	jsoner := &jsonpb.Marshaler{
-		// Indent: "\t",
-		// EmitDefaults: true,
-	}
-	stringified, err := jsoner.MarshalToString(vald.Spec)
-	log.Printf("[DBG] %+v %s...", err, stringified[:37])
+	log.Println("[NFO] model is valid")
 	return
 }
 

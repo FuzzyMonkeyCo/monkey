@@ -1,4 +1,4 @@
-package pkg
+package modeler_openapiv3
 
 import (
 	"testing"

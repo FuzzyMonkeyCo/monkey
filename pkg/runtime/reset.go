@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context) error {
+func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Msg_Reset) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_ResetProgress_{

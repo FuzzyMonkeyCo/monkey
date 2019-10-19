@@ -1,22 +1,27 @@
 package modeler_openapiv3
 
 import (
+	"io"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	// "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"go.starlark.net/starlark"
 )
 
-func init() {
-	runtime.RegisterModeler("OpenAPIv3", (*oa3)(nil))
-}
+// func init() {
+// 	runtime.RegisterModeler("OpenAPIv3", (*oa3)(nil))
+// }
 
 var _ modeler.Interface = (*oa3)(nil)
 
 type oa3 struct {
 	fm.Clt_Msg_Fuzz_Model_Openapiv3
 
-	resetter resetter.Resetter
+	resetter resetter.Interface
+
+	vald *validator
 
 	tcap *tCapHTTP
 }
@@ -30,16 +35,16 @@ func (m *oa3) ToProto() *fm.Clt_Msg_Fuzz_Model {
 }
 
 // SetResetter TODO
-func (m *oa3) SetResetter(sr resetter.Resetter) { m.resetter = sr }
+func (m *oa3) SetResetter(sr resetter.Interface) { m.resetter = sr }
 
 // GetResetter TODO
-func (m *oa3) GetResetter() resetter.Resetter { return m.resetter }
+func (m *oa3) GetResetter() resetter.Interface { return m.resetter }
 
 // Pretty TODO
 func (m *oa3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
 func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
-	mo := &oa3{}
+	m := &oa3{}
 	var (
 		found              bool
 		field              string
@@ -51,7 +56,7 @@ func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 		e := &modeler.Error{FieldRead: field, Want: "a string", Got: file.Type()}
 		return nil, e
 	}
-	mo.File = file.(starlark.String).GoString()
+	m.File = file.(starlark.String).GoString()
 
 	field = "host"
 	if host, found = d[field]; found && host.Type() != "string" {
@@ -60,7 +65,7 @@ func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 	}
 	if found {
 		h := host.(starlark.String).GoString()
-		mo.Host = h
+		m.Host = h
 		addHost = &h
 	}
 
@@ -71,7 +76,7 @@ func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 	}
 	if found {
 		authz := hAuthz.(starlark.String).GoString()
-		mo.Header_Authorization = authz
+		m.Header_Authorization = authz
 		addHeaderAuthorization = &authz
 	}
 

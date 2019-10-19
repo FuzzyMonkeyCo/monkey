@@ -2,6 +2,7 @@ package modeler_openapiv3
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,7 +16,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	// "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	"github.com/gogo/protobuf/types"
 )
 
 var (
@@ -26,16 +30,18 @@ var (
 )
 
 var (
-	_ Capturer          = (*tCapHTTP)(nil)
-	_ CaptureShower     = (*tCapHTTP)(nil)
-	_ http.RoundTripper = (*tCapHTTP)(nil)
+	_ modeler.Caller        = (*tCapHTTP)(nil)
+	_ modeler.CaptureShower = (*tCapHTTP)(nil)
+	_ http.RoundTripper     = (*tCapHTTP)(nil)
 )
 
 type tCapHTTP struct {
 	showf    func(string, ...interface{})
 	req, rep []byte
 
-	har *HAR_Entry // FIXME: ditch HAR collector
+	httpReq  *http.Request
+	reqProto *fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_
+	repProto *fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_
 
 	// Request/Response somewhat follow python's `requests` API
 
@@ -96,43 +102,51 @@ func (c *tCapHTTP) ToProto() *fm.Clt_Msg_CallResponseRaw {
 
 type namedLambda struct {
 	name   string
-	lambda fuzz.CheckerFunc
+	lambda modeler.CheckerFunc
 }
 
-func (c *tCapHTTP) CheckFirst() (string, fuzz.CheckerFunc) {
+func (c *tCapHTTP) CheckFirst() (string, modeler.CheckerFunc) {
+	if len(c.firstChecks) == 0 {
+		return "", nil
+	}
 	var nameAndLambda namedLambda
 	nameAndLambda, c.firstChecks = c.firstChecks[0], c.firstChecks[1:]
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func NewCaller(showf func(string, ...interface{})) *tCapHTTP {
-	c := &tCapHTTP{
+func (m *oa3) NewCaller(msg *fm.Srv_Msg_Call, showf func(string, ...interface{})) (*tCapHTTP, error) {
+	m.tcap = &tCapHTTP{
 		showf: showf,
 	}
-	c.firstChecks = []namedLambda{
-		{"HTTP code", c.checkFirstHTTPCode},
-		{"valid JSON response", c.checkFirstValidJSONResponse},
-		{"response validates schema", c.checkFirstValidatesJSONSchema},
-		{"", nil},
+	if err := m.tcap.callinputProtoToHttpReqAndReqStructWithHostAndUA(msg); err != nil {
+		return nil, err
 	}
-	return c
+
+	m.tcap.firstChecks = []namedLambda{
+		{"HTTP code", m.checkFirstHTTPCode(msg.GetEId())},
+		{"valid JSON response", m.checkFirstValidJSONResponse},
+		{"response validates schema", m.checkFirstValidatesJSONSchema},
+	}
+	return m.tcap, nil
 }
 
-func (c *tCapHTTP) checkFirstHTTPCode(mnk *Monkey) (s string, f []string) {
-	endpoint := mnk.Vald.Spec.Endpoints[mnk.eid].GetJson()
-	var ok bool
-	// TODO: handle 1,2,3,4,5,XXX
-	// TODO: think about overflow
-	if c.matchedSID, ok = endpoint.Outputs[uint32(c.repStatus)]; !ok {
-		f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", c.repStatus))
+func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
+	return func() (s string, f []string) {
+		endpoint := m.vald.Spec.Endpoints[eId].GetJson()
+		var ok bool
+		// TODO: handle 1,2,3,4,5,XXX
+		// TODO: think about overflow
+		if m.tcap.matchedSID, ok = endpoint.Outputs[uint32(m.tcap.repStatus)]; !ok {
+			f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", m.tcap.repStatus))
+			return
+		}
+		s = "HTTP code checked"
 		return
 	}
-	s = "HTTP code checked"
-	return
 }
 
-func (c *tCapHTTP) checkFirstValidJSONResponse(mnk *Monkey) (s string, f []string) {
-	if !c.repHasBody {
+func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
+	if !m.tcap.repHasBody {
 		f = append(f, "response body is empty")
 		return
 	}
@@ -142,8 +156,8 @@ func (c *tCapHTTP) checkFirstValidJSONResponse(mnk *Monkey) (s string, f []strin
 	return
 }
 
-func (c *tCapHTTP) checkFirstValidatesJSONSchema(mnk *Monkey) (s string, f []string) {
-	if errs := mnk.Vald.Spec.Schemas.Validate(c.matchedSID, c.repJSON); len(errs) != 0 {
+func (m *oa3) checkFirstValidatesJSONSchema() (s string, f []string) {
+	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repJSON); len(errs) != 0 {
 		f = errs
 		return
 	}
@@ -164,57 +178,67 @@ func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
 	return nil
 }
 
-func (c *tCapHTTP) Request() map[string]interface{} {
-	m := map[string]interface{}{
-		"method":  c.reqMethod,
-		"url":     c.reqURL.String(),
-		"headers": c.reqHeaders,
-		// "content" as bytes?
+func (c *tCapHTTP) Request() *types.Struct {
+	s := types.Struct{
+		Fields: map[string]*types.Value{
+			"method":  {Kind: &types.Value_StringValue{c.reqMethod}},
+			"url":     {Kind: &types.Value_StringValue{c.reqURL.String()}},
+			"headers": {Kind: &types.Value_ListValue{c.reqHeaders}},
+			// "content" as bytes?
+		},
 	}
 	if c.reqHasBody {
-		m["json"] = c.reqJSON
+		s.Fields["json"] = &types.Value{Kind: &types.Value_StringValue{c.reqJSON}}
 	}
 	// TODO? Response *Response
 	// Response is the redirect response which caused this request
 	// to be created. This field is only populated during client
 	// redirects.
-	return m
+	return s
 }
 
-func (c *tCapHTTP) Response() map[string]interface{} {
-	m := map[string]interface{}{
-		"request": c.Request(),
-		// FIXME: "error": c.repErr,
-		"status_code": c.repStatus,
-		"reason":      c.repReason,
-		"headers":     c.repHeaders,
-		// "content" as bytes?
-		// "history" :: []Rep (redirects)?
+func (c *tCapHTTP) Response() *types.Struct {
+	s := types.Struct{
+		Fields: map[string]*types.Value{
+			"request": {Kind: c.Request()},
+			// FIXME: "error": c.repErr,
+			"status_code": {Kind: &types.Value_StringValue{c.repStatus}},
+			"reason":      {Kind: &types.Value_StringValue{c.repReason}},
+			"headers":     {Kind: &types.Value_ListValue{c.repHeaders}},
+			// "content" as bytes?
+			// "history" :: []Rep (redirects)?
+		},
 	}
 	if c.repHasBody {
-		m["json"] = c.repJSON
+		s.Fields["json"] = c.repJSON
 	}
 	// TODO? TLS *tls.ConnectionState
 	// TLS contains information about the TLS connection on which the
 	// response was received. It is nil for unencrypted responses.
 	// The pointer is shared between responses and should not be
 	// modified.
-	return m
+	return s
 }
 
 func (c *tCapHTTP) request(r *http.Request) (err error) {
-	c.reqMethod = r.Method
-	c.reqURL = cloneURL(r.URL)
+	c.reqProto = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_{
+		Method: r.Method,
+		Url: r.URL.String(),
+	}
 
-	c.reqHeaders = cloneHeader(r.Header)
-	if _, ok := c.reqHeaders[headerContentLength]; ok {
-		c.reqHeaders[headerContentLength] = []string{strconv.FormatInt(r.ContentLength, 10)}
-	}
-	if _, ok := c.reqHeaders[headerTransferEncoding]; ok {
-		c.reqHeaders[headerTransferEncoding] = r.TransferEncoding
-	}
-	if _, ok := c.reqHeaders[headerHost]; ok {
-		c.reqHeaders[headerHost] = []string{r.Host}
+	reqHeaders := cloneHeader(r.Header)
+	for key, values := range reqHeaders {
+		switch key {
+		case headerContentLength:
+			v := strconv.FormatInt(r.ContentLength, 10)
+			reqHeaders[headerContentLength] = &types.Value_ListValue{Values: {v}}
+		case headerTransferEncoding:
+			v := r.TransferEncoding
+			reqHeaders[headerTransferEncoding] = &types.Value_ListValue{
+				&types.Value_StringValue{v}
+		case headerHost:
+			v := r.Host
+			reqHeaders[headerHost] = []string{r.Host}
 	}
 
 	if r.Body != nil {
@@ -295,9 +319,11 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 		return
 	}
 	elapsed := time.Since(start)
-	c.elapsed = elapsed
 
-	if c.har, err = harEntry(req, rep, elapsed); err != nil {
+	if c.reqProto, err = reqToProto(req, elapsed); err != nil {
+		return
+	}
+	if c.repProto, err = repToProto(rep, elapsed); err != nil {
 		return
 	}
 
@@ -305,10 +331,28 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	return
 }
 
-// FIXME: remove this global by attaching to OpenAPIv3 modeler
-var tcap *tCapHTTP
+func (c *tCapHTTP) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Msg_Call) (err error) {
+	input := msg.GetHttpRequest()
+	if body := input.GetBody(); len(body) != 0 {
+		b := bytes.NewReader(body)
+		c.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
+	} else {
+		c.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
+	}
+	if err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 
-func (c *tCapHTTP) makeRequest(harReq *HAR_Request, host string) (nxt *RepCallDone, err error) {
+	for key, values := range input.GetHeaders() {
+		for _, value := range values.GetValues() {
+			c.httpReq.Header.Add(key, value)
+		}
+	}
+	return
+}
+
+func (c *tCapHTTP) Do(ctx context.Context) error {
 	req, err := harReq.Request()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -383,7 +427,7 @@ func maybeUpdateUserAgentHeader(r *http.Request) {
 			}
 		}
 		if replace {
-			r.Header[headerUserAgent] = []string{runtime.BinTitle()}
+			// r.Header[headerUserAgent] = []string{runtime.BinTitle()}
 		}
 	}
 }

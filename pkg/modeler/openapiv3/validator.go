@@ -1,42 +1,42 @@
-package pkg
+package modeler_openapiv3
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
-	"os"
 	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/gogo/protobuf/types"
 	"github.com/xeipuuv/gojsonschema"
 )
 
-type Validator struct {
-	Spec *SpecIR
+type validator struct {
+	Spec *fm.SpecIR
 	Refs map[string]sid
 	Refd *gojsonschema.SchemaLoader
 }
 
-func newValidator(capaEndpoints, capaSchemas int) *Validator {
-	return &Validator{
+func newValidator(capaEndpoints, capaSchemas int) *validator {
+	return &validator{
 		Refs: make(map[string]sid, capaSchemas),
-		Spec: &SpecIR{
+		Spec: &fm.SpecIR{
 			Endpoints: make(map[eid]*Endpoint, capaEndpoints),
-			Schemas:   &Schemas{Json: make(map[sid]*RefOrSchemaJSON, capaSchemas)},
+			Schemas:   &fm.Schemas{Json: make(map[sid]*fm.RefOrSchemaJSON, capaSchemas)},
 		},
 		Refd: gojsonschema.NewSchemaLoader(),
 	}
 }
 
-func (vald *Validator) newSID() sid {
+func (vald *validator) newSID() sid {
 	return sid(1 + len(vald.Spec.Schemas.Json))
 }
 
-func (vald *Validator) seed(base string, schemas schemasJSON) (err error) {
+func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 	i, names := 0, make([]string, len(schemas))
 	for name := range schemas {
 		names[i] = name
@@ -49,8 +49,8 @@ func (vald *Validator) seed(base string, schemas schemasJSON) (err error) {
 		absRef := base + name
 		log.Printf("[DBG] pre-seeding ref '%s'", absRef)
 		refSID := vald.newSID()
-		vald.Spec.Schemas.Json[refSID] = &RefOrSchemaJSON{
-			PtrOrSchema: &RefOrSchemaJSON_Ptr{&SchemaPtr{Ref: absRef, SID: 0}},
+		vald.Spec.Schemas.Json[refSID] = &fm.RefOrSchemaJSON{
+			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{&fm.SchemaPtr{Ref: absRef, SID: 0}},
 		}
 		vald.Refs[absRef] = refSID
 	}
@@ -73,14 +73,14 @@ func (vald *Validator) seed(base string, schemas schemasJSON) (err error) {
 		}
 		refSID := vald.Refs[absRef]
 		vald.Refs[absRef] = sid
-		vald.Spec.Schemas.Json[refSID] = &RefOrSchemaJSON{
-			PtrOrSchema: &RefOrSchemaJSON_Ptr{&SchemaPtr{Ref: absRef, SID: sid}},
+		vald.Spec.Schemas.Json[refSID] = &fm.RefOrSchemaJSON{
+			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{&fm.SchemaPtr{Ref: absRef, SID: sid}},
 		}
 	}
 	return
 }
 
-func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
+func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
 		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
@@ -89,8 +89,8 @@ func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 			}
 		}
 		SID := vald.newSID()
-		vald.Spec.Schemas.Json[SID] = &RefOrSchemaJSON{
-			PtrOrSchema: &RefOrSchemaJSON_Schema{&schema},
+		vald.Spec.Schemas.Json[SID] = &fm.RefOrSchemaJSON{
+			PtrOrSchema: &fm.RefOrSchemaJSON_Schema{&schema},
 		}
 		return SID
 	}
@@ -100,7 +100,7 @@ func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		// Every $ref should already be in here
 		panic(ref)
 	}
-	schemaPtr := &SchemaPtr{Ref: ref, SID: mappedSID}
+	schemaPtr := &fm.SchemaPtr{Ref: ref, SID: mappedSID}
 	SID := sid(0)
 	for refSID, schemaPtr := range vald.Spec.Schemas.Json {
 		if ptr := schemaPtr.GetPtr(); ptr != nil && ptr.GetRef() == ref {
@@ -111,17 +111,17 @@ func (vald *Validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		// Impossible not to find that ref
 		panic(ref)
 	}
-	vald.Spec.Schemas.Json[SID] = &RefOrSchemaJSON{
-		PtrOrSchema: &RefOrSchemaJSON_Ptr{schemaPtr},
+	vald.Spec.Schemas.Json[SID] = &fm.RefOrSchemaJSON{
+		PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{schemaPtr},
 	}
 	return SID
 }
 
-func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
+func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
-		schema.Enum = make([]*ValueJSON, len(enum))
+		schema.Enum = make([]*types.Value, len(enum))
 		for i, vv := range enum {
 			schema.Enum[i] = enumFromGo(vv)
 		}
@@ -130,7 +130,7 @@ func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	// "type"
 	if v, ok := s["type"]; ok {
 		types := v.([]string)
-		schema.Types = make([]Schema_JSON_Type, len(types))
+		schema.Types = make([]fm.Schema_JSON_Type, len(types))
 		for i, vv := range types {
 			schema.Types[i] = Schema_JSON_Type(Schema_JSON_Type_value[vv])
 		}
@@ -293,7 +293,7 @@ func (vald *Validator) fromGo(s schemaJSON) (schema Schema_JSON) {
 	return
 }
 
-type schemap map[sid]*RefOrSchemaJSON
+type schemap map[sid]*fm.RefOrSchemaJSON
 
 func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	schemaOrRef, ok := sm[SID]
@@ -439,7 +439,7 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	return
 }
 
-func formatFromGo(format string) Schema_JSON_Format {
+func formatFromGo(format string) fm.Schema_JSON_Format {
 	switch format {
 	case "date-time":
 		return Schema_JSON_date_time
@@ -454,7 +454,7 @@ func formatFromGo(format string) Schema_JSON_Format {
 	}
 }
 
-func formatToGo(format Schema_JSON_Format) string {
+func formatToGo(format fm.Schema_JSON_Format) string {
 	switch format {
 	case Schema_JSON_NONE:
 		return ""
@@ -467,54 +467,53 @@ func formatToGo(format Schema_JSON_Format) string {
 	}
 }
 
-func enumFromGo(value interface{}) *ValueJSON {
+func enumFromGo(value interface{}) *types.Value {
 	if value == nil {
-		return &ValueJSON{Value: &ValueJSON_IsNull{true}}
+		return types.NullValue_NULL_VALUE
 	}
 	switch val := value.(type) {
 	case bool:
-		return &ValueJSON{Value: &ValueJSON_Boolean{val}}
+		return &types.Value{Kind: &types.Value_BoolValue{val}}
 	case float64:
-		return &ValueJSON{Value: &ValueJSON_Number{val}}
+		return &types.Value{Kind: &types.Value_NumberValue{val}}
 	case string:
-		return &ValueJSON{Value: &ValueJSON_Text{val}}
+		return &types.Value{Kind: &types.Value_StringValue{val}}
 	case []interface{}:
-		vs := make([]*ValueJSON, len(val))
+		vs := make([]*types.Value, len(val))
 		for i, v := range val {
 			vs[i] = enumFromGo(v)
 		}
-		return &ValueJSON{Value: &ValueJSON_Array{&ArrayJSON{Values: vs}}}
+		return &types.Value{Kind: &types.Value_ListValue{Values: vs}}
 	case map[string]interface{}:
-		vs := make(map[string]*ValueJSON, len(val))
+		vs := make(map[string]*types.Value, len(val))
 		for n, v := range val {
 			vs[n] = enumFromGo(v)
 		}
-		return &ValueJSON{Value: &ValueJSON_Object{&ObjectJSON{Values: vs}}}
+		return &types.Value{Kind: &types.Value_StructValue{Fields: vs}}
 	default:
 		panic("unreachable")
 	}
 }
 
-func EnumToGo(value *ValueJSON) interface{} {
-	if value.GetIsNull() {
-		return nil
-	}
+func EnumToGo(value *types.Value) interface{} {
 	switch value.GetValue().(type) {
-	case *ValueJSON_Boolean:
-		return value.GetBoolean()
-	case *ValueJSON_Number:
-		return value.GetNumber()
-	case *ValueJSON_Text:
-		return value.GetText()
-	case *ValueJSON_Array:
-		val := value.GetArray().GetValues()
+	case *types.Value_NullValue:
+		return nil
+	case *types.Value_BoolValue:
+		return value.GetBoolValue()
+	case *types.Value_NumberValue:
+		return value.GetNumberValue()
+	case *types.Value_StringValue:
+		return value.GetStringValue()
+	case *types.Value_ListValue:
+		val := value.GetListValue().GetValues()
 		vs := make([]interface{}, len(val))
 		for i, v := range val {
 			vs[i] = EnumToGo(v)
 		}
 		return vs
-	case *ValueJSON_Object:
-		val := value.GetObject().GetValues()
+	case *types.Value_StructValue:
+		val := value.GetStructValue().GetFields()
 		vs := make(map[string]interface{}, len(val))
 		for n, v := range val {
 			vs[n] = EnumToGo(v)
@@ -525,7 +524,7 @@ func EnumToGo(value *ValueJSON) interface{} {
 	}
 }
 
-func (vald *Validator) FilterEndpoints(args []string) (eids []eid, err error) {
+func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	// TODO? filter on 2nd, 3rd, ... -level schemas
 	// instead of just first level (ref A references B & C)
 
@@ -645,8 +644,16 @@ func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) 
 	return
 }
 
-func (vald *Validator) WriteAbsoluteReferences(w io.Writer) {
-	all := make([]string, 0, len(vald.Refs))
+func (vald *validator) InputsCount() int {
+	return len(vald.Refs)
+}
+
+func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
+	if vald.InputsCount() != 0 {
+		as.ColorNFO.Fprintln(w, "Available types:")
+	}
+
+	all := make([]string, 0, vald.InputsCount())
 	for absRef := range vald.Refs {
 		all = append(all, absRef)
 	}
@@ -658,17 +665,12 @@ func (vald *Validator) WriteAbsoluteReferences(w io.Writer) {
 	}
 }
 
-func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
+func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
 		err = ErrNoSuchRef
 		return
 	}
 
-	var data []byte
-	if data, err = ioutil.ReadAll(os.Stdin); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
 	var value interface{}
 	if err = json.Unmarshal(data, &value); err != nil {
 		log.Println("[ERR]", err)
@@ -685,7 +687,7 @@ func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 	}
 
 	log.Println("[NFO] validating payload against refs")
-	res, err := schema.Validate(gojsonschema.NewGoLoader(value))
+	res, err := vald.Validate(schema, gojsonschema.NewGoLoader(value))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -702,9 +704,9 @@ func (vald *Validator) ValidateAgainstSchema(absRef string) (err error) {
 	return
 }
 
-func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
+func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 	var sm schemap
-	sm = ss.GetJson()
+	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)
 	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, json_data)
 	// FIXME? turns out Compile does not need an $id set?
@@ -732,7 +734,7 @@ func (ss *Schemas) Validate(SID sid, json_data interface{}) []string {
 	}
 
 	log.Println("[NFO] validating payload against refs")
-	res, err := schema.Validate(gojsonschema.NewGoLoader(json_data))
+	res, err := vald.Validate(schema, gojsonschema.NewGoLoader(json_data))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return []string{err.Error()}

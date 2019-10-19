@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
 )
@@ -17,6 +18,8 @@ func init() {
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
+
+	RegisterModeler("OpenAPIv3", (*openapiv3.T)(nil))
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop

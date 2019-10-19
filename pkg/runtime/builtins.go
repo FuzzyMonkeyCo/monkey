@@ -37,26 +37,26 @@ func (rt *runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.
 }
 
 type triggerActionAfterProbe struct {
-	Name              starlark.String
-	Probe             starlark.Tuple
-	Predicate, Action *starlark.Function
+	name      starlark.String
+	probe     starlark.Tuple
+	pred, act *starlark.Function
 }
 
 func (rt *runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var trigger triggerActionAfterProbe
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"name?", &trigger.Name,
-		"probe", &trigger.Probe,
-		"predicate", &trigger.Predicate,
-		"action", &trigger.Action,
+		"name?", &trigger.name,
+		"probe", &trigger.probe,
+		"predicate", &trigger.pred,
+		"action", &trigger.act,
 	); err != nil {
 		return nil, err
 	}
-	// TODO: enforce arities
+	// FIXME: enforce arities
 	log.Println("[NFO] registering", b.Name(), trigger)
-	if name := trigger.Name.GoString(); name == "" {
-		trigger.Name = starlark.String(trigger.Action.Name())
-		// TODO: complain if trigger.Name == "lambda"
+	if name := trigger.name.GoString(); name == "" {
+		trigger.name = starlark.String(trigger.act.Name())
+		// FIXME: complain if trigger.Name == "lambda"
 	}
 	rt.triggers = append(rt.triggers, trigger)
 	return starlark.None, nil

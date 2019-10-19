@@ -1,13 +1,9 @@
-package pkg
+package modeler_openapiv3
 
 import (
-	"errors"
 	"sort"
 	"strings"
 )
-
-var ErrInvalidPayload = errors.New("invalid JSON payload")
-var ErrNoSuchRef = errors.New("no such $ref")
 
 type eid = uint32
 type sid = uint32
@@ -19,7 +15,7 @@ func (f sids) Len() int           { return len(f) }
 func (f sids) Less(i, j int) bool { return f[i] < f[j] }
 func (f sids) Swap(i, j int)      { f[i], f[j] = f[j], f[i] }
 
-func (vald *Validator) refsFromSIDs(SIDs sids) []string {
+func (vald *validator) refsFromSIDs(SIDs sids) []string {
 	sort.Sort(SIDs)
 	refs := make([]string, 0, len(SIDs))
 	for _, SID := range SIDs {

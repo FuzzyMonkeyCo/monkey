@@ -1,12 +1,18 @@
 package modeler
 
 import (
+	"errors"
 	"fmt"
 	"io"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"go.starlark.net/starlark"
+)
+
+var (
+	ErrUnparsablePayload = errors.New("unparsable piped payload")
+	ErrNoSuchSchema      = errors.New("no such schema")
 )
 
 // Interface describes checkable models
@@ -18,7 +24,14 @@ type Interface interface {
 	SetResetter(resetter.Interface)
 	GetResetter() resetter.Interface
 
-	NewCaller() Caller
+	Lint(bool) error
+
+	InputsCount() int
+	WriteAbsoluteReferences(io.Writer)
+	ValidateAgainstSchema(string, []byte) error
+	FilterEndpoints([]string) ([]uint32, error)
+
+	NewCaller(*fm.Srv_Msg_Call, func(string, ...interface{})) (Caller, error)
 
 	// Check(...) ...
 

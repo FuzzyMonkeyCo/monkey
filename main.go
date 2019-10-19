@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -11,11 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	monkey "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
 	"github.com/mitchellh/mapstructure"
@@ -204,21 +207,78 @@ func actualMain() int {
 	}
 
 	// Always lint before fuzzing
-	vald, err := pkg.DoLint(docPath, blob, args.ShowSpec)
-	if err != nil {
+	if err := rt.Lint(args.ShowSpec); err != nil {
 		return code.FailedLint
 	}
 	if args.Lint {
-		err := fmt.Errorf("%s is a valid %v specification", docPath, cfg.Kind)
-		log.Println("[NFO]", err)
-		as.ColorNFO.Println(err)
 		return code.OK
 	}
 
 	if args.Schema {
-		return doSchema(vald, args.ValidateAgainst)
+		ref := args.ValidateAgainst
+		if ref == "" {
+			rt.WriteAbsoluteReferences(os.Stdout)
+			return code.OK
+		}
+
+		data, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			log.Println("[ERR]", err)
+			return code.FailedSchema
+		}
+
+		if err := rt.ValidateAgainstSchema(ref, data); err != nil {
+			switch err {
+			case modeler.ErrUnparsablePayload:
+			case modeler.ErrNoSuchSchema:
+				as.ColorERR.Printf("No such $ref '%s'\n", ref)
+				rt.WriteAbsoluteReferences(os.Stdout)
+			default:
+				as.ColorERR.Println(err)
+			}
+			return code.FailedSchema
+		}
+		as.ColorNFO.Println("Payload is valid")
+		return code.OK
 	}
-	return doFuzz(rt)
+
+	var apiKey string
+	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
+		err := fmt.Errorf("$%s is unset", envAPIKey)
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
+	as.ColorNFO.Printf("%d named schemas\n", rt.InputsCount())
+	if err = rt.FilterEndpoints(os.Args); err != nil {
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
+	rt.Ntensity = args.N
+	if args.N == 0 {
+		as.ColorERR.Println("No tests to run.")
+		return code.Failed
+	}
+	as.ColorNFO.Printf("\n Running tests...\n\n")
+
+	ctx := context.Background()
+	closer, err := rt.Dial(ctx, binTitle, apiKey)
+	if err != nil {
+		return retryOrReport()
+	}
+	defer closer()
+
+	if err := rt.Fuzz(ctx); err != nil {
+		return retryOrReportThenCleanup(err)
+	}
+	fmt.Println()
+	fmt.Println()
+	// if rt.TestsSucceeded() {
+	return code.OK
+	// }
+	// return code.FailedFuzz
 }
 
 func logLevel(verbosity uint8) logutils.LogLevel {
@@ -295,76 +355,9 @@ func doEnv(vars []string) int {
 	return code.OK
 }
 
-func doSchema(vald *pkg.Validator, ref string) int {
-	refs := vald.Refs
-	refsCount := len(refs)
-	if ref == "" {
-		log.Printf("[NFO] found %d refs\n", refsCount)
-		as.ColorNFO.Printf("Found %d refs\n", refsCount)
-		vald.WriteAbsoluteReferences(os.Stdout)
-		return code.OK
-	}
-
-	if err := vald.ValidateAgainstSchema(ref); err != nil {
-		switch err {
-		case pkg.ErrInvalidPayload:
-		case pkg.ErrNoSuchRef:
-			as.ColorERR.Printf("No such $ref '%s'\n", ref)
-			if refsCount > 0 {
-				fmt.Println("Try one of:")
-				vald.WriteAbsoluteReferences(os.Stdout)
-			}
-		default:
-			as.ColorERR.Println(err)
-		}
-		return code.FailedSchema
-	}
-	as.ColorNFO.Println("Payload is valid")
-	return code.OK
-}
-
-func doFuzz(rt *runtime.runtime) int {
-	var apiKey string
-	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
-		err := fmt.Errorf("$%s is unset", envAPIKey)
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
-		return code.Failed
-	}
-
-	as.ColorNFO.Printf("%d named schemas\n", len(vald.Refs))
-	if rt.EIDs, err = vald.FilterEndpoints(os.Args); err != nil {
-		as.ColorERR.Println(err)
-		return code.Failed
-	}
-
-	rt.Ntensity = args.N
-	if args.N == 0 {
-		as.ColorERR.Println("No tests to run.")
-		return code.Failed
-	}
-	as.ColorNFO.Printf("\n Running tests...\n\n")
-
-	closer, err := rt.Dial(context.Background(), binTitle, apiKey)
-	if err != nil {
-		return retryOrReport()
-	}
-	defer closer()
-
-	if err := rt.Fuzz(ctx); err != nil {
-		return retryOrReportThenCleanup(err)
-	}
-	fmt.Println()
-	fmt.Println()
-	if rt.TestsSucceeded() {
-		return code.OK
-	}
-	return code.FailedFuzz
-}
-
 func retryOrReportThenCleanup(err error) int {
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if _, ok := err.(*reset.Error); ok {
+	if _, ok := err.(*resetter.Error); ok {
 		as.ColorERR.Println(err)
 		return code.FailedExec
 	}

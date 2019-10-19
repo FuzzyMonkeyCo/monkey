@@ -39,7 +39,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 					Usage:     os.Args,
 					Seed:      []byte{42, 42, 42},
 					Intensity: rt.Ntensity,
-					EIDs:      rt.EIDs,
+					EIDs:      rt.eIds,
 				}}}}); err != nil {
 		log.Println("[ERR]", err)
 		return err
@@ -64,16 +64,18 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 
 		log.Println(srv)
-		msg := srv.GetMsg().GetMsg()
-		switch msg := msg.(type) {
+		msg := srv.GetMsg()
+		switch msg.GetMsg().(type) {
 		case *fm.Srv_Msg_Call_:
+			cll := msg.GetCall()
 			// rt.progress.state("🙈") 🙉 🙊 🐵
 			// rt.progress.Before(ui.Call)
-			if err := rt.call(ctx, msg.GetEId(), msg.GetInput()); err != nil {
+			if err := rt.call(ctx, cll); err != nil {
 				return err
 			}
 		case *fm.Srv_Msg_Reset_:
-			if err := rt.reset(ctx); err != nil {
+			rst := msg.GetReset_()
+			if err := rt.reset(ctx, rst); err != nil {
 				return err
 			}
 		default:

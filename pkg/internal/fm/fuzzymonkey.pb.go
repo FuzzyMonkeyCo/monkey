@@ -7,6 +7,7 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
+import types "github.com/gogo/protobuf/types"
 
 import bytes "bytes"
 
@@ -14,6 +15,8 @@ import (
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
 )
+
+import encoding_binary "encoding/binary"
 
 import io "io"
 
@@ -48,7 +51,7 @@ func (x Clt_Msg_Fuzz_ModelKind) String() string {
 	return proto.EnumName(Clt_Msg_Fuzz_ModelKind_name, int32(x))
 }
 func (Clt_Msg_Fuzz_ModelKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0, 0}
 }
 
 type Clt_Msg_ResetProgress_Status int32
@@ -77,7 +80,245 @@ func (x Clt_Msg_ResetProgress_Status) String() string {
 	return proto.EnumName(Clt_Msg_ResetProgress_Status_name, int32(x))
 }
 func (Clt_Msg_ResetProgress_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 2, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 2, 0}
+}
+
+type Clt_Msg_CallVerifProgress_Status int32
+
+const (
+	Clt_Msg_CallVerifProgress_done    Clt_Msg_CallVerifProgress_Status = 0
+	Clt_Msg_CallVerifProgress_data    Clt_Msg_CallVerifProgress_Status = 1
+	Clt_Msg_CallVerifProgress_skipped Clt_Msg_CallVerifProgress_Status = 2
+	Clt_Msg_CallVerifProgress_start   Clt_Msg_CallVerifProgress_Status = 3
+	Clt_Msg_CallVerifProgress_success Clt_Msg_CallVerifProgress_Status = 4
+	Clt_Msg_CallVerifProgress_failure Clt_Msg_CallVerifProgress_Status = 5
+)
+
+var Clt_Msg_CallVerifProgress_Status_name = map[int32]string{
+	0: "done",
+	1: "data",
+	2: "skipped",
+	3: "start",
+	4: "success",
+	5: "failure",
+}
+var Clt_Msg_CallVerifProgress_Status_value = map[string]int32{
+	"done":    0,
+	"data":    1,
+	"skipped": 2,
+	"start":   3,
+	"success": 4,
+	"failure": 5,
+}
+
+func (x Clt_Msg_CallVerifProgress_Status) String() string {
+	return proto.EnumName(Clt_Msg_CallVerifProgress_Status_name, int32(x))
+}
+func (Clt_Msg_CallVerifProgress_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 5, 0}
+}
+
+type EndpointJSON_Method int32
+
+const (
+	EndpointJSON_UNKNOWN EndpointJSON_Method = 0
+	EndpointJSON_GET     EndpointJSON_Method = 1
+	EndpointJSON_HEAD    EndpointJSON_Method = 2
+	EndpointJSON_POST    EndpointJSON_Method = 3
+	EndpointJSON_PUT     EndpointJSON_Method = 4
+	EndpointJSON_PATCH   EndpointJSON_Method = 5
+	EndpointJSON_DELETE  EndpointJSON_Method = 6
+	EndpointJSON_CONNECT EndpointJSON_Method = 7
+	EndpointJSON_OPTIONS EndpointJSON_Method = 8
+	EndpointJSON_TRACE   EndpointJSON_Method = 9
+)
+
+var EndpointJSON_Method_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "GET",
+	2: "HEAD",
+	3: "POST",
+	4: "PUT",
+	5: "PATCH",
+	6: "DELETE",
+	7: "CONNECT",
+	8: "OPTIONS",
+	9: "TRACE",
+}
+var EndpointJSON_Method_value = map[string]int32{
+	"UNKNOWN": 0,
+	"GET":     1,
+	"HEAD":    2,
+	"POST":    3,
+	"PUT":     4,
+	"PATCH":   5,
+	"DELETE":  6,
+	"CONNECT": 7,
+	"OPTIONS": 8,
+	"TRACE":   9,
+}
+
+func (x EndpointJSON_Method) String() string {
+	return proto.EnumName(EndpointJSON_Method_name, int32(x))
+}
+func (EndpointJSON_Method) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{7, 0}
+}
+
+type ParamJSON_Kind int32
+
+const (
+	ParamJSON_UNKNOWN ParamJSON_Kind = 0
+	ParamJSON_body    ParamJSON_Kind = 1
+	ParamJSON_path    ParamJSON_Kind = 2
+	ParamJSON_query   ParamJSON_Kind = 3
+	ParamJSON_header  ParamJSON_Kind = 4
+	ParamJSON_cookie  ParamJSON_Kind = 5
+)
+
+var ParamJSON_Kind_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "body",
+	2: "path",
+	3: "query",
+	4: "header",
+	5: "cookie",
+}
+var ParamJSON_Kind_value = map[string]int32{
+	"UNKNOWN": 0,
+	"body":    1,
+	"path":    2,
+	"query":   3,
+	"header":  4,
+	"cookie":  5,
+}
+
+func (x ParamJSON_Kind) String() string {
+	return proto.EnumName(ParamJSON_Kind_name, int32(x))
+}
+func (ParamJSON_Kind) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{8, 0}
+}
+
+type Schema_JSON_Type int32
+
+const (
+	Schema_JSON_UNKNOWN Schema_JSON_Type = 0
+	Schema_JSON_any     Schema_JSON_Type = 1
+	Schema_JSON_null    Schema_JSON_Type = 2
+	Schema_JSON_boolean Schema_JSON_Type = 3
+	Schema_JSON_integer Schema_JSON_Type = 4
+	Schema_JSON_number  Schema_JSON_Type = 5
+	Schema_JSON_array   Schema_JSON_Type = 6
+	Schema_JSON_string  Schema_JSON_Type = 7
+	Schema_JSON_object  Schema_JSON_Type = 8
+)
+
+var Schema_JSON_Type_name = map[int32]string{
+	0: "UNKNOWN",
+	1: "any",
+	2: "null",
+	3: "boolean",
+	4: "integer",
+	5: "number",
+	6: "array",
+	7: "string",
+	8: "object",
+}
+var Schema_JSON_Type_value = map[string]int32{
+	"UNKNOWN": 0,
+	"any":     1,
+	"null":    2,
+	"boolean": 3,
+	"integer": 4,
+	"number":  5,
+	"array":   6,
+	"string":  7,
+	"object":  8,
+}
+
+func (x Schema_JSON_Type) String() string {
+	return proto.EnumName(Schema_JSON_Type_name, int32(x))
+}
+func (Schema_JSON_Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{10, 0, 0}
+}
+
+// type: string
+type Schema_JSON_Format int32
+
+const (
+	Schema_JSON_NONE      Schema_JSON_Format = 0
+	Schema_JSON_date_time Schema_JSON_Format = 1
+	Schema_JSON_date      Schema_JSON_Format = 2
+	// time = 3;
+	Schema_JSON_email Schema_JSON_Format = 4
+	// idn-email = 5;
+	Schema_JSON_hostname Schema_JSON_Format = 6
+	// idn_hostname = 7;
+	Schema_JSON_ipv4          Schema_JSON_Format = 8
+	Schema_JSON_ipv6          Schema_JSON_Format = 9
+	Schema_JSON_uri           Schema_JSON_Format = 10
+	Schema_JSON_uri_reference Schema_JSON_Format = 11
+	// iri = 12;
+	// iri_reference = 13;
+	// uri_template = 14;
+	// json_pointer = 15;
+	// relative_json_pointer = 16;
+	Schema_JSON_regex    Schema_JSON_Format = 17
+	Schema_JSON_int32    Schema_JSON_Format = 18
+	Schema_JSON_int64    Schema_JSON_Format = 19
+	Schema_JSON_float    Schema_JSON_Format = 20
+	Schema_JSON_double   Schema_JSON_Format = 21
+	Schema_JSON_byte     Schema_JSON_Format = 22
+	Schema_JSON_binary   Schema_JSON_Format = 23
+	Schema_JSON_password Schema_JSON_Format = 24
+)
+
+var Schema_JSON_Format_name = map[int32]string{
+	0:  "NONE",
+	1:  "date_time",
+	2:  "date",
+	4:  "email",
+	6:  "hostname",
+	8:  "ipv4",
+	9:  "ipv6",
+	10: "uri",
+	11: "uri_reference",
+	17: "regex",
+	18: "int32",
+	19: "int64",
+	20: "float",
+	21: "double",
+	22: "byte",
+	23: "binary",
+	24: "password",
+}
+var Schema_JSON_Format_value = map[string]int32{
+	"NONE":          0,
+	"date_time":     1,
+	"date":          2,
+	"email":         4,
+	"hostname":      6,
+	"ipv4":          8,
+	"ipv6":          9,
+	"uri":           10,
+	"uri_reference": 11,
+	"regex":         17,
+	"int32":         18,
+	"int64":         19,
+	"float":         20,
+	"double":        21,
+	"byte":          22,
+	"binary":        23,
+	"password":      24,
+}
+
+func (x Schema_JSON_Format) String() string {
+	return proto.EnumName(Schema_JSON_Format_name, int32(x))
+}
+func (Schema_JSON_Format) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{10, 0, 1}
 }
 
 type Clt struct {
@@ -91,7 +332,7 @@ func (m *Clt) Reset()         { *m = Clt{} }
 func (m *Clt) String() string { return proto.CompactTextString(m) }
 func (*Clt) ProtoMessage()    {}
 func (*Clt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0}
 }
 func (m *Clt) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -132,9 +373,9 @@ type Clt_Msg struct {
 	//	*Clt_Msg_Fuzz_
 	//	*Clt_Msg_Metrics_
 	//	*Clt_Msg_ResetProgress_
+	//	*Clt_Msg_CallRequestRaw_
 	//	*Clt_Msg_CallResponseRaw_
 	//	*Clt_Msg_CallVerifProgress_
-	//	*Clt_Msg_CallResponse_
 	Msg                  isClt_Msg_Msg `protobuf_oneof:"msg"`
 	XXX_NoUnkeyedLiteral struct{}      `json:"-"`
 	XXX_unrecognized     []byte        `json:"-"`
@@ -145,7 +386,7 @@ func (m *Clt_Msg) Reset()         { *m = Clt_Msg{} }
 func (m *Clt_Msg) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg) ProtoMessage()    {}
 func (*Clt_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0}
 }
 func (m *Clt_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -190,22 +431,22 @@ type Clt_Msg_Metrics_ struct {
 type Clt_Msg_ResetProgress_ struct {
 	ResetProgress *Clt_Msg_ResetProgress `protobuf:"bytes,3,opt,name=reset_progress,json=resetProgress,oneof"`
 }
+type Clt_Msg_CallRequestRaw_ struct {
+	CallRequestRaw *Clt_Msg_CallRequestRaw `protobuf:"bytes,4,opt,name=call_request_raw,json=callRequestRaw,oneof"`
+}
 type Clt_Msg_CallResponseRaw_ struct {
-	CallResponseRaw *Clt_Msg_CallResponseRaw `protobuf:"bytes,4,opt,name=call_response_raw,json=callResponseRaw,oneof"`
+	CallResponseRaw *Clt_Msg_CallResponseRaw `protobuf:"bytes,5,opt,name=call_response_raw,json=callResponseRaw,oneof"`
 }
 type Clt_Msg_CallVerifProgress_ struct {
-	CallVerifProgress *Clt_Msg_CallVerifProgress `protobuf:"bytes,5,opt,name=call_verif_progress,json=callVerifProgress,oneof"`
-}
-type Clt_Msg_CallResponse_ struct {
-	CallResponse *Clt_Msg_CallResponse `protobuf:"bytes,6,opt,name=call_response,json=callResponse,oneof"`
+	CallVerifProgress *Clt_Msg_CallVerifProgress `protobuf:"bytes,6,opt,name=call_verif_progress,json=callVerifProgress,oneof"`
 }
 
 func (*Clt_Msg_Fuzz_) isClt_Msg_Msg()              {}
 func (*Clt_Msg_Metrics_) isClt_Msg_Msg()           {}
 func (*Clt_Msg_ResetProgress_) isClt_Msg_Msg()     {}
+func (*Clt_Msg_CallRequestRaw_) isClt_Msg_Msg()    {}
 func (*Clt_Msg_CallResponseRaw_) isClt_Msg_Msg()   {}
 func (*Clt_Msg_CallVerifProgress_) isClt_Msg_Msg() {}
-func (*Clt_Msg_CallResponse_) isClt_Msg_Msg()      {}
 
 func (m *Clt_Msg) GetMsg() isClt_Msg_Msg {
 	if m != nil {
@@ -235,6 +476,13 @@ func (m *Clt_Msg) GetResetProgress() *Clt_Msg_ResetProgress {
 	return nil
 }
 
+func (m *Clt_Msg) GetCallRequestRaw() *Clt_Msg_CallRequestRaw {
+	if x, ok := m.GetMsg().(*Clt_Msg_CallRequestRaw_); ok {
+		return x.CallRequestRaw
+	}
+	return nil
+}
+
 func (m *Clt_Msg) GetCallResponseRaw() *Clt_Msg_CallResponseRaw {
 	if x, ok := m.GetMsg().(*Clt_Msg_CallResponseRaw_); ok {
 		return x.CallResponseRaw
@@ -249,22 +497,15 @@ func (m *Clt_Msg) GetCallVerifProgress() *Clt_Msg_CallVerifProgress {
 	return nil
 }
 
-func (m *Clt_Msg) GetCallResponse() *Clt_Msg_CallResponse {
-	if x, ok := m.GetMsg().(*Clt_Msg_CallResponse_); ok {
-		return x.CallResponse
-	}
-	return nil
-}
-
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*Clt_Msg) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _Clt_Msg_OneofMarshaler, _Clt_Msg_OneofUnmarshaler, _Clt_Msg_OneofSizer, []interface{}{
 		(*Clt_Msg_Fuzz_)(nil),
 		(*Clt_Msg_Metrics_)(nil),
 		(*Clt_Msg_ResetProgress_)(nil),
+		(*Clt_Msg_CallRequestRaw_)(nil),
 		(*Clt_Msg_CallResponseRaw_)(nil),
 		(*Clt_Msg_CallVerifProgress_)(nil),
-		(*Clt_Msg_CallResponse_)(nil),
 	}
 }
 
@@ -287,19 +528,19 @@ func _Clt_Msg_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 		if err := b.EncodeMessage(x.ResetProgress); err != nil {
 			return err
 		}
-	case *Clt_Msg_CallResponseRaw_:
+	case *Clt_Msg_CallRequestRaw_:
 		_ = b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CallRequestRaw); err != nil {
+			return err
+		}
+	case *Clt_Msg_CallResponseRaw_:
+		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.CallResponseRaw); err != nil {
 			return err
 		}
 	case *Clt_Msg_CallVerifProgress_:
-		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.CallVerifProgress); err != nil {
-			return err
-		}
-	case *Clt_Msg_CallResponse_:
 		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
-		if err := b.EncodeMessage(x.CallResponse); err != nil {
+		if err := b.EncodeMessage(x.CallVerifProgress); err != nil {
 			return err
 		}
 	case nil:
@@ -336,7 +577,15 @@ func _Clt_Msg_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer
 		err := b.DecodeMessage(msg)
 		m.Msg = &Clt_Msg_ResetProgress_{msg}
 		return true, err
-	case 4: // msg.call_response_raw
+	case 4: // msg.call_request_raw
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Clt_Msg_CallRequestRaw)
+		err := b.DecodeMessage(msg)
+		m.Msg = &Clt_Msg_CallRequestRaw_{msg}
+		return true, err
+	case 5: // msg.call_response_raw
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
@@ -344,21 +593,13 @@ func _Clt_Msg_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer
 		err := b.DecodeMessage(msg)
 		m.Msg = &Clt_Msg_CallResponseRaw_{msg}
 		return true, err
-	case 5: // msg.call_verif_progress
+	case 6: // msg.call_verif_progress
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
 		}
 		msg := new(Clt_Msg_CallVerifProgress)
 		err := b.DecodeMessage(msg)
 		m.Msg = &Clt_Msg_CallVerifProgress_{msg}
-		return true, err
-	case 6: // msg.call_response
-		if wire != proto.WireBytes {
-			return true, proto.ErrInternalBadWireType
-		}
-		msg := new(Clt_Msg_CallResponse)
-		err := b.DecodeMessage(msg)
-		m.Msg = &Clt_Msg_CallResponse_{msg}
 		return true, err
 	default:
 		return false, nil
@@ -384,6 +625,11 @@ func _Clt_Msg_OneofSizer(msg proto.Message) (n int) {
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *Clt_Msg_CallRequestRaw_:
+		s := proto.Size(x.CallRequestRaw)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case *Clt_Msg_CallResponseRaw_:
 		s := proto.Size(x.CallResponseRaw)
 		n += 1 // tag and wire
@@ -391,11 +637,6 @@ func _Clt_Msg_OneofSizer(msg proto.Message) (n int) {
 		n += s
 	case *Clt_Msg_CallVerifProgress_:
 		s := proto.Size(x.CallVerifProgress)
-		n += 1 // tag and wire
-		n += proto.SizeVarint(uint64(s))
-		n += s
-	case *Clt_Msg_CallResponse_:
-		s := proto.Size(x.CallResponse)
 		n += 1 // tag and wire
 		n += proto.SizeVarint(uint64(s))
 		n += s
@@ -408,7 +649,7 @@ func _Clt_Msg_OneofSizer(msg proto.Message) (n int) {
 
 type Clt_Msg_Fuzz struct {
 	Resetter             *Clt_Msg_Fuzz_Resetter `protobuf:"bytes,1,opt,name=resetter" json:"resetter,omitempty"`
-	ModelKind            Clt_Msg_Fuzz_ModelKind `protobuf:"varint,2,opt,name=model_kind,json=modelKind,proto3,enum=fm.Clt_Msg_Fuzz_ModelKind" json:"model_kind,omitempty"`
+	ModelKind            Clt_Msg_Fuzz_ModelKind `protobuf:"varint,2,opt,name=model_kind,json=modelKind,proto3,enum=Clt_Msg_Fuzz_ModelKind" json:"model_kind,omitempty"`
 	Model                *Clt_Msg_Fuzz_Model    `protobuf:"bytes,3,opt,name=model" json:"model,omitempty"`
 	Usage                []string               `protobuf:"bytes,4,rep,name=usage" json:"usage,omitempty"`
 	Seed                 []byte                 `protobuf:"bytes,5,opt,name=seed,proto3" json:"seed,omitempty"`
@@ -423,7 +664,7 @@ func (m *Clt_Msg_Fuzz) Reset()         { *m = Clt_Msg_Fuzz{} }
 func (m *Clt_Msg_Fuzz) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -514,7 +755,7 @@ func (m *Clt_Msg_Fuzz_Resetter) Reset()         { *m = Clt_Msg_Fuzz_Resetter{} }
 func (m *Clt_Msg_Fuzz_Resetter) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -638,7 +879,7 @@ func (m *Clt_Msg_Fuzz_Resetter_Shell) Reset()         { *m = Clt_Msg_Fuzz_Resett
 func (m *Clt_Msg_Fuzz_Resetter_Shell) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Resetter_Shell) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Resetter_Shell) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0, 0, 0}
 }
 func (m *Clt_Msg_Fuzz_Resetter_Shell) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -701,7 +942,7 @@ func (m *Clt_Msg_Fuzz_Model) Reset()         { *m = Clt_Msg_Fuzz_Model{} }
 func (m *Clt_Msg_Fuzz_Model) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 1}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0, 1}
 }
 func (m *Clt_Msg_Fuzz_Model) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -828,7 +1069,7 @@ func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) Reset()         { *m = Clt_Msg_Fuzz_Model
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) ProtoMessage()    {}
 func (*Clt_Msg_Fuzz_Model_OpenAPIv3) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 0, 1, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 0, 1, 0}
 }
 func (m *Clt_Msg_Fuzz_Model_OpenAPIv3) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -888,7 +1129,7 @@ func (m *Clt_Msg_Metrics) Reset()         { *m = Clt_Msg_Metrics{} }
 func (m *Clt_Msg_Metrics) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_Metrics) ProtoMessage()    {}
 func (*Clt_Msg_Metrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 1}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 1}
 }
 func (m *Clt_Msg_Metrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -918,7 +1159,7 @@ func (m *Clt_Msg_Metrics) XXX_DiscardUnknown() {
 var xxx_messageInfo_Clt_Msg_Metrics proto.InternalMessageInfo
 
 type Clt_Msg_ResetProgress struct {
-	Status               Clt_Msg_ResetProgress_Status `protobuf:"varint,1,opt,name=status,proto3,enum=fm.Clt_Msg_ResetProgress_Status" json:"status,omitempty"`
+	Status               Clt_Msg_ResetProgress_Status `protobuf:"varint,1,opt,name=status,proto3,enum=Clt_Msg_ResetProgress_Status" json:"status,omitempty"`
 	TsDiff               uint64                       `protobuf:"varint,2,opt,name=ts_diff,json=tsDiff,proto3" json:"ts_diff,omitempty"`
 	Reason               []string                     `protobuf:"bytes,3,rep,name=reason" json:"reason,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
@@ -930,7 +1171,7 @@ func (m *Clt_Msg_ResetProgress) Reset()         { *m = Clt_Msg_ResetProgress{} }
 func (m *Clt_Msg_ResetProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_ResetProgress) ProtoMessage()    {}
 func (*Clt_Msg_ResetProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 2}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 2}
 }
 func (m *Clt_Msg_ResetProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -980,6 +1221,218 @@ func (m *Clt_Msg_ResetProgress) GetReason() []string {
 	return nil
 }
 
+type Clt_Msg_CallRequestRaw struct {
+	Input                *Clt_Msg_CallRequestRaw_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
+	XXX_unrecognized     []byte                        `json:"-"`
+	XXX_sizecache        int32                         `json:"-"`
+}
+
+func (m *Clt_Msg_CallRequestRaw) Reset()         { *m = Clt_Msg_CallRequestRaw{} }
+func (m *Clt_Msg_CallRequestRaw) String() string { return proto.CompactTextString(m) }
+func (*Clt_Msg_CallRequestRaw) ProtoMessage()    {}
+func (*Clt_Msg_CallRequestRaw) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 3}
+}
+func (m *Clt_Msg_CallRequestRaw) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallRequestRaw) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallRequestRaw.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallRequestRaw) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw.Merge(dst, src)
+}
+func (m *Clt_Msg_CallRequestRaw) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallRequestRaw) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallRequestRaw proto.InternalMessageInfo
+
+func (m *Clt_Msg_CallRequestRaw) GetInput() *Clt_Msg_CallRequestRaw_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+type Clt_Msg_CallRequestRaw_Input struct {
+	// Types that are valid to be assigned to Input:
+	//	*Clt_Msg_CallRequestRaw_Input_HttpRequest_
+	Input                isClt_Msg_CallRequestRaw_Input_Input `protobuf_oneof:"input"`
+	XXX_NoUnkeyedLiteral struct{}                             `json:"-"`
+	XXX_unrecognized     []byte                               `json:"-"`
+	XXX_sizecache        int32                                `json:"-"`
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input) Reset()         { *m = Clt_Msg_CallRequestRaw_Input{} }
+func (m *Clt_Msg_CallRequestRaw_Input) String() string { return proto.CompactTextString(m) }
+func (*Clt_Msg_CallRequestRaw_Input) ProtoMessage()    {}
+func (*Clt_Msg_CallRequestRaw_Input) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 3, 0}
+}
+func (m *Clt_Msg_CallRequestRaw_Input) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallRequestRaw_Input) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallRequestRaw_Input.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallRequestRaw_Input) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw_Input.Merge(dst, src)
+}
+func (m *Clt_Msg_CallRequestRaw_Input) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallRequestRaw_Input) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw_Input.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallRequestRaw_Input proto.InternalMessageInfo
+
+type isClt_Msg_CallRequestRaw_Input_Input interface {
+	isClt_Msg_CallRequestRaw_Input_Input()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Clt_Msg_CallRequestRaw_Input_HttpRequest_ struct {
+	HttpRequest *Clt_Msg_CallRequestRaw_Input_HttpRequest `protobuf:"bytes,1,opt,name=http_request,json=httpRequest,oneof"`
+}
+
+func (*Clt_Msg_CallRequestRaw_Input_HttpRequest_) isClt_Msg_CallRequestRaw_Input_Input() {}
+
+func (m *Clt_Msg_CallRequestRaw_Input) GetInput() isClt_Msg_CallRequestRaw_Input_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input) GetHttpRequest() *Clt_Msg_CallRequestRaw_Input_HttpRequest {
+	if x, ok := m.GetInput().(*Clt_Msg_CallRequestRaw_Input_HttpRequest_); ok {
+		return x.HttpRequest
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Clt_Msg_CallRequestRaw_Input) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Clt_Msg_CallRequestRaw_Input_OneofMarshaler, _Clt_Msg_CallRequestRaw_Input_OneofUnmarshaler, _Clt_Msg_CallRequestRaw_Input_OneofSizer, []interface{}{
+		(*Clt_Msg_CallRequestRaw_Input_HttpRequest_)(nil),
+	}
+}
+
+func _Clt_Msg_CallRequestRaw_Input_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Clt_Msg_CallRequestRaw_Input)
+	// input
+	switch x := m.Input.(type) {
+	case *Clt_Msg_CallRequestRaw_Input_HttpRequest_:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.HttpRequest); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Clt_Msg_CallRequestRaw_Input.Input has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Clt_Msg_CallRequestRaw_Input_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Clt_Msg_CallRequestRaw_Input)
+	switch tag {
+	case 1: // input.http_request
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Clt_Msg_CallRequestRaw_Input_HttpRequest)
+		err := b.DecodeMessage(msg)
+		m.Input = &Clt_Msg_CallRequestRaw_Input_HttpRequest_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Clt_Msg_CallRequestRaw_Input_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Clt_Msg_CallRequestRaw_Input)
+	// input
+	switch x := m.Input.(type) {
+	case *Clt_Msg_CallRequestRaw_Input_HttpRequest_:
+		s := proto.Size(x.HttpRequest)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type Clt_Msg_CallRequestRaw_Input_HttpRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) Reset() {
+	*m = Clt_Msg_CallRequestRaw_Input_HttpRequest{}
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
+func (*Clt_Msg_CallRequestRaw_Input_HttpRequest) ProtoMessage()    {}
+func (*Clt_Msg_CallRequestRaw_Input_HttpRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 3, 0, 0}
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Clt_Msg_CallRequestRaw_Input_HttpRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Clt_Msg_CallRequestRaw_Input_HttpRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw_Input_HttpRequest.Merge(dst, src)
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_Clt_Msg_CallRequestRaw_Input_HttpRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Clt_Msg_CallRequestRaw_Input_HttpRequest proto.InternalMessageInfo
+
 type Clt_Msg_CallResponseRaw struct {
 	Output               *Clt_Msg_CallResponseRaw_Output `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                        `json:"-"`
@@ -991,7 +1444,7 @@ func (m *Clt_Msg_CallResponseRaw) Reset()         { *m = Clt_Msg_CallResponseRaw
 func (m *Clt_Msg_CallResponseRaw) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponseRaw) ProtoMessage()    {}
 func (*Clt_Msg_CallResponseRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 4}
 }
 func (m *Clt_Msg_CallResponseRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1040,7 +1493,7 @@ func (m *Clt_Msg_CallResponseRaw_Output) Reset()         { *m = Clt_Msg_CallResp
 func (m *Clt_Msg_CallResponseRaw_Output) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallResponseRaw_Output) ProtoMessage()    {}
 func (*Clt_Msg_CallResponseRaw_Output) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 4, 0}
 }
 func (m *Clt_Msg_CallResponseRaw_Output) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1170,7 +1623,7 @@ func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) String() string {
 }
 func (*Clt_Msg_CallResponseRaw_Output_HttpResponse) ProtoMessage() {}
 func (*Clt_Msg_CallResponseRaw_Output_HttpResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 4, 0, 0}
 }
 func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1242,7 +1695,7 @@ func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) String() stri
 }
 func (*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) ProtoMessage() {}
 func (*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 3, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 4, 0, 0, 0}
 }
 func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1279,16 +1732,20 @@ func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues) GetValues() [
 }
 
 type Clt_Msg_CallVerifProgress struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Status               Clt_Msg_CallVerifProgress_Status `protobuf:"varint,1,opt,name=status,proto3,enum=Clt_Msg_CallVerifProgress_Status" json:"status,omitempty"`
+	Name                 string                           `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Reason               []string                         `protobuf:"bytes,3,rep,name=reason" json:"reason,omitempty"`
+	Response             *types.Struct                    `protobuf:"bytes,4,opt,name=response" json:"response,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}                         `json:"-"`
+	XXX_unrecognized     []byte                           `json:"-"`
+	XXX_sizecache        int32                            `json:"-"`
 }
 
 func (m *Clt_Msg_CallVerifProgress) Reset()         { *m = Clt_Msg_CallVerifProgress{} }
 func (m *Clt_Msg_CallVerifProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_Msg_CallVerifProgress) ProtoMessage()    {}
 func (*Clt_Msg_CallVerifProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 4}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{0, 0, 5}
 }
 func (m *Clt_Msg_CallVerifProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1317,44 +1774,33 @@ func (m *Clt_Msg_CallVerifProgress) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Clt_Msg_CallVerifProgress proto.InternalMessageInfo
 
-type Clt_Msg_CallResponse struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Clt_Msg_CallResponse) Reset()         { *m = Clt_Msg_CallResponse{} }
-func (m *Clt_Msg_CallResponse) String() string { return proto.CompactTextString(m) }
-func (*Clt_Msg_CallResponse) ProtoMessage()    {}
-func (*Clt_Msg_CallResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{0, 0, 5}
-}
-func (m *Clt_Msg_CallResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Clt_Msg_CallResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Clt_Msg_CallResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
+func (m *Clt_Msg_CallVerifProgress) GetStatus() Clt_Msg_CallVerifProgress_Status {
+	if m != nil {
+		return m.Status
 	}
-}
-func (dst *Clt_Msg_CallResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Clt_Msg_CallResponse.Merge(dst, src)
-}
-func (m *Clt_Msg_CallResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *Clt_Msg_CallResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_Clt_Msg_CallResponse.DiscardUnknown(m)
+	return Clt_Msg_CallVerifProgress_done
 }
 
-var xxx_messageInfo_Clt_Msg_CallResponse proto.InternalMessageInfo
+func (m *Clt_Msg_CallVerifProgress) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Clt_Msg_CallVerifProgress) GetReason() []string {
+	if m != nil {
+		return m.Reason
+	}
+	return nil
+}
+
+func (m *Clt_Msg_CallVerifProgress) GetResponse() *types.Struct {
+	if m != nil {
+		return m.Response
+	}
+	return nil
+}
 
 type Srv struct {
 	Msg                  *Srv_Msg `protobuf:"bytes,1,opt,name=msg" json:"msg,omitempty"`
@@ -1367,7 +1813,7 @@ func (m *Srv) Reset()         { *m = Srv{} }
 func (m *Srv) String() string { return proto.CompactTextString(m) }
 func (*Srv) ProtoMessage()    {}
 func (*Srv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1}
 }
 func (m *Srv) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1418,7 +1864,7 @@ func (m *Srv_Msg) Reset()         { *m = Srv_Msg{} }
 func (m *Srv_Msg) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg) ProtoMessage()    {}
 func (*Srv_Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0}
 }
 func (m *Srv_Msg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1601,7 +2047,7 @@ func (m *Srv_Msg_Call) Reset()         { *m = Srv_Msg_Call{} }
 func (m *Srv_Msg_Call) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call) ProtoMessage()    {}
 func (*Srv_Msg_Call) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 0}
 }
 func (m *Srv_Msg_Call) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1657,7 +2103,7 @@ func (m *Srv_Msg_Call_Input) Reset()         { *m = Srv_Msg_Call_Input{} }
 func (m *Srv_Msg_Call_Input) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call_Input) ProtoMessage()    {}
 func (*Srv_Msg_Call_Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1782,7 +2228,7 @@ func (m *Srv_Msg_Call_Input_HttpRequest) Reset()         { *m = Srv_Msg_Call_Inp
 func (m *Srv_Msg_Call_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Call_Input_HttpRequest) ProtoMessage()    {}
 func (*Srv_Msg_Call_Input_HttpRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1854,7 +2300,7 @@ func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) String() string {
 }
 func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) ProtoMessage() {}
 func (*Srv_Msg_Call_Input_HttpRequest_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 0, 0, 0, 0}
 }
 func (m *Srv_Msg_Call_Input_HttpRequest_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1900,7 +2346,7 @@ func (m *Srv_Msg_Reset) Reset()         { *m = Srv_Msg_Reset{} }
 func (m *Srv_Msg_Reset) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_Reset) ProtoMessage()    {}
 func (*Srv_Msg_Reset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 1}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 1}
 }
 func (m *Srv_Msg_Reset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1939,7 +2385,7 @@ func (m *Srv_Msg_FuzzProgress) Reset()         { *m = Srv_Msg_FuzzProgress{} }
 func (m *Srv_Msg_FuzzProgress) String() string { return proto.CompactTextString(m) }
 func (*Srv_Msg_FuzzProgress) ProtoMessage()    {}
 func (*Srv_Msg_FuzzProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_9dd8a582123f3792, []int{1, 0, 2}
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{1, 0, 2}
 }
 func (m *Srv_Msg_FuzzProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1968,34 +2414,1261 @@ func (m *Srv_Msg_FuzzProgress) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Srv_Msg_FuzzProgress proto.InternalMessageInfo
 
+type SpecIR struct {
+	Schemas *Schemas `protobuf:"bytes,1,opt,name=schemas" json:"schemas,omitempty"`
+	// All endpoints are here.
+	// Start at 1 then increases monotonously. 0 (zero) is reserved for bug finding.
+	Endpoints            map[uint32]*Endpoint `protobuf:"bytes,2,rep,name=endpoints" json:"endpoints,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+func (m *SpecIR) Reset()         { *m = SpecIR{} }
+func (m *SpecIR) String() string { return proto.CompactTextString(m) }
+func (*SpecIR) ProtoMessage()    {}
+func (*SpecIR) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{2}
+}
+func (m *SpecIR) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SpecIR) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SpecIR.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *SpecIR) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SpecIR.Merge(dst, src)
+}
+func (m *SpecIR) XXX_Size() int {
+	return m.Size()
+}
+func (m *SpecIR) XXX_DiscardUnknown() {
+	xxx_messageInfo_SpecIR.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SpecIR proto.InternalMessageInfo
+
+func (m *SpecIR) GetSchemas() *Schemas {
+	if m != nil {
+		return m.Schemas
+	}
+	return nil
+}
+
+func (m *SpecIR) GetEndpoints() map[uint32]*Endpoint {
+	if m != nil {
+		return m.Endpoints
+	}
+	return nil
+}
+
+type Schemas struct {
+	// All schemas are here.
+	// Start at 1. 0 (zero) is reserved for bug finding.
+	Json                 map[uint32]*RefOrSchemaJSON `protobuf:"bytes,1,rep,name=json" json:"json,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
+}
+
+func (m *Schemas) Reset()         { *m = Schemas{} }
+func (m *Schemas) String() string { return proto.CompactTextString(m) }
+func (*Schemas) ProtoMessage()    {}
+func (*Schemas) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{3}
+}
+func (m *Schemas) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Schemas) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Schemas.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Schemas) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Schemas.Merge(dst, src)
+}
+func (m *Schemas) XXX_Size() int {
+	return m.Size()
+}
+func (m *Schemas) XXX_DiscardUnknown() {
+	xxx_messageInfo_Schemas.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Schemas proto.InternalMessageInfo
+
+func (m *Schemas) GetJson() map[uint32]*RefOrSchemaJSON {
+	if m != nil {
+		return m.Json
+	}
+	return nil
+}
+
+type RefOrSchemaJSON struct {
+	// Types that are valid to be assigned to PtrOrSchema:
+	//	*RefOrSchemaJSON_Ptr
+	//	*RefOrSchemaJSON_Schema
+	PtrOrSchema          isRefOrSchemaJSON_PtrOrSchema `protobuf_oneof:"ptr_or_schema"`
+	XXX_NoUnkeyedLiteral struct{}                      `json:"-"`
+	XXX_unrecognized     []byte                        `json:"-"`
+	XXX_sizecache        int32                         `json:"-"`
+}
+
+func (m *RefOrSchemaJSON) Reset()         { *m = RefOrSchemaJSON{} }
+func (m *RefOrSchemaJSON) String() string { return proto.CompactTextString(m) }
+func (*RefOrSchemaJSON) ProtoMessage()    {}
+func (*RefOrSchemaJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{4}
+}
+func (m *RefOrSchemaJSON) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *RefOrSchemaJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_RefOrSchemaJSON.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *RefOrSchemaJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RefOrSchemaJSON.Merge(dst, src)
+}
+func (m *RefOrSchemaJSON) XXX_Size() int {
+	return m.Size()
+}
+func (m *RefOrSchemaJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_RefOrSchemaJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RefOrSchemaJSON proto.InternalMessageInfo
+
+type isRefOrSchemaJSON_PtrOrSchema interface {
+	isRefOrSchemaJSON_PtrOrSchema()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type RefOrSchemaJSON_Ptr struct {
+	Ptr *SchemaPtr `protobuf:"bytes,1,opt,name=ptr,oneof"`
+}
+type RefOrSchemaJSON_Schema struct {
+	Schema *Schema_JSON `protobuf:"bytes,2,opt,name=schema,oneof"`
+}
+
+func (*RefOrSchemaJSON_Ptr) isRefOrSchemaJSON_PtrOrSchema()    {}
+func (*RefOrSchemaJSON_Schema) isRefOrSchemaJSON_PtrOrSchema() {}
+
+func (m *RefOrSchemaJSON) GetPtrOrSchema() isRefOrSchemaJSON_PtrOrSchema {
+	if m != nil {
+		return m.PtrOrSchema
+	}
+	return nil
+}
+
+func (m *RefOrSchemaJSON) GetPtr() *SchemaPtr {
+	if x, ok := m.GetPtrOrSchema().(*RefOrSchemaJSON_Ptr); ok {
+		return x.Ptr
+	}
+	return nil
+}
+
+func (m *RefOrSchemaJSON) GetSchema() *Schema_JSON {
+	if x, ok := m.GetPtrOrSchema().(*RefOrSchemaJSON_Schema); ok {
+		return x.Schema
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*RefOrSchemaJSON) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _RefOrSchemaJSON_OneofMarshaler, _RefOrSchemaJSON_OneofUnmarshaler, _RefOrSchemaJSON_OneofSizer, []interface{}{
+		(*RefOrSchemaJSON_Ptr)(nil),
+		(*RefOrSchemaJSON_Schema)(nil),
+	}
+}
+
+func _RefOrSchemaJSON_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*RefOrSchemaJSON)
+	// ptr_or_schema
+	switch x := m.PtrOrSchema.(type) {
+	case *RefOrSchemaJSON_Ptr:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Ptr); err != nil {
+			return err
+		}
+	case *RefOrSchemaJSON_Schema:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Schema); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("RefOrSchemaJSON.PtrOrSchema has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _RefOrSchemaJSON_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*RefOrSchemaJSON)
+	switch tag {
+	case 1: // ptr_or_schema.ptr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(SchemaPtr)
+		err := b.DecodeMessage(msg)
+		m.PtrOrSchema = &RefOrSchemaJSON_Ptr{msg}
+		return true, err
+	case 2: // ptr_or_schema.schema
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Schema_JSON)
+		err := b.DecodeMessage(msg)
+		m.PtrOrSchema = &RefOrSchemaJSON_Schema{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _RefOrSchemaJSON_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*RefOrSchemaJSON)
+	// ptr_or_schema
+	switch x := m.PtrOrSchema.(type) {
+	case *RefOrSchemaJSON_Ptr:
+		s := proto.Size(x.Ptr)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RefOrSchemaJSON_Schema:
+		s := proto.Size(x.Schema)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type SchemaPtr struct {
+	// Pointer to actual schema. i.e. key in Schemas message.
+	SID uint32 `protobuf:"varint,1,opt,name=SID,proto3" json:"SID,omitempty"`
+	// $ref if was ref'd, in canonical/absolute (#/...-like) format.
+	Ref                  string   `protobuf:"bytes,2,opt,name=ref,proto3" json:"ref,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SchemaPtr) Reset()         { *m = SchemaPtr{} }
+func (m *SchemaPtr) String() string { return proto.CompactTextString(m) }
+func (*SchemaPtr) ProtoMessage()    {}
+func (*SchemaPtr) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{5}
+}
+func (m *SchemaPtr) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SchemaPtr) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SchemaPtr.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *SchemaPtr) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SchemaPtr.Merge(dst, src)
+}
+func (m *SchemaPtr) XXX_Size() int {
+	return m.Size()
+}
+func (m *SchemaPtr) XXX_DiscardUnknown() {
+	xxx_messageInfo_SchemaPtr.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SchemaPtr proto.InternalMessageInfo
+
+func (m *SchemaPtr) GetSID() uint32 {
+	if m != nil {
+		return m.SID
+	}
+	return 0
+}
+
+func (m *SchemaPtr) GetRef() string {
+	if m != nil {
+		return m.Ref
+	}
+	return ""
+}
+
+type Endpoint struct {
+	// Types that are valid to be assigned to Endpoint:
+	//	*Endpoint_Json
+	Endpoint             isEndpoint_Endpoint `protobuf_oneof:"endpoint"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
+}
+
+func (m *Endpoint) Reset()         { *m = Endpoint{} }
+func (m *Endpoint) String() string { return proto.CompactTextString(m) }
+func (*Endpoint) ProtoMessage()    {}
+func (*Endpoint) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{6}
+}
+func (m *Endpoint) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Endpoint) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Endpoint.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Endpoint) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Endpoint.Merge(dst, src)
+}
+func (m *Endpoint) XXX_Size() int {
+	return m.Size()
+}
+func (m *Endpoint) XXX_DiscardUnknown() {
+	xxx_messageInfo_Endpoint.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Endpoint proto.InternalMessageInfo
+
+type isEndpoint_Endpoint interface {
+	isEndpoint_Endpoint()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Endpoint_Json struct {
+	Json *EndpointJSON `protobuf:"bytes,1,opt,name=json,oneof"`
+}
+
+func (*Endpoint_Json) isEndpoint_Endpoint() {}
+
+func (m *Endpoint) GetEndpoint() isEndpoint_Endpoint {
+	if m != nil {
+		return m.Endpoint
+	}
+	return nil
+}
+
+func (m *Endpoint) GetJson() *EndpointJSON {
+	if x, ok := m.GetEndpoint().(*Endpoint_Json); ok {
+		return x.Json
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Endpoint) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Endpoint_OneofMarshaler, _Endpoint_OneofUnmarshaler, _Endpoint_OneofSizer, []interface{}{
+		(*Endpoint_Json)(nil),
+	}
+}
+
+func _Endpoint_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Endpoint)
+	// endpoint
+	switch x := m.Endpoint.(type) {
+	case *Endpoint_Json:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Json); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Endpoint.Endpoint has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Endpoint_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Endpoint)
+	switch tag {
+	case 1: // endpoint.json
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(EndpointJSON)
+		err := b.DecodeMessage(msg)
+		m.Endpoint = &Endpoint_Json{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Endpoint_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Endpoint)
+	// endpoint
+	switch x := m.Endpoint.(type) {
+	case *Endpoint_Json:
+		s := proto.Size(x.Json)
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type EndpointJSON struct {
+	Method       EndpointJSON_Method `protobuf:"varint,1,opt,name=method,proto3,enum=EndpointJSON_Method" json:"method,omitempty"`
+	PathPartials []*PathPartial      `protobuf:"bytes,2,rep,name=path_partials,json=pathPartials" json:"path_partials,omitempty"`
+	Inputs       []*ParamJSON        `protobuf:"bytes,3,rep,name=inputs" json:"inputs,omitempty"`
+	// The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+	// The uint32 values are SID
+	Outputs              map[uint32]uint32 `protobuf:"bytes,4,rep,name=outputs" json:"outputs,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
+}
+
+func (m *EndpointJSON) Reset()         { *m = EndpointJSON{} }
+func (m *EndpointJSON) String() string { return proto.CompactTextString(m) }
+func (*EndpointJSON) ProtoMessage()    {}
+func (*EndpointJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{7}
+}
+func (m *EndpointJSON) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EndpointJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EndpointJSON.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *EndpointJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EndpointJSON.Merge(dst, src)
+}
+func (m *EndpointJSON) XXX_Size() int {
+	return m.Size()
+}
+func (m *EndpointJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_EndpointJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EndpointJSON proto.InternalMessageInfo
+
+func (m *EndpointJSON) GetMethod() EndpointJSON_Method {
+	if m != nil {
+		return m.Method
+	}
+	return EndpointJSON_UNKNOWN
+}
+
+func (m *EndpointJSON) GetPathPartials() []*PathPartial {
+	if m != nil {
+		return m.PathPartials
+	}
+	return nil
+}
+
+func (m *EndpointJSON) GetInputs() []*ParamJSON {
+	if m != nil {
+		return m.Inputs
+	}
+	return nil
+}
+
+func (m *EndpointJSON) GetOutputs() map[uint32]uint32 {
+	if m != nil {
+		return m.Outputs
+	}
+	return nil
+}
+
+type ParamJSON struct {
+	IsRequired bool   `protobuf:"varint,1,opt,name=is_required,json=isRequired,proto3" json:"is_required,omitempty"`
+	SID        uint32 `protobuf:"varint,2,opt,name=SID,proto3" json:"SID,omitempty"`
+	// Note: bodies have an empty name
+	Name                 string         `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
+	Kind                 ParamJSON_Kind `protobuf:"varint,4,opt,name=kind,proto3,enum=ParamJSON_Kind" json:"kind,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *ParamJSON) Reset()         { *m = ParamJSON{} }
+func (m *ParamJSON) String() string { return proto.CompactTextString(m) }
+func (*ParamJSON) ProtoMessage()    {}
+func (*ParamJSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{8}
+}
+func (m *ParamJSON) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ParamJSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ParamJSON.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *ParamJSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ParamJSON.Merge(dst, src)
+}
+func (m *ParamJSON) XXX_Size() int {
+	return m.Size()
+}
+func (m *ParamJSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_ParamJSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ParamJSON proto.InternalMessageInfo
+
+func (m *ParamJSON) GetIsRequired() bool {
+	if m != nil {
+		return m.IsRequired
+	}
+	return false
+}
+
+func (m *ParamJSON) GetSID() uint32 {
+	if m != nil {
+		return m.SID
+	}
+	return 0
+}
+
+func (m *ParamJSON) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *ParamJSON) GetKind() ParamJSON_Kind {
+	if m != nil {
+		return m.Kind
+	}
+	return ParamJSON_UNKNOWN
+}
+
+type PathPartial struct {
+	// Types that are valid to be assigned to Pp:
+	//	*PathPartial_Part
+	//	*PathPartial_Ptr
+	Pp                   isPathPartial_Pp `protobuf_oneof:"pp"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
+}
+
+func (m *PathPartial) Reset()         { *m = PathPartial{} }
+func (m *PathPartial) String() string { return proto.CompactTextString(m) }
+func (*PathPartial) ProtoMessage()    {}
+func (*PathPartial) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{9}
+}
+func (m *PathPartial) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PathPartial) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PathPartial.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *PathPartial) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PathPartial.Merge(dst, src)
+}
+func (m *PathPartial) XXX_Size() int {
+	return m.Size()
+}
+func (m *PathPartial) XXX_DiscardUnknown() {
+	xxx_messageInfo_PathPartial.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PathPartial proto.InternalMessageInfo
+
+type isPathPartial_Pp interface {
+	isPathPartial_Pp()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type PathPartial_Part struct {
+	Part string `protobuf:"bytes,1,opt,name=part,proto3,oneof"`
+}
+type PathPartial_Ptr struct {
+	Ptr string `protobuf:"bytes,2,opt,name=ptr,proto3,oneof"`
+}
+
+func (*PathPartial_Part) isPathPartial_Pp() {}
+func (*PathPartial_Ptr) isPathPartial_Pp()  {}
+
+func (m *PathPartial) GetPp() isPathPartial_Pp {
+	if m != nil {
+		return m.Pp
+	}
+	return nil
+}
+
+func (m *PathPartial) GetPart() string {
+	if x, ok := m.GetPp().(*PathPartial_Part); ok {
+		return x.Part
+	}
+	return ""
+}
+
+func (m *PathPartial) GetPtr() string {
+	if x, ok := m.GetPp().(*PathPartial_Ptr); ok {
+		return x.Ptr
+	}
+	return ""
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*PathPartial) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _PathPartial_OneofMarshaler, _PathPartial_OneofUnmarshaler, _PathPartial_OneofSizer, []interface{}{
+		(*PathPartial_Part)(nil),
+		(*PathPartial_Ptr)(nil),
+	}
+}
+
+func _PathPartial_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*PathPartial)
+	// pp
+	switch x := m.Pp.(type) {
+	case *PathPartial_Part:
+		_ = b.EncodeVarint(1<<3 | proto.WireBytes)
+		_ = b.EncodeStringBytes(x.Part)
+	case *PathPartial_Ptr:
+		_ = b.EncodeVarint(2<<3 | proto.WireBytes)
+		_ = b.EncodeStringBytes(x.Ptr)
+	case nil:
+	default:
+		return fmt.Errorf("PathPartial.Pp has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _PathPartial_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*PathPartial)
+	switch tag {
+	case 1: // pp.part
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.Pp = &PathPartial_Part{x}
+		return true, err
+	case 2: // pp.ptr
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.Pp = &PathPartial_Ptr{x}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _PathPartial_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*PathPartial)
+	// pp
+	switch x := m.Pp.(type) {
+	case *PathPartial_Part:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(len(x.Part)))
+		n += len(x.Part)
+	case *PathPartial_Ptr:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(len(x.Ptr)))
+		n += len(x.Ptr)
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+type Schema struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Schema) Reset()         { *m = Schema{} }
+func (m *Schema) String() string { return proto.CompactTextString(m) }
+func (*Schema) ProtoMessage()    {}
+func (*Schema) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{10}
+}
+func (m *Schema) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Schema) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Schema.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Schema) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Schema.Merge(dst, src)
+}
+func (m *Schema) XXX_Size() int {
+	return m.Size()
+}
+func (m *Schema) XXX_DiscardUnknown() {
+	xxx_messageInfo_Schema.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Schema proto.InternalMessageInfo
+
+type Schema_JSON struct {
+	Types        []Schema_JSON_Type `protobuf:"varint,1,rep,packed,name=types,enum=Schema_JSON_Type" json:"types,omitempty"`
+	Enum         []*types.Value     `protobuf:"bytes,2,rep,name=enum" json:"enum,omitempty"`
+	Format       Schema_JSON_Format `protobuf:"varint,3,opt,name=format,proto3,enum=Schema_JSON_Format" json:"format,omitempty"`
+	MinLength    uint64             `protobuf:"varint,4,opt,name=min_length,json=minLength,proto3" json:"min_length,omitempty"`
+	MaxLength    uint64             `protobuf:"varint,5,opt,name=max_length,json=maxLength,proto3" json:"max_length,omitempty"`
+	HasMaxLength bool               `protobuf:"varint,6,opt,name=has_max_length,json=hasMaxLength,proto3" json:"has_max_length,omitempty"`
+	Pattern      string             `protobuf:"bytes,7,opt,name=pattern,proto3" json:"pattern,omitempty"`
+	// type: number | integer
+	Minimum              float64 `protobuf:"fixed64,8,opt,name=minimum,proto3" json:"minimum,omitempty"`
+	Maximum              float64 `protobuf:"fixed64,9,opt,name=maximum,proto3" json:"maximum,omitempty"`
+	HasMinimum           bool    `protobuf:"varint,10,opt,name=has_minimum,json=hasMinimum,proto3" json:"has_minimum,omitempty"`
+	HasMaximum           bool    `protobuf:"varint,11,opt,name=has_maximum,json=hasMaximum,proto3" json:"has_maximum,omitempty"`
+	TranslatedMultipleOf float64 `protobuf:"fixed64,12,opt,name=translated_multiple_of,json=translatedMultipleOf,proto3" json:"translated_multiple_of,omitempty"`
+	ExclusiveMinimum     bool    `protobuf:"varint,13,opt,name=exclusive_minimum,json=exclusiveMinimum,proto3" json:"exclusive_minimum,omitempty"`
+	ExclusiveMaximum     bool    `protobuf:"varint,14,opt,name=exclusive_maximum,json=exclusiveMaximum,proto3" json:"exclusive_maximum,omitempty"`
+	// type: array
+	Items       []uint32 `protobuf:"varint,15,rep,packed,name=items" json:"items,omitempty"`
+	UniqueItems bool     `protobuf:"varint,16,opt,name=unique_items,json=uniqueItems,proto3" json:"unique_items,omitempty"`
+	MinItems    uint64   `protobuf:"varint,17,opt,name=min_items,json=minItems,proto3" json:"min_items,omitempty"`
+	MaxItems    uint64   `protobuf:"varint,18,opt,name=max_items,json=maxItems,proto3" json:"max_items,omitempty"`
+	HasMaxItems bool     `protobuf:"varint,19,opt,name=has_max_items,json=hasMaxItems,proto3" json:"has_max_items,omitempty"`
+	// type: object
+	Properties              map[string]uint32                 `protobuf:"bytes,20,rep,name=properties" json:"properties,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	Required                []string                          `protobuf:"bytes,21,rep,name=required" json:"required,omitempty"`
+	MinProperties           uint64                            `protobuf:"varint,22,opt,name=min_properties,json=minProperties,proto3" json:"min_properties,omitempty"`
+	MaxProperties           uint64                            `protobuf:"varint,23,opt,name=max_properties,json=maxProperties,proto3" json:"max_properties,omitempty"`
+	HasMaxProperties        bool                              `protobuf:"varint,24,opt,name=has_max_properties,json=hasMaxProperties,proto3" json:"has_max_properties,omitempty"`
+	AdditionalProperties    *Schema_JSON_AdditionalProperties `protobuf:"bytes,25,opt,name=additional_properties,json=additionalProperties" json:"additional_properties,omitempty"`
+	HasAdditionalProperties bool                              `protobuf:"varint,26,opt,name=has_additional_properties,json=hasAdditionalProperties,proto3" json:"has_additional_properties,omitempty"`
+	AllOf                   []uint32                          `protobuf:"varint,27,rep,packed,name=all_of,json=allOf" json:"all_of,omitempty"`
+	AnyOf                   []uint32                          `protobuf:"varint,28,rep,packed,name=any_of,json=anyOf" json:"any_of,omitempty"`
+	OneOf                   []uint32                          `protobuf:"varint,29,rep,packed,name=one_of,json=oneOf" json:"one_of,omitempty"`
+	Not                     uint32                            `protobuf:"varint,30,opt,name=not,proto3" json:"not,omitempty"`
+	XXX_NoUnkeyedLiteral    struct{}                          `json:"-"`
+	XXX_unrecognized        []byte                            `json:"-"`
+	XXX_sizecache           int32                             `json:"-"`
+}
+
+func (m *Schema_JSON) Reset()         { *m = Schema_JSON{} }
+func (m *Schema_JSON) String() string { return proto.CompactTextString(m) }
+func (*Schema_JSON) ProtoMessage()    {}
+func (*Schema_JSON) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{10, 0}
+}
+func (m *Schema_JSON) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Schema_JSON) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Schema_JSON.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Schema_JSON) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Schema_JSON.Merge(dst, src)
+}
+func (m *Schema_JSON) XXX_Size() int {
+	return m.Size()
+}
+func (m *Schema_JSON) XXX_DiscardUnknown() {
+	xxx_messageInfo_Schema_JSON.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Schema_JSON proto.InternalMessageInfo
+
+func (m *Schema_JSON) GetTypes() []Schema_JSON_Type {
+	if m != nil {
+		return m.Types
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetEnum() []*types.Value {
+	if m != nil {
+		return m.Enum
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetFormat() Schema_JSON_Format {
+	if m != nil {
+		return m.Format
+	}
+	return Schema_JSON_NONE
+}
+
+func (m *Schema_JSON) GetMinLength() uint64 {
+	if m != nil {
+		return m.MinLength
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetMaxLength() uint64 {
+	if m != nil {
+		return m.MaxLength
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetHasMaxLength() bool {
+	if m != nil {
+		return m.HasMaxLength
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetPattern() string {
+	if m != nil {
+		return m.Pattern
+	}
+	return ""
+}
+
+func (m *Schema_JSON) GetMinimum() float64 {
+	if m != nil {
+		return m.Minimum
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetMaximum() float64 {
+	if m != nil {
+		return m.Maximum
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetHasMinimum() bool {
+	if m != nil {
+		return m.HasMinimum
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetHasMaximum() bool {
+	if m != nil {
+		return m.HasMaximum
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetTranslatedMultipleOf() float64 {
+	if m != nil {
+		return m.TranslatedMultipleOf
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetExclusiveMinimum() bool {
+	if m != nil {
+		return m.ExclusiveMinimum
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetExclusiveMaximum() bool {
+	if m != nil {
+		return m.ExclusiveMaximum
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetItems() []uint32 {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetUniqueItems() bool {
+	if m != nil {
+		return m.UniqueItems
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetMinItems() uint64 {
+	if m != nil {
+		return m.MinItems
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetMaxItems() uint64 {
+	if m != nil {
+		return m.MaxItems
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetHasMaxItems() bool {
+	if m != nil {
+		return m.HasMaxItems
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetProperties() map[string]uint32 {
+	if m != nil {
+		return m.Properties
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetRequired() []string {
+	if m != nil {
+		return m.Required
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetMinProperties() uint64 {
+	if m != nil {
+		return m.MinProperties
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetMaxProperties() uint64 {
+	if m != nil {
+		return m.MaxProperties
+	}
+	return 0
+}
+
+func (m *Schema_JSON) GetHasMaxProperties() bool {
+	if m != nil {
+		return m.HasMaxProperties
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetAdditionalProperties() *Schema_JSON_AdditionalProperties {
+	if m != nil {
+		return m.AdditionalProperties
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetHasAdditionalProperties() bool {
+	if m != nil {
+		return m.HasAdditionalProperties
+	}
+	return false
+}
+
+func (m *Schema_JSON) GetAllOf() []uint32 {
+	if m != nil {
+		return m.AllOf
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetAnyOf() []uint32 {
+	if m != nil {
+		return m.AnyOf
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetOneOf() []uint32 {
+	if m != nil {
+		return m.OneOf
+	}
+	return nil
+}
+
+func (m *Schema_JSON) GetNot() uint32 {
+	if m != nil {
+		return m.Not
+	}
+	return 0
+}
+
+// / FIXME true is equivalent to {}, false is equivalent to {"not": {}}
+type Schema_JSON_AdditionalProperties struct {
+	// Types that are valid to be assigned to AddProps:
+	//	*Schema_JSON_AdditionalProperties_AlwaysSucceed
+	//	*Schema_JSON_AdditionalProperties_SID
+	AddProps             isSchema_JSON_AdditionalProperties_AddProps `protobuf_oneof:"add_props"`
+	XXX_NoUnkeyedLiteral struct{}                                    `json:"-"`
+	XXX_unrecognized     []byte                                      `json:"-"`
+	XXX_sizecache        int32                                       `json:"-"`
+}
+
+func (m *Schema_JSON_AdditionalProperties) Reset()         { *m = Schema_JSON_AdditionalProperties{} }
+func (m *Schema_JSON_AdditionalProperties) String() string { return proto.CompactTextString(m) }
+func (*Schema_JSON_AdditionalProperties) ProtoMessage()    {}
+func (*Schema_JSON_AdditionalProperties) Descriptor() ([]byte, []int) {
+	return fileDescriptor_fuzzymonkey_6ac3692e041c80b5, []int{10, 0, 1}
+}
+func (m *Schema_JSON_AdditionalProperties) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *Schema_JSON_AdditionalProperties) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_Schema_JSON_AdditionalProperties.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalTo(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (dst *Schema_JSON_AdditionalProperties) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Schema_JSON_AdditionalProperties.Merge(dst, src)
+}
+func (m *Schema_JSON_AdditionalProperties) XXX_Size() int {
+	return m.Size()
+}
+func (m *Schema_JSON_AdditionalProperties) XXX_DiscardUnknown() {
+	xxx_messageInfo_Schema_JSON_AdditionalProperties.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Schema_JSON_AdditionalProperties proto.InternalMessageInfo
+
+type isSchema_JSON_AdditionalProperties_AddProps interface {
+	isSchema_JSON_AdditionalProperties_AddProps()
+	Equal(interface{}) bool
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type Schema_JSON_AdditionalProperties_AlwaysSucceed struct {
+	AlwaysSucceed bool `protobuf:"varint,1,opt,name=always_succeed,json=alwaysSucceed,proto3,oneof"`
+}
+type Schema_JSON_AdditionalProperties_SID struct {
+	SID uint32 `protobuf:"varint,2,opt,name=SID,proto3,oneof"`
+}
+
+func (*Schema_JSON_AdditionalProperties_AlwaysSucceed) isSchema_JSON_AdditionalProperties_AddProps() {}
+func (*Schema_JSON_AdditionalProperties_SID) isSchema_JSON_AdditionalProperties_AddProps()           {}
+
+func (m *Schema_JSON_AdditionalProperties) GetAddProps() isSchema_JSON_AdditionalProperties_AddProps {
+	if m != nil {
+		return m.AddProps
+	}
+	return nil
+}
+
+func (m *Schema_JSON_AdditionalProperties) GetAlwaysSucceed() bool {
+	if x, ok := m.GetAddProps().(*Schema_JSON_AdditionalProperties_AlwaysSucceed); ok {
+		return x.AlwaysSucceed
+	}
+	return false
+}
+
+func (m *Schema_JSON_AdditionalProperties) GetSID() uint32 {
+	if x, ok := m.GetAddProps().(*Schema_JSON_AdditionalProperties_SID); ok {
+		return x.SID
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Schema_JSON_AdditionalProperties) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Schema_JSON_AdditionalProperties_OneofMarshaler, _Schema_JSON_AdditionalProperties_OneofUnmarshaler, _Schema_JSON_AdditionalProperties_OneofSizer, []interface{}{
+		(*Schema_JSON_AdditionalProperties_AlwaysSucceed)(nil),
+		(*Schema_JSON_AdditionalProperties_SID)(nil),
+	}
+}
+
+func _Schema_JSON_AdditionalProperties_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Schema_JSON_AdditionalProperties)
+	// add_props
+	switch x := m.AddProps.(type) {
+	case *Schema_JSON_AdditionalProperties_AlwaysSucceed:
+		t := uint64(0)
+		if x.AlwaysSucceed {
+			t = 1
+		}
+		_ = b.EncodeVarint(1<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(t)
+	case *Schema_JSON_AdditionalProperties_SID:
+		_ = b.EncodeVarint(2<<3 | proto.WireVarint)
+		_ = b.EncodeVarint(uint64(x.SID))
+	case nil:
+	default:
+		return fmt.Errorf("Schema_JSON_AdditionalProperties.AddProps has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Schema_JSON_AdditionalProperties_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Schema_JSON_AdditionalProperties)
+	switch tag {
+	case 1: // add_props.always_succeed
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.AddProps = &Schema_JSON_AdditionalProperties_AlwaysSucceed{x != 0}
+		return true, err
+	case 2: // add_props.SID
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.AddProps = &Schema_JSON_AdditionalProperties_SID{uint32(x)}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Schema_JSON_AdditionalProperties_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Schema_JSON_AdditionalProperties)
+	// add_props
+	switch x := m.AddProps.(type) {
+	case *Schema_JSON_AdditionalProperties_AlwaysSucceed:
+		n += 1 // tag and wire
+		n += 1
+	case *Schema_JSON_AdditionalProperties_SID:
+		n += 1 // tag and wire
+		n += proto.SizeVarint(uint64(x.SID))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
 func init() {
-	proto.RegisterType((*Clt)(nil), "fm.Clt")
-	proto.RegisterType((*Clt_Msg)(nil), "fm.Clt.Msg")
-	proto.RegisterType((*Clt_Msg_Fuzz)(nil), "fm.Clt.Msg.Fuzz")
-	proto.RegisterType((*Clt_Msg_Fuzz_Resetter)(nil), "fm.Clt.Msg.Fuzz.Resetter")
-	proto.RegisterType((*Clt_Msg_Fuzz_Resetter_Shell)(nil), "fm.Clt.Msg.Fuzz.Resetter.Shell")
-	proto.RegisterType((*Clt_Msg_Fuzz_Model)(nil), "fm.Clt.Msg.Fuzz.Model")
-	proto.RegisterType((*Clt_Msg_Fuzz_Model_OpenAPIv3)(nil), "fm.Clt.Msg.Fuzz.Model.OpenAPIv3")
-	proto.RegisterType((*Clt_Msg_Metrics)(nil), "fm.Clt.Msg.Metrics")
-	proto.RegisterType((*Clt_Msg_ResetProgress)(nil), "fm.Clt.Msg.ResetProgress")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw)(nil), "fm.Clt.Msg.CallResponseRaw")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output)(nil), "fm.Clt.Msg.CallResponseRaw.Output")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse")
-	proto.RegisterMapType((map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse.HeadersEntry")
-	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "fm.Clt.Msg.CallResponseRaw.Output.HttpResponse.HeaderValues")
-	proto.RegisterType((*Clt_Msg_CallVerifProgress)(nil), "fm.Clt.Msg.CallVerifProgress")
-	proto.RegisterType((*Clt_Msg_CallResponse)(nil), "fm.Clt.Msg.CallResponse")
-	proto.RegisterType((*Srv)(nil), "fm.Srv")
-	proto.RegisterType((*Srv_Msg)(nil), "fm.Srv.Msg")
-	proto.RegisterType((*Srv_Msg_Call)(nil), "fm.Srv.Msg.Call")
-	proto.RegisterType((*Srv_Msg_Call_Input)(nil), "fm.Srv.Msg.Call.Input")
-	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest)(nil), "fm.Srv.Msg.Call.Input.HttpRequest")
-	proto.RegisterMapType((map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "fm.Srv.Msg.Call.Input.HttpRequest.HeadersEntry")
-	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "fm.Srv.Msg.Call.Input.HttpRequest.HeaderValues")
-	proto.RegisterType((*Srv_Msg_Reset)(nil), "fm.Srv.Msg.Reset")
-	proto.RegisterType((*Srv_Msg_FuzzProgress)(nil), "fm.Srv.Msg.FuzzProgress")
-	proto.RegisterEnum("fm.Clt_Msg_Fuzz_ModelKind", Clt_Msg_Fuzz_ModelKind_name, Clt_Msg_Fuzz_ModelKind_value)
-	proto.RegisterEnum("fm.Clt_Msg_ResetProgress_Status", Clt_Msg_ResetProgress_Status_name, Clt_Msg_ResetProgress_Status_value)
+	proto.RegisterType((*Clt)(nil), "Clt")
+	proto.RegisterType((*Clt_Msg)(nil), "Clt.Msg")
+	proto.RegisterType((*Clt_Msg_Fuzz)(nil), "Clt.Msg.Fuzz")
+	proto.RegisterType((*Clt_Msg_Fuzz_Resetter)(nil), "Clt.Msg.Fuzz.Resetter")
+	proto.RegisterType((*Clt_Msg_Fuzz_Resetter_Shell)(nil), "Clt.Msg.Fuzz.Resetter.Shell")
+	proto.RegisterType((*Clt_Msg_Fuzz_Model)(nil), "Clt.Msg.Fuzz.Model")
+	proto.RegisterType((*Clt_Msg_Fuzz_Model_OpenAPIv3)(nil), "Clt.Msg.Fuzz.Model.OpenAPIv3")
+	proto.RegisterType((*Clt_Msg_Metrics)(nil), "Clt.Msg.Metrics")
+	proto.RegisterType((*Clt_Msg_ResetProgress)(nil), "Clt.Msg.ResetProgress")
+	proto.RegisterType((*Clt_Msg_CallRequestRaw)(nil), "Clt.Msg.CallRequestRaw")
+	proto.RegisterType((*Clt_Msg_CallRequestRaw_Input)(nil), "Clt.Msg.CallRequestRaw.Input")
+	proto.RegisterType((*Clt_Msg_CallRequestRaw_Input_HttpRequest)(nil), "Clt.Msg.CallRequestRaw.Input.HttpRequest")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw)(nil), "Clt.Msg.CallResponseRaw")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output)(nil), "Clt.Msg.CallResponseRaw.Output")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse)(nil), "Clt.Msg.CallResponseRaw.Output.HttpResponse")
+	proto.RegisterMapType((map[string]*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "Clt.Msg.CallResponseRaw.Output.HttpResponse.HeadersEntry")
+	proto.RegisterType((*Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues)(nil), "Clt.Msg.CallResponseRaw.Output.HttpResponse.HeaderValues")
+	proto.RegisterType((*Clt_Msg_CallVerifProgress)(nil), "Clt.Msg.CallVerifProgress")
+	proto.RegisterType((*Srv)(nil), "Srv")
+	proto.RegisterType((*Srv_Msg)(nil), "Srv.Msg")
+	proto.RegisterType((*Srv_Msg_Call)(nil), "Srv.Msg.Call")
+	proto.RegisterType((*Srv_Msg_Call_Input)(nil), "Srv.Msg.Call.Input")
+	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest)(nil), "Srv.Msg.Call.Input.HttpRequest")
+	proto.RegisterMapType((map[string]*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "Srv.Msg.Call.Input.HttpRequest.HeadersEntry")
+	proto.RegisterType((*Srv_Msg_Call_Input_HttpRequest_HeaderValues)(nil), "Srv.Msg.Call.Input.HttpRequest.HeaderValues")
+	proto.RegisterType((*Srv_Msg_Reset)(nil), "Srv.Msg.Reset")
+	proto.RegisterType((*Srv_Msg_FuzzProgress)(nil), "Srv.Msg.FuzzProgress")
+	proto.RegisterType((*SpecIR)(nil), "SpecIR")
+	proto.RegisterMapType((map[uint32]*Endpoint)(nil), "SpecIR.EndpointsEntry")
+	proto.RegisterType((*Schemas)(nil), "Schemas")
+	proto.RegisterMapType((map[uint32]*RefOrSchemaJSON)(nil), "Schemas.JsonEntry")
+	proto.RegisterType((*RefOrSchemaJSON)(nil), "RefOrSchemaJSON")
+	proto.RegisterType((*SchemaPtr)(nil), "SchemaPtr")
+	proto.RegisterType((*Endpoint)(nil), "Endpoint")
+	proto.RegisterType((*EndpointJSON)(nil), "EndpointJSON")
+	proto.RegisterMapType((map[uint32]uint32)(nil), "EndpointJSON.OutputsEntry")
+	proto.RegisterType((*ParamJSON)(nil), "ParamJSON")
+	proto.RegisterType((*PathPartial)(nil), "PathPartial")
+	proto.RegisterType((*Schema)(nil), "Schema")
+	proto.RegisterType((*Schema_JSON)(nil), "Schema.JSON")
+	proto.RegisterMapType((map[string]uint32)(nil), "Schema.JSON.PropertiesEntry")
+	proto.RegisterType((*Schema_JSON_AdditionalProperties)(nil), "Schema.JSON.AdditionalProperties")
+	proto.RegisterEnum("Clt_Msg_Fuzz_ModelKind", Clt_Msg_Fuzz_ModelKind_name, Clt_Msg_Fuzz_ModelKind_value)
+	proto.RegisterEnum("Clt_Msg_ResetProgress_Status", Clt_Msg_ResetProgress_Status_name, Clt_Msg_ResetProgress_Status_value)
+	proto.RegisterEnum("Clt_Msg_CallVerifProgress_Status", Clt_Msg_CallVerifProgress_Status_name, Clt_Msg_CallVerifProgress_Status_value)
+	proto.RegisterEnum("EndpointJSON_Method", EndpointJSON_Method_name, EndpointJSON_Method_value)
+	proto.RegisterEnum("ParamJSON_Kind", ParamJSON_Kind_name, ParamJSON_Kind_value)
+	proto.RegisterEnum("Schema_JSON_Type", Schema_JSON_Type_name, Schema_JSON_Type_value)
+	proto.RegisterEnum("Schema_JSON_Format", Schema_JSON_Format_name, Schema_JSON_Format_value)
 }
 func (this *Clt) Equal(that interface{}) bool {
 	if that == nil {
@@ -2129,6 +3802,30 @@ func (this *Clt_Msg_ResetProgress_) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *Clt_Msg_CallRequestRaw_) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallRequestRaw_)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallRequestRaw_)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.CallRequestRaw.Equal(that1.CallRequestRaw) {
+		return false
+	}
+	return true
+}
 func (this *Clt_Msg_CallResponseRaw_) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -2173,30 +3870,6 @@ func (this *Clt_Msg_CallVerifProgress_) Equal(that interface{}) bool {
 		return false
 	}
 	if !this.CallVerifProgress.Equal(that1.CallVerifProgress) {
-		return false
-	}
-	return true
-}
-func (this *Clt_Msg_CallResponse_) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*Clt_Msg_CallResponse_)
-	if !ok {
-		that2, ok := that.(Clt_Msg_CallResponse_)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.CallResponse.Equal(that1.CallResponse) {
 		return false
 	}
 	return true
@@ -2498,6 +4171,114 @@ func (this *Clt_Msg_ResetProgress) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *Clt_Msg_CallRequestRaw) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallRequestRaw)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallRequestRaw)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Input.Equal(that1.Input) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallRequestRaw_Input) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallRequestRaw_Input)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallRequestRaw_Input)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.Input == nil {
+		if this.Input != nil {
+			return false
+		}
+	} else if this.Input == nil {
+		return false
+	} else if !this.Input.Equal(that1.Input) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallRequestRaw_Input_HttpRequest_) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallRequestRaw_Input_HttpRequest_)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallRequestRaw_Input_HttpRequest_)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.HttpRequest.Equal(that1.HttpRequest) {
+		return false
+	}
+	return true
+}
+func (this *Clt_Msg_CallRequestRaw_Input_HttpRequest) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Clt_Msg_CallRequestRaw_Input_HttpRequest)
+	if !ok {
+		that2, ok := that.(Clt_Msg_CallRequestRaw_Input_HttpRequest)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
 func (this *Clt_Msg_CallResponseRaw) Equal(that interface{}) bool {
 	if that == nil {
 		return this == nil
@@ -2674,28 +4455,21 @@ func (this *Clt_Msg_CallVerifProgress) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+	if this.Status != that1.Status {
 		return false
 	}
-	return true
-}
-func (this *Clt_Msg_CallResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
+	if this.Name != that1.Name {
+		return false
 	}
-
-	that1, ok := that.(*Clt_Msg_CallResponse)
-	if !ok {
-		that2, ok := that.(Clt_Msg_CallResponse)
-		if ok {
-			that1 = &that2
-		} else {
+	if len(this.Reason) != len(that1.Reason) {
+		return false
+	}
+	for i := range this.Reason {
+		if this.Reason[i] != that1.Reason[i] {
 			return false
 		}
 	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
+	if !this.Response.Equal(that1.Response) {
 		return false
 	}
 	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
@@ -3043,6 +4817,668 @@ func (this *Srv_Msg_FuzzProgress) Equal(that interface{}) bool {
 	}
 	return true
 }
+func (this *SpecIR) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SpecIR)
+	if !ok {
+		that2, ok := that.(SpecIR)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Schemas.Equal(that1.Schemas) {
+		return false
+	}
+	if len(this.Endpoints) != len(that1.Endpoints) {
+		return false
+	}
+	for i := range this.Endpoints {
+		if !this.Endpoints[i].Equal(that1.Endpoints[i]) {
+			return false
+		}
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Schemas) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schemas)
+	if !ok {
+		that2, ok := that.(Schemas)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Json) != len(that1.Json) {
+		return false
+	}
+	for i := range this.Json {
+		if !this.Json[i].Equal(that1.Json[i]) {
+			return false
+		}
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *RefOrSchemaJSON) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RefOrSchemaJSON)
+	if !ok {
+		that2, ok := that.(RefOrSchemaJSON)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.PtrOrSchema == nil {
+		if this.PtrOrSchema != nil {
+			return false
+		}
+	} else if this.PtrOrSchema == nil {
+		return false
+	} else if !this.PtrOrSchema.Equal(that1.PtrOrSchema) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *RefOrSchemaJSON_Ptr) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RefOrSchemaJSON_Ptr)
+	if !ok {
+		that2, ok := that.(RefOrSchemaJSON_Ptr)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Ptr.Equal(that1.Ptr) {
+		return false
+	}
+	return true
+}
+func (this *RefOrSchemaJSON_Schema) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*RefOrSchemaJSON_Schema)
+	if !ok {
+		that2, ok := that.(RefOrSchemaJSON_Schema)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Schema.Equal(that1.Schema) {
+		return false
+	}
+	return true
+}
+func (this *SchemaPtr) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*SchemaPtr)
+	if !ok {
+		that2, ok := that.(SchemaPtr)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.SID != that1.SID {
+		return false
+	}
+	if this.Ref != that1.Ref {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Endpoint) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Endpoint)
+	if !ok {
+		that2, ok := that.(Endpoint)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.Endpoint == nil {
+		if this.Endpoint != nil {
+			return false
+		}
+	} else if this.Endpoint == nil {
+		return false
+	} else if !this.Endpoint.Equal(that1.Endpoint) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Endpoint_Json) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Endpoint_Json)
+	if !ok {
+		that2, ok := that.(Endpoint_Json)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Json.Equal(that1.Json) {
+		return false
+	}
+	return true
+}
+func (this *EndpointJSON) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*EndpointJSON)
+	if !ok {
+		that2, ok := that.(EndpointJSON)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Method != that1.Method {
+		return false
+	}
+	if len(this.PathPartials) != len(that1.PathPartials) {
+		return false
+	}
+	for i := range this.PathPartials {
+		if !this.PathPartials[i].Equal(that1.PathPartials[i]) {
+			return false
+		}
+	}
+	if len(this.Inputs) != len(that1.Inputs) {
+		return false
+	}
+	for i := range this.Inputs {
+		if !this.Inputs[i].Equal(that1.Inputs[i]) {
+			return false
+		}
+	}
+	if len(this.Outputs) != len(that1.Outputs) {
+		return false
+	}
+	for i := range this.Outputs {
+		if this.Outputs[i] != that1.Outputs[i] {
+			return false
+		}
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *ParamJSON) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*ParamJSON)
+	if !ok {
+		that2, ok := that.(ParamJSON)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.IsRequired != that1.IsRequired {
+		return false
+	}
+	if this.SID != that1.SID {
+		return false
+	}
+	if this.Name != that1.Name {
+		return false
+	}
+	if this.Kind != that1.Kind {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *PathPartial) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PathPartial)
+	if !ok {
+		that2, ok := that.(PathPartial)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.Pp == nil {
+		if this.Pp != nil {
+			return false
+		}
+	} else if this.Pp == nil {
+		return false
+	} else if !this.Pp.Equal(that1.Pp) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *PathPartial_Part) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PathPartial_Part)
+	if !ok {
+		that2, ok := that.(PathPartial_Part)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Part != that1.Part {
+		return false
+	}
+	return true
+}
+func (this *PathPartial_Ptr) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*PathPartial_Ptr)
+	if !ok {
+		that2, ok := that.(PathPartial_Ptr)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Ptr != that1.Ptr {
+		return false
+	}
+	return true
+}
+func (this *Schema) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schema)
+	if !ok {
+		that2, ok := that.(Schema)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Schema_JSON) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schema_JSON)
+	if !ok {
+		that2, ok := that.(Schema_JSON)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Types) != len(that1.Types) {
+		return false
+	}
+	for i := range this.Types {
+		if this.Types[i] != that1.Types[i] {
+			return false
+		}
+	}
+	if len(this.Enum) != len(that1.Enum) {
+		return false
+	}
+	for i := range this.Enum {
+		if !this.Enum[i].Equal(that1.Enum[i]) {
+			return false
+		}
+	}
+	if this.Format != that1.Format {
+		return false
+	}
+	if this.MinLength != that1.MinLength {
+		return false
+	}
+	if this.MaxLength != that1.MaxLength {
+		return false
+	}
+	if this.HasMaxLength != that1.HasMaxLength {
+		return false
+	}
+	if this.Pattern != that1.Pattern {
+		return false
+	}
+	if this.Minimum != that1.Minimum {
+		return false
+	}
+	if this.Maximum != that1.Maximum {
+		return false
+	}
+	if this.HasMinimum != that1.HasMinimum {
+		return false
+	}
+	if this.HasMaximum != that1.HasMaximum {
+		return false
+	}
+	if this.TranslatedMultipleOf != that1.TranslatedMultipleOf {
+		return false
+	}
+	if this.ExclusiveMinimum != that1.ExclusiveMinimum {
+		return false
+	}
+	if this.ExclusiveMaximum != that1.ExclusiveMaximum {
+		return false
+	}
+	if len(this.Items) != len(that1.Items) {
+		return false
+	}
+	for i := range this.Items {
+		if this.Items[i] != that1.Items[i] {
+			return false
+		}
+	}
+	if this.UniqueItems != that1.UniqueItems {
+		return false
+	}
+	if this.MinItems != that1.MinItems {
+		return false
+	}
+	if this.MaxItems != that1.MaxItems {
+		return false
+	}
+	if this.HasMaxItems != that1.HasMaxItems {
+		return false
+	}
+	if len(this.Properties) != len(that1.Properties) {
+		return false
+	}
+	for i := range this.Properties {
+		if this.Properties[i] != that1.Properties[i] {
+			return false
+		}
+	}
+	if len(this.Required) != len(that1.Required) {
+		return false
+	}
+	for i := range this.Required {
+		if this.Required[i] != that1.Required[i] {
+			return false
+		}
+	}
+	if this.MinProperties != that1.MinProperties {
+		return false
+	}
+	if this.MaxProperties != that1.MaxProperties {
+		return false
+	}
+	if this.HasMaxProperties != that1.HasMaxProperties {
+		return false
+	}
+	if !this.AdditionalProperties.Equal(that1.AdditionalProperties) {
+		return false
+	}
+	if this.HasAdditionalProperties != that1.HasAdditionalProperties {
+		return false
+	}
+	if len(this.AllOf) != len(that1.AllOf) {
+		return false
+	}
+	for i := range this.AllOf {
+		if this.AllOf[i] != that1.AllOf[i] {
+			return false
+		}
+	}
+	if len(this.AnyOf) != len(that1.AnyOf) {
+		return false
+	}
+	for i := range this.AnyOf {
+		if this.AnyOf[i] != that1.AnyOf[i] {
+			return false
+		}
+	}
+	if len(this.OneOf) != len(that1.OneOf) {
+		return false
+	}
+	for i := range this.OneOf {
+		if this.OneOf[i] != that1.OneOf[i] {
+			return false
+		}
+	}
+	if this.Not != that1.Not {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Schema_JSON_AdditionalProperties) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schema_JSON_AdditionalProperties)
+	if !ok {
+		that2, ok := that.(Schema_JSON_AdditionalProperties)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that1.AddProps == nil {
+		if this.AddProps != nil {
+			return false
+		}
+	} else if this.AddProps == nil {
+		return false
+	} else if !this.AddProps.Equal(that1.AddProps) {
+		return false
+	}
+	if !bytes.Equal(this.XXX_unrecognized, that1.XXX_unrecognized) {
+		return false
+	}
+	return true
+}
+func (this *Schema_JSON_AdditionalProperties_AlwaysSucceed) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schema_JSON_AdditionalProperties_AlwaysSucceed)
+	if !ok {
+		that2, ok := that.(Schema_JSON_AdditionalProperties_AlwaysSucceed)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.AlwaysSucceed != that1.AlwaysSucceed {
+		return false
+	}
+	return true
+}
+func (this *Schema_JSON_AdditionalProperties_SID) Equal(that interface{}) bool {
+	if that == nil {
+		return this == nil
+	}
+
+	that1, ok := that.(*Schema_JSON_AdditionalProperties_SID)
+	if !ok {
+		that2, ok := that.(Schema_JSON_AdditionalProperties_SID)
+		if ok {
+			that1 = &that2
+		} else {
+			return false
+		}
+	}
+	if that1 == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.SID != that1.SID {
+		return false
+	}
+	return true
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
@@ -3068,7 +5504,7 @@ func NewFuzzyMonkeyClient(cc *grpc.ClientConn) FuzzyMonkeyClient {
 }
 
 func (c *fuzzyMonkeyClient) Do(ctx context.Context, opts ...grpc.CallOption) (FuzzyMonkey_DoClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_FuzzyMonkey_serviceDesc.Streams[0], "/fm.FuzzyMonkey/Do", opts...)
+	stream, err := c.cc.NewStream(ctx, &_FuzzyMonkey_serviceDesc.Streams[0], "/FuzzyMonkey/Do", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -3134,7 +5570,7 @@ func (x *fuzzyMonkeyDoServer) Recv() (*Clt, error) {
 }
 
 var _FuzzyMonkey_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "fm.FuzzyMonkey",
+	ServiceName: "FuzzyMonkey",
 	HandlerType: (*FuzzyMonkeyServer)(nil),
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
@@ -3249,13 +5685,13 @@ func (m *Clt_Msg_ResetProgress_) MarshalTo(dAtA []byte) (int, error) {
 	}
 	return i, nil
 }
-func (m *Clt_Msg_CallResponseRaw_) MarshalTo(dAtA []byte) (int, error) {
+func (m *Clt_Msg_CallRequestRaw_) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
-	if m.CallResponseRaw != nil {
+	if m.CallRequestRaw != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallResponseRaw.Size()))
-		n6, err := m.CallResponseRaw.MarshalTo(dAtA[i:])
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallRequestRaw.Size()))
+		n6, err := m.CallRequestRaw.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -3263,13 +5699,13 @@ func (m *Clt_Msg_CallResponseRaw_) MarshalTo(dAtA []byte) (int, error) {
 	}
 	return i, nil
 }
-func (m *Clt_Msg_CallVerifProgress_) MarshalTo(dAtA []byte) (int, error) {
+func (m *Clt_Msg_CallResponseRaw_) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
-	if m.CallVerifProgress != nil {
+	if m.CallResponseRaw != nil {
 		dAtA[i] = 0x2a
 		i++
-		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallVerifProgress.Size()))
-		n7, err := m.CallVerifProgress.MarshalTo(dAtA[i:])
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallResponseRaw.Size()))
+		n7, err := m.CallResponseRaw.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -3277,13 +5713,13 @@ func (m *Clt_Msg_CallVerifProgress_) MarshalTo(dAtA []byte) (int, error) {
 	}
 	return i, nil
 }
-func (m *Clt_Msg_CallResponse_) MarshalTo(dAtA []byte) (int, error) {
+func (m *Clt_Msg_CallVerifProgress_) MarshalTo(dAtA []byte) (int, error) {
 	i := 0
-	if m.CallResponse != nil {
+	if m.CallVerifProgress != nil {
 		dAtA[i] = 0x32
 		i++
-		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallResponse.Size()))
-		n8, err := m.CallResponse.MarshalTo(dAtA[i:])
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.CallVerifProgress.Size()))
+		n8, err := m.CallVerifProgress.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -3609,6 +6045,100 @@ func (m *Clt_Msg_ResetProgress) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *Clt_Msg_CallRequestRaw) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallRequestRaw) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Input != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Input.Size()))
+		n17, err := m.Input.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n17
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Input != nil {
+		nn18, err := m.Input.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn18
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest_) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.HttpRequest != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpRequest.Size()))
+		n19, err := m.HttpRequest.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n19
+	}
+	return i, nil
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
 func (m *Clt_Msg_CallResponseRaw) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -3628,11 +6158,11 @@ func (m *Clt_Msg_CallResponseRaw) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Output.Size()))
-		n17, err := m.Output.MarshalTo(dAtA[i:])
+		n20, err := m.Output.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n17
+		i += n20
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3656,11 +6186,11 @@ func (m *Clt_Msg_CallResponseRaw_Output) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Output != nil {
-		nn18, err := m.Output.MarshalTo(dAtA[i:])
+		nn21, err := m.Output.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn18
+		i += nn21
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3674,11 +6204,11 @@ func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse_) MarshalTo(dAtA []byte) (i
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpResponse.Size()))
-		n19, err := m.HttpResponse.MarshalTo(dAtA[i:])
+		n22, err := m.HttpResponse.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n19
+		i += n22
 	}
 	return i, nil
 }
@@ -3728,11 +6258,11 @@ func (m *Clt_Msg_CallResponseRaw_Output_HttpResponse) MarshalTo(dAtA []byte) (in
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
-				n20, err := v.MarshalTo(dAtA[i:])
+				n23, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n20
+				i += n23
 			}
 		}
 	}
@@ -3799,27 +6329,42 @@ func (m *Clt_Msg_CallVerifProgress) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
+	if m.Status != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Status))
 	}
-	return i, nil
-}
-
-func (m *Clt_Msg_CallResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
 	}
-	return dAtA[:n], nil
-}
-
-func (m *Clt_Msg_CallResponse) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
+	if len(m.Reason) > 0 {
+		for _, s := range m.Reason {
+			dAtA[i] = 0x1a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if m.Response != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Response.Size()))
+		n24, err := m.Response.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n24
+	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
 	}
@@ -3845,11 +6390,11 @@ func (m *Srv) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Msg.Size()))
-		n21, err := m.Msg.MarshalTo(dAtA[i:])
+		n25, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n21
+		i += n25
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3873,11 +6418,11 @@ func (m *Srv_Msg) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Msg != nil {
-		nn22, err := m.Msg.MarshalTo(dAtA[i:])
+		nn26, err := m.Msg.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn22
+		i += nn26
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3891,11 +6436,11 @@ func (m *Srv_Msg_Call_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Call.Size()))
-		n23, err := m.Call.MarshalTo(dAtA[i:])
+		n27, err := m.Call.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n23
+		i += n27
 	}
 	return i, nil
 }
@@ -3905,11 +6450,11 @@ func (m *Srv_Msg_FuzzProgress_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x12
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.FuzzProgress.Size()))
-		n24, err := m.FuzzProgress.MarshalTo(dAtA[i:])
+		n28, err := m.FuzzProgress.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n24
+		i += n28
 	}
 	return i, nil
 }
@@ -3919,11 +6464,11 @@ func (m *Srv_Msg_Reset_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Reset_.Size()))
-		n25, err := m.Reset_.MarshalTo(dAtA[i:])
+		n29, err := m.Reset_.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n25
+		i += n29
 	}
 	return i, nil
 }
@@ -3946,11 +6491,11 @@ func (m *Srv_Msg_Call) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Input.Size()))
-		n26, err := m.Input.MarshalTo(dAtA[i:])
+		n30, err := m.Input.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n26
+		i += n30
 	}
 	if m.EId != 0 {
 		dAtA[i] = 0x10
@@ -3979,11 +6524,11 @@ func (m *Srv_Msg_Call_Input) MarshalTo(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	if m.Input != nil {
-		nn27, err := m.Input.MarshalTo(dAtA[i:])
+		nn31, err := m.Input.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += nn27
+		i += nn31
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -3997,11 +6542,11 @@ func (m *Srv_Msg_Call_Input_HttpRequest_) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0xa
 		i++
 		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.HttpRequest.Size()))
-		n28, err := m.HttpRequest.MarshalTo(dAtA[i:])
+		n32, err := m.HttpRequest.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n28
+		i += n32
 	}
 	return i, nil
 }
@@ -4052,11 +6597,11 @@ func (m *Srv_Msg_Call_Input_HttpRequest) MarshalTo(dAtA []byte) (int, error) {
 				dAtA[i] = 0x12
 				i++
 				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
-				n29, err := v.MarshalTo(dAtA[i:])
+				n33, err := v.MarshalTo(dAtA[i:])
 				if err != nil {
 					return 0, err
 				}
-				i += n29
+				i += n33
 			}
 		}
 	}
@@ -4150,6 +6695,809 @@ func (m *Srv_Msg_FuzzProgress) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *SpecIR) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SpecIR) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Schemas != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Schemas.Size()))
+		n34, err := m.Schemas.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n34
+	}
+	if len(m.Endpoints) > 0 {
+		for k := range m.Endpoints {
+			dAtA[i] = 0x12
+			i++
+			v := m.Endpoints[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovFuzzymonkey(uint64(msgSize))
+			}
+			mapSize := 1 + sovFuzzymonkey(uint64(k)) + msgSize
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
+				n35, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n35
+			}
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Schemas) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Schemas) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Json) > 0 {
+		for k := range m.Json {
+			dAtA[i] = 0xa
+			i++
+			v := m.Json[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovFuzzymonkey(uint64(msgSize))
+			}
+			mapSize := 1 + sovFuzzymonkey(uint64(k)) + msgSize
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintFuzzymonkey(dAtA, i, uint64(v.Size()))
+				n36, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n36
+			}
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *RefOrSchemaJSON) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RefOrSchemaJSON) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.PtrOrSchema != nil {
+		nn37, err := m.PtrOrSchema.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn37
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *RefOrSchemaJSON_Ptr) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Ptr != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Ptr.Size()))
+		n38, err := m.Ptr.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n38
+	}
+	return i, nil
+}
+func (m *RefOrSchemaJSON_Schema) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Schema != nil {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Schema.Size()))
+		n39, err := m.Schema.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n39
+	}
+	return i, nil
+}
+func (m *SchemaPtr) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SchemaPtr) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.SID != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.SID))
+	}
+	if len(m.Ref) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Ref)))
+		i += copy(dAtA[i:], m.Ref)
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Endpoint) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Endpoint) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Endpoint != nil {
+		nn40, err := m.Endpoint.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn40
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Endpoint_Json) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Json != nil {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Json.Size()))
+		n41, err := m.Json.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n41
+	}
+	return i, nil
+}
+func (m *EndpointJSON) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EndpointJSON) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Method != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Method))
+	}
+	if len(m.PathPartials) > 0 {
+		for _, msg := range m.PathPartials {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.Inputs) > 0 {
+		for _, msg := range m.Inputs {
+			dAtA[i] = 0x1a
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.Outputs) > 0 {
+		for k := range m.Outputs {
+			dAtA[i] = 0x22
+			i++
+			v := m.Outputs[k]
+			mapSize := 1 + sovFuzzymonkey(uint64(k)) + 1 + sovFuzzymonkey(uint64(v))
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(k))
+			dAtA[i] = 0x10
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(v))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *ParamJSON) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ParamJSON) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.IsRequired {
+		dAtA[i] = 0x8
+		i++
+		if m.IsRequired {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.SID != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.SID))
+	}
+	if len(m.Name) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Name)))
+		i += copy(dAtA[i:], m.Name)
+	}
+	if m.Kind != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Kind))
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *PathPartial) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PathPartial) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Pp != nil {
+		nn42, err := m.Pp.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn42
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *PathPartial_Part) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0xa
+	i++
+	i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Part)))
+	i += copy(dAtA[i:], m.Part)
+	return i, nil
+}
+func (m *PathPartial_Ptr) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Ptr)))
+	i += copy(dAtA[i:], m.Ptr)
+	return i, nil
+}
+func (m *Schema) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Schema) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Schema_JSON) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Schema_JSON) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Types) > 0 {
+		dAtA44 := make([]byte, len(m.Types)*10)
+		var j43 int
+		for _, num := range m.Types {
+			for num >= 1<<7 {
+				dAtA44[j43] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j43++
+			}
+			dAtA44[j43] = uint8(num)
+			j43++
+		}
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(j43))
+		i += copy(dAtA[i:], dAtA44[:j43])
+	}
+	if len(m.Enum) > 0 {
+		for _, msg := range m.Enum {
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if m.Format != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Format))
+	}
+	if m.MinLength != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MinLength))
+	}
+	if m.MaxLength != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MaxLength))
+	}
+	if m.HasMaxLength {
+		dAtA[i] = 0x30
+		i++
+		if m.HasMaxLength {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.Pattern) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(m.Pattern)))
+		i += copy(dAtA[i:], m.Pattern)
+	}
+	if m.Minimum != 0 {
+		dAtA[i] = 0x41
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Minimum))))
+		i += 8
+	}
+	if m.Maximum != 0 {
+		dAtA[i] = 0x49
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.Maximum))))
+		i += 8
+	}
+	if m.HasMinimum {
+		dAtA[i] = 0x50
+		i++
+		if m.HasMinimum {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.HasMaximum {
+		dAtA[i] = 0x58
+		i++
+		if m.HasMaximum {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.TranslatedMultipleOf != 0 {
+		dAtA[i] = 0x61
+		i++
+		encoding_binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.TranslatedMultipleOf))))
+		i += 8
+	}
+	if m.ExclusiveMinimum {
+		dAtA[i] = 0x68
+		i++
+		if m.ExclusiveMinimum {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.ExclusiveMaximum {
+		dAtA[i] = 0x70
+		i++
+		if m.ExclusiveMaximum {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.Items) > 0 {
+		dAtA46 := make([]byte, len(m.Items)*10)
+		var j45 int
+		for _, num := range m.Items {
+			for num >= 1<<7 {
+				dAtA46[j45] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j45++
+			}
+			dAtA46[j45] = uint8(num)
+			j45++
+		}
+		dAtA[i] = 0x7a
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(j45))
+		i += copy(dAtA[i:], dAtA46[:j45])
+	}
+	if m.UniqueItems {
+		dAtA[i] = 0x80
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.UniqueItems {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.MinItems != 0 {
+		dAtA[i] = 0x88
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MinItems))
+	}
+	if m.MaxItems != 0 {
+		dAtA[i] = 0x90
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MaxItems))
+	}
+	if m.HasMaxItems {
+		dAtA[i] = 0x98
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.HasMaxItems {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.Properties) > 0 {
+		for k := range m.Properties {
+			dAtA[i] = 0xa2
+			i++
+			dAtA[i] = 0x1
+			i++
+			v := m.Properties[k]
+			mapSize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + 1 + sovFuzzymonkey(uint64(v))
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x10
+			i++
+			i = encodeVarintFuzzymonkey(dAtA, i, uint64(v))
+		}
+	}
+	if len(m.Required) > 0 {
+		for _, s := range m.Required {
+			dAtA[i] = 0xaa
+			i++
+			dAtA[i] = 0x1
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	if m.MinProperties != 0 {
+		dAtA[i] = 0xb0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MinProperties))
+	}
+	if m.MaxProperties != 0 {
+		dAtA[i] = 0xb8
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.MaxProperties))
+	}
+	if m.HasMaxProperties {
+		dAtA[i] = 0xc0
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.HasMaxProperties {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if m.AdditionalProperties != nil {
+		dAtA[i] = 0xca
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.AdditionalProperties.Size()))
+		n47, err := m.AdditionalProperties.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n47
+	}
+	if m.HasAdditionalProperties {
+		dAtA[i] = 0xd0
+		i++
+		dAtA[i] = 0x1
+		i++
+		if m.HasAdditionalProperties {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	if len(m.AllOf) > 0 {
+		dAtA49 := make([]byte, len(m.AllOf)*10)
+		var j48 int
+		for _, num := range m.AllOf {
+			for num >= 1<<7 {
+				dAtA49[j48] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j48++
+			}
+			dAtA49[j48] = uint8(num)
+			j48++
+		}
+		dAtA[i] = 0xda
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(j48))
+		i += copy(dAtA[i:], dAtA49[:j48])
+	}
+	if len(m.AnyOf) > 0 {
+		dAtA51 := make([]byte, len(m.AnyOf)*10)
+		var j50 int
+		for _, num := range m.AnyOf {
+			for num >= 1<<7 {
+				dAtA51[j50] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j50++
+			}
+			dAtA51[j50] = uint8(num)
+			j50++
+		}
+		dAtA[i] = 0xe2
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(j50))
+		i += copy(dAtA[i:], dAtA51[:j50])
+	}
+	if len(m.OneOf) > 0 {
+		dAtA53 := make([]byte, len(m.OneOf)*10)
+		var j52 int
+		for _, num := range m.OneOf {
+			for num >= 1<<7 {
+				dAtA53[j52] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j52++
+			}
+			dAtA53[j52] = uint8(num)
+			j52++
+		}
+		dAtA[i] = 0xea
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(j52))
+		i += copy(dAtA[i:], dAtA53[:j52])
+	}
+	if m.Not != 0 {
+		dAtA[i] = 0xf0
+		i++
+		dAtA[i] = 0x1
+		i++
+		i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.Not))
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Schema_JSON_AdditionalProperties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Schema_JSON_AdditionalProperties) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.AddProps != nil {
+		nn54, err := m.AddProps.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn54
+	}
+	if m.XXX_unrecognized != nil {
+		i += copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return i, nil
+}
+
+func (m *Schema_JSON_AdditionalProperties_AlwaysSucceed) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x8
+	i++
+	if m.AlwaysSucceed {
+		dAtA[i] = 1
+	} else {
+		dAtA[i] = 0
+	}
+	i++
+	return i, nil
+}
+func (m *Schema_JSON_AdditionalProperties_SID) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	dAtA[i] = 0x10
+	i++
+	i = encodeVarintFuzzymonkey(dAtA, i, uint64(m.SID))
+	return i, nil
+}
 func encodeVarintFuzzymonkey(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -4226,6 +7574,18 @@ func (m *Clt_Msg_ResetProgress_) Size() (n int) {
 	}
 	return n
 }
+func (m *Clt_Msg_CallRequestRaw_) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.CallRequestRaw != nil {
+		l = m.CallRequestRaw.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
 func (m *Clt_Msg_CallResponseRaw_) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4246,18 +7606,6 @@ func (m *Clt_Msg_CallVerifProgress_) Size() (n int) {
 	_ = l
 	if m.CallVerifProgress != nil {
 		l = m.CallVerifProgress.Size()
-		n += 1 + l + sovFuzzymonkey(uint64(l))
-	}
-	return n
-}
-func (m *Clt_Msg_CallResponse_) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.CallResponse != nil {
-		l = m.CallResponse.Size()
 		n += 1 + l + sovFuzzymonkey(uint64(l))
 	}
 	return n
@@ -4443,6 +7791,61 @@ func (m *Clt_Msg_ResetProgress) Size() (n int) {
 	return n
 }
 
+func (m *Clt_Msg_CallRequestRaw) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Input != nil {
+		l = m.Input.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Input != nil {
+		n += m.Input.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest_) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.HttpRequest != nil {
+		l = m.HttpRequest.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
 func (m *Clt_Msg_CallResponseRaw) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4546,18 +7949,23 @@ func (m *Clt_Msg_CallVerifProgress) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.Status != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.Status))
 	}
-	return n
-}
-
-func (m *Clt_Msg_CallResponse) Size() (n int) {
-	if m == nil {
-		return 0
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
 	}
-	var l int
-	_ = l
+	if len(m.Reason) > 0 {
+		for _, s := range m.Reason {
+			l = len(s)
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
+	if m.Response != nil {
+		l = m.Response.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -4753,6 +8161,421 @@ func (m *Srv_Msg_FuzzProgress) Size() (n int) {
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
+	return n
+}
+
+func (m *SpecIR) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Schemas != nil {
+		l = m.Schemas.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if len(m.Endpoints) > 0 {
+		for k, v := range m.Endpoints {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovFuzzymonkey(uint64(l))
+			}
+			mapEntrySize := 1 + sovFuzzymonkey(uint64(k)) + l
+			n += mapEntrySize + 1 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Schemas) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Json) > 0 {
+		for k, v := range m.Json {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovFuzzymonkey(uint64(l))
+			}
+			mapEntrySize := 1 + sovFuzzymonkey(uint64(k)) + l
+			n += mapEntrySize + 1 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *RefOrSchemaJSON) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.PtrOrSchema != nil {
+		n += m.PtrOrSchema.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *RefOrSchemaJSON_Ptr) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Ptr != nil {
+		l = m.Ptr.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *RefOrSchemaJSON_Schema) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Schema != nil {
+		l = m.Schema.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *SchemaPtr) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.SID != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.SID))
+	}
+	l = len(m.Ref)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Endpoint) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Endpoint != nil {
+		n += m.Endpoint.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Endpoint_Json) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Json != nil {
+		l = m.Json.Size()
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	return n
+}
+func (m *EndpointJSON) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Method != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.Method))
+	}
+	if len(m.PathPartials) > 0 {
+		for _, e := range m.PathPartials {
+			l = e.Size()
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
+	if len(m.Inputs) > 0 {
+		for _, e := range m.Inputs {
+			l = e.Size()
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
+	if len(m.Outputs) > 0 {
+		for k, v := range m.Outputs {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + sovFuzzymonkey(uint64(k)) + 1 + sovFuzzymonkey(uint64(v))
+			n += mapEntrySize + 1 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ParamJSON) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.IsRequired {
+		n += 2
+	}
+	if m.SID != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.SID))
+	}
+	l = len(m.Name)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.Kind != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.Kind))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PathPartial) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pp != nil {
+		n += m.Pp.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *PathPartial_Part) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Part)
+	n += 1 + l + sovFuzzymonkey(uint64(l))
+	return n
+}
+func (m *PathPartial_Ptr) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Ptr)
+	n += 1 + l + sovFuzzymonkey(uint64(l))
+	return n
+}
+func (m *Schema) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Schema_JSON) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Types) > 0 {
+		l = 0
+		for _, e := range m.Types {
+			l += sovFuzzymonkey(uint64(e))
+		}
+		n += 1 + sovFuzzymonkey(uint64(l)) + l
+	}
+	if len(m.Enum) > 0 {
+		for _, e := range m.Enum {
+			l = e.Size()
+			n += 1 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
+	if m.Format != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.Format))
+	}
+	if m.MinLength != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.MinLength))
+	}
+	if m.MaxLength != 0 {
+		n += 1 + sovFuzzymonkey(uint64(m.MaxLength))
+	}
+	if m.HasMaxLength {
+		n += 2
+	}
+	l = len(m.Pattern)
+	if l > 0 {
+		n += 1 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.Minimum != 0 {
+		n += 9
+	}
+	if m.Maximum != 0 {
+		n += 9
+	}
+	if m.HasMinimum {
+		n += 2
+	}
+	if m.HasMaximum {
+		n += 2
+	}
+	if m.TranslatedMultipleOf != 0 {
+		n += 9
+	}
+	if m.ExclusiveMinimum {
+		n += 2
+	}
+	if m.ExclusiveMaximum {
+		n += 2
+	}
+	if len(m.Items) > 0 {
+		l = 0
+		for _, e := range m.Items {
+			l += sovFuzzymonkey(uint64(e))
+		}
+		n += 1 + sovFuzzymonkey(uint64(l)) + l
+	}
+	if m.UniqueItems {
+		n += 3
+	}
+	if m.MinItems != 0 {
+		n += 2 + sovFuzzymonkey(uint64(m.MinItems))
+	}
+	if m.MaxItems != 0 {
+		n += 2 + sovFuzzymonkey(uint64(m.MaxItems))
+	}
+	if m.HasMaxItems {
+		n += 3
+	}
+	if len(m.Properties) > 0 {
+		for k, v := range m.Properties {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovFuzzymonkey(uint64(len(k))) + 1 + sovFuzzymonkey(uint64(v))
+			n += mapEntrySize + 2 + sovFuzzymonkey(uint64(mapEntrySize))
+		}
+	}
+	if len(m.Required) > 0 {
+		for _, s := range m.Required {
+			l = len(s)
+			n += 2 + l + sovFuzzymonkey(uint64(l))
+		}
+	}
+	if m.MinProperties != 0 {
+		n += 2 + sovFuzzymonkey(uint64(m.MinProperties))
+	}
+	if m.MaxProperties != 0 {
+		n += 2 + sovFuzzymonkey(uint64(m.MaxProperties))
+	}
+	if m.HasMaxProperties {
+		n += 3
+	}
+	if m.AdditionalProperties != nil {
+		l = m.AdditionalProperties.Size()
+		n += 2 + l + sovFuzzymonkey(uint64(l))
+	}
+	if m.HasAdditionalProperties {
+		n += 3
+	}
+	if len(m.AllOf) > 0 {
+		l = 0
+		for _, e := range m.AllOf {
+			l += sovFuzzymonkey(uint64(e))
+		}
+		n += 2 + sovFuzzymonkey(uint64(l)) + l
+	}
+	if len(m.AnyOf) > 0 {
+		l = 0
+		for _, e := range m.AnyOf {
+			l += sovFuzzymonkey(uint64(e))
+		}
+		n += 2 + sovFuzzymonkey(uint64(l)) + l
+	}
+	if len(m.OneOf) > 0 {
+		l = 0
+		for _, e := range m.OneOf {
+			l += sovFuzzymonkey(uint64(e))
+		}
+		n += 2 + sovFuzzymonkey(uint64(l)) + l
+	}
+	if m.Not != 0 {
+		n += 2 + sovFuzzymonkey(uint64(m.Not))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Schema_JSON_AdditionalProperties) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.AddProps != nil {
+		n += m.AddProps.Size()
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *Schema_JSON_AdditionalProperties_AlwaysSucceed) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 2
+	return n
+}
+func (m *Schema_JSON_AdditionalProperties_SID) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	n += 1 + sovFuzzymonkey(uint64(m.SID))
 	return n
 }
 
@@ -4980,6 +8803,38 @@ func (m *Clt_Msg) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CallRequestRaw", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Clt_Msg_CallRequestRaw{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Msg = &Clt_Msg_CallRequestRaw_{v}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CallResponseRaw", wireType)
 			}
 			var msglen int
@@ -5010,7 +8865,7 @@ func (m *Clt_Msg) Unmarshal(dAtA []byte) error {
 			}
 			m.Msg = &Clt_Msg_CallResponseRaw_{v}
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CallVerifProgress", wireType)
 			}
@@ -5041,38 +8896,6 @@ func (m *Clt_Msg) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			m.Msg = &Clt_Msg_CallVerifProgress_{v}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CallResponse", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowFuzzymonkey
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthFuzzymonkey
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			v := &Clt_Msg_CallResponse{}
-			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			m.Msg = &Clt_Msg_CallResponse_{v}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -5995,6 +9818,224 @@ func (m *Clt_Msg_ResetProgress) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *Clt_Msg_CallRequestRaw) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CallRequestRaw: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CallRequestRaw: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Input", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Input == nil {
+				m.Input = &Clt_Msg_CallRequestRaw_Input{}
+			}
+			if err := m.Input.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Clt_Msg_CallRequestRaw_Input) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Input: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Input: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HttpRequest", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Clt_Msg_CallRequestRaw_Input_HttpRequest{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Input = &Clt_Msg_CallRequestRaw_Input_HttpRequest_{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Clt_Msg_CallRequestRaw_Input_HttpRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: HttpRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: HttpRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *Clt_Msg_CallResponseRaw) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -6524,57 +10565,116 @@ func (m *Clt_Msg_CallVerifProgress) Unmarshal(dAtA []byte) error {
 			return fmt.Errorf("proto: CallVerifProgress: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
-			if err != nil {
-				return err
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
-			if skippy < 0 {
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (Clt_Msg_CallVerifProgress_Status(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthFuzzymonkey
 			}
-			if (iNdEx + skippy) > l {
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Clt_Msg_CallResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowFuzzymonkey
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
 			}
-			if iNdEx >= l {
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
+			m.Reason = append(m.Reason, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Response", wireType)
 			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: CallResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: CallResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Response == nil {
+				m.Response = &types.Struct{}
+			}
+			if err := m.Response.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
@@ -7459,6 +11559,2283 @@ func (m *Srv_Msg_FuzzProgress) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *SpecIR) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SpecIR: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SpecIR: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Schemas", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Schemas == nil {
+				m.Schemas = &Schemas{}
+			}
+			if err := m.Schemas.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Endpoints", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Endpoints == nil {
+				m.Endpoints = make(map[uint32]*Endpoint)
+			}
+			var mapkey uint32
+			var mapvalue *Endpoint
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &Endpoint{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Endpoints[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Schemas) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Schemas: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Schemas: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Json", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Json == nil {
+				m.Json = make(map[uint32]*RefOrSchemaJSON)
+			}
+			var mapkey uint32
+			var mapvalue *RefOrSchemaJSON
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &RefOrSchemaJSON{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Json[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RefOrSchemaJSON) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RefOrSchemaJSON: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RefOrSchemaJSON: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ptr", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &SchemaPtr{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PtrOrSchema = &RefOrSchemaJSON_Ptr{v}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Schema", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Schema_JSON{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.PtrOrSchema = &RefOrSchemaJSON_Schema{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SchemaPtr) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SchemaPtr: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SchemaPtr: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SID", wireType)
+			}
+			m.SID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SID |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ref", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Ref = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Endpoint) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Endpoint: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Endpoint: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Json", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &EndpointJSON{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Endpoint = &Endpoint_Json{v}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EndpointJSON) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EndpointJSON: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EndpointJSON: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Method", wireType)
+			}
+			m.Method = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Method |= (EndpointJSON_Method(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PathPartials", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PathPartials = append(m.PathPartials, &PathPartial{})
+			if err := m.PathPartials[len(m.PathPartials)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Inputs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Inputs = append(m.Inputs, &ParamJSON{})
+			if err := m.Inputs[len(m.Inputs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Outputs", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Outputs == nil {
+				m.Outputs = make(map[uint32]uint32)
+			}
+			var mapkey uint32
+			var mapvalue uint32
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Outputs[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ParamJSON) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ParamJSON: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ParamJSON: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsRequired", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsRequired = bool(v != 0)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SID", wireType)
+			}
+			m.SID = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SID |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Name", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Kind", wireType)
+			}
+			m.Kind = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Kind |= (ParamJSON_Kind(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PathPartial) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PathPartial: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PathPartial: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Part", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pp = &PathPartial_Part{string(dAtA[iNdEx:postIndex])}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ptr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pp = &PathPartial_Ptr{string(dAtA[iNdEx:postIndex])}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Schema) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Schema: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Schema: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Schema_JSON) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: JSON: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: JSON: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v Schema_JSON_Type
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (Schema_JSON_Type(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Types = append(m.Types, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthFuzzymonkey
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				if elementCount != 0 && len(m.Types) == 0 {
+					m.Types = make([]Schema_JSON_Type, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v Schema_JSON_Type
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (Schema_JSON_Type(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Types = append(m.Types, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Types", wireType)
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enum", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Enum = append(m.Enum, &types.Value{})
+			if err := m.Enum[len(m.Enum)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Format", wireType)
+			}
+			m.Format = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Format |= (Schema_JSON_Format(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinLength", wireType)
+			}
+			m.MinLength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MinLength |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxLength", wireType)
+			}
+			m.MaxLength = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxLength |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasMaxLength", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasMaxLength = bool(v != 0)
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pattern", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Pattern = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Minimum", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.Minimum = float64(math.Float64frombits(v))
+		case 9:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Maximum", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.Maximum = float64(math.Float64frombits(v))
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasMinimum", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasMinimum = bool(v != 0)
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasMaximum", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasMaximum = bool(v != 0)
+		case 12:
+			if wireType != 1 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TranslatedMultipleOf", wireType)
+			}
+			var v uint64
+			if (iNdEx + 8) > l {
+				return io.ErrUnexpectedEOF
+			}
+			v = uint64(encoding_binary.LittleEndian.Uint64(dAtA[iNdEx:]))
+			iNdEx += 8
+			m.TranslatedMultipleOf = float64(math.Float64frombits(v))
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExclusiveMinimum", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ExclusiveMinimum = bool(v != 0)
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ExclusiveMaximum", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ExclusiveMaximum = bool(v != 0)
+		case 15:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.Items = append(m.Items, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthFuzzymonkey
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.Items) == 0 {
+					m.Items = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.Items = append(m.Items, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field Items", wireType)
+			}
+		case 16:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UniqueItems", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.UniqueItems = bool(v != 0)
+		case 17:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinItems", wireType)
+			}
+			m.MinItems = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MinItems |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 18:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxItems", wireType)
+			}
+			m.MaxItems = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxItems |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 19:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasMaxItems", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasMaxItems = bool(v != 0)
+		case 20:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Properties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Properties == nil {
+				m.Properties = make(map[string]uint32)
+			}
+			var mapkey string
+			var mapvalue uint32
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthFuzzymonkey
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Properties[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 21:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Required", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Required = append(m.Required, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 22:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinProperties", wireType)
+			}
+			m.MinProperties = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MinProperties |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 23:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxProperties", wireType)
+			}
+			m.MaxProperties = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxProperties |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 24:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasMaxProperties", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasMaxProperties = bool(v != 0)
+		case 25:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AdditionalProperties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AdditionalProperties == nil {
+				m.AdditionalProperties = &Schema_JSON_AdditionalProperties{}
+			}
+			if err := m.AdditionalProperties.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 26:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HasAdditionalProperties", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.HasAdditionalProperties = bool(v != 0)
+		case 27:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.AllOf = append(m.AllOf, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthFuzzymonkey
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.AllOf) == 0 {
+					m.AllOf = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.AllOf = append(m.AllOf, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllOf", wireType)
+			}
+		case 28:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.AnyOf = append(m.AnyOf, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthFuzzymonkey
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.AnyOf) == 0 {
+					m.AnyOf = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.AnyOf = append(m.AnyOf, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field AnyOf", wireType)
+			}
+		case 29:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= (uint32(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.OneOf = append(m.OneOf, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowFuzzymonkey
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= (int(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthFuzzymonkey
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.OneOf) == 0 {
+					m.OneOf = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowFuzzymonkey
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= (uint32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.OneOf = append(m.OneOf, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field OneOf", wireType)
+			}
+		case 30:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Not", wireType)
+			}
+			m.Not = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Not |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Schema_JSON_AdditionalProperties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowFuzzymonkey
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AdditionalProperties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AdditionalProperties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AlwaysSucceed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			b := bool(v != 0)
+			m.AddProps = &Schema_JSON_AdditionalProperties_AlwaysSucceed{b}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SID", wireType)
+			}
+			var v uint32
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowFuzzymonkey
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.AddProps = &Schema_JSON_AdditionalProperties_SID{v}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipFuzzymonkey(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthFuzzymonkey
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func skipFuzzymonkey(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0
@@ -7565,83 +13942,167 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_9dd8a582123f3792)
+	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_6ac3692e041c80b5)
 }
 
-var fileDescriptor_fuzzymonkey_9dd8a582123f3792 = []byte{
-	// 1173 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x6f, 0x1b, 0x55,
-	0x10, 0xf7, 0x7a, 0xbd, 0x76, 0x3c, 0xfe, 0x53, 0xf7, 0xa5, 0x2a, 0xee, 0xd2, 0xa6, 0xc1, 0x87,
-	0x12, 0x04, 0xac, 0x21, 0x15, 0x50, 0x2a, 0x24, 0xa8, 0xdd, 0x82, 0xad, 0x2a, 0x71, 0xf5, 0x22,
-	0x82, 0xc4, 0xc5, 0xda, 0x64, 0xdf, 0xda, 0xab, 0xac, 0x77, 0xcd, 0xbe, 0xb7, 0x2e, 0xce, 0x91,
-	0x0b, 0x17, 0x4e, 0x88, 0x0f, 0x01, 0xe2, 0x06, 0x37, 0x8e, 0x9c, 0x38, 0xf6, 0xc2, 0x1d, 0xe5,
-	0x8b, 0x80, 0xde, 0xbc, 0xe7, 0x78, 0xed, 0xb4, 0x04, 0x90, 0xb8, 0xcd, 0xcc, 0xfb, 0xcd, 0xec,
-	0xef, 0xcd, 0xcc, 0x9b, 0x59, 0x78, 0x65, 0x7a, 0x32, 0x6a, 0x07, 0x91, 0x60, 0x49, 0xe4, 0x86,
-	0x6d, 0x7f, 0xd2, 0xf6, 0xd3, 0xd3, 0xd3, 0xf9, 0x24, 0x8e, 0x4e, 0xd8, 0xdc, 0x99, 0x26, 0xb1,
-	0x88, 0x49, 0xde, 0x9f, 0xd8, 0x6f, 0x8e, 0x02, 0x31, 0x4e, 0x8f, 0x9c, 0xe3, 0x78, 0xd2, 0x1e,
-	0xc5, 0xa3, 0xb8, 0x8d, 0x47, 0x47, 0xa9, 0x8f, 0x1a, 0x2a, 0x28, 0x29, 0x97, 0xd6, 0x0f, 0x75,
-	0x30, 0xbb, 0xa1, 0x20, 0xb7, 0xc0, 0x9c, 0xf0, 0x51, 0xd3, 0xd8, 0x36, 0x76, 0x2a, 0xbb, 0x15,
-	0xc7, 0x9f, 0x38, 0xdd, 0x50, 0x38, 0x7b, 0x7c, 0x44, 0xa5, 0xdd, 0xfe, 0xaa, 0x0e, 0xe6, 0x1e,
-	0x1f, 0x91, 0x3b, 0x50, 0x90, 0x9f, 0xd5, 0xb8, 0x46, 0x06, 0xe7, 0x7c, 0x9c, 0x9e, 0x9e, 0xf6,
-	0x72, 0x14, 0xcf, 0x49, 0x1b, 0x4a, 0x13, 0x26, 0x92, 0xe0, 0x98, 0x37, 0xf3, 0x08, 0xdd, 0xcc,
-	0x42, 0xf7, 0xd4, 0x51, 0x2f, 0x47, 0x17, 0x28, 0xd2, 0x81, 0x7a, 0xc2, 0x38, 0x13, 0xc3, 0x69,
-	0x12, 0x8f, 0x12, 0xc6, 0x79, 0xd3, 0x44, 0xbf, 0x1b, 0x59, 0x3f, 0x2a, 0x11, 0x4f, 0x34, 0xa0,
-	0x97, 0xa3, 0xb5, 0x24, 0x6b, 0x20, 0x7d, 0xb8, 0x7a, 0xec, 0x86, 0xe1, 0x30, 0x61, 0x7c, 0x1a,
-	0x47, 0x9c, 0x0d, 0x13, 0xf7, 0x69, 0xb3, 0x80, 0x61, 0x5e, 0xce, 0x86, 0xe9, 0xba, 0x61, 0x48,
-	0x35, 0x86, 0xba, 0x4f, 0x7b, 0x39, 0x7a, 0xe5, 0x78, 0xd5, 0x44, 0x06, 0xb0, 0x89, 0xa1, 0x66,
-	0x2c, 0x09, 0xfc, 0x25, 0x27, 0x0b, 0x83, 0xdd, 0x5a, 0x0f, 0x76, 0x28, 0x51, 0x19, 0x5e, 0x48,
-	0x63, 0xc5, 0x48, 0x3e, 0x84, 0xda, 0x0a, 0xb7, 0x66, 0x11, 0x43, 0x35, 0x5f, 0xc4, 0xab, 0x97,
-	0xa3, 0xd5, 0x2c, 0x29, 0xfb, 0xcf, 0x02, 0x14, 0x64, 0x8a, 0xc9, 0x3b, 0xb0, 0x81, 0xd7, 0x16,
-	0x2c, 0xd1, 0x65, 0xb8, 0xb1, 0x5e, 0x06, 0x95, 0x28, 0xc1, 0x12, 0x7a, 0x0e, 0x25, 0xef, 0x03,
-	0x4c, 0x62, 0x8f, 0x85, 0xc3, 0x93, 0x20, 0xf2, 0xb0, 0x28, 0xf5, 0x5d, 0xfb, 0x82, 0xe3, 0x9e,
-	0x84, 0x3c, 0x0e, 0x22, 0x8f, 0x96, 0x27, 0x0b, 0x91, 0xbc, 0x01, 0x16, 0x2a, 0xba, 0x24, 0xd7,
-	0x9f, 0xef, 0x45, 0x15, 0x88, 0x5c, 0x03, 0x2b, 0xe5, 0xee, 0x88, 0x35, 0x0b, 0xdb, 0xe6, 0x4e,
-	0x99, 0x2a, 0x85, 0x10, 0x28, 0x70, 0xc6, 0x3c, 0xcc, 0x60, 0x95, 0xa2, 0x4c, 0x6e, 0x42, 0x59,
-	0xf6, 0x73, 0xc4, 0x03, 0x31, 0xc7, 0x7c, 0xd4, 0xe8, 0xd2, 0x20, 0x3d, 0x1e, 0xf5, 0x1f, 0xf2,
-	0x66, 0x69, 0xdb, 0xdc, 0xa9, 0x51, 0x94, 0xed, 0xef, 0x0c, 0xd8, 0x58, 0xdc, 0x8d, 0xbc, 0x07,
-	0x16, 0x1f, 0xb3, 0x30, 0xd4, 0x59, 0xb8, 0xfd, 0xc2, 0x2c, 0x38, 0x07, 0x12, 0xd6, 0xcb, 0x51,
-	0x85, 0xb7, 0xbb, 0x60, 0xa1, 0x45, 0x52, 0xe5, 0xc2, 0x4d, 0x04, 0x46, 0x28, 0x53, 0xa5, 0x90,
-	0x06, 0x98, 0x09, 0x17, 0x98, 0xa2, 0x32, 0x95, 0x22, 0x92, 0x17, 0xf1, 0x14, 0xef, 0x5f, 0xa6,
-	0x28, 0x77, 0x60, 0x59, 0x06, 0xfb, 0x17, 0x03, 0x2c, 0xcc, 0x01, 0xf9, 0x08, 0xca, 0xf1, 0x94,
-	0x45, 0xee, 0x34, 0x98, 0xdd, 0xd5, 0xbc, 0xb6, 0x9f, 0x9f, 0x2e, 0x67, 0x30, 0x65, 0xd1, 0x83,
-	0x27, 0xfd, 0xd9, 0xdd, 0x5e, 0x8e, 0x2e, 0x9d, 0x6c, 0x1f, 0xca, 0xe7, 0x27, 0xf2, 0xc3, 0x7e,
-	0x10, 0x32, 0xcd, 0x0f, 0x65, 0x69, 0x1b, 0xc7, 0xe7, 0xfc, 0x50, 0x26, 0x6f, 0xc3, 0xb5, 0x31,
-	0x73, 0x3d, 0x96, 0x0c, 0xdd, 0x54, 0x8c, 0xe3, 0x24, 0x38, 0x75, 0x45, 0x10, 0x47, 0x9a, 0xf0,
-	0xa6, 0x3a, 0x7b, 0x90, 0x3d, 0xea, 0x94, 0x74, 0x51, 0x5b, 0xaf, 0x42, 0xf9, 0xbc, 0xea, 0xa4,
-	0x02, 0xa5, 0x4f, 0xf7, 0x1f, 0xef, 0x0f, 0x3e, 0xdb, 0x6f, 0xe4, 0x48, 0x2d, 0x43, 0xa5, 0x61,
-	0xd8, 0x65, 0x28, 0xe9, 0x87, 0x6b, 0xff, 0x64, 0x40, 0x6d, 0xe5, 0x31, 0x92, 0x7b, 0x50, 0xe4,
-	0xc2, 0x15, 0x29, 0x47, 0xae, 0xf5, 0xd5, 0x5b, 0xaf, 0x40, 0x9d, 0x03, 0xc4, 0x51, 0x8d, 0x27,
-	0x2f, 0x41, 0x49, 0xf0, 0xa1, 0x17, 0xf8, 0x3e, 0x5e, 0xa9, 0x40, 0x8b, 0x82, 0x3f, 0x0c, 0x7c,
-	0x9f, 0x5c, 0x87, 0x62, 0xc2, 0x5c, 0x8e, 0xd7, 0x90, 0x9d, 0xa4, 0xb5, 0xd6, 0xbb, 0x50, 0x54,
-	0x21, 0xc8, 0x06, 0x14, 0xf6, 0x07, 0x83, 0x27, 0x8d, 0x9c, 0xe4, 0x8d, 0xc5, 0x63, 0x5e, 0xc3,
-	0x20, 0x65, 0xb0, 0x58, 0xe4, 0x31, 0xaf, 0x91, 0x27, 0x00, 0x45, 0xdf, 0x0d, 0x42, 0xe6, 0x35,
-	0x4c, 0xfb, 0xdb, 0x02, 0x5c, 0x59, 0x7b, 0xfa, 0xe4, 0x3e, 0x14, 0xe3, 0x54, 0x4c, 0x53, 0xa1,
-	0x8b, 0xd5, 0xfa, 0x9b, 0x39, 0xe1, 0x0c, 0x10, 0x49, 0xb5, 0x87, 0xfd, 0xab, 0x09, 0x45, 0x65,
-	0x22, 0x87, 0x50, 0x1b, 0x0b, 0x31, 0x5d, 0xbe, 0x6e, 0x15, 0xad, 0x7d, 0x79, 0x34, 0xa7, 0x27,
-	0xc4, 0x34, 0xfb, 0xe8, 0xc7, 0x19, 0xdd, 0xfe, 0x3d, 0x0f, 0xd5, 0x2c, 0x80, 0xdc, 0x86, 0x8a,
-	0x4a, 0xdb, 0xf0, 0x38, 0xf6, 0xd4, 0x67, 0x6a, 0x14, 0x94, 0xa9, 0x1b, 0x7b, 0x2c, 0x93, 0x34,
-	0xd5, 0x1f, 0x5a, 0x23, 0x87, 0x50, 0x52, 0x5d, 0xc0, 0x31, 0x9b, 0x95, 0xdd, 0x0f, 0xfe, 0x25,
-	0x37, 0xa7, 0xa7, 0xdc, 0x1f, 0x45, 0x22, 0x99, 0xd3, 0x45, 0x30, 0xd9, 0x8d, 0x47, 0xb1, 0x37,
-	0xc7, 0x31, 0x5b, 0xa5, 0x28, 0xdb, 0x77, 0xa0, 0xaa, 0xc0, 0x87, 0x6e, 0x98, 0x32, 0x2e, 0x39,
-	0xcd, 0x50, 0x6a, 0x1a, 0xaa, 0x90, 0x4a, 0xb3, 0xbf, 0x5c, 0xe0, 0x54, 0x50, 0xf9, 0xf0, 0x4e,
-	0xd8, 0x5c, 0x37, 0xbb, 0x14, 0x09, 0x05, 0x0b, 0xb1, 0x7a, 0x89, 0xfc, 0x47, 0xce, 0x8a, 0x06,
-	0x55, 0xa1, 0xee, 0xe7, 0xef, 0x19, 0x9d, 0x8d, 0x45, 0xd9, 0xed, 0x4d, 0xb8, 0x7a, 0x61, 0x82,
-	0xdb, 0x75, 0xa8, 0x66, 0xa3, 0x77, 0x2c, 0x5c, 0x8e, 0xad, 0x9f, 0x2d, 0x30, 0x0f, 0x92, 0xd9,
-	0x73, 0x76, 0xe5, 0x41, 0x32, 0x5b, 0xee, 0xca, 0x6f, 0xac, 0xf3, 0x5d, 0x29, 0x27, 0x78, 0x76,
-	0x57, 0x6a, 0x1c, 0x72, 0x97, 0xbb, 0x52, 0x9e, 0xcb, 0xd5, 0x20, 0x77, 0xe6, 0x72, 0xcb, 0xe4,
-	0x97, 0xab, 0x61, 0xe1, 0x20, 0xe7, 0x46, 0x66, 0xc1, 0x54, 0xfd, 0x8c, 0x4e, 0x5e, 0x03, 0x0b,
-	0x47, 0x91, 0x9e, 0xcf, 0x57, 0xb3, 0x8e, 0xf8, 0xf4, 0xe4, 0xe8, 0x43, 0x84, 0xfd, 0xcc, 0x84,
-	0x82, 0xfc, 0xb8, 0x9c, 0xe9, 0x41, 0xb4, 0xec, 0xfb, 0xeb, 0xeb, 0xec, 0x9c, 0xbe, 0x3c, 0xa5,
-	0x0a, 0x24, 0x2b, 0xc3, 0xfa, 0x6a, 0x6b, 0xd4, 0xa8, 0x14, 0xed, 0xaf, 0x4d, 0xb0, 0x10, 0x42,
-	0x3e, 0x81, 0xaa, 0xee, 0xfd, 0x2f, 0x52, 0xc6, 0x57, 0x1e, 0xd2, 0xc5, 0x80, 0xba, 0x3c, 0x88,
-	0xec, 0xe5, 0x68, 0x65, 0xbc, 0x54, 0xed, 0x1f, 0xf3, 0x50, 0xc9, 0x1c, 0xcb, 0xb6, 0x99, 0x30,
-	0x31, 0x8e, 0x3d, 0xdd, 0x11, 0x5a, 0x93, 0x64, 0xd2, 0x24, 0x5c, 0xcc, 0xe7, 0x34, 0x09, 0x49,
-	0x7f, 0xbd, 0xb9, 0xdb, 0x97, 0x7f, 0xfd, 0x7f, 0xe8, 0xe7, 0x93, 0x4b, 0xfb, 0xf9, 0xd1, 0x6a,
-	0x3f, 0xff, 0x73, 0x9a, 0x17, 0x5b, 0xb8, 0xa4, 0x0b, 0x68, 0x97, 0xc0, 0xc2, 0x22, 0xcb, 0xae,
-	0xcd, 0xb6, 0x89, 0xee, 0xda, 0xdd, 0xd7, 0xa1, 0x22, 0xcd, 0xf3, 0x3d, 0xfc, 0x53, 0x24, 0x37,
-	0x21, 0xff, 0x30, 0x26, 0x25, 0xfd, 0x92, 0xec, 0x92, 0xa6, 0xd0, 0xca, 0xed, 0x18, 0x6f, 0x19,
-	0x9d, 0x07, 0xdf, 0x9f, 0x6d, 0x19, 0xbf, 0x9d, 0x6d, 0x19, 0xcf, 0xce, 0xb6, 0x8c, 0x3f, 0xce,
-	0xb6, 0x8c, 0xcf, 0xdb, 0x99, 0xff, 0xc9, 0x4c, 0x9c, 0x6e, 0xdc, 0x56, 0xbf, 0x9e, 0xed, 0xb5,
-	0xdf, 0xd2, 0xa3, 0x22, 0xfe, 0x58, 0xde, 0xfd, 0x2b, 0x00, 0x00, 0xff, 0xff, 0xd4, 0x99, 0xb6,
-	0x40, 0xb0, 0x0a, 0x00, 0x00,
+var fileDescriptor_fuzzymonkey_6ac3692e041c80b5 = []byte{
+	// 2524 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x58, 0xcd, 0x93, 0x1b, 0x47,
+	0x15, 0xd7, 0xc7, 0xe8, 0xeb, 0xad, 0xa4, 0xed, 0x6d, 0xaf, 0xd7, 0xca, 0xc4, 0xf1, 0x87, 0x42,
+	0x1c, 0x87, 0x18, 0x2d, 0x59, 0x1b, 0x43, 0x42, 0x52, 0xd4, 0x7e, 0x39, 0xda, 0x24, 0xbb, 0xda,
+	0x1a, 0x6d, 0x42, 0x15, 0x17, 0xd1, 0xab, 0x69, 0x49, 0x13, 0xcf, 0x57, 0x66, 0x7a, 0xd6, 0x2b,
+	0x17, 0x67, 0xee, 0x14, 0x47, 0xce, 0x54, 0x51, 0xc5, 0x81, 0x1b, 0x14, 0x67, 0x38, 0xc0, 0x89,
+	0x1c, 0xf8, 0x03, 0x28, 0xff, 0x03, 0x70, 0xe3, 0x16, 0xa8, 0x7e, 0xdd, 0x33, 0x1a, 0xad, 0xd7,
+	0x31, 0x50, 0xc5, 0xad, 0xdf, 0x7b, 0xbf, 0x7e, 0xfd, 0xba, 0xdf, 0xe7, 0x0c, 0xdc, 0x0e, 0x1f,
+	0x4f, 0x37, 0x1d, 0x5f, 0xf0, 0xc8, 0x67, 0xee, 0xe6, 0xc4, 0xdb, 0x9c, 0x24, 0x4f, 0x9f, 0xce,
+	0xbd, 0xc0, 0x7f, 0xcc, 0xe7, 0xbd, 0x30, 0x0a, 0x44, 0x60, 0x5e, 0x9f, 0x06, 0xc1, 0xd4, 0xe5,
+	0x9b, 0x48, 0x9d, 0x26, 0x93, 0xcd, 0x58, 0x44, 0xc9, 0x58, 0x68, 0xe9, 0xb7, 0xa6, 0x8e, 0x98,
+	0x25, 0xa7, 0xbd, 0x71, 0xe0, 0x6d, 0x4e, 0x83, 0x69, 0xb0, 0x80, 0x49, 0x0a, 0x09, 0x5c, 0x29,
+	0x78, 0xf7, 0xe7, 0x6b, 0x50, 0xde, 0x75, 0x05, 0x35, 0xa1, 0xec, 0xc5, 0xd3, 0x4e, 0xf1, 0x56,
+	0xf1, 0xee, 0xca, 0x56, 0xbd, 0xb7, 0xeb, 0x8a, 0xde, 0x61, 0x3c, 0xb5, 0x24, 0xd3, 0xfc, 0x3b,
+	0x81, 0xf2, 0x61, 0x3c, 0xa5, 0xaf, 0x83, 0x21, 0xad, 0xd1, 0xa0, 0x56, 0x0a, 0xea, 0x3d, 0x4a,
+	0x9e, 0x3e, 0xed, 0x17, 0x2c, 0x14, 0xd2, 0x7b, 0x50, 0xf3, 0xb8, 0x88, 0x9c, 0x71, 0xdc, 0x29,
+	0x21, 0x8e, 0x64, 0xb8, 0x43, 0xc5, 0xef, 0x17, 0xac, 0x14, 0x42, 0x7f, 0x00, 0xed, 0x88, 0xc7,
+	0x5c, 0x8c, 0xc2, 0x28, 0x98, 0x46, 0x3c, 0x8e, 0x3b, 0x65, 0xdc, 0xb4, 0x91, 0x6d, 0xb2, 0xa4,
+	0xf8, 0x58, 0x4b, 0xfb, 0x05, 0xab, 0x15, 0xe5, 0x19, 0x74, 0x17, 0xc8, 0x98, 0xb9, 0xee, 0x28,
+	0xe2, 0x5f, 0x24, 0x3c, 0x16, 0xa3, 0x88, 0x3d, 0xe9, 0x18, 0xa8, 0xe2, 0x5a, 0xa6, 0x62, 0x97,
+	0xb9, 0xae, 0xa5, 0xe4, 0x16, 0x7b, 0xd2, 0x2f, 0x58, 0xed, 0xf1, 0x12, 0x87, 0x3e, 0x82, 0x35,
+	0xad, 0x24, 0x0e, 0x03, 0x3f, 0xe6, 0xa8, 0xa5, 0x82, 0x5a, 0x3a, 0x17, 0xb4, 0x28, 0x80, 0x52,
+	0xb3, 0x3a, 0x5e, 0x66, 0xd1, 0x4f, 0xe0, 0x0a, 0xea, 0x39, 0xe3, 0x91, 0x33, 0x59, 0x5c, 0xa9,
+	0x8a, 0x9a, 0xcc, 0x25, 0x4d, 0x9f, 0x49, 0x48, 0xee, 0x5a, 0x68, 0xc0, 0x12, 0xd3, 0xfc, 0x87,
+	0x01, 0x86, 0x7c, 0x5a, 0xba, 0x05, 0x75, 0xbc, 0xb4, 0xe0, 0x91, 0x7e, 0xfb, 0x8d, 0xa5, 0xb7,
+	0x57, 0x6f, 0x24, 0x78, 0x64, 0x65, 0x38, 0xfa, 0x10, 0xc0, 0x0b, 0x6c, 0xee, 0x8e, 0x1e, 0x3b,
+	0xbe, 0x8d, 0x9e, 0x68, 0xe7, 0x5e, 0x04, 0x77, 0x1d, 0x4a, 0xf9, 0xc7, 0x8e, 0x6f, 0x5b, 0x0d,
+	0x2f, 0x5d, 0xd2, 0xb7, 0xa0, 0x82, 0x84, 0xf6, 0xc3, 0x95, 0x4b, 0xb6, 0x58, 0x0a, 0x41, 0xd7,
+	0xa1, 0x92, 0xc4, 0x6c, 0xca, 0x3b, 0xc6, 0xad, 0xf2, 0xdd, 0x86, 0xa5, 0x08, 0x4a, 0xc1, 0x88,
+	0x39, 0xb7, 0xf1, 0xf9, 0x9a, 0x16, 0xae, 0xe9, 0x75, 0x68, 0xc8, 0x90, 0xf6, 0x63, 0x47, 0xcc,
+	0xf1, 0x35, 0x5a, 0xd6, 0x82, 0x21, 0x77, 0xec, 0x1f, 0xec, 0xc5, 0x9d, 0xda, 0xad, 0xf2, 0xdd,
+	0x96, 0x85, 0x6b, 0xf3, 0x67, 0x45, 0xa8, 0xa7, 0xb7, 0xa2, 0x0f, 0xa0, 0x12, 0xcf, 0xb8, 0xeb,
+	0xea, 0xcb, 0x5f, 0xbf, 0xfc, 0xf2, 0xbd, 0xa1, 0xc4, 0xf4, 0x0b, 0x96, 0x02, 0x9b, 0xbb, 0x50,
+	0x41, 0x8e, 0xb4, 0x33, 0x16, 0x2c, 0x12, 0xb8, 0xbd, 0x61, 0x29, 0x82, 0x12, 0x28, 0x47, 0xb1,
+	0xc0, 0x97, 0x69, 0x58, 0x72, 0x89, 0x96, 0x8b, 0x20, 0xc4, 0x9b, 0x37, 0x2c, 0x5c, 0xef, 0xc0,
+	0xe2, 0xe9, 0xcd, 0xdf, 0x15, 0xa1, 0x82, 0x0f, 0x40, 0x3f, 0x80, 0x46, 0x10, 0x72, 0x9f, 0x85,
+	0xce, 0xd9, 0x7d, 0x6d, 0xd4, 0x6b, 0x97, 0x3c, 0x54, 0x6f, 0x10, 0x72, 0x7f, 0xfb, 0xf8, 0xe0,
+	0xec, 0x7e, 0xbf, 0x60, 0x2d, 0x76, 0x98, 0x13, 0x68, 0x64, 0x12, 0x79, 0xea, 0xc4, 0x71, 0xb9,
+	0x36, 0x0e, 0xd7, 0x92, 0x37, 0x0b, 0x32, 0xe3, 0x70, 0x4d, 0xdf, 0x81, 0xf5, 0x19, 0x67, 0x36,
+	0x8f, 0x46, 0x2c, 0x11, 0xb3, 0x20, 0x72, 0x9e, 0x32, 0xe1, 0x04, 0xbe, 0xb6, 0xf6, 0x8a, 0x92,
+	0x6d, 0xe7, 0x45, 0x3b, 0x35, 0xed, 0xcb, 0xee, 0x9b, 0xd0, 0xc8, 0x9c, 0x4d, 0x57, 0xa0, 0xf6,
+	0xe9, 0xd1, 0xc7, 0x47, 0x83, 0x1f, 0x1e, 0x91, 0x02, 0x6d, 0xe5, 0x4c, 0x21, 0x45, 0xb3, 0x01,
+	0x35, 0x9d, 0xa4, 0xe6, 0x6f, 0x8a, 0xd0, 0x5a, 0xca, 0x3d, 0xfa, 0x1d, 0xa8, 0xc6, 0x82, 0x89,
+	0x24, 0x46, 0x5b, 0xdb, 0xb9, 0x2b, 0x2f, 0xe1, 0x7a, 0x43, 0x04, 0x59, 0x1a, 0x4c, 0xaf, 0x41,
+	0x4d, 0xc4, 0x23, 0xdb, 0x99, 0x4c, 0xf0, 0x3e, 0x86, 0x55, 0x15, 0xf1, 0x9e, 0x33, 0x99, 0xd0,
+	0x0d, 0xa8, 0x46, 0x9c, 0xc5, 0x78, 0x07, 0x19, 0x40, 0x9a, 0xea, 0x3e, 0x84, 0xaa, 0x52, 0x41,
+	0xeb, 0x60, 0x1c, 0x0d, 0x06, 0xc7, 0xa4, 0x20, 0x8d, 0x46, 0xb7, 0x71, 0x9b, 0x14, 0x69, 0x03,
+	0x2a, 0xdc, 0xb7, 0xb9, 0x4d, 0x4a, 0x14, 0xa0, 0x3a, 0x61, 0x8e, 0xcb, 0x6d, 0x52, 0x36, 0x7f,
+	0x5b, 0x84, 0xf6, 0x72, 0xaa, 0xd3, 0xfb, 0x50, 0x71, 0xfc, 0x30, 0x11, 0xcf, 0x39, 0x69, 0x19,
+	0xd7, 0x3b, 0x90, 0x20, 0x4b, 0x61, 0xcd, 0x00, 0x2a, 0x48, 0xd3, 0x23, 0x68, 0xce, 0x84, 0x08,
+	0xd3, 0xda, 0xa2, 0x95, 0xbc, 0xf5, 0xb5, 0x4a, 0x7a, 0x7d, 0x21, 0x42, 0xcd, 0xec, 0x17, 0xac,
+	0x95, 0xd9, 0x82, 0x34, 0x5b, 0xb0, 0x92, 0x93, 0x4a, 0xf7, 0xa8, 0x03, 0x7f, 0x6a, 0xc0, 0xea,
+	0x85, 0xea, 0x42, 0xbf, 0x0b, 0xd5, 0x20, 0x11, 0x0b, 0xd3, 0x6f, 0xbe, 0xa8, 0x0e, 0xf5, 0x06,
+	0x08, 0xb3, 0x34, 0xdc, 0xfc, 0x7d, 0x19, 0xaa, 0x8a, 0x45, 0x87, 0xd0, 0xd2, 0xf6, 0x2b, 0xb4,
+	0x56, 0x75, 0xef, 0x25, 0xaa, 0xf4, 0x15, 0x14, 0xbb, 0x5f, 0xb0, 0x9a, 0xb3, 0x1c, 0x6d, 0xfe,
+	0xa5, 0x04, 0xcd, 0x3c, 0x80, 0xde, 0x84, 0x15, 0xe5, 0xe9, 0xd1, 0x38, 0xb0, 0xd5, 0x19, 0x2d,
+	0x0b, 0x14, 0x6b, 0x37, 0xb0, 0x79, 0xce, 0xcf, 0x2a, 0x9e, 0x35, 0x45, 0x87, 0x50, 0x53, 0x51,
+	0x1b, 0x63, 0x00, 0xac, 0x6c, 0xbd, 0xfb, 0xdf, 0x18, 0xd6, 0xeb, 0xab, 0xbd, 0xfb, 0xbe, 0x88,
+	0xe6, 0x56, 0xaa, 0x49, 0xa6, 0xce, 0x69, 0x60, 0xcf, 0xb1, 0x07, 0x34, 0x2d, 0x5c, 0x9b, 0x77,
+	0xa0, 0xa9, 0xc0, 0x9f, 0x31, 0x37, 0xe1, 0xb1, 0x34, 0xe8, 0x0c, 0x57, 0x9d, 0xa2, 0x0a, 0x3c,
+	0x45, 0x99, 0x49, 0x8a, 0x53, 0x4a, 0x65, 0x89, 0x78, 0xcc, 0xe7, 0x3a, 0x33, 0xe5, 0x92, 0x0e,
+	0xa0, 0x82, 0x58, 0xdd, 0xda, 0xfe, 0x17, 0x83, 0x95, 0x0d, 0x96, 0xd2, 0xf3, 0x5e, 0xe9, 0x7b,
+	0xc5, 0x9d, 0x7a, 0xea, 0x6a, 0xf3, 0x5f, 0x45, 0x58, 0x7b, 0xae, 0x39, 0xd0, 0x77, 0x2f, 0xe4,
+	0xdd, 0xed, 0x17, 0x37, 0x92, 0x8b, 0xb9, 0x47, 0xc1, 0xf0, 0x99, 0xc7, 0xd3, 0x42, 0x22, 0xd7,
+	0x2f, 0x4a, 0x3b, 0x7a, 0x1f, 0x4b, 0x9d, 0x0a, 0x94, 0xb4, 0x83, 0xaa, 0x49, 0xa3, 0x97, 0x8e,
+	0x10, 0xbd, 0x21, 0x4e, 0x1a, 0x56, 0x06, 0xec, 0x1e, 0xe5, 0x73, 0xd5, 0x0e, 0x7c, 0x4e, 0x0a,
+	0xb8, 0x62, 0x82, 0x91, 0x22, 0x66, 0xed, 0x63, 0x27, 0x0c, 0x31, 0x55, 0x1b, 0xba, 0x0c, 0x93,
+	0x32, 0xf2, 0x93, 0xf1, 0x98, 0xc7, 0x31, 0x31, 0x24, 0x21, 0x53, 0x38, 0x89, 0x38, 0xa9, 0xec,
+	0x54, 0x70, 0x0c, 0xe9, 0xfe, 0xa2, 0x02, 0xe5, 0x61, 0x74, 0x76, 0x71, 0x2a, 0x19, 0x46, 0x67,
+	0x8b, 0xa9, 0xe4, 0x9f, 0x46, 0x36, 0x95, 0xc8, 0xde, 0x99, 0x4d, 0x25, 0x1a, 0x84, 0x8f, 0x23,
+	0xa7, 0x12, 0x29, 0xa4, 0xef, 0x43, 0x4b, 0x4e, 0x27, 0x8b, 0x9e, 0xac, 0x1c, 0x78, 0x35, 0x43,
+	0xcb, 0xaa, 0x9d, 0x6b, 0xc7, 0xcd, 0x49, 0x8e, 0xa6, 0x77, 0xa0, 0x82, 0x5d, 0x40, 0x37, 0xc5,
+	0x76, 0xb6, 0x0b, 0x0b, 0x9f, 0x6c, 0x39, 0x28, 0x36, 0xff, 0x58, 0x06, 0x43, 0x1e, 0x2b, 0xbb,
+	0x68, 0xbe, 0xee, 0x5c, 0x59, 0x32, 0x6a, 0xa9, 0xda, 0xc8, 0x20, 0xe3, 0x07, 0xaa, 0x43, 0xb7,
+	0x2c, 0xb9, 0x34, 0xbf, 0x2a, 0xa5, 0x05, 0x68, 0xef, 0xd2, 0x02, 0x74, 0xf3, 0x12, 0x6d, 0x5f,
+	0x57, 0x76, 0x7e, 0x59, 0x5a, 0xaa, 0x3b, 0x32, 0x00, 0x3c, 0x2e, 0x66, 0x81, 0xad, 0x23, 0x5b,
+	0x53, 0xd2, 0x92, 0x24, 0x72, 0xd3, 0x8e, 0x98, 0x44, 0x2e, 0x7d, 0x74, 0x31, 0x43, 0xef, 0xbd,
+	0xe4, 0xe8, 0xff, 0x43, 0x52, 0xce, 0x5e, 0x9a, 0x94, 0x3b, 0xcb, 0x49, 0xf9, 0x1f, 0xda, 0xf8,
+	0x7c, 0x1e, 0x66, 0xf5, 0xb8, 0x06, 0x15, 0x74, 0xac, 0xd9, 0x86, 0x66, 0x3e, 0x2e, 0xd2, 0xe8,
+	0xfc, 0x75, 0x11, 0xaa, 0xc3, 0x90, 0x8f, 0x0f, 0x2c, 0xda, 0x85, 0x5a, 0x3c, 0x9e, 0x71, 0x8f,
+	0xc5, 0x8b, 0x20, 0x55, 0xb4, 0x95, 0x0a, 0xe8, 0x03, 0x68, 0x70, 0xdf, 0x0e, 0x03, 0xc7, 0x17,
+	0x32, 0xee, 0xca, 0x38, 0xbf, 0xa9, 0xfd, 0xbd, 0xfd, 0x54, 0xa0, 0x5e, 0x6c, 0x01, 0x34, 0x3f,
+	0x84, 0xf6, 0xb2, 0x30, 0x7f, 0xf3, 0x96, 0xba, 0xf9, 0xcd, 0xe5, 0x9b, 0x37, 0x32, 0x75, 0xb9,
+	0x6b, 0x75, 0x7f, 0x02, 0x35, 0x6d, 0x12, 0xbd, 0x03, 0xc6, 0xe7, 0x32, 0xf1, 0x8b, 0x68, 0x04,
+	0x4d, 0x4d, 0xed, 0x7d, 0x14, 0x07, 0xbe, 0x32, 0x00, 0xe5, 0xe6, 0x01, 0x34, 0x32, 0xd6, 0x25,
+	0xc7, 0xde, 0x59, 0x3e, 0x96, 0xf4, 0x2c, 0x3e, 0x19, 0x44, 0x4a, 0xd9, 0x47, 0xc3, 0xc1, 0x51,
+	0xfe, 0xf4, 0xcf, 0x61, 0xf5, 0x82, 0x94, 0xde, 0x80, 0x72, 0x28, 0xd2, 0x49, 0x16, 0xb4, 0x11,
+	0xc7, 0x22, 0xea, 0x17, 0x2c, 0x29, 0xa0, 0x77, 0xa0, 0xaa, 0x9e, 0x4e, 0xeb, 0x6f, 0x6a, 0x48,
+	0x4f, 0xee, 0xee, 0x17, 0x2c, 0x2d, 0xdd, 0x59, 0x85, 0x56, 0x28, 0xa2, 0x51, 0x10, 0x8d, 0x14,
+	0xa3, 0xbb, 0x09, 0x8d, 0x4c, 0x99, 0x34, 0x7b, 0x78, 0xb0, 0x97, 0x9a, 0x3d, 0x3c, 0xd8, 0xc3,
+	0x89, 0x8f, 0x4f, 0xb2, 0x89, 0x8f, 0x4f, 0xba, 0xdf, 0x87, 0x7a, 0xfa, 0x62, 0xb2, 0x8c, 0xe8,
+	0xb7, 0x51, 0x65, 0x24, 0x15, 0xe8, 0x43, 0x51, 0x28, 0xc7, 0xc1, 0xd4, 0x43, 0xdd, 0xaf, 0x4a,
+	0xd0, 0xcc, 0x83, 0xe8, 0xbd, 0xa5, 0xbc, 0x6a, 0x6f, 0xad, 0x2f, 0xe9, 0x90, 0x5f, 0x3f, 0xb3,
+	0xc0, 0xce, 0xb2, 0xed, 0x1d, 0x68, 0x85, 0x4c, 0xcc, 0x46, 0x21, 0x8b, 0x84, 0xc3, 0xdc, 0x34,
+	0x32, 0x9a, 0xbd, 0x63, 0x26, 0x66, 0xc7, 0x8a, 0x69, 0x35, 0xc3, 0x05, 0x11, 0xd3, 0x2e, 0x54,
+	0x31, 0x40, 0xd3, 0x6c, 0x84, 0xde, 0x31, 0x8b, 0x98, 0x87, 0x4f, 0xae, 0x25, 0xf4, 0x01, 0xd4,
+	0x54, 0x33, 0x89, 0x71, 0x2c, 0x97, 0x9f, 0x1d, 0x4b, 0x56, 0xa8, 0xc6, 0x94, 0x26, 0xa8, 0x86,
+	0x9a, 0xef, 0x41, 0x33, 0x2f, 0xb8, 0xc4, 0xe7, 0xeb, 0x79, 0x9f, 0xb7, 0xf2, 0x1e, 0x7e, 0x02,
+	0x55, 0x75, 0xb5, 0xe5, 0xc9, 0xb2, 0x06, 0xe5, 0x0f, 0xf7, 0x4f, 0x48, 0x51, 0xb6, 0x83, 0xfe,
+	0xfe, 0xf6, 0x1e, 0x29, 0xc9, 0xd5, 0xf1, 0x60, 0x78, 0x42, 0xca, 0x52, 0x78, 0xfc, 0xe9, 0x09,
+	0x31, 0x64, 0x53, 0x38, 0xde, 0x3e, 0xd9, 0xed, 0x93, 0x8a, 0x1c, 0xe5, 0xf6, 0xf6, 0x3f, 0xd9,
+	0x3f, 0xd9, 0x27, 0x55, 0xa9, 0x69, 0x77, 0x70, 0x74, 0xb4, 0xbf, 0x7b, 0x42, 0x6a, 0x92, 0x18,
+	0x1c, 0x9f, 0x1c, 0x0c, 0x8e, 0x86, 0xa4, 0x2e, 0x37, 0x9c, 0x58, 0xdb, 0xbb, 0xfb, 0xa4, 0xd1,
+	0xfd, 0x43, 0x11, 0x1a, 0xd9, 0x03, 0xc8, 0x31, 0xc4, 0x89, 0xb1, 0x52, 0x3a, 0x11, 0x57, 0x2e,
+	0xa8, 0x5b, 0xe0, 0xc4, 0x96, 0xe6, 0xa4, 0x01, 0x51, 0x5a, 0x04, 0x44, 0xda, 0x1d, 0xcb, 0xb9,
+	0xee, 0xf8, 0x3a, 0x18, 0xf8, 0xc5, 0x64, 0xa0, 0x0b, 0x57, 0x17, 0x2f, 0xdc, 0xc3, 0x2f, 0x25,
+	0x14, 0x76, 0x3f, 0x02, 0xe3, 0xf9, 0x51, 0xba, 0xae, 0x8a, 0x9c, 0xba, 0xb1, 0xf4, 0x9b, 0xea,
+	0x79, 0x5f, 0x24, 0x3c, 0x9a, 0x93, 0xb2, 0xbc, 0x9e, 0x2a, 0x87, 0xc4, 0x90, 0xeb, 0x71, 0x10,
+	0x3c, 0x76, 0x38, 0xa9, 0x74, 0x3f, 0x80, 0x95, 0x9c, 0xc7, 0xe9, 0xba, 0xdc, 0x9b, 0x7e, 0xab,
+	0xc8, 0xb8, 0x93, 0x14, 0xa5, 0x2a, 0x65, 0x4a, 0x9a, 0x29, 0x89, 0x1d, 0x03, 0x4a, 0x61, 0xd8,
+	0xfd, 0x6b, 0x13, 0xaa, 0x2a, 0xe8, 0xcd, 0x3f, 0x37, 0xc1, 0xc0, 0xa7, 0x78, 0x13, 0x2a, 0x62,
+	0x1e, 0xea, 0x4a, 0xda, 0xde, 0x5a, 0xcb, 0xe7, 0x4f, 0xef, 0x64, 0x1e, 0x72, 0x4b, 0xc9, 0xe9,
+	0x37, 0xc1, 0xe0, 0x7e, 0xe2, 0x65, 0x45, 0xe9, 0x62, 0xbb, 0xc7, 0x1a, 0x69, 0x21, 0x86, 0xbe,
+	0x0d, 0xd5, 0x49, 0x10, 0x79, 0x4c, 0x35, 0xc1, 0xb6, 0xec, 0x69, 0x39, 0xad, 0x8f, 0x50, 0x64,
+	0x69, 0x08, 0x7d, 0x0d, 0xc0, 0x73, 0xfc, 0x91, 0xcb, 0xfd, 0xa9, 0x98, 0xe1, 0x5b, 0x1a, 0x56,
+	0xc3, 0x73, 0xfc, 0x4f, 0x90, 0x81, 0x62, 0x76, 0x9e, 0x8a, 0x2b, 0x5a, 0xcc, 0xce, 0xb5, 0xf8,
+	0x1b, 0xd0, 0x9e, 0xb1, 0x78, 0x94, 0x83, 0x54, 0xd1, 0x9b, 0xcd, 0x19, 0x8b, 0x0f, 0x33, 0x54,
+	0x07, 0x6a, 0x21, 0x93, 0x1f, 0x66, 0x7e, 0xa7, 0x86, 0x0e, 0x4c, 0x49, 0x29, 0xf1, 0x1c, 0xdf,
+	0xf1, 0x12, 0xaf, 0x53, 0xbf, 0x55, 0xbc, 0x5b, 0xb4, 0x52, 0x12, 0x25, 0xec, 0x1c, 0x25, 0x0d,
+	0x2d, 0x51, 0xa4, 0x0c, 0x1f, 0x3c, 0x53, 0xef, 0x03, 0x15, 0x3e, 0xf2, 0x40, 0xbd, 0x35, 0x05,
+	0xe8, 0xed, 0x2b, 0x0b, 0x80, 0xd6, 0xf0, 0x00, 0x36, 0x44, 0xc4, 0xfc, 0xd8, 0x65, 0x82, 0xdb,
+	0x23, 0x2f, 0x71, 0x85, 0x13, 0xba, 0x7c, 0x14, 0x4c, 0x3a, 0x4d, 0x3c, 0x6a, 0x7d, 0x21, 0x3d,
+	0xd4, 0xc2, 0xc1, 0x84, 0xbe, 0x0d, 0x6b, 0xfc, 0x7c, 0xec, 0x26, 0xb1, 0x73, 0xc6, 0xb3, 0xd3,
+	0x5b, 0xa8, 0x9c, 0x64, 0x82, 0xd4, 0x86, 0x65, 0xb0, 0xb6, 0xa4, 0x7d, 0x11, 0xac, 0xed, 0x59,
+	0x87, 0x8a, 0x23, 0xb8, 0x17, 0x77, 0x56, 0xf1, 0xbb, 0x5a, 0x11, 0xf4, 0x36, 0x34, 0x13, 0xdf,
+	0xf9, 0x22, 0xe1, 0x23, 0x25, 0x24, 0xb8, 0x7b, 0x45, 0xf1, 0x0e, 0x10, 0xf2, 0x2a, 0x48, 0x57,
+	0x69, 0xf9, 0x1a, 0x3a, 0xa7, 0xee, 0x39, 0xfe, 0x42, 0xc8, 0xce, 0xb5, 0x90, 0x6a, 0x21, 0x3b,
+	0x57, 0xc2, 0x2e, 0xb4, 0x52, 0xc7, 0x29, 0xc0, 0x15, 0xa5, 0x5d, 0xbd, 0x92, 0xc2, 0xbc, 0x0f,
+	0x10, 0x46, 0x41, 0xc8, 0x23, 0xe1, 0xf0, 0xb8, 0xb3, 0x8e, 0x91, 0x77, 0x7d, 0x29, 0x96, 0x8e,
+	0x33, 0xb1, 0xaa, 0x52, 0x39, 0x3c, 0x35, 0xe5, 0x90, 0xaa, 0x53, 0xfc, 0x2a, 0xce, 0x09, 0x19,
+	0x4d, 0xdf, 0x80, 0xb6, 0xb4, 0x3b, 0xa7, 0x7d, 0x03, 0xed, 0x6b, 0x79, 0x8e, 0xbf, 0xd0, 0x89,
+	0x30, 0x76, 0x9e, 0x87, 0x5d, 0xd3, 0x30, 0x76, 0x9e, 0x83, 0xdd, 0x03, 0x9a, 0xde, 0x25, 0x07,
+	0xed, 0xa8, 0xc7, 0x56, 0x17, 0xca, 0xa1, 0x3f, 0x83, 0xab, 0xcc, 0xb6, 0x1d, 0xf9, 0xd9, 0xcd,
+	0xdc, 0xfc, 0x86, 0x57, 0xb0, 0x9d, 0xdc, 0x5e, 0xba, 0xe0, 0x76, 0x86, 0x5c, 0x68, 0xb0, 0xd6,
+	0xd9, 0x25, 0x5c, 0xfa, 0x1e, 0xbc, 0x22, 0xad, 0xb8, 0x5c, 0xb7, 0x89, 0xc6, 0x5c, 0x9b, 0xb1,
+	0xf8, 0x32, 0x8d, 0xf4, 0x2a, 0x54, 0x99, 0xeb, 0xca, 0x00, 0x7c, 0x55, 0x45, 0x00, 0x73, 0xdd,
+	0xc1, 0x04, 0xd9, 0xfe, 0x5c, 0xb2, 0xaf, 0x6b, 0xb6, 0x3f, 0x57, 0xec, 0xc0, 0xc7, 0x70, 0x7d,
+	0x4d, 0xb1, 0x03, 0x5f, 0xc6, 0x27, 0x81, 0xb2, 0x1f, 0x88, 0xce, 0x0d, 0x55, 0x35, 0xfd, 0x40,
+	0x98, 0x1f, 0xc0, 0xea, 0x05, 0x0f, 0x5d, 0x32, 0x93, 0xbd, 0xb0, 0x5d, 0x98, 0x3f, 0x86, 0xf5,
+	0x4b, 0xad, 0x7d, 0x13, 0xda, 0xcc, 0x7d, 0xc2, 0xe6, 0xf1, 0x08, 0x3f, 0x0d, 0xd2, 0x12, 0xde,
+	0x2f, 0x58, 0x2d, 0xc5, 0x1f, 0x2a, 0xb6, 0xac, 0x85, 0x59, 0x1d, 0x97, 0xb5, 0x70, 0x78, 0xb0,
+	0xb7, 0xb3, 0x02, 0x0d, 0x66, 0xdb, 0xf8, 0x36, 0x71, 0x37, 0x00, 0x43, 0x16, 0xb9, 0xe7, 0xda,
+	0x11, 0xf3, 0x75, 0x71, 0xf6, 0x13, 0xd7, 0x25, 0x25, 0x29, 0x3f, 0x0d, 0x02, 0x97, 0x33, 0x5f,
+	0x7d, 0x92, 0x38, 0xbe, 0xe0, 0xd3, 0xb4, 0x3e, 0xfb, 0x89, 0x77, 0xca, 0x23, 0x52, 0x91, 0x25,
+	0x9c, 0x45, 0x11, 0x9b, 0x93, 0xaa, 0x64, 0xc7, 0x22, 0x72, 0xfc, 0x29, 0xa9, 0xc9, 0x75, 0x70,
+	0xfa, 0x39, 0x1f, 0x0b, 0x52, 0xef, 0x7e, 0x59, 0x84, 0xaa, 0x2a, 0x80, 0xea, 0x8f, 0xc5, 0xd1,
+	0xbe, 0xfa, 0xb3, 0x62, 0x33, 0xc1, 0x47, 0xc2, 0xf1, 0xb8, 0x3a, 0x56, 0x92, 0xaa, 0x27, 0x70,
+	0x8f, 0x39, 0x2e, 0x31, 0x68, 0x13, 0xea, 0xb3, 0x20, 0x16, 0xb2, 0xf1, 0x90, 0xaa, 0x84, 0x38,
+	0xe1, 0xd9, 0x03, 0x52, 0xd7, 0xab, 0x87, 0xa4, 0x21, 0xcd, 0x4e, 0x22, 0x87, 0x00, 0x5d, 0x83,
+	0x56, 0x12, 0x39, 0xa3, 0x88, 0x4f, 0x78, 0xc4, 0xfd, 0x31, 0x27, 0x2b, 0x52, 0x51, 0xc4, 0xa7,
+	0xfc, 0x9c, 0xac, 0xc9, 0xa5, 0xe3, 0x8b, 0xfb, 0x5b, 0x84, 0xea, 0xe5, 0xc3, 0x07, 0xe4, 0x8a,
+	0x5c, 0x4e, 0xdc, 0x80, 0x09, 0xb2, 0x2e, 0xcd, 0xb5, 0x83, 0xe4, 0xd4, 0xe5, 0xe4, 0x2a, 0x36,
+	0xaa, 0xb9, 0xe0, 0x64, 0x43, 0x72, 0x4f, 0x1d, 0x9f, 0x45, 0x73, 0x72, 0x4d, 0xda, 0x12, 0xb2,
+	0x38, 0x7e, 0x12, 0x44, 0x36, 0xe9, 0x6c, 0xbd, 0x01, 0x2b, 0x72, 0xf2, 0x9d, 0x1f, 0xe2, 0x8f,
+	0x67, 0xba, 0x01, 0xa5, 0xbd, 0x80, 0x1a, 0xf2, 0xc3, 0xd3, 0x34, 0xe4, 0x7c, 0xdd, 0x2d, 0xdc,
+	0x2d, 0x7e, 0xbb, 0xb8, 0xb3, 0xfd, 0xab, 0x67, 0x37, 0x8a, 0x7f, 0x7a, 0x76, 0xa3, 0xf8, 0xe5,
+	0xb3, 0x1b, 0xc5, 0xbf, 0x3d, 0xbb, 0x51, 0xfc, 0xd1, 0x66, 0xee, 0xf7, 0x73, 0x4e, 0xc3, 0x6e,
+	0xb0, 0xa9, 0xfe, 0x61, 0x6f, 0x5e, 0xf8, 0xbf, 0x7d, 0x5a, 0xc5, 0x6e, 0x73, 0xff, 0xdf, 0x01,
+	0x00, 0x00, 0xff, 0xff, 0x12, 0x8d, 0x26, 0x47, 0xf9, 0x16, 0x00, 0x00,
 }

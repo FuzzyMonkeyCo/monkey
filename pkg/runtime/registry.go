@@ -1,8 +1,13 @@
 package runtime
 
 import (
+	"fmt"
+	"log"
+	"unicode"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
@@ -16,6 +21,7 @@ func RegisterModeler(name string, mdlr modeler.Interface) {
 		panic(fmt.Sprintf("modeler %q is already registered", name))
 	}
 	registeredIRModels[name] = mdlr.NewFromKwargs
+	panic(`wtf`)
 }
 
 func (rt *runtime) modelMaker(modelName string, mdlr newModelerFunc) builtin {

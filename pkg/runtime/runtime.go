@@ -23,7 +23,7 @@ func Bintitle() string {
 }
 
 type runtime struct {
-	EIDs     []uint32
+	eIds     []uint32
 	Ntensity uint32
 
 	thread     *starlark.Thread
@@ -51,13 +51,14 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	}
 
 	rt = &runtime{}
-	rt.globals = make(starlark.StringDict, 2+len(registeredIRModels))
-	for modelName, modeler := range registeredIRModels {
+	rt.globals = make(starlark.StringDict, len(rt.builtins())+len(registeredIRModels))
+	as.ColorERR.Printf(">>> registeredIRModels: %+v\n", registeredIRModels)
+	for modelName, mdlr := range registeredIRModels {
 		if _, ok := fm.Clt_Msg_Fuzz_ModelKind_value[modelName]; !ok {
 			err = fmt.Errorf("unexpected model kind: %q", modelName)
 			return
 		}
-		builtin := rt.modelMaker(modelName, modeler)
+		builtin := rt.modelMaker(modelName, mdlr)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
 
@@ -82,6 +83,7 @@ func NewMonkey(name string) (rt *runtime, err error) {
 }
 
 func (rt *runtime) loadCfg(localCfg string) (err error) {
+	as.ColorERR.Printf(">>> globals: %+v\n", rt.globals)
 	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, nil, rt.globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()

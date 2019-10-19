@@ -30,3 +30,5 @@ require (
 )
 
 replace github.com/golang/lint => github.com/golang/lint v0.0.0-20190227174305-8f45f776aaf1
+
+go 1.13
