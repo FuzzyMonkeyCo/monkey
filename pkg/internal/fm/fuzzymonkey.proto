@@ -1,4 +1,5 @@
 syntax = "proto3";
+package fm;
 
 option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
 
@@ -61,6 +62,7 @@ message Clt {
           string host = 2;
           // HeaderAuthorization if non-empty is added to requests as bearer token
           string header_authorization = 3;
+          SpecIR spec = 4;
         }
         oneof model {
           OpenAPIv3 openapiv3 = 1;
@@ -199,8 +201,6 @@ message Srv {
   }
   Msg msg = 1;
 }
-
-
 
 
 

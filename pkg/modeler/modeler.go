@@ -19,6 +19,7 @@ var (
 // Interface describes checkable models
 type Interface interface {
 	ToProto() *fm.Clt_Msg_Fuzz_Model
+	FromProto(*fm.Clt_Msg_Fuzz_Model) error
 
 	NewFromKwargs(starlark.StringDict) (Interface, *Error)
 
@@ -31,12 +32,11 @@ type Interface interface {
 	WriteAbsoluteReferences(io.Writer)
 	ValidateAgainstSchema(string, []byte) error
 	FilterEndpoints([]string) ([]uint32, error)
+	Validate(uint32, interface{}) []string
 
 	NewCaller(*fm.Srv_Msg_Call, func(string, ...interface{})) (Caller, error)
 
 	// Check(...) ...
-
-	Pretty(w io.Writer) (n int, err error)
 }
 
 var _ error = (*Error)(nil)

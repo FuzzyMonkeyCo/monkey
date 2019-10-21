@@ -31,10 +31,22 @@ type oa3 struct {
 
 // ToProto TODO
 func (m *oa3) ToProto() *fm.Clt_Msg_Fuzz_Model {
+	m.Spec = m.vald.Spec
 	return &fm.Clt_Msg_Fuzz_Model{
 		Model: &fm.Clt_Msg_Fuzz_Model_Openapiv3{
 			&m.Clt_Msg_Fuzz_Model_OpenAPIv3,
-		}}
+		},
+	}
+}
+
+// FromProto TODO
+func (m *oa3) FromProto(p *fm.Clt_Msg_Fuzz_Model) error {
+	if mm := p.GetOpenapiv3(); m != nil {
+		m = &oa3{Clt_Msg_Fuzz_Model_OpenAPIv3: *mm}
+		m.vald.Spec = m.Spec // TODO? merge vald with oa3
+		return nil
+	}
+	return fmt.Errorf("unexpected model type: %T", p.GetModel())
 }
 
 // SetResetter TODO
@@ -42,9 +54,6 @@ func (m *oa3) SetResetter(sr resetter.Interface) { m.resetter = sr }
 
 // GetResetter TODO
 func (m *oa3) GetResetter() resetter.Interface { return m.resetter }
-
-// Pretty TODO
-func (m *oa3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
 func (m *oa3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 	m = &oa3{}
@@ -90,6 +99,10 @@ func (m *oa3) InputsCount() int {
 
 func (m *oa3) FilterEndpoints(args []string) ([]eid, error) {
 	return m.vald.FilterEndpoints(args)
+}
+
+func (m *oa3) Validate(SID sid, data interface{}) []string {
+	return m.vald.Validate(SID, data)
 }
 
 func (m *oa3) ValidateAgainstSchema(absRef string, data []byte) error {
