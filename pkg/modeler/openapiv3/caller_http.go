@@ -13,7 +13,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -40,26 +39,16 @@ type tCapHTTP struct {
 	req, rep []byte
 
 	httpReq  *http.Request
-	reqProto *fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_
-	repProto *fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_
+	reqProto *fm.Clt_Msg_CallRequestRaw_Input_HttpRequest
+	repProto *fm.Clt_Msg_CallResponseRaw_Output_HttpResponse
 
-	// Request/Response somewhat follow python's `requests` API
+	reqJSON, repJSON *types.Value
 
-	/// request
-	reqMethod  string
-	reqURL     *url.URL
-	reqHeaders map[string][]string
-	reqHasBody bool
-	reqBody    []byte
-	reqJSON    interface{}
-	/// reply
-	repErr     string
 	repStatus  int
 	repReason  string
 	repHeaders map[string][]string
 	repHasBody bool
 	repBody    []byte
-	repJSON    interface{}
 
 	elapsed time.Duration
 	// TODO: pick from these
@@ -114,11 +103,11 @@ func (c *tCapHTTP) CheckFirst() (string, modeler.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func (m *oa3) NewCaller(msg *fm.Srv_Msg_Call, showf func(string, ...interface{})) (*tCapHTTP, error) {
+func (m *oa3) NewCaller(msg *fm.Srv_Msg_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
 		showf: showf,
 	}
-	if err := m.tcap.callinputProtoToHttpReqAndReqStructWithHostAndUA(msg); err != nil {
+	if err := m.callinputProtoToHttpReqAndReqStructWithHostAndUA(msg); err != nil {
 		return nil, err
 	}
 
@@ -179,16 +168,16 @@ func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
-	s := types.Struct{
+	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"method":  {Kind: &types.Value_StringValue{c.reqMethod}},
-			"url":     {Kind: &types.Value_StringValue{c.reqURL.String()}},
-			"headers": {Kind: &types.Value_ListValue{c.reqHeaders}},
+			"method":  enumFromGo(c.reqProto.Method),
+			"url":     enumFromGo(c.reqProto.Url),
+			"headers": enumFromGo(c.reqProto.Headers),
 			// "content" as bytes?
 		},
 	}
-	if c.reqHasBody {
-		s.Fields["json"] = &types.Value{Kind: &types.Value_StringValue{c.reqJSON}}
+	if c.reqProto.Body != nil {
+		s.Fields["json"] = c.reqJSON
 	}
 	// TODO? Response *Response
 	// Response is the redirect response which caused this request
@@ -197,19 +186,21 @@ func (c *tCapHTTP) Request() *types.Struct {
 	return s
 }
 
+// Request/Response somewhat follow python's `requests` API
+
 func (c *tCapHTTP) Response() *types.Struct {
-	s := types.Struct{
+	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"request": {Kind: c.Request()},
-			// FIXME: "error": c.repErr,
-			"status_code": {Kind: &types.Value_StringValue{c.repStatus}},
-			"reason":      {Kind: &types.Value_StringValue{c.repReason}},
-			"headers":     {Kind: &types.Value_ListValue{c.repHeaders}},
+			"request": &types.Value{Kind: &types.Value_StructValue{c.Request()}},
+			// FIXME? "error"
+			"status_code": enumFromGo(c.repProto.StatusCode),
+			"reason":      enumFromGo(c.repProto.Reason),
+			"headers":     enumFromGo(c.repProto.Headers),
 			// "content" as bytes?
 			// "history" :: []Rep (redirects)?
 		},
 	}
-	if c.repHasBody {
+	if c.repProto.Body != nil {
 		s.Fields["json"] = c.repJSON
 	}
 	// TODO? TLS *tls.ConnectionState
@@ -221,64 +212,98 @@ func (c *tCapHTTP) Response() *types.Struct {
 }
 
 func (c *tCapHTTP) request(r *http.Request) (err error) {
-	c.reqProto = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_{
+	c.reqProto = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest{
 		Method: r.Method,
-		Url: r.URL.String(),
+		Url:    r.URL.String(),
 	}
 
-	reqHeaders := cloneHeader(r.Header)
-	for key, values := range reqHeaders {
+	headers := fromReqHeader(r.Header)
+	for key, _ := range headers {
 		switch key {
 		case headerContentLength:
-			v := strconv.FormatInt(r.ContentLength, 10)
-			reqHeaders[headerContentLength] = &types.Value_ListValue{Values: {v}}
+			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
+			}
 		case headerTransferEncoding:
-			v := r.TransferEncoding
-			reqHeaders[headerTransferEncoding] = &types.Value_ListValue{
-				&types.Value_StringValue{v}
+			values := make([]string, len(r.TransferEncoding))
+			copy(values, r.TransferEncoding)
+			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+				Values: values,
+			}
 		case headerHost:
-			v := r.Host
-			reqHeaders[headerHost] = []string{r.Host}
+			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+				Values: []string{r.Host},
+			}
+		default:
+		}
 	}
+	c.reqProto.Headers = headers
 
 	if r.Body != nil {
-		if c.reqBody, err = ioutil.ReadAll(r.Body); err != nil {
+		if c.reqProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
+			log.Println("[ERR]", err)
 			return
 		}
-		r.Body.Close()
-		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqBody))
-		if err = json.Unmarshal(c.reqBody, &c.reqJSON); err != nil {
+		if err = r.Body.Close(); err != nil {
+			log.Println("[ERR]", err)
 			return
 		}
-		c.reqHasBody = true
+		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqProto.Body))
+		// TOOD: move decoding to one of CheckFirst
+		var jsn interface{}
+		if err = json.Unmarshal(c.reqProto.Body, &jsn); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		c.reqJSON = enumFromGo(jsn)
 	}
 
 	return
 }
 
-func (c *tCapHTTP) response(r *http.Response) (err error) {
-	// FIXME c.repErr
-	c.repStatus = r.StatusCode
-	c.repReason = r.Status
+func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (err error) {
+	c.repProto = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse{
+		Error:      e.Error(),
+		StatusCode: uint32(r.StatusCode), // TODO: check bounds
+		Reason:     r.Status,
+		Elapsed:    uint32(elapsed),
+	}
 
-	c.repHeaders = cloneHeader(r.Header)
-	if _, ok := c.repHeaders[headerContentLength]; ok {
-		c.repHeaders[headerContentLength] = []string{strconv.FormatInt(r.ContentLength, 10)}
+	headers := fromRepHeader(r.Header)
+	for key, _ := range headers {
+		switch key {
+		case headerContentLength:
+			headers[key] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
+			}
+		case headerTransferEncoding:
+			values := make([]string, len(r.TransferEncoding))
+			copy(values, r.TransferEncoding)
+			headers[key] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+				Values: values,
+			}
+		default:
+		}
 	}
-	if _, ok := c.repHeaders[headerTransferEncoding]; ok {
-		c.repHeaders[headerTransferEncoding] = r.TransferEncoding
-	}
+	c.repProto.Headers = headers
 
 	if r.Body != nil {
-		if c.repBody, err = ioutil.ReadAll(r.Body); err != nil {
+		if c.repProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
+			log.Println("[ERR]", err)
 			return
 		}
-		r.Body.Close()
-		r.Body = ioutil.NopCloser(bytes.NewReader(c.repBody))
-		if err = json.Unmarshal(c.repBody, &c.repJSON); err != nil {
+		if err = r.Body.Close(); err != nil {
+			log.Println("[ERR]", err)
 			return
 		}
-		c.repHasBody = true
+		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
+		// TOOD: move decoding to one of CheckFirst
+		var jsn interface{}
+		if err = json.Unmarshal(c.repProto.Body, &jsn); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		c.repJSON = enumFromGo(jsn)
 	}
 
 	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
@@ -320,24 +345,21 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	}
 	elapsed := time.Since(start)
 
-	if c.reqProto, err = reqToProto(req, elapsed); err != nil {
-		return
+	callFailed := err != nil
+	err = c.response(rep, elapsed, err)
+	if callFailed {
+		err = modeler.ErrCallFailed
 	}
-	if c.repProto, err = repToProto(rep, elapsed); err != nil {
-		return
-	}
-
-	err = c.response(rep)
 	return
 }
 
-func (c *tCapHTTP) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Msg_Call) (err error) {
-	input := msg.GetHttpRequest()
+func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Msg_Call) (err error) {
+	input := msg.GetInput().GetHttpRequest()
 	if body := input.GetBody(); len(body) != 0 {
 		b := bytes.NewReader(body)
-		c.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
+		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
 	} else {
-		c.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
+		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -346,39 +368,35 @@ func (c *tCapHTTP) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_
 
 	for key, values := range input.GetHeaders() {
 		for _, value := range values.GetValues() {
-			c.httpReq.Header.Add(key, value)
+			m.tcap.httpReq.Header.Add(key, value)
 		}
 	}
+
+	if m.HeaderAuthorization != "" {
+		m.tcap.httpReq.Header.Add("Authorization", m.HeaderAuthorization)
+	}
+
+	// m.tcap.httpReq.Header.Set(headerUserAgent, runtime.BinTitle())
+
+	if host := m.Host; host != "" {
+		configured, err := url.ParseRequestURI(host)
+		if err != nil {
+			log.Println("[ERR]", err)
+			return err
+		}
+
+		// NOTE: forces Request.Write to use URL.Host
+		m.tcap.httpReq.Host = ""
+		m.tcap.httpReq.URL.Scheme = configured.Scheme
+		m.tcap.httpReq.URL.Host = configured.Host
+	}
+
 	return
 }
 
-func (c *tCapHTTP) Do(ctx context.Context) error {
-	req, err := harReq.Request()
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
+func (c *tCapHTTP) Do(ctx context.Context) (err error) {
+	req := c.httpReq
 
-	if addHeaderAuthorization != nil {
-		req.Header.Add("Authorization", *addHeaderAuthorization)
-	}
-
-	if addHost != nil {
-		host = *addHost
-	}
-	configured, err := url.ParseRequestURI(host)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	maybeUpdateUserAgentHeader(req)
-	// NOTE: forces Request.Write to use req.URL.Host
-	req.Host = ""
-	req.URL.Scheme = configured.Scheme
-	req.URL.Host = configured.Host
-
-	log.Println("[NFO] ▼", harReq)
 	// TODO: output `curl` requests when showing counterexample
 	//   https://github.com/sethgrid/gencurl
 	//   https://github.com/moul/http2curl
@@ -397,19 +415,8 @@ func (c *tCapHTTP) Do(ctx context.Context) error {
 		Transport: c,
 	}).Do(req)
 
-	nxt = &RepCallDone{TsDiff: uint64(c.elapsed)}
 	if err == nil {
 		r.Body.Close()
-		resp := c.Response()
-		log.Println("[NFO] ▲", resp)
-		// FIXME: nxt.Response = resp
-		nxt.Response = c.har
-		nxt.Success = true
-	} else {
-		c.repErr = err.Error()
-		log.Println("[NFO] ▲", c.repErr)
-		nxt.Reason = c.repErr
-		nxt.Failure = true
 	}
 
 	if err = c.ShowResponse(c.showf); err != nil {
@@ -418,47 +425,36 @@ func (c *tCapHTTP) Do(ctx context.Context) error {
 	return
 }
 
-func maybeUpdateUserAgentHeader(r *http.Request) {
-	if hs, ok := r.Header[headerUserAgent]; ok {
-		replace := false
-		for _, h := range hs {
-			if strings.HasPrefix(h, "FuzzyMonkey.co/") {
-				replace = true
-			}
-		}
-		if replace {
-			// r.Header[headerUserAgent] = []string{runtime.BinTitle()}
-		}
-	}
-}
-
-func cloneHeader(src http.Header) (dst http.Header) {
+func fromReqHeader(src http.Header) map[string]*fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues {
 	if src == nil {
-		return
-	}
-	dst = make(http.Header, len(src))
-	for h, hs := range src {
-		if hs == nil {
-			dst[h] = nil
-		} else {
-			values := make([]string, len(hs))
-			copy(values, hs)
-			dst[h] = values
-		}
-	}
-	return
-}
-
-// https://github.com/golang/go/blob/2c67cdf7cf59a685f3a5e705b6be85f32285acec/src/net/http/clone.go#L22
-func cloneURL(u *url.URL) *url.URL {
-	if u == nil {
 		return nil
 	}
-	u2 := new(url.URL)
-	*u2 = *u
-	if u.User != nil {
-		u2.User = new(url.Userinfo)
-		*u2.User = *u.User
+	dst := make(map[string]*fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues, len(src))
+	for h, hs := range src {
+		if len(hs) != 0 {
+			vs := make([]string, len(hs))
+			copy(vs, hs)
+			dst[h] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+				Values: vs,
+			}
+		}
 	}
-	return u2
+	return dst
+}
+
+func fromRepHeader(src http.Header) map[string]*fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues {
+	if src == nil {
+		return nil
+	}
+	dst := make(map[string]*fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues, len(src))
+	for h, hs := range src {
+		if len(hs) != 0 {
+			vs := make([]string, len(hs))
+			copy(vs, hs)
+			dst[h] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+				Values: vs,
+			}
+		}
+	}
+	return dst
 }

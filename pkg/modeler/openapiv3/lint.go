@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/getkin/kin-openapi/openapi3"
 	openapi_v3 "github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
@@ -23,7 +24,7 @@ func (m *oa3) Lint(showSpec bool) (err error) {
 	}
 
 	log.Printf("[NFO] reading info in %dB", len(blob))
-	if err = validateAndPretty(docPath, blob, showSpec); err != nil {
+	if err = validateAndPretty(m.File, blob, showSpec); err != nil {
 		return
 	}
 
@@ -31,14 +32,14 @@ func (m *oa3) Lint(showSpec bool) (err error) {
 	doc, err := loader.LoadSwaggerFromData(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
-		ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return
 	}
 
 	log.Println("[NFO] first validation pass")
 	if err = doc.Validate(loader.Context); err != nil {
 		log.Println("[ERR]", err)
-		ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return
 	}
 
@@ -69,7 +70,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	if !ok || !strings.HasPrefix(openapi, "3.0") {
 		err = errors.New("format:unsupported")
 		log.Println("[ERR]", err)
-		ColorERR.Printf("Format of '%s' is not supported", docPath)
+		as.ColorERR.Printf("Format of '%s' is not supported", docPath)
 		return
 	}
 
@@ -77,24 +78,24 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	doc, err := openapi_v3.NewDocument(info, compiler.NewContext("$root", nil))
 	if err != nil {
 		log.Println("[ERR]", err)
-		ColorWRN.Println("Validation errors:")
+		as.ColorWRN.Println("Validation errors:")
 		for i, line := range strings.Split(err.Error(), "\n") {
 			e := strings.TrimPrefix(line, "ERROR $root.")
-			fmt.Printf("%d: %s\n", 1+i, ColorERR.Sprintf(e))
+			fmt.Printf("%d: %s\n", 1+i, as.ColorERR.Sprintf(e))
 		}
-		ColorERR.Println("Documentation validation failed.")
+		as.ColorERR.Println("Documentation validation failed.")
 		return
 	}
 
 	log.Println("[NFO] ensuring references are valid")
 	if _, err = doc.ResolveReferences(docPath); err != nil {
 		log.Println("[ERR]", err)
-		ColorWRN.Println("Validation errors:")
+		as.ColorWRN.Println("Validation errors:")
 		for i, line := range strings.Split(err.Error(), "\n") {
 			e := strings.TrimPrefix(line, "ERROR ")
-			fmt.Printf("%d: %s\n", 1+i, ColorERR.Sprintf(e))
+			fmt.Printf("%d: %s\n", 1+i, as.ColorERR.Sprintf(e))
 		}
-		ColorERR.Println("Documentation validation failed.")
+		as.ColorERR.Println("Documentation validation failed.")
 		return
 	}
 
@@ -111,7 +112,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 
 	if showSpec {
 		log.Println("[NFO] serialyzing spec to YAML")
-		ColorNFO.Println("Spec:")
+		as.ColorNFO.Println("Spec:")
 		var pretty []byte
 		if pretty, err = yaml.Marshal(rawInfo); err != nil {
 			log.Println("[ERR]", err)

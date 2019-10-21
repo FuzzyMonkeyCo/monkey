@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/getkin/kin-openapi/openapi3"
 )
@@ -95,7 +96,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			docMethod := methods[l]
 			log.Println("[DBG] through", docMethod, path)
 			docOp := docOps[docMethod]
-			inputs := make([]*ParamJSON, 0, 1+len(docOp.Parameters))
+			inputs := make([]*fm.ParamJSON, 0, 1+len(docOp.Parameters))
 			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
 			vald.inputsFromOA3(&inputs, docOp.Parameters)
 			outputs := vald.outputsFromOA3(docOp.Responses)
@@ -147,7 +148,7 @@ func (vald *validator) inputBodyFromOA3(inputs *[]*fm.ParamJSON, docReqBody *ope
 					IsRequired: docBody.Required,
 					SID:        vald.ensureMapped(docSchema.Ref, schema),
 					Name:       "",
-					Kind:       ParamJSON_body,
+					Kind:       fm.ParamJSON_body,
 				}
 				*inputs = append(*inputs, param)
 				return
@@ -189,16 +190,16 @@ func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3
 		docParamRef := paramap[names[j]]
 		//FIXME: handle .Ref
 		docParam := docParamRef.Value
-		kind := ParamJSON_UNKNOWN
+		kind := fm.ParamJSON_UNKNOWN
 		switch docParam.In {
 		case openapi3.ParameterInPath:
-			kind = ParamJSON_path
+			kind = fm.ParamJSON_path
 		case openapi3.ParameterInQuery:
-			kind = ParamJSON_query
+			kind = fm.ParamJSON_query
 		case openapi3.ParameterInHeader:
-			kind = ParamJSON_header
+			kind = fm.ParamJSON_header
 		case openapi3.ParameterInCookie:
-			kind = ParamJSON_cookie
+			kind = fm.ParamJSON_cookie
 		}
 		docSchema := docParam.Schema
 		schema := vald.schemaOrRefFromOA3(docSchema)
@@ -221,13 +222,13 @@ func (sm schemap) inputsToOA3(inputs []*fm.ParamJSON) (params openapi3.Parameter
 
 		var in string
 		switch input.GetKind() {
-		case ParamJSON_path:
+		case fm.ParamJSON_path:
 			in = openapi3.ParameterInPath
-		case ParamJSON_query:
+		case fm.ParamJSON_query:
 			in = openapi3.ParameterInQuery
-		case ParamJSON_header:
+		case fm.ParamJSON_header:
 			in = openapi3.ParameterInHeader
-		case ParamJSON_cookie:
+		case fm.ParamJSON_cookie:
 			in = openapi3.ParameterInCookie
 		}
 
@@ -478,7 +479,7 @@ func transformSchemaToOA3(s schemaJSON) schemaJSON {
 			switch v {
 			case "":
 				continue
-			case Schema_JSON_null.String():
+			case fm.Schema_JSON_null.String():
 				s["nullable"] = true
 			default:
 				sType = v
@@ -560,7 +561,7 @@ func pathFromOA3(basePath, path string) (partials []*fm.PathPartial) {
 	onCurly := func(r rune) bool { return r == '{' || r == '}' }
 	isCurly := '{' == path[0]
 	for i, part := range strings.FieldsFunc(path, onCurly) {
-		var p PathPartial
+		var p fm.PathPartial
 		if isCurly || i%2 != 0 {
 			// TODO (vendor): ensure path params are part of inputs
 			p.Pp = &fm.PathPartial_Ptr{part}
@@ -629,7 +630,7 @@ func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err er
 	u, err := url.ParseRequestURI(docServers[0].URL)
 	if err != nil {
 		log.Println("[ERR]", err)
-		ColorERR.Println(err)
+		as.ColorERR.Println(err)
 		return
 	}
 	basePath = u.Path
@@ -638,38 +639,38 @@ func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err er
 	if basePath == "" || basePath[0] != '/' {
 		err = errors.New(`field 'servers' has no suitable 'url'`)
 		log.Println("[ERR]", err)
-		ColorERR.Println(err)
+		as.ColorERR.Println(err)
 	}
 	return
 }
 
 func isInputBody(input *fm.ParamJSON) bool {
-	return input.GetName() == "" && input.GetKind() == ParamJSON_body
+	return input.GetName() == "" && input.GetKind() == fm.ParamJSON_body
 }
 
 func methodFromOA3(docMethod string) fm.EndpointJSON_Method {
-	return EndpointJSON_Method(EndpointJSON_Method_value[docMethod])
+	return fm.EndpointJSON_Method(fm.EndpointJSON_Method_value[docMethod])
 }
 
 func methodToOA3(m fm.EndpointJSON_Method, op *openapi3.Operation, p *openapi3.PathItem) {
 	switch m {
-	case EndpointJSON_CONNECT:
+	case fm.EndpointJSON_CONNECT:
 		p.Connect = op
-	case EndpointJSON_DELETE:
+	case fm.EndpointJSON_DELETE:
 		p.Delete = op
-	case EndpointJSON_GET:
+	case fm.EndpointJSON_GET:
 		p.Get = op
-	case EndpointJSON_HEAD:
+	case fm.EndpointJSON_HEAD:
 		p.Head = op
-	case EndpointJSON_OPTIONS:
+	case fm.EndpointJSON_OPTIONS:
 		p.Options = op
-	case EndpointJSON_PATCH:
+	case fm.EndpointJSON_PATCH:
 		p.Patch = op
-	case EndpointJSON_POST:
+	case fm.EndpointJSON_POST:
 		p.Post = op
-	case EndpointJSON_PUT:
+	case fm.EndpointJSON_PUT:
 		p.Put = op
-	case EndpointJSON_TRACE:
+	case fm.EndpointJSON_TRACE:
 		p.Trace = op
 	default:
 		panic(`no such method`)

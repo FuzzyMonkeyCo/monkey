@@ -13,6 +13,7 @@ import (
 var (
 	ErrUnparsablePayload = errors.New("unparsable piped payload")
 	ErrNoSuchSchema      = errors.New("no such schema")
+	ErrNoSuchRef         = errors.New("no such ref")
 )
 
 // Interface describes checkable models

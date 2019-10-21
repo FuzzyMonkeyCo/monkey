@@ -5,7 +5,7 @@ print('$THIS_ENVIRONMENT_VARIABLE is', Env('THIS_ENVIRONMENT_VARIABLE','not set'
 host, spec = 'https://jsonplaceholder.typicode.com/', None
 mode = Env('TESTING_WHAT')
 if mode == '':
-    spec = 'lib/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml'
+    spec = 'pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml'
 elif mode == 'other-thing':
     pass
 else:

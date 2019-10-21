@@ -181,10 +181,16 @@ func actualMain() int {
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
+	// Always lint
+	if err := rt.Lint(args.ShowSpec); err != nil {
+		as.ColorERR.Println(err)
+		return code.FailedLint
+	}
 	if args.Lint {
 		e := "Configuration is valid."
 		log.Println("[NFO]", e)
 		as.ColorNFO.Println(e)
+		return code.OK
 	}
 
 	if args.Exec {
@@ -203,14 +209,6 @@ func actualMain() int {
 			as.ColorERR.Println(err)
 			return code.FailedExec
 		}
-		return code.OK
-	}
-
-	// Always lint before fuzzing
-	if err := rt.Lint(args.ShowSpec); err != nil {
-		return code.FailedLint
-	}
-	if args.Lint {
 		return code.OK
 	}
 

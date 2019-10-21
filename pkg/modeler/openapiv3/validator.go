@@ -10,7 +10,9 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/gogo/protobuf/types"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -25,7 +27,7 @@ func newValidator(capaEndpoints, capaSchemas int) *validator {
 	return &validator{
 		Refs: make(map[string]sid, capaSchemas),
 		Spec: &fm.SpecIR{
-			Endpoints: make(map[eid]*Endpoint, capaEndpoints),
+			Endpoints: make(map[eid]*fm.Endpoint, capaEndpoints),
 			Schemas:   &fm.Schemas{Json: make(map[sid]*fm.RefOrSchemaJSON, capaSchemas)},
 		},
 		Refd: gojsonschema.NewSchemaLoader(),
@@ -132,7 +134,7 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 		types := v.([]string)
 		schema.Types = make([]fm.Schema_JSON_Type, len(types))
 		for i, vv := range types {
-			schema.Types[i] = Schema_JSON_Type(Schema_JSON_Type_value[vv])
+			schema.Types[i] = fm.Schema_JSON_Type(fm.Schema_JSON_Type_value[vv])
 		}
 	}
 
@@ -325,7 +327,7 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	}
 
 	// "format"
-	if schemaFormat := schema.GetFormat(); schemaFormat != Schema_JSON_NONE {
+	if schemaFormat := schema.GetFormat(); schemaFormat != fm.Schema_JSON_NONE {
 		s["format"] = formatToGo(schemaFormat)
 	}
 	// "minLength"
@@ -442,25 +444,25 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 func formatFromGo(format string) fm.Schema_JSON_Format {
 	switch format {
 	case "date-time":
-		return Schema_JSON_date_time
+		return fm.Schema_JSON_date_time
 	case "uriref", "uri-reference":
-		return Schema_JSON_uri_reference
+		return fm.Schema_JSON_uri_reference
 	default:
-		v, ok := Schema_JSON_Format_value[format]
+		v, ok := fm.Schema_JSON_Format_value[format]
 		if ok {
-			return Schema_JSON_Format(v)
+			return fm.Schema_JSON_Format(v)
 		}
-		return Schema_JSON_NONE
+		return fm.Schema_JSON_NONE
 	}
 }
 
 func formatToGo(format fm.Schema_JSON_Format) string {
 	switch format {
-	case Schema_JSON_NONE:
+	case fm.Schema_JSON_NONE:
 		return ""
-	case Schema_JSON_date_time:
+	case fm.Schema_JSON_date_time:
 		return "date-time"
-	case Schema_JSON_uri_reference:
+	case fm.Schema_JSON_uri_reference:
 		return "uri-reference"
 	default:
 		return format.String()
@@ -469,7 +471,7 @@ func formatToGo(format fm.Schema_JSON_Format) string {
 
 func enumFromGo(value interface{}) *types.Value {
 	if value == nil {
-		return types.NullValue_NULL_VALUE
+		return &types.Value{Kind: &types.Value_NullValue{types.NullValue_NULL_VALUE}}
 	}
 	switch val := value.(type) {
 	case bool:
@@ -483,20 +485,20 @@ func enumFromGo(value interface{}) *types.Value {
 		for i, v := range val {
 			vs[i] = enumFromGo(v)
 		}
-		return &types.Value{Kind: &types.Value_ListValue{Values: vs}}
+		return &types.Value{Kind: &types.Value_ListValue{ListValue: &types.ListValue{Values: vs}}}
 	case map[string]interface{}:
 		vs := make(map[string]*types.Value, len(val))
 		for n, v := range val {
 			vs[n] = enumFromGo(v)
 		}
-		return &types.Value{Kind: &types.Value_StructValue{Fields: vs}}
+		return &types.Value{Kind: &types.Value_StructValue{StructValue: &types.Struct{Fields: vs}}}
 	default:
 		panic("unreachable")
 	}
 }
 
 func EnumToGo(value *types.Value) interface{} {
-	switch value.GetValue().(type) {
+	switch value.GetKind().(type) {
 	case *types.Value_NullValue:
 		return nil
 	case *types.Value_BoolValue:
@@ -605,7 +607,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	}
 
 	log.Println("[NFO]", e)
-	ColorNFO.Println(e)
+	as.ColorNFO.Println(e)
 	eids = make([]eid, 0, selected)
 	for eid := range all {
 		eids = append(eids, eid)
@@ -615,6 +617,13 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 		fmt.Println(all[eid])
 	}
 	return
+}
+
+func plural(s string, n uint32) string {
+	if n == 1 {
+		return s
+	}
+	return s + "s"
 }
 
 func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) {
@@ -667,7 +676,7 @@ func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
 
 func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
-		err = ErrNoSuchRef
+		err = modeler.ErrNoSuchRef
 		return
 	}
 
@@ -687,7 +696,7 @@ func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err er
 	}
 
 	log.Println("[NFO] validating payload against refs")
-	res, err := vald.Validate(schema, gojsonschema.NewGoLoader(value))
+	res, err := schema.Validate(gojsonschema.NewGoLoader(value))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -696,10 +705,10 @@ func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err er
 	errs := res.Errors()
 	for _, e := range errs {
 		// ResultError interface
-		ColorERR.Println(e)
+		as.ColorERR.Println(e)
 	}
 	if len(errs) > 0 {
-		err = ErrInvalidPayload
+		err = modeler.ErrUnparsablePayload
 	}
 	return
 }
@@ -734,7 +743,7 @@ func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 	}
 
 	log.Println("[NFO] validating payload against refs")
-	res, err := vald.Validate(schema, gojsonschema.NewGoLoader(json_data))
+	res, err := schema.Validate(gojsonschema.NewGoLoader(json_data))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return []string{err.Error()}

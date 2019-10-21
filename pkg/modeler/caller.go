@@ -2,9 +2,15 @@ package modeler
 
 import (
 	"context"
+	"errors"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/gogo/protobuf/types"
+)
+
+var (
+	ErrCallFailed  = errors.New("call to SUT unexpectedly failed")
+	ErrCheckFailed = errors.New("call check failed")
 )
 
 // CheckerFunc TODO

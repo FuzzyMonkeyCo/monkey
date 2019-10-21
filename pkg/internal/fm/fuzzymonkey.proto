@@ -111,14 +111,15 @@ message Clt {
     message CallResponseRaw {
       message Output {
         message HttpResponse {
-          // FIXME string error
-          uint32 status_code = 1;
-          string reason = 2;
+          string error = 1;
+          uint32 status_code = 2;
+          string reason = 3;
           message HeaderValues {
             repeated string values = 1;
           }
-          map<string,HeaderValues> headers = 3;
-          bytes body = 4;
+          map<string,HeaderValues> headers = 4;
+          bytes body = 5;
+          uint32 elapsed = 6; // TODO: finer timings
         }
         oneof output {
           HttpResponse http_response = 1;

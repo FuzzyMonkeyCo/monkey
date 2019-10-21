@@ -92,10 +92,3 @@ package pkg
 // 	}
 // 	return
 // }
-
-func plural(s string, n uint32) string {
-	if n == 1 {
-		return s
-	}
-	return s + "s"
-}

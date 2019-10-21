@@ -33,7 +33,7 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
 
 lint:
-	gofmt -s -w *.go */*.go */*/*.go */*/*/*.go
+	go fmt ./...
 	./misc/goolint.sh
 
 debug: all

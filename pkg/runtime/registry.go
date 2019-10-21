@@ -21,7 +21,6 @@ func RegisterModeler(name string, mdlr modeler.Interface) {
 		panic(fmt.Sprintf("modeler %q is already registered", name))
 	}
 	registeredIRModels[name] = mdlr.NewFromKwargs
-	panic(`wtf`)
 }
 
 func (rt *runtime) modelMaker(modelName string, mdlr newModelerFunc) builtin {
@@ -61,15 +60,15 @@ func (rt *runtime) modelMaker(modelName string, mdlr newModelerFunc) builtin {
 				r[key] = v
 			}
 		}
-		mo, err := mdlr(u)
-		if err != nil {
-			if modelerErr, ok := err.(*modeler.Error); ok {
-				modelerErr.SetModelerName(modelName)
-				err = modelerErr
-			}
+
+		mo, modelerErr := mdlr(u)
+		if modelerErr != nil {
+			modelerErr.SetModelerName(modelName)
+			err = modelerErr
 			log.Println("[ERR]", err)
 			return
 		}
+
 		var rsttr resetter.Interface
 		if rsttr, err = newFromKwargs(fname, r); err != nil {
 			return

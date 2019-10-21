@@ -1,6 +1,7 @@
 package modeler_openapiv3
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -16,8 +17,10 @@ import (
 
 var _ modeler.Interface = (*oa3)(nil)
 
+type T = oa3
+
 type oa3 struct {
-	fm.Clt_Msg_Fuzz_Model_Openapiv3
+	fm.Clt_Msg_Fuzz_Model_OpenAPIv3
 
 	resetter resetter.Interface
 
@@ -29,8 +32,8 @@ type oa3 struct {
 // ToProto TODO
 func (m *oa3) ToProto() *fm.Clt_Msg_Fuzz_Model {
 	return &fm.Clt_Msg_Fuzz_Model{
-		Model: &fm.Clt_Msg_Fuzz_Model_Openapiv3_{
-			&m.Clt_Msg_Fuzz_Model_Openapiv3,
+		Model: &fm.Clt_Msg_Fuzz_Model_Openapiv3{
+			&m.Clt_Msg_Fuzz_Model_OpenAPIv3,
 		}}
 }
 
@@ -43,8 +46,8 @@ func (m *oa3) GetResetter() resetter.Interface { return m.resetter }
 // Pretty TODO
 func (m *oa3) Pretty(w io.Writer) (int, error) { return fmt.Fprintf(w, "%+v\n", m) }
 
-func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
-	m := &oa3{}
+func (m *oa3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
+	m = &oa3{}
 	var (
 		found              bool
 		field              string
@@ -53,32 +56,46 @@ func NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 
 	field = "file"
 	if file, found = d[field]; !found || file.Type() != "string" {
-		e := &modeler.Error{FieldRead: field, Want: "a string", Got: file.Type()}
+		e := modeler.NewError(field, "a string", file.Type())
 		return nil, e
 	}
 	m.File = file.(starlark.String).GoString()
 
 	field = "host"
 	if host, found = d[field]; found && host.Type() != "string" {
-		e := &modeler.Error{FieldRead: field, Want: "a string", Got: host.Type()}
+		e := modeler.NewError(field, "a string", file.Type())
 		return nil, e
 	}
 	if found {
 		h := host.(starlark.String).GoString()
 		m.Host = h
-		addHost = &h
 	}
 
 	field = "header_authorization"
 	if hAuthz, found = d[field]; found && hAuthz.Type() != "string" {
-		e := &modeler.Error{FieldRead: field, Want: "a string", Got: hAuthz.Type()}
+		e := modeler.NewError(field, "a string", file.Type())
 		return nil, e
 	}
 	if found {
 		authz := hAuthz.(starlark.String).GoString()
-		m.Header_Authorization = authz
-		addHeaderAuthorization = &authz
+		m.HeaderAuthorization = authz
 	}
 
-	return mo, nil
+	return m, nil
+}
+
+func (m *oa3) InputsCount() int {
+	return m.vald.InputsCount()
+}
+
+func (m *oa3) FilterEndpoints(args []string) ([]eid, error) {
+	return m.vald.FilterEndpoints(args)
+}
+
+func (m *oa3) ValidateAgainstSchema(absRef string, data []byte) error {
+	return m.vald.ValidateAgainstSchema(absRef, data)
+}
+
+func (m *oa3) WriteAbsoluteReferences(w io.Writer) {
+	m.vald.WriteAbsoluteReferences(w)
 }

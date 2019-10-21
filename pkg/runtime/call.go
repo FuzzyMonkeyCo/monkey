@@ -2,7 +2,6 @@ package runtime
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -11,11 +10,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
-)
-
-var (
-	ErrCallFailed  = errors.New("call to SUT unexpectedly failed")
-	ErrCheckFailed = errors.New("call check failed")
 )
 
 func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
@@ -29,24 +23,29 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	if cllr, err = mdlr.NewCaller(msg, showf); err != nil {
 		return
 	}
+	log.Println("[NFO] ▼", msg.GetInput())
 
 	var errCall error
-	if errCall = cllr.Do(ctx); errCall != nil && errCall != ErrCallFailed {
+	if errCall = cllr.Do(ctx); errCall != nil && errCall != modeler.ErrCallFailed {
+		log.Println("[NFO] ▲", errCall)
 		return errCall
 	}
+
+	output := cllr.ToProto()
+	log.Println("[NFO] ▲", output)
 
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_CallResponseRaw_{
-				CallResponseRaw: cllr.ToProto(),
+				CallResponseRaw: output,
 			}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	if errCall == ErrCallFailed {
+	if errCall == modeler.ErrCallFailed {
 		log.Println("[DBG] call failed, skipping checks")
-		return ErrCallFailed
+		return modeler.ErrCallFailed
 	}
 
 	// Just the amount of checks needed to be able to call cllr.Response()
@@ -134,7 +133,7 @@ func (rt *runtime) firstChecks(mdlr modeler.Interface, cllr modeler.Caller) (err
 		}
 
 		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
-			err = ErrCheckFailed
+			err = modeler.ErrCheckFailed
 			log.Println("[ERR]", err)
 			return
 		}
@@ -247,7 +246,7 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 		}
 
 		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
-			err = ErrCheckFailed
+			err = modeler.ErrCheckFailed
 			log.Println("[ERR]", err)
 			return
 		}
