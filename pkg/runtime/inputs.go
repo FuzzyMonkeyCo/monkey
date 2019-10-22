@@ -2,16 +2,33 @@ package runtime
 
 import (
 	"io"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
 func (rt *runtime) InputsCount() int {
-	return rt.models[0].InputsCount()
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	return mdl.InputsCount()
 }
 
 func (rt *runtime) WriteAbsoluteReferences(w io.Writer) {
-	rt.models[0].WriteAbsoluteReferences(w)
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	mdl.WriteAbsoluteReferences(w)
 }
 
 func (rt *runtime) ValidateAgainstSchema(absRef string, data []byte) (err error) {
-	return rt.models[0].ValidateAgainstSchema(absRef, data)
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	return mdl.ValidateAgainstSchema(absRef, data)
 }

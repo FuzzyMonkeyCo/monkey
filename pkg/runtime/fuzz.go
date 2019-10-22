@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 )
 
@@ -28,14 +29,19 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 	}()
 
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
 	log.Printf("[DBG] 🡱  initial msg...")
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
 			Msg: &fm.Clt_Msg_Fuzz_{
 				Fuzz: &fm.Clt_Msg_Fuzz{
-					Resetter:  rt.models[0].GetResetter().ToProto(),
+					Resetter:  mdl.GetResetter().ToProto(),
 					ModelKind: fm.Clt_Msg_Fuzz_OpenAPIv3,
-					Model:     rt.models[0].ToProto(),
+					Model:     mdl.ToProto(),
 					Usage:     os.Args,
 					Seed:      []byte{42, 42, 42},
 					Intensity: rt.Ntensity,
@@ -50,7 +56,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	for {
 		srv, err := rt.client.Recv()
 		if err == io.EOF {
-			if err := rt.models[0].GetResetter().Terminate(ctx, nil); err != nil {
+			if err := mdl.GetResetter().Terminate(ctx, nil); err != nil {
 				return err
 			}
 			if err := rt.progress.Terminate(); err != nil {

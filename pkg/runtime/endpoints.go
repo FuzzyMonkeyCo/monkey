@@ -1,6 +1,15 @@
 package runtime
 
+import (
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+)
+
 func (rt *runtime) FilterEndpoints(criteria []string) (err error) {
-	rt.eIds, err = rt.models[0].FilterEndpoints(criteria)
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	rt.eIds, err = mdl.FilterEndpoints(criteria)
 	return
 }

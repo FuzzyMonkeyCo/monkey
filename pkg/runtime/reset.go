@@ -24,7 +24,11 @@ func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Msg_Reset) error {
 		return err
 	}
 
-	rsttr := rt.models[0].GetResetter()
+	var rsttr resetter.Interface
+	for _, mdl := range rt.models {
+		rsttr = mdl.GetResetter()
+		break
+	}
 	start := time.Now()
 	err := rsttr.ExecReset(ctx, rt.client)
 	elapsed := uint64(time.Since(start))

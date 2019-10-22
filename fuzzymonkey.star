@@ -13,6 +13,8 @@ else:
 print('Now testing {}.'.format(spec))
 
 OpenAPIv3(
+    Name = "my_model",
+
     file = spec,
 
     host = host,

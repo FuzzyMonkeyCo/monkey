@@ -33,7 +33,7 @@ type runtime struct {
 	envRead  map[string]string
 	triggers []triggerActionAfterProbe
 
-	models []modeler.Interface
+	models map[string]modeler.Interface
 
 	client fm.Client
 
@@ -50,8 +50,10 @@ func NewMonkey(name string) (rt *runtime, err error) {
 		return
 	}
 
-	rt = &runtime{}
-	rt.globals = make(starlark.StringDict, len(rt.builtins())+len(registeredIRModels))
+	rt = &runtime{
+		models:  make(map[string]modeler.Interface, 1),
+		globals: make(starlark.StringDict, len(rt.builtins())+len(registeredIRModels)),
+	}
 	as.ColorERR.Printf(">>> registeredIRModels: %+v\n", registeredIRModels)
 	for modelName, mdlr := range registeredIRModels {
 		if _, ok := fm.Clt_Msg_Fuzz_ModelKind_value[modelName]; !ok {
@@ -95,9 +97,9 @@ func (rt *runtime) loadCfg(localCfg string) (err error) {
 	}
 
 	// Ensure at least one model was defined
-	as.ColorERR.Printf(">>> modelers: %v\n", rt.models)
+	as.ColorERR.Printf(">>> models: %v\n", rt.models)
 	if len(rt.models) == 0 {
-		err = errors.New("no modelers are registered")
+		err = errors.New("no models registered")
 		log.Println("[ERR]", err)
 		return
 	}

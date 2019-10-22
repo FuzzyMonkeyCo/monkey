@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	modeler_openapiv3 "github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
@@ -33,18 +34,36 @@ func (rt *runtime) JustExecREPL() error {
 
 // JustExecStart only executes SUT 'start'
 func (rt *runtime) JustExecStart() error {
-	resetter := rt.models[0].GetResetter()
+	// FIXME: require a model name
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	resetter := mdl.GetResetter()
 	return resetter.ExecStart(context.Background(), nil)
 }
 
 // JustExecReset only executes SUT 'reset'
 func (rt *runtime) JustExecReset() error {
-	resetter := rt.models[0].GetResetter()
+	// FIXME: require a model name
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	resetter := mdl.GetResetter()
 	return resetter.ExecReset(context.Background(), nil)
 }
 
 // JustExecStop only executes SUT 'stop'
 func (rt *runtime) JustExecStop() error {
-	resetter := rt.models[0].GetResetter()
+	// FIXME: require a model name
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
+
+	resetter := mdl.GetResetter()
 	return resetter.ExecStop(context.Background(), nil)
 }

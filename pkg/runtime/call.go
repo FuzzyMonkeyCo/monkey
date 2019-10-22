@@ -18,9 +18,12 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 		rt.progress.Showf(format, s)
 	}
 
-	mdlr := rt.models[0]
+	var mdl modeler.Interface
+	for _, mdl = range rt.models {
+		break
+	}
 	var cllr modeler.Caller
-	if cllr, err = mdlr.NewCaller(msg, showf); err != nil {
+	if cllr, err = mdl.NewCaller(msg, showf); err != nil {
 		return
 	}
 	log.Println("[NFO] ▼", msg.GetInput())
@@ -49,7 +52,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	}
 
 	// Just the amount of checks needed to be able to call cllr.Response()
-	if err = rt.firstChecks(mdlr, cllr); err != nil {
+	if err = rt.firstChecks(mdl, cllr); err != nil {
 		return
 	}
 
@@ -66,6 +69,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 		return
 	}
 
+	// TODO: user-defined eBPF triggers
 	if err = rt.userChecks(callResponse); err != nil {
 		return
 	}
@@ -87,7 +91,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 
 // FIXME: turn this into a sync.errgroup with additional tasks being
 // triggers with match-all predicates andalso pure actions
-func (rt *runtime) firstChecks(mdlr modeler.Interface, cllr modeler.Caller) (err error) {
+func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err error) {
 	for {
 		var lambda modeler.CheckerFunc
 		v := &fm.Clt_Msg_CallVerifProgress{}
