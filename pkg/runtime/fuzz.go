@@ -10,15 +10,36 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
+
+const grpcHost = "do.dev.fuzzymonkey.co:7077"
 
 func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
 	closer func() error,
 	err error,
 ) {
-	if rt.client, closer, err = fm.NewClient(ctx, ua, apiKey); err != nil {
+	log.Println("[NFO] dialing", grpcHost)
+	var conn *grpc.ClientConn
+	if conn, err = grpc.DialContext(ctx, grpcHost,
+		grpc.WithBlock(),
+		grpc.WithInsecure(),
+	); err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
+
+	ctx = metadata.AppendToOutgoingContext(ctx,
+		"ua", ua,
+		"apiKey", apiKey,
+	)
+
+	if rt.client, err = fm.NewFuzzyMonkeyClient(conn).Do(ctx); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	closer = func() error { return conn.Close() }
 	return
 }
 
@@ -56,6 +77,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	for {
 		srv, err := rt.client.Recv()
 		if err == io.EOF {
+			log.Println("[DBG] server dialogue ended")
 			if err := mdl.GetResetter().Terminate(ctx, nil); err != nil {
 				return err
 			}

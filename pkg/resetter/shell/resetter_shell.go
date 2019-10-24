@@ -43,12 +43,12 @@ func (s *Shell) ToProto() *fm.Clt_Msg_Fuzz_Resetter {
 }
 
 // ExecStart TODO
-func (s *Shell) ExecStart(ctx context.Context, clt fm.Client) error {
+func (s *Shell) ExecStart(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
 	return s.exec(ctx, s.Start)
 }
 
 // ExecReset TODO
-func (s *Shell) ExecReset(ctx context.Context, clt fm.Client) error {
+func (s *Shell) ExecReset(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
 	if clt == nil {
 		return s.exec(ctx, s.Rst)
 	}
@@ -74,12 +74,12 @@ func (s *Shell) ExecReset(ctx context.Context, clt fm.Client) error {
 }
 
 // ExecStop TODO
-func (s *Shell) ExecStop(ctx context.Context, clt fm.Client) error {
+func (s *Shell) ExecStop(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
 	return s.exec(ctx, s.Stop)
 }
 
 // Terminate cleans up after resetter
-func (s *Shell) Terminate(ctx context.Context, clt fm.Client) error {
+func (s *Shell) Terminate(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
 	// TODO: maybe run s.Stop
 	return os.Remove(cwid.EnvFile())
 }

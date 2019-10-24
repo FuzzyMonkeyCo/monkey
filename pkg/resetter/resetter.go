@@ -12,11 +12,11 @@ import (
 type Interface interface {
 	ToProto() *fm.Clt_Msg_Fuzz_Resetter
 
-	ExecStart(context.Context, fm.Client) error
-	ExecReset(context.Context, fm.Client) error
-	ExecStop(context.Context, fm.Client) error
+	ExecStart(context.Context, fm.FuzzyMonkey_DoClient) error
+	ExecReset(context.Context, fm.FuzzyMonkey_DoClient) error
+	ExecStop(context.Context, fm.FuzzyMonkey_DoClient) error
 
-	Terminate(context.Context, fm.Client) error
+	Terminate(context.Context, fm.FuzzyMonkey_DoClient) error
 }
 
 var _ error = (*Error)(nil)

@@ -35,7 +35,7 @@ type runtime struct {
 
 	models map[string]modeler.Interface
 
-	client fm.Client
+	client fm.FuzzyMonkey_DoClient
 
 	progress ui.Progresser
 }
