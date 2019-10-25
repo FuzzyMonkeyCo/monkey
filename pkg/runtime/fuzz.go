@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -24,6 +25,7 @@ func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
 	var conn *grpc.ClientConn
 	if conn, err = grpc.DialContext(ctx, grpcHost,
 		grpc.WithBlock(),
+		grpc.WithTimeout(4*time.Second),
 		grpc.WithInsecure(),
 	); err != nil {
 		log.Println("[ERR]", err)
