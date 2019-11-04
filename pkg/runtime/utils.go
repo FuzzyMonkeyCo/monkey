@@ -2,9 +2,9 @@ package runtime
 
 import (
 	"fmt"
-	"reflect"
 	"unicode"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
@@ -31,54 +31,46 @@ func printableASCII(s string) error {
 	return nil
 }
 
-func slValueFromInterface(x interface{}) (starlark.Value, error) {
-	if x == nil {
+func slValueFromProto(value *types.Value) (starlark.Value, error) {
+	switch value.GetKind().(type) {
+	case *types.Value_NullValue:
 		return starlark.None, nil
-	}
-	switch v := reflect.ValueOf(x); v.Kind() {
-	case reflect.Bool:
-		return starlark.Bool(v.Bool()), nil
-	case reflect.Int, reflect.Int8, reflect.Int32, reflect.Int64:
-		return starlark.MakeInt64(v.Int()), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint32, reflect.Uint64:
-		return starlark.MakeUint64(v.Uint()), nil
-	case reflect.Float32, reflect.Float64:
-		return starlark.Float(v.Float()), nil
-	case reflect.String:
-		return starlark.String(v.String()), nil
-	case reflect.Slice:
-		values := make([]starlark.Value, 0, v.Len())
-		for i := 0; i < v.Len(); i++ {
-			s, err := slValueFromInterface(v.Index(i).Interface())
+	case *types.Value_BoolValue:
+		return starlark.Bool(value.GetBoolValue()), nil
+	case *types.Value_NumberValue:
+		return starlark.Float(value.GetNumberValue()), nil
+	case *types.Value_StringValue:
+		return starlark.String(value.GetStringValue()), nil
+	case *types.Value_ListValue:
+		values := value.GetListValue().GetValues()
+		vals := make([]starlark.Value, 0, len(values))
+		for _, v := range values {
+			val, err := slValueFromProto(v)
 			if err != nil {
 				return nil, err
 			}
-			values = append(values, s)
+			vals = append(vals, val)
 		}
-		return starlark.NewList(values), nil
-	case reflect.Map:
-		if v.Type().Key().Kind() != reflect.String {
-			return nil, fmt.Errorf("expected string keys: %T", x)
-		}
-		values := starlark.NewDict(v.Len())
-		for _, k := range v.MapKeys() {
-			value := v.MapIndex(k)
-			key := k.String()
+		return starlark.NewList(vals), nil
+	case *types.Value_StructValue:
+		// TODO: ensure keys are strings
+		values := value.GetStructValue().GetFields()
+		vals := starlark.NewDict(len(values))
+		for key, v := range values {
 			if err := printableASCII(key); err != nil {
 				return nil, errors.Wrap(err, "illegal string key")
 			}
-			s, err := slValueFromInterface(value.Interface())
+			val, err := slValueFromProto(v)
 			if err != nil {
 				return nil, err
 			}
-			if err = values.SetKey(starlark.String(key), s); err != nil {
+			if err = vals.SetKey(starlark.String(key), val); err != nil {
 				return nil, err
 			}
 		}
-		return values, nil
+		return vals, nil
 	default:
-		err := fmt.Errorf("not a JSON value: %T %+v", x, x)
-		return nil, err
+		panic("unreachable")
 	}
 }
 

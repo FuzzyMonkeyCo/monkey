@@ -3,6 +3,7 @@ package ui
 // Progresser TODO
 type Progresser interface {
 	MaxTestsCount(uint32)
+
 	TotalTestsCount(uint32)
 	TotalCallsCount(uint32)
 	TotalChecksCount(uint32)

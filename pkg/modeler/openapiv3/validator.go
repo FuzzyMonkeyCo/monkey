@@ -476,6 +476,8 @@ func enumFromGo(value interface{}) *types.Value {
 	switch val := value.(type) {
 	case bool:
 		return &types.Value{Kind: &types.Value_BoolValue{val}}
+	case uint32:
+		return &types.Value{Kind: &types.Value_NumberValue{float64(val)}}
 	case float64:
 		return &types.Value{Kind: &types.Value_NumberValue{val}}
 	case string:
@@ -493,7 +495,7 @@ func enumFromGo(value interface{}) *types.Value {
 		}
 		return &types.Value{Kind: &types.Value_StructValue{StructValue: &types.Struct{Fields: vs}}}
 	default:
-		panic("unreachable")
+		panic(fmt.Errorf("cannot convert to value type: %T", value))
 	}
 }
 
@@ -753,7 +755,7 @@ func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 	errs := make([]string, 0, len(errors))
 	for _, e := range errors {
 		errs = append(errs, e.String())
-		log.Printf("[ERR] value: %#v", e.Value())
+		log.Printf("[ERR] value: %s", e.Value())
 	}
 	return errs
 }

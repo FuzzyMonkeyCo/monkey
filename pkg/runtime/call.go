@@ -148,7 +148,8 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
 	var response starlark.Value
 	//FIXME: replace response copies by calls to this
-	if response, err = slValueFromInterface(callResponse); err != nil {
+	if response, err = slValueFromProto(&types.Value{
+		Kind: &types.Value_StructValue{StructValue: callResponse}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}

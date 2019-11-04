@@ -44,12 +44,6 @@ type tCapHTTP struct {
 
 	reqJSON, repJSON *types.Value
 
-	repStatus  int
-	repReason  string
-	repHeaders map[string][]string
-	repHasBody bool
-	repBody    []byte
-
 	elapsed time.Duration
 	// TODO: pick from these
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
@@ -122,11 +116,12 @@ func (m *oa3) NewCaller(msg *fm.Srv_Msg_Call, showf func(string, ...interface{})
 func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
 	return func() (s string, f []string) {
 		endpoint := m.vald.Spec.Endpoints[eId].GetJson()
+		code := m.tcap.repProto.StatusCode
 		var ok bool
 		// TODO: handle 1,2,3,4,5,XXX
 		// TODO: think about overflow
-		if m.tcap.matchedSID, ok = endpoint.Outputs[uint32(m.tcap.repStatus)]; !ok {
-			f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", m.tcap.repStatus))
+		if m.tcap.matchedSID, ok = endpoint.Outputs[uint32(code)]; !ok {
+			f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
 			return
 		}
 		s = "HTTP code checked"
@@ -135,10 +130,10 @@ func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
 }
 
 func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
-	if !m.tcap.repHasBody {
-		f = append(f, "response body is empty")
-		return
-	}
+	// if m.tcap.repProto.Body != nil {
+	// 	f = append(f, "response body is empty")
+	// 	return
+	// }
 
 	// TODO: get Unmarshal error of request() method & return it
 	s = "response is valid JSON"
@@ -170,12 +165,25 @@ func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
 func (c *tCapHTTP) Request() *types.Struct {
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"method":  enumFromGo(c.reqProto.Method),
-			"url":     enumFromGo(c.reqProto.Url),
-			"headers": enumFromGo(c.reqProto.Headers),
+			"method": enumFromGo(c.reqProto.Method),
+			"url":    enumFromGo(c.reqProto.Url),
 			// "content" as bytes?
 		},
 	}
+
+	headers := make(map[string]*types.Value, len(c.reqProto.Headers))
+	for key, values0 := range c.reqProto.Headers {
+		values := values0.GetValues()
+		vals := make([]*types.Value, len(values))
+		for i, val := range values {
+			vals[i] = enumFromGo(val)
+		}
+		headers[key] = &types.Value{Kind: &types.Value_ListValue{
+			ListValue: &types.ListValue{Values: vals}}}
+	}
+	s.Fields["headers"] = &types.Value{Kind: &types.Value_StructValue{
+		StructValue: &types.Struct{Fields: headers}}}
+
 	if c.reqProto.Body != nil {
 		s.Fields["json"] = c.reqJSON
 	}
@@ -195,11 +203,24 @@ func (c *tCapHTTP) Response() *types.Struct {
 			// FIXME? "error"
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),
-			"headers":     enumFromGo(c.repProto.Headers),
 			// "content" as bytes?
 			// "history" :: []Rep (redirects)?
 		},
 	}
+
+	headers := make(map[string]*types.Value, len(c.repProto.Headers))
+	for key, values0 := range c.repProto.Headers {
+		values := values0.GetValues()
+		vals := make([]*types.Value, len(values))
+		for i, val := range values {
+			vals[i] = enumFromGo(val)
+		}
+		headers[key] = &types.Value{Kind: &types.Value_ListValue{
+			ListValue: &types.ListValue{Values: vals}}}
+	}
+	s.Fields["headers"] = &types.Value{Kind: &types.Value_StructValue{
+		StructValue: &types.Struct{Fields: headers}}}
+
 	if c.repProto.Body != nil {
 		s.Fields["json"] = c.repJSON
 	}
@@ -263,10 +284,12 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 
 func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (err error) {
 	c.repProto = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse{
-		Error:      e.Error(),
 		StatusCode: uint32(r.StatusCode), // TODO: check bounds
 		Reason:     r.Status,
 		Elapsed:    uint32(elapsed),
+	}
+	if e != nil {
+		c.repProto.Error = e.Error()
 	}
 
 	headers := fromRepHeader(r.Header)

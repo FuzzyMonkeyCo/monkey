@@ -75,6 +75,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	}
 
 	rt.progress = ui.NewCli()
+	rt.progress.MaxTestsCount(rt.Ntensity)
 
 	for {
 		srv, err := rt.client.Recv()
