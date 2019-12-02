@@ -30,8 +30,9 @@ type Interface interface {
 
 	InputsCount() int
 	WriteAbsoluteReferences(io.Writer)
-	ValidateAgainstSchema(string, []byte) error
 	FilterEndpoints([]string) ([]uint32, error)
+
+	ValidateAgainstSchema(string, []byte) error
 	Validate(uint32, interface{}) []string
 
 	NewCaller(*fm.Srv_Msg_Call, func(string, ...interface{})) (Caller, error)

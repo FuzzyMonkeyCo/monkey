@@ -98,19 +98,28 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		msg := srv.GetMsg()
 		switch msg.GetMsg().(type) {
 		case *fm.Srv_Msg_Call_:
+			log.Println("[NFO] handling srvcall")
 			cll := msg.GetCall()
 			// rt.progress.state("🙈") 🙉 🙊 🐵
 			// rt.progress.Before(ui.Call)
 			if err := rt.call(ctx, cll); err != nil {
 				return err
 			}
+			log.Println("[NFO] done handling srvcall")
 		case *fm.Srv_Msg_Reset_:
+			log.Println("[NFO] handling srvreset")
 			rst := msg.GetReset_()
 			if err := rt.reset(ctx, rst); err != nil {
 				return err
 			}
+			log.Println("[NFO] done handling srvreset")
+		case *fm.Srv_Msg_FuzzProgress_:
+			log.Println("[NFO] handling srvprogress")
+			stts := msg.GetFuzzProgress()
+			rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
+			log.Println("[NFO] done handling srvprogress")
 		default:
-			err := fmt.Errorf("unhandled srv msg %T: %+v", msg, msg)
+			err := fmt.Errorf("unhandled srv msg %T: %+v", msg.GetMsg(), msg)
 			log.Println("[ERR]", err)
 			return err
 		}

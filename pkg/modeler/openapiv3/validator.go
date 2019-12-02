@@ -719,7 +719,14 @@ func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 	var sm schemap
 	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)
-	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, json_data)
+
+	data, ok := json_data.(*types.Value)
+	if !ok {
+		panic(fmt.Sprintf("%T", json_data))
+	}
+	toValidate := EnumToGo(data)
+	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, toValidate)
+
 	// FIXME? turns out Compile does not need an $id set?
 	// id := fmt.Sprintf("file:///schema_%d.json", SID)
 	// s["$id"] = id
@@ -745,7 +752,7 @@ func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 	}
 
 	log.Println("[NFO] validating payload against refs")
-	res, err := schema.Validate(gojsonschema.NewGoLoader(json_data))
+	res, err := schema.Validate(gojsonschema.NewGoLoader(toValidate))
 	if err != nil {
 		log.Println("[ERR]", err)
 		return []string{err.Error()}

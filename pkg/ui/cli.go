@@ -5,6 +5,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/superhawk610/bar"
+	// See also: https://github.com/reconquest/barely
 )
 
 var _ Progresser = (*Cli)(nil)

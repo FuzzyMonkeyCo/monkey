@@ -46,6 +46,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 		return
 	}
 
+	// FIXME? merge ErrCallFailed with output, as Do's return
 	if errCall == modeler.ErrCallFailed {
 		log.Println("[DBG] call failed, skipping checks")
 		return modeler.ErrCallFailed

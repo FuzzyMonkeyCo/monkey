@@ -188,7 +188,21 @@ message Srv {
       // bool as_final_step = 1;
     }
 
-    message FuzzProgress {}
+    message FuzzProgress {
+      bool failure = 1;
+      bool success = 2;
+      bool last_call_failure = 3;
+      bool last_call_success = 4;
+      bool last_check_failure = 5;
+      bool last_check_success = 6;
+      bool shrinking = 7;
+      uint32 total_tests_count = 8;
+      uint32 total_calls_count = 9;
+      uint32 total_checks_count = 10;
+      uint32 test_calls_count = 11;
+      uint32 call_checks_count = 12;
+      uint32 shrink_amount = 13;
+    }
 
     oneof msg {
       // Try call to SUT

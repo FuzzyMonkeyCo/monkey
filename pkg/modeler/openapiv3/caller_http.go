@@ -80,7 +80,10 @@ type tCapHTTP struct {
 }
 
 func (c *tCapHTTP) ToProto() *fm.Clt_Msg_CallResponseRaw {
-	return &fm.Clt_Msg_CallResponseRaw{}
+	return &fm.Clt_Msg_CallResponseRaw{Output: &fm.Clt_Msg_CallResponseRaw_Output{
+		Output: &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_{
+			HttpResponse: c.repProto,
+		}}}
 }
 
 type namedLambda struct {
