@@ -600,7 +600,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	}
 
 	selected := uint32(len(all))
-	e := fmt.Sprintf("%d of %d %s selected for testing", selected, total, plural("endpoint", selected))
+	e := fmt.Sprintf("%d of %d endpoints selected for testing", selected, total)
 	if selected == 0 {
 		err = errors.New(e)
 		log.Println("[ERR]", err)
@@ -619,13 +619,6 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 		fmt.Println(all[eid])
 	}
 	return
-}
-
-func plural(s string, n uint32) string {
-	if n == 1 {
-		return s
-	}
-	return s + "s"
 }
 
 func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) {

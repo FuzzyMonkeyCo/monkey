@@ -269,14 +269,15 @@ func actualMain() int {
 	defer closer()
 
 	if err := rt.Fuzz(ctx); err != nil {
+		log.Println("[ERR]", err)
 		return retryOrReportThenCleanup(err)
 	}
 	fmt.Println()
 	fmt.Println()
-	// if rt.TestsSucceeded() {
-	return code.OK
-	// }
-	// return code.FailedFuzz
+	if rt.ProgressCampaignSummary() {
+		return code.OK
+	}
+	return code.FailedFuzz
 }
 
 func logLevel(verbosity uint8) logutils.LogLevel {
@@ -367,7 +368,7 @@ func retryOrReport() int {
 	const email = "ook@fuzzymonkey.co"
 	w := os.Stderr
 	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Fprintf(w, "\nYou may want to run `monkey --update`.\n")
+	fmt.Fprintf(w, "\nYou may want to try `monkey --update`.\n")
 	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)

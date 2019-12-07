@@ -16,7 +16,10 @@ type Cli struct {
 	testCallsCount, callChecksCount                    uint32
 	bar                                                *bar.Bar
 	failed                                             bool
+	campaignSuccess                                    bool
 	start                                              time.Time
+	ticker                                             <-chan time.Time
+	stateIdx                                           int
 }
 
 // NewCli TODO
@@ -34,17 +37,37 @@ func (p *Cli) MaxTestsCount(v uint32) {
 		bar.WithFormat(":state :bar :rate ops/s :eta"),
 	)
 	p.start = time.Now()
+	p.ticker = time.Tick(333 * time.Millisecond)
+	go func() {
+		for range p.ticker {
+			p.state(0)
+		}
+	}()
 }
 
-func (p *Cli) TotalTestsCount(v uint32)  { p.totalTestsCount = v }
-func (p *Cli) TotalCallsCount(v uint32)  { p.totalCallsCount = v }
+func (p *Cli) Terminate() error {
+	p.ticker = nil
+	p.bar.Done()
+	return nil
+}
+
+func (p *Cli) TotalTestsCount(v uint32) { p.totalTestsCount = v }
+func (p *Cli) TotalCallsCount(v uint32) {
+	if p.totalCallsCount != v {
+		p.state(1)
+	}
+	p.totalCallsCount = v
+}
 func (p *Cli) TotalChecksCount(v uint32) { p.totalChecksCount = v }
 func (p *Cli) TestCallsCount(v uint32)   { p.testCallsCount = v }
 func (p *Cli) CallChecksCount(v uint32)  { p.callChecksCount = v }
+func (p *Cli) CampaignSuccess(v bool)    { p.campaignSuccess = v }
 
-func (p *Cli) state(s string) {
-	advancement := 1 + p.totalCallsCount
-	p.bar.Update(int(advancement), bar.Context{bar.Ctx("state", s)})
+func (p *Cli) state(inc int) {
+	state := cliStates[p.stateIdx%len(cliStates)]
+	p.stateIdx++
+	advancement := inc + int(p.totalCallsCount)
+	p.bar.Update(advancement, bar.Context{bar.Ctx("state", state)})
 }
 func (p *Cli) show(s string)                         { p.bar.Interrupt(s) }
 func (p *Cli) Showf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
@@ -57,17 +80,14 @@ func (p *Cli) err(s string) {
 
 func (p *Cli) ChecksPassed() { p.nfo(" All checks passed.\n") }
 func (p *Cli) CheckPassed(s string) {
-	const prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅
 	p.show(" " + as.ColorOK.Sprintf(prefixSucceeded) + " " + as.ColorNFO.Sprintf(s))
 }
 func (p *Cli) CheckSkipped(s string) {
-	const prefixSkipped = "○" // ● • ‣ ◦ ⁃ ○ ◯ ⭕ 💮
 	p.show(" " + as.ColorWRN.Sprintf(prefixSkipped) + " " + as.ColorNFO.Sprintf(s) + " skipped")
 }
 func (p *Cli) CheckFailed(ss []string) {
 	p.failed = true
 	if len(ss) > 0 {
-		const prefixFailed = "✖" // ⨯ × ✗ x X ☓ ✘
 		p.show(" " + as.ColorERR.Sprintf(prefixFailed) + " " + as.ColorNFO.Sprintf(ss[0]))
 	}
 	if len(ss) > 1 {
@@ -76,9 +96,4 @@ func (p *Cli) CheckFailed(ss []string) {
 		}
 	}
 	p.nfo(" Found a bug!\n")
-}
-
-func (p *Cli) Terminate() error {
-	p.bar.Done()
-	return nil
 }

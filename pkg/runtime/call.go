@@ -12,6 +12,39 @@ import (
 	"go.starlark.net/starlark"
 )
 
+func (rt *runtime) recvFuzzProgress() error {
+	log.Println("[DBG] receiving fm.Srv_Msg_FuzzProgress_...")
+	srv, err := rt.client.Recv()
+	if err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+
+	log.Println("[DBG] >>>", srv)
+	msg := srv.GetMsg()
+	switch msg.GetMsg().(type) {
+	case *fm.Srv_Msg_FuzzProgress_:
+		log.Println("[NFO] handling srvprogress")
+		stts := msg.GetFuzzProgress()
+		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
+		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
+		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
+		rt.progress.TestCallsCount(stts.GetTestCallsCount())
+		rt.progress.CallChecksCount(stts.GetCallChecksCount())
+		if stts.GetSuccess() {
+			rt.progress.CampaignSuccess(true)
+		} else if stts.GetFailure() {
+			rt.progress.CampaignSuccess(false)
+		}
+		log.Println("[NFO] done handling srvprogress")
+		return nil
+	default:
+		err := fmt.Errorf("unexpected srv msg %T: %+v", msg.GetMsg(), msg)
+		log.Println("[ERR]", err)
+		return err
+	}
+}
+
 func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
@@ -43,6 +76,9 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 				CallResponseRaw: output,
 			}}}); err != nil {
 		log.Println("[ERR]", err)
+		return
+	}
+	if err = rt.recvFuzzProgress(); err != nil {
 		return
 	}
 
@@ -134,6 +170,9 @@ func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err 
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
+			return
+		}
+		if err = rt.recvFuzzProgress(); err != nil {
 			return
 		}
 
@@ -248,6 +287,9 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
+			return
+		}
+		if err = rt.recvFuzzProgress(); err != nil {
 			return
 		}
 

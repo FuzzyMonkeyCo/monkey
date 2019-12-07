@@ -77,51 +77,58 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	rt.progress = ui.NewCli()
 	rt.progress.MaxTestsCount(rt.Ntensity)
 
+	var (
+		srv *fm.Srv
+		err error
+	)
 	for {
-		srv, err := rt.client.Recv()
-		if err == io.EOF {
-			log.Println("[DBG] server dialogue ended")
-			if err := mdl.GetResetter().Terminate(ctx, nil); err != nil {
-				return err
+		if srv, err = rt.client.Recv(); err != nil {
+			if err == io.EOF {
+				err = nil
+				break
 			}
-			if err := rt.progress.Terminate(); err != nil {
-				return err
-			}
-			return nil
-		}
-		if err != nil {
 			log.Println("[ERR]", err)
-			return err
+			break
 		}
 
-		log.Println(srv)
+		log.Println("[DBG] >>>", srv)
 		msg := srv.GetMsg()
 		switch msg.GetMsg().(type) {
 		case *fm.Srv_Msg_Call_:
 			log.Println("[NFO] handling srvcall")
 			cll := msg.GetCall()
-			// rt.progress.state("🙈") 🙉 🙊 🐵
 			// rt.progress.Before(ui.Call)
-			if err := rt.call(ctx, cll); err != nil {
-				return err
+			if err = rt.call(ctx, cll); err != nil {
+				break
 			}
 			log.Println("[NFO] done handling srvcall")
+			if err = rt.recvFuzzProgress(); err != nil {
+				break
+			}
 		case *fm.Srv_Msg_Reset_:
 			log.Println("[NFO] handling srvreset")
 			rst := msg.GetReset_()
-			if err := rt.reset(ctx, rst); err != nil {
-				return err
+			if err = rt.reset(ctx, rst); err != nil {
+				break
 			}
-			log.Println("[NFO] done handling srvreset")
-		case *fm.Srv_Msg_FuzzProgress_:
-			log.Println("[NFO] handling srvprogress")
-			stts := msg.GetFuzzProgress()
-			rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
-			log.Println("[NFO] done handling srvprogress")
+			if err = rt.recvFuzzProgress(); err != nil {
+				break
+			}
 		default:
-			err := fmt.Errorf("unhandled srv msg %T: %+v", msg.GetMsg(), msg)
+			err = fmt.Errorf("unhandled srv msg %T: %+v", msg.GetMsg(), msg)
 			log.Println("[ERR]", err)
-			return err
+			break
 		}
 	}
+
+	log.Println("[DBG] server dialogue ended, cleaning up...")
+	if err2 := mdl.GetResetter().Terminate(ctx, nil); err2 != nil {
+		log.Println("[ERR]", err2)
+		return err2
+	}
+	if err2 := rt.progress.Terminate(); err2 != nil {
+		log.Println("[ERR]", err2)
+		return err2
+	}
+	return err
 }
