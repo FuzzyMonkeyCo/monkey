@@ -147,23 +147,20 @@ message Clt {
     google.protobuf.Struct response = 4;
   }
 
-  message Msg {
-    oneof msg {
-      // Initiates testing
-      Fuzz fuzz = 1;
-      // Logs & observed SUT
-      Metrics metrics = 2;
-      // SUT state resetting
-      ResetProgress reset_progress = 3;
-      // Actual call to SUT
-      CallRequestRaw call_request_raw = 4;
-      // SUT call response
-      CallResponseRaw call_response_raw = 5;
-      // SUT call verifications
-      CallVerifProgress call_verif_progress = 6;
-    }
+  oneof msg {
+    // Initiates testing
+    Fuzz fuzz = 1;
+    // Logs & observed SUT
+    Metrics metrics = 2;
+    // SUT state resetting
+    ResetProgress reset_progress = 3;
+    // Actual call to SUT
+    CallRequestRaw call_request_raw = 4;
+    // SUT call response
+    CallResponseRaw call_response_raw = 5;
+    // SUT call verifications
+    CallVerifProgress call_verif_progress = 6;
   }
-  Msg msg = 1;
 }
 
 message Srv {
@@ -206,17 +203,14 @@ message Srv {
     uint32 shrink_amount = 13;
   }
 
-  message Msg {
-    oneof msg {
-      // Try call to SUT
-      Call call = 1;
-      // Testing progress & end
-      FuzzProgress fuzz_progress = 2;
-      // Reset SUT state
-      Reset reset = 3;
-    }
+  oneof msg {
+    // Try call to SUT
+    Call call = 1;
+    // Testing progress & end
+    FuzzProgress fuzz_progress = 2;
+    // Reset SUT state
+    Reset reset = 3;
   }
-  Msg msg = 1;
 }
 
 message SpecIR {

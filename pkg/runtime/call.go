@@ -13,7 +13,7 @@ import (
 )
 
 func (rt *runtime) recvFuzzProgress() error {
-	log.Println("[DBG] receiving fm.Srv_Msg_FuzzProgress...")
+	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
 	srv, err := rt.client.Recv()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -21,11 +21,10 @@ func (rt *runtime) recvFuzzProgress() error {
 	}
 
 	log.Println("[DBG] >>>", srv)
-	msg := srv.GetMsg()
-	switch msg.GetMsg().(type) {
-	case *fm.Srv_Msg_FuzzProgress:
+	switch srv.GetMsg().(type) {
+	case *fm.Srv_FuzzProgress_:
 		log.Println("[NFO] handling srvprogress")
-		stts := msg.GetFuzzProgress()
+		stts := srv.GetFuzzProgress()
 		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
 		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
 		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
@@ -39,7 +38,7 @@ func (rt *runtime) recvFuzzProgress() error {
 		log.Println("[NFO] done handling srvprogress")
 		return nil
 	default:
-		err := fmt.Errorf("unexpected srv msg %T: %+v", msg.GetMsg(), msg)
+		err := fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
 		log.Println("[ERR]", err)
 		return err
 	}
@@ -71,10 +70,9 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	log.Println("[NFO] ▲", output)
 
 	if err = rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallResponseRaw{
-				CallResponseRaw: output,
-			}}}); err != nil {
+		Msg: &fm.Clt_CallResponseRaw_{
+			CallResponseRaw: output,
+		}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -96,12 +94,11 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	callResponse := cllr.Response()
 	// Actionable response data parsed...
 	if err = rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallVerifProgress{
-				CallVerifProgress: &fm.Clt_CallVerifProgress{
-					Status:   fm.Clt_CallVerifProgress_data,
-					Response: callResponse,
-				}}}}); err != nil {
+		Msg: &fm.Clt_CallVerifProgress_{
+			CallVerifProgress: &fm.Clt_CallVerifProgress{
+				Status:   fm.Clt_CallVerifProgress_data,
+				Response: callResponse,
+			}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -113,10 +110,9 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 
 	// Through all checks: we're done
 	if err = rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallVerifProgress{
-				CallVerifProgress: &fm.Clt_CallVerifProgress{},
-			}}}); err != nil {
+		Msg: &fm.Clt_CallVerifProgress_{
+			CallVerifProgress: &fm.Clt_CallVerifProgress{},
+		}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -140,10 +136,9 @@ func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err 
 
 		v.Status = fm.Clt_CallVerifProgress_start
 		if err = rt.client.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress{
-					CallVerifProgress: v,
-				}}}); err != nil {
+			Msg: &fm.Clt_CallVerifProgress_{
+				CallVerifProgress: v,
+			}}); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -165,10 +160,9 @@ func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err 
 		}
 
 		if err = rt.client.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress{
-					CallVerifProgress: v,
-				}}}); err != nil {
+			Msg: &fm.Clt_CallVerifProgress_{
+				CallVerifProgress: v,
+			}}); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -202,10 +196,9 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 
 		v.Status = fm.Clt_CallVerifProgress_start
 		if err = rt.client.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress{
-					CallVerifProgress: v,
-				}}}); err != nil {
+			Msg: &fm.Clt_CallVerifProgress_{
+				CallVerifProgress: v,
+			}}); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -282,10 +275,9 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 		}
 
 		if err = rt.client.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress{
-					CallVerifProgress: v,
-				}}}); err != nil {
+			Msg: &fm.Clt_CallVerifProgress_{
+				CallVerifProgress: v,
+			}}); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}

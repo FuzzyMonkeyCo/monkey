@@ -15,11 +15,10 @@ import (
 
 func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Reset) error {
 	if err := rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress{
-				ResetProgress: &fm.Clt_ResetProgress{
-					Status: fm.Clt_ResetProgress_started,
-				}}}}); err != nil {
+		Msg: &fm.Clt_ResetProgress_{
+			ResetProgress: &fm.Clt_ResetProgress{
+				Status: fm.Clt_ResetProgress_started,
+			}}}); err != nil {
 		log.Println("[ERR]", err)
 		return err
 	}
@@ -42,13 +41,12 @@ func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Reset) error {
 		}
 
 		if err2 := rt.client.Send(&fm.Clt{
-			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_ResetProgress{
-					ResetProgress: &fm.Clt_ResetProgress{
-						Status: fm.Clt_ResetProgress_failed,
-						TsDiff: elapsed,
-						Reason: reason,
-					}}}}); err != nil {
+			Msg: &fm.Clt_ResetProgress_{
+				ResetProgress: &fm.Clt_ResetProgress{
+					Status: fm.Clt_ResetProgress_failed,
+					TsDiff: elapsed,
+					Reason: reason,
+				}}}); err != nil {
 			log.Println("[ERR]", err2)
 			// nothing to continue on
 		}
@@ -56,12 +54,11 @@ func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Reset) error {
 	}
 
 	if err = rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress{
-				ResetProgress: &fm.Clt_ResetProgress{
-					Status: fm.Clt_ResetProgress_ended,
-					TsDiff: elapsed,
-				}}}}); err != nil {
+		Msg: &fm.Clt_ResetProgress_{
+			ResetProgress: &fm.Clt_ResetProgress{
+				Status: fm.Clt_ResetProgress_ended,
+				TsDiff: elapsed,
+			}}}); err != nil {
 		log.Println("[ERR]", err)
 	}
 	return err

@@ -59,17 +59,16 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 
 	log.Printf("[DBG] 🡱  initial msg...")
 	if err := rt.client.Send(&fm.Clt{
-		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_Fuzz{
-				Fuzz: &fm.Clt_Fuzz{
-					Resetter:  mdl.GetResetter().ToProto(),
-					ModelKind: fm.Clt_Fuzz_OpenAPIv3,
-					Model:     mdl.ToProto(),
-					Usage:     os.Args,
-					Seed:      []byte{42, 42, 42},
-					Intensity: rt.Ntensity,
-					EIDs:      rt.eIds,
-				}}}}); err != nil {
+		Msg: &fm.Clt_Fuzz_{
+			Fuzz: &fm.Clt_Fuzz{
+				Resetter:  mdl.GetResetter().ToProto(),
+				ModelKind: fm.Clt_Fuzz_OpenAPIv3,
+				Model:     mdl.ToProto(),
+				Usage:     os.Args,
+				Seed:      []byte{42, 42, 42},
+				Intensity: rt.Ntensity,
+				EIDs:      rt.eIds,
+			}}}); err != nil {
 		log.Println("[ERR]", err)
 		return err
 	}
@@ -92,31 +91,30 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 
 		log.Println("[DBG] >>>", srv)
-		msg := srv.GetMsg()
-		switch msg.GetMsg().(type) {
-		case *fm.Srv_Msg_Call:
-			log.Println("[NFO] handling Srv_Msg_Call")
-			cll := msg.GetCall()
+		switch srv.GetMsg().(type) {
+		case *fm.Srv_Call_:
+			log.Println("[NFO] handling fm.Srv_Call_")
+			cll := srv.GetCall()
 			// rt.progress.Before(ui.Call)
 			if err = rt.call(ctx, cll); err != nil {
 				break
 			}
-			log.Println("[NFO] done handling Srv_Msg_Call")
+			log.Println("[NFO] done handling fm.Srv_Call_")
 			if err = rt.recvFuzzProgress(); err != nil {
 				break
 			}
-		case *fm.Srv_Msg_Reset_:
-			log.Println("[NFO] handling Srv_Msg_Reset_")
-			rst := msg.GetReset_()
+		case *fm.Srv_Reset_:
+			log.Println("[NFO] handling fm.Srv_Reset_")
+			rst := srv.GetReset_()
 			if err = rt.reset(ctx, rst); err != nil {
 				break
 			}
-			log.Println("[NFO] done handling Srv_Msg_Reset_")
+			log.Println("[NFO] done handling fm.Srv_Reset_")
 			if err = rt.recvFuzzProgress(); err != nil {
 				break
 			}
 		default:
-			err = fmt.Errorf("unhandled srv msg %T: %+v", msg.GetMsg(), msg)
+			err = fmt.Errorf("unhandled srv msg %T: %+v", srv.GetMsg(), srv)
 			log.Println("[ERR]", err)
 			break
 		}
