@@ -14,137 +14,140 @@ option (gogoproto.marshaler_all) = true;
 // stable_marshaler
 // Enable custom Unmarshal method
 option (gogoproto.unmarshaler_all) = true;
-//option (gogoproto.gostring_all) = true;
-//option (gogoproto.goproto_stringer_all) = false;
-//option (gogoproto.stringer_all) =  true;
+// option (gogoproto.gostring_all) = true;
+// option (gogoproto.goproto_stringer_all) = false;
+// option (gogoproto.stringer_all) =  true;
 
 // Generate func (this *ProtoMessage) Equal(that interface{}) bool
 option (gogoproto.equal_all) = true;
 // Don't generate XXX_unrecognized
-//option (gogoproto.goproto_unrecognized_all) = true;
-// jsontag, moretags: https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
+// option (gogoproto.goproto_unrecognized_all) = true;
+// jsontag, moretags:
+// https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
 
-//FIXME
-//option (gogoproto.goproto_testgen_all) = true;
-//option (gogoproto.goproto_benchgen_all) = true;
+// FIXME
+// option (gogoproto.goproto_testgen_all) = true;
+// option (gogoproto.goproto_benchgen_all) = true;
 // https://godoc.org/github.com/gogo/protobuf/plugin/populate
 
-
 service FuzzyMonkey {
-  rpc Do(stream Clt) returns (stream Srv) {}
+  rpc Do(stream Clt) returns (stream Srv) {
+  }
 }
 
-
 message Clt {
+  message Fuzz {
+    message Resetter {
+      message Shell {
+        string start = 1;
+        string rst = 2;
+        string stop = 3;
+      }
+      oneof resetter {
+        Shell shell = 1;
+      }
+    }
+    Resetter resetter = 1;
+    enum ModelKind {
+      UNKNOWN = 0;
+      OpenAPIv3 = 1;
+    }
+    ModelKind model_kind = 2;
+    message Model {
+      message OpenAPIv3 {
+        // File is a path within current directory pointing to a YAML spec
+        string file = 1;
+        // Host superseeds the spec's base URL
+        string host = 2;
+        // HeaderAuthorization if non-empty is added to requests as bearer
+        // token
+        string header_authorization = 3;
+        SpecIR spec = 4;
+      }
+      oneof model {
+        OpenAPIv3 openapiv3 = 1;
+      }
+    }
+    Model model = 3;
+    repeated string usage = 4;
+    bytes seed = 5;
+    uint32 intensity = 6;
+    repeated uint32 EIDs = 7;
+  }
+
+  message Metrics {
+  }
+
+  message ResetProgress {
+    enum Status {
+      NOOP = 0;
+      started = 1;
+      ended = 2;
+      failed = 3;
+    }
+    Status status = 1;
+    uint64 ts_diff = 2;
+    repeated string reason = 3;
+  }
+
+  message CallRequestRaw {
+    message Input {
+      message HttpRequest {
+        string method = 1;
+        string url = 2;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 3;
+        bytes body = 4;
+        // same as Srv's but with timings..
+      }
+      oneof input {
+        HttpRequest http_request = 1;
+      }
+    }
+    Input input = 1;
+  }
+
+  // add http timings similar to
+  // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
+
+  message CallResponseRaw {
+    message Output {
+      message HttpResponse {
+        string error = 1;
+        uint32 status_code = 2;
+        string reason = 3;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 4;
+        bytes body = 5;
+        uint32 elapsed = 6;  // TODO: finer timings
+      }
+      oneof output {
+        HttpResponse http_response = 1;
+      }
+    }
+    Output output = 1;
+  }
+
+  message CallVerifProgress {
+    enum Status {
+      done = 0;
+      data = 1;
+      skipped = 2;
+      start = 3;
+      success = 4;
+      failure = 5;
+    }
+    Status status = 1;
+    string name = 2;
+    repeated string reason = 3;
+    google.protobuf.Struct response = 4;
+  }
+
   message Msg {
-    message Fuzz {
-      message Resetter {
-        message Shell {
-          string start = 1;
-          string rst = 2;
-          string stop = 3;
-        }
-        oneof resetter {
-          Shell shell = 1;
-        }
-      }
-      Resetter resetter = 1;
-      enum ModelKind {
-        UNKNOWN = 0;
-        OpenAPIv3 = 1;
-      }
-      ModelKind model_kind = 2;
-      message Model {
-        message OpenAPIv3 {
-          // File is a path within current directory pointing to a YAML spec
-          string file = 1;
-          // Host superseeds the spec's base URL
-          string host = 2;
-          // HeaderAuthorization if non-empty is added to requests as bearer token
-          string header_authorization = 3;
-          SpecIR spec = 4;
-        }
-        oneof model {
-          OpenAPIv3 openapiv3 = 1;
-        }
-      }
-      Model model = 3;
-      repeated string usage = 4;
-      bytes seed = 5;
-      uint32 intensity = 6;
-      repeated uint32 EIDs = 7;
-    }
-
-    message Metrics {}
-
-    message ResetProgress {
-      enum Status {
-        NOOP = 0;
-        started = 1;
-        ended = 2;
-        failed = 3;
-      }
-      Status status = 1;
-      uint64 ts_diff = 2;
-      repeated string reason = 3;
-    }
-
-    message CallRequestRaw {
-      message Input {
-        message HttpRequest {
-          string method = 1;
-          string url = 2;
-          message HeaderValues {
-            repeated string values = 1;
-          }
-          map<string,HeaderValues> headers = 3;
-          bytes body = 4;
-          // same as Srv's but with timings..
-        }
-        oneof input {
-          HttpRequest http_request = 1;
-        }
-      }
-      Input input = 1;
-    }
-
-    // add http timings similar to https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
-
-    message CallResponseRaw {
-      message Output {
-        message HttpResponse {
-          string error = 1;
-          uint32 status_code = 2;
-          string reason = 3;
-          message HeaderValues {
-            repeated string values = 1;
-          }
-          map<string,HeaderValues> headers = 4;
-          bytes body = 5;
-          uint32 elapsed = 6; // TODO: finer timings
-        }
-        oneof output {
-          HttpResponse http_response = 1;
-        }
-      }
-      Output output = 1;
-    }
-
-    message CallVerifProgress {
-      enum Status {
-        done = 0;
-        data = 1;
-        skipped = 2;
-        start = 3;
-        success = 4;
-        failure = 5;
-      }
-      Status status = 1;
-      string name = 2;
-      repeated string reason = 3;
-      google.protobuf.Struct response = 4;
-    }
-
     oneof msg {
       // Initiates testing
       Fuzz fuzz = 1;
@@ -164,46 +167,46 @@ message Clt {
 }
 
 message Srv {
-  message Msg {
-    message Call {
-      message Input {
-        message HttpRequest {
-          string method = 1;
-          string url = 2;
-          message HeaderValues {
-            repeated string values = 1;
-          }
-          map<string,HeaderValues> headers = 3;
-          bytes body = 4;
+  message Call {
+    message Input {
+      message HttpRequest {
+        string method = 1;
+        string url = 2;
+        message HeaderValues {
+          repeated string values = 1;
         }
-        oneof input {
-          HttpRequest http_request = 1;
-        }
+        map<string, HeaderValues> headers = 3;
+        bytes body = 4;
       }
-      Input input = 1;
-      uint32 eId = 2;
+      oneof input {
+        HttpRequest http_request = 1;
+      }
     }
+    Input input = 1;
+    uint32 eId = 2;
+  }
 
-    message Reset {
-      // bool as_final_step = 1;
-    }
+  message Reset {
+    // bool as_final_step = 1;
+  }
 
-    message FuzzProgress {
-      bool failure = 1;
-      bool success = 2;
-      bool last_call_failure = 3;
-      bool last_call_success = 4;
-      bool last_check_failure = 5;
-      bool last_check_success = 6;
-      bool shrinking = 7;
-      uint32 total_tests_count = 8;
-      uint32 total_calls_count = 9;
-      uint32 total_checks_count = 10;
-      uint32 test_calls_count = 11;
-      uint32 call_checks_count = 12;
-      uint32 shrink_amount = 13;
-    }
+  message FuzzProgress {
+    bool failure = 1;
+    bool success = 2;
+    bool last_call_failure = 3;
+    bool last_call_success = 4;
+    bool last_check_failure = 5;
+    bool last_check_success = 6;
+    bool shrinking = 7;
+    uint32 total_tests_count = 8;
+    uint32 total_calls_count = 9;
+    uint32 total_checks_count = 10;
+    uint32 test_calls_count = 11;
+    uint32 call_checks_count = 12;
+    uint32 shrink_amount = 13;
+  }
 
+  message Msg {
     oneof msg {
       // Try call to SUT
       Call call = 1;
@@ -216,15 +219,11 @@ message Srv {
   Msg msg = 1;
 }
 
-
-
-
-
-
 message SpecIR {
   Schemas schemas = 1;
   // All endpoints are here.
-  // Start at 1 then increases monotonously. 0 (zero) is reserved for bug finding.
+  // Start at 1 then increases monotonously. 0 (zero) is reserved for bug
+  // finding.
   map<uint32, Endpoint> endpoints = 2;
 }
 
@@ -330,7 +329,8 @@ message Schema {
     }
     repeated Type types = 1;  // default: []
 
-    repeated google.protobuf.Value enum = 2;
+    repeated google.protobuf.Value enum
+    = 2;
 
     // type: string
     enum Format {

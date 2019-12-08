@@ -20,7 +20,7 @@ var _ modeler.Interface = (*oa3)(nil)
 type T = oa3
 
 type oa3 struct {
-	fm.Clt_Msg_Fuzz_Model_OpenAPIv3
+	fm.Clt_Fuzz_Model_OpenAPIv3
 
 	resetter resetter.Interface
 
@@ -30,19 +30,19 @@ type oa3 struct {
 }
 
 // ToProto TODO
-func (m *oa3) ToProto() *fm.Clt_Msg_Fuzz_Model {
+func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 	m.Spec = m.vald.Spec
-	return &fm.Clt_Msg_Fuzz_Model{
-		Model: &fm.Clt_Msg_Fuzz_Model_Openapiv3{
-			&m.Clt_Msg_Fuzz_Model_OpenAPIv3,
+	return &fm.Clt_Fuzz_Model{
+		Model: &fm.Clt_Fuzz_Model_Openapiv3{
+			&m.Clt_Fuzz_Model_OpenAPIv3,
 		},
 	}
 }
 
 // FromProto TODO
-func (m *oa3) FromProto(p *fm.Clt_Msg_Fuzz_Model) error {
+func (m *oa3) FromProto(p *fm.Clt_Fuzz_Model) error {
 	if mm := p.GetOpenapiv3(); m != nil {
-		m = &oa3{Clt_Msg_Fuzz_Model_OpenAPIv3: *mm}
+		m = &oa3{Clt_Fuzz_Model_OpenAPIv3: *mm}
 		m.vald.Spec = m.Spec // TODO? merge vald with oa3
 		return nil
 	}

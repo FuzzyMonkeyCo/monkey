@@ -13,7 +13,7 @@ import (
 )
 
 func (rt *runtime) recvFuzzProgress() error {
-	log.Println("[DBG] receiving fm.Srv_Msg_FuzzProgress_...")
+	log.Println("[DBG] receiving fm.Srv_Msg_FuzzProgress...")
 	srv, err := rt.client.Recv()
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -23,7 +23,7 @@ func (rt *runtime) recvFuzzProgress() error {
 	log.Println("[DBG] >>>", srv)
 	msg := srv.GetMsg()
 	switch msg.GetMsg().(type) {
-	case *fm.Srv_Msg_FuzzProgress_:
+	case *fm.Srv_Msg_FuzzProgress:
 		log.Println("[NFO] handling srvprogress")
 		stts := msg.GetFuzzProgress()
 		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
@@ -45,7 +45,7 @@ func (rt *runtime) recvFuzzProgress() error {
 	}
 }
 
-func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
+func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Showf(format, s)
@@ -72,7 +72,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallResponseRaw_{
+			Msg: &fm.Clt_Msg_CallResponseRaw{
 				CallResponseRaw: output,
 			}}}); err != nil {
 		log.Println("[ERR]", err)
@@ -97,9 +97,9 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	// Actionable response data parsed...
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallVerifProgress_{
-				CallVerifProgress: &fm.Clt_Msg_CallVerifProgress{
-					Status:   fm.Clt_Msg_CallVerifProgress_data,
+			Msg: &fm.Clt_Msg_CallVerifProgress{
+				CallVerifProgress: &fm.Clt_CallVerifProgress{
+					Status:   fm.Clt_CallVerifProgress_data,
 					Response: callResponse,
 				}}}}); err != nil {
 		log.Println("[ERR]", err)
@@ -114,8 +114,8 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 	// Through all checks: we're done
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_CallVerifProgress_{
-				CallVerifProgress: &fm.Clt_Msg_CallVerifProgress{},
+			Msg: &fm.Clt_Msg_CallVerifProgress{
+				CallVerifProgress: &fm.Clt_CallVerifProgress{},
 			}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -131,17 +131,17 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Msg_Call) (err error) {
 func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err error) {
 	for {
 		var lambda modeler.CheckerFunc
-		v := &fm.Clt_Msg_CallVerifProgress{}
+		v := &fm.Clt_CallVerifProgress{}
 		v.Name, lambda = cllr.CheckFirst()
 		if lambda == nil {
 			return
 		}
 		log.Println("[NFO] checking", v.Name)
 
-		v.Status = fm.Clt_Msg_CallVerifProgress_start
+		v.Status = fm.Clt_CallVerifProgress_start
 		if err = rt.client.Send(&fm.Clt{
 			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress_{
+				Msg: &fm.Clt_Msg_CallVerifProgress{
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
@@ -151,22 +151,22 @@ func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err 
 		success, failure := lambda()
 		switch {
 		case success != "":
-			v.Status = fm.Clt_Msg_CallVerifProgress_success
+			v.Status = fm.Clt_CallVerifProgress_success
 			v.Reason = []string{success}
 			rt.progress.CheckPassed(success)
 		case len(failure) != 0:
-			v.Status = fm.Clt_Msg_CallVerifProgress_failure
+			v.Status = fm.Clt_CallVerifProgress_failure
 			v.Reason = failure
 			log.Println(append([]string{"[NFO]"}, failure...))
 			rt.progress.CheckFailed(failure)
 		default:
-			v.Status = fm.Clt_Msg_CallVerifProgress_skipped
+			v.Status = fm.Clt_CallVerifProgress_skipped
 			rt.progress.CheckSkipped(v.Name)
 		}
 
 		if err = rt.client.Send(&fm.Clt{
 			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress_{
+				Msg: &fm.Clt_Msg_CallVerifProgress{
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
@@ -176,7 +176,7 @@ func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err 
 			return
 		}
 
-		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
+		if v.Status == fm.Clt_CallVerifProgress_failure {
 			err = modeler.ErrCheckFailed
 			log.Println("[ERR]", err)
 			return
@@ -196,14 +196,14 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 	rt.thread.Print = func(_ *starlark.Thread, msg string) { rt.progress.Showf("%s", msg) }
 
 	for i, trggr := range rt.triggers {
-		v := &fm.Clt_Msg_CallVerifProgress{}
+		v := &fm.Clt_CallVerifProgress{}
 		v.Name = fmt.Sprintf("user property #%d: %q", i, trggr.name.GoString())
 		log.Println("[NFO] checking", v.Name)
 
-		v.Status = fm.Clt_Msg_CallVerifProgress_start
+		v.Status = fm.Clt_CallVerifProgress_start
 		if err = rt.client.Send(&fm.Clt{
 			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress_{
+				Msg: &fm.Clt_Msg_CallVerifProgress{
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
@@ -241,14 +241,14 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 					if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err == nil {
 						switch newModelState := newModelState.(type) {
 						case starlark.NoneType:
-							v.Status = fm.Clt_Msg_CallVerifProgress_success
+							v.Status = fm.Clt_CallVerifProgress_success
 							rt.progress.CheckPassed(v.Name)
 						case *modelState:
-							v.Status = fm.Clt_Msg_CallVerifProgress_success
+							v.Status = fm.Clt_CallVerifProgress_success
 							rt.modelState = newModelState
 							rt.progress.CheckPassed(v.Name)
 						default:
-							v.Status = fm.Clt_Msg_CallVerifProgress_failure
+							v.Status = fm.Clt_CallVerifProgress_failure
 							err = fmt.Errorf(
 								"expected action %q (of %s) to return a ModelState, got: %T %v",
 								trggr.act.Name(), v.Name, newModelState, newModelState,
@@ -258,24 +258,24 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 							rt.progress.CheckFailed(v.Reason)
 						}
 					} else {
-						v.Status = fm.Clt_Msg_CallVerifProgress_failure
+						v.Status = fm.Clt_CallVerifProgress_failure
 						maybeEvalError(v, err)
 						log.Println("[NFO]", err)
 						rt.progress.CheckFailed(v.Reason)
 					}
 				} else {
-					v.Status = fm.Clt_Msg_CallVerifProgress_skipped
+					v.Status = fm.Clt_CallVerifProgress_skipped
 					rt.progress.CheckSkipped(v.Name)
 				}
 			} else {
-				v.Status = fm.Clt_Msg_CallVerifProgress_failure
+				v.Status = fm.Clt_CallVerifProgress_failure
 				err = fmt.Errorf("expected predicate to return a Bool, got: %v", shouldBeBool)
 				v.Reason = strings.Split(err.Error(), "\n")
 				log.Println("[NFO]", err)
 				rt.progress.CheckFailed(v.Reason)
 			}
 		} else {
-			v.Status = fm.Clt_Msg_CallVerifProgress_failure
+			v.Status = fm.Clt_CallVerifProgress_failure
 			maybeEvalError(v, err)
 			log.Println("[NFO]", err)
 			rt.progress.CheckFailed(v.Reason)
@@ -283,7 +283,7 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 
 		if err = rt.client.Send(&fm.Clt{
 			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_CallVerifProgress_{
+				Msg: &fm.Clt_Msg_CallVerifProgress{
 					CallVerifProgress: v,
 				}}}); err != nil {
 			log.Println("[ERR]", err)
@@ -293,7 +293,7 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 			return
 		}
 
-		if v.Status == fm.Clt_Msg_CallVerifProgress_failure {
+		if v.Status == fm.Clt_CallVerifProgress_failure {
 			err = modeler.ErrCheckFailed
 			log.Println("[ERR]", err)
 			return
@@ -302,7 +302,7 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 	return
 }
 
-func maybeEvalError(v *fm.Clt_Msg_CallVerifProgress, err error) {
+func maybeEvalError(v *fm.Clt_CallVerifProgress, err error) {
 	if e, ok := err.(*starlark.EvalError); ok {
 		// TODO: think about a dedicated type
 		v.Reason = strings.Split(e.Backtrace(), "\n")

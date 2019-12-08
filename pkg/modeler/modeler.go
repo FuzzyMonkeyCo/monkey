@@ -18,8 +18,8 @@ var (
 
 // Interface describes checkable models
 type Interface interface {
-	ToProto() *fm.Clt_Msg_Fuzz_Model
-	FromProto(*fm.Clt_Msg_Fuzz_Model) error
+	ToProto() *fm.Clt_Fuzz_Model
+	FromProto(*fm.Clt_Fuzz_Model) error
 
 	NewFromKwargs(starlark.StringDict) (Interface, *Error)
 
@@ -35,7 +35,7 @@ type Interface interface {
 	ValidateAgainstSchema(string, []byte) error
 	Validate(uint32, interface{}) []string
 
-	NewCaller(*fm.Srv_Msg_Call, func(string, ...interface{})) (Caller, error)
+	NewCaller(*fm.Srv_Call, func(string, ...interface{})) (Caller, error)
 
 	// Check(...) ...
 }

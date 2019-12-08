@@ -18,7 +18,7 @@ type CheckerFunc func() (string, []string)
 
 // Caller TODO
 type Caller interface {
-	ToProto() *fm.Clt_Msg_CallResponseRaw
+	ToProto() *fm.Clt_CallResponseRaw
 
 	Do(context.Context) error
 

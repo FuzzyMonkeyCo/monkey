@@ -60,10 +60,10 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	log.Printf("[DBG] 🡱  initial msg...")
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_Fuzz_{
-				Fuzz: &fm.Clt_Msg_Fuzz{
+			Msg: &fm.Clt_Msg_Fuzz{
+				Fuzz: &fm.Clt_Fuzz{
 					Resetter:  mdl.GetResetter().ToProto(),
-					ModelKind: fm.Clt_Msg_Fuzz_OpenAPIv3,
+					ModelKind: fm.Clt_Fuzz_OpenAPIv3,
 					Model:     mdl.ToProto(),
 					Usage:     os.Args,
 					Seed:      []byte{42, 42, 42},
@@ -94,23 +94,24 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		log.Println("[DBG] >>>", srv)
 		msg := srv.GetMsg()
 		switch msg.GetMsg().(type) {
-		case *fm.Srv_Msg_Call_:
-			log.Println("[NFO] handling srvcall")
+		case *fm.Srv_Msg_Call:
+			log.Println("[NFO] handling Srv_Msg_Call")
 			cll := msg.GetCall()
 			// rt.progress.Before(ui.Call)
 			if err = rt.call(ctx, cll); err != nil {
 				break
 			}
-			log.Println("[NFO] done handling srvcall")
+			log.Println("[NFO] done handling Srv_Msg_Call")
 			if err = rt.recvFuzzProgress(); err != nil {
 				break
 			}
 		case *fm.Srv_Msg_Reset_:
-			log.Println("[NFO] handling srvreset")
+			log.Println("[NFO] handling Srv_Msg_Reset_")
 			rst := msg.GetReset_()
 			if err = rt.reset(ctx, rst); err != nil {
 				break
 			}
+			log.Println("[NFO] done handling Srv_Msg_Reset_")
 			if err = rt.recvFuzzProgress(); err != nil {
 				break
 			}

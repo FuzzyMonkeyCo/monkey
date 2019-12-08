@@ -30,15 +30,15 @@ var (
 
 // Shell implements resetter.Interface
 type Shell struct {
-	fm.Clt_Msg_Fuzz_Resetter_Shell
+	fm.Clt_Fuzz_Resetter_Shell
 	isNotFirstRun bool
 }
 
 // ToProto TODO
-func (s *Shell) ToProto() *fm.Clt_Msg_Fuzz_Resetter {
-	return &fm.Clt_Msg_Fuzz_Resetter{
-		Resetter: &fm.Clt_Msg_Fuzz_Resetter_Shell_{
-			&s.Clt_Msg_Fuzz_Resetter_Shell,
+func (s *Shell) ToProto() *fm.Clt_Fuzz_Resetter {
+	return &fm.Clt_Fuzz_Resetter{
+		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
+			&s.Clt_Fuzz_Resetter_Shell,
 		}}
 }
 

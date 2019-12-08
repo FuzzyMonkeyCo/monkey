@@ -13,12 +13,12 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Msg_Reset) error {
+func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Reset) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress_{
-				ResetProgress: &fm.Clt_Msg_ResetProgress{
-					Status: fm.Clt_Msg_ResetProgress_started,
+			Msg: &fm.Clt_Msg_ResetProgress{
+				ResetProgress: &fm.Clt_ResetProgress{
+					Status: fm.Clt_ResetProgress_started,
 				}}}}); err != nil {
 		log.Println("[ERR]", err)
 		return err
@@ -43,9 +43,9 @@ func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Msg_Reset) error {
 
 		if err2 := rt.client.Send(&fm.Clt{
 			Msg: &fm.Clt_Msg{
-				Msg: &fm.Clt_Msg_ResetProgress_{
-					ResetProgress: &fm.Clt_Msg_ResetProgress{
-						Status: fm.Clt_Msg_ResetProgress_failed,
+				Msg: &fm.Clt_Msg_ResetProgress{
+					ResetProgress: &fm.Clt_ResetProgress{
+						Status: fm.Clt_ResetProgress_failed,
 						TsDiff: elapsed,
 						Reason: reason,
 					}}}}); err != nil {
@@ -57,9 +57,9 @@ func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Msg_Reset) error {
 
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Msg{
-			Msg: &fm.Clt_Msg_ResetProgress_{
-				ResetProgress: &fm.Clt_Msg_ResetProgress{
-					Status: fm.Clt_Msg_ResetProgress_ended,
+			Msg: &fm.Clt_Msg_ResetProgress{
+				ResetProgress: &fm.Clt_ResetProgress{
+					Status: fm.Clt_ResetProgress_ended,
 					TsDiff: elapsed,
 				}}}}); err != nil {
 		log.Println("[ERR]", err)

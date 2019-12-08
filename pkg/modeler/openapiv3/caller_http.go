@@ -39,8 +39,8 @@ type tCapHTTP struct {
 	req, rep []byte
 
 	httpReq  *http.Request
-	reqProto *fm.Clt_Msg_CallRequestRaw_Input_HttpRequest
-	repProto *fm.Clt_Msg_CallResponseRaw_Output_HttpResponse
+	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
+	repProto *fm.Clt_CallResponseRaw_Output_HttpResponse
 
 	reqJSON, repJSON *types.Value
 
@@ -79,9 +79,9 @@ type tCapHTTP struct {
 	matchedSID  sid
 }
 
-func (c *tCapHTTP) ToProto() *fm.Clt_Msg_CallResponseRaw {
-	return &fm.Clt_Msg_CallResponseRaw{Output: &fm.Clt_Msg_CallResponseRaw_Output{
-		Output: &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_{
+func (c *tCapHTTP) ToProto() *fm.Clt_CallResponseRaw {
+	return &fm.Clt_CallResponseRaw{Output: &fm.Clt_CallResponseRaw_Output{
+		Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
 			HttpResponse: c.repProto,
 		}}}
 }
@@ -100,7 +100,7 @@ func (c *tCapHTTP) CheckFirst() (string, modeler.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func (m *oa3) NewCaller(msg *fm.Srv_Msg_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
+func (m *oa3) NewCaller(msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
 		showf: showf,
 	}
@@ -236,7 +236,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 }
 
 func (c *tCapHTTP) request(r *http.Request) (err error) {
-	c.reqProto = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest{
+	c.reqProto = &fm.Clt_CallRequestRaw_Input_HttpRequest{
 		Method: r.Method,
 		Url:    r.URL.String(),
 	}
@@ -245,17 +245,17 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 	for key, _ := range headers {
 		switch key {
 		case headerContentLength:
-			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
 			}
 		case headerTransferEncoding:
 			values := make([]string, len(r.TransferEncoding))
 			copy(values, r.TransferEncoding)
-			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: values,
 			}
 		case headerHost:
-			headers[key] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: []string{r.Host},
 			}
 		default:
@@ -286,7 +286,7 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 }
 
 func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (err error) {
-	c.repProto = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse{
+	c.repProto = &fm.Clt_CallResponseRaw_Output_HttpResponse{
 		StatusCode: uint32(r.StatusCode), // TODO: check bounds
 		Reason:     r.Status,
 		Elapsed:    uint32(elapsed),
@@ -299,13 +299,13 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 	for key, _ := range headers {
 		switch key {
 		case headerContentLength:
-			headers[key] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
 			}
 		case headerTransferEncoding:
 			values := make([]string, len(r.TransferEncoding))
 			copy(values, r.TransferEncoding)
-			headers[key] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: values,
 			}
 		default:
@@ -379,7 +379,7 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	return
 }
 
-func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Msg_Call) (err error) {
+func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
 	if body := input.GetBody(); len(body) != 0 {
 		b := bytes.NewReader(body)
@@ -451,16 +451,16 @@ func (c *tCapHTTP) Do(ctx context.Context) (err error) {
 	return
 }
 
-func fromReqHeader(src http.Header) map[string]*fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues {
+func fromReqHeader(src http.Header) map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues {
 	if src == nil {
 		return nil
 	}
-	dst := make(map[string]*fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues, len(src))
+	dst := make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(src))
 	for h, hs := range src {
 		if len(hs) != 0 {
 			vs := make([]string, len(hs))
 			copy(vs, hs)
-			dst[h] = &fm.Clt_Msg_CallRequestRaw_Input_HttpRequest_HeaderValues{
+			dst[h] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: vs,
 			}
 		}
@@ -468,16 +468,16 @@ func fromReqHeader(src http.Header) map[string]*fm.Clt_Msg_CallRequestRaw_Input_
 	return dst
 }
 
-func fromRepHeader(src http.Header) map[string]*fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues {
+func fromRepHeader(src http.Header) map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues {
 	if src == nil {
 		return nil
 	}
-	dst := make(map[string]*fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues, len(src))
+	dst := make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(src))
 	for h, hs := range src {
 		if len(hs) != 0 {
 			vs := make([]string, len(hs))
 			copy(vs, hs)
-			dst[h] = &fm.Clt_Msg_CallResponseRaw_Output_HttpResponse_HeaderValues{
+			dst[h] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: vs,
 			}
 		}

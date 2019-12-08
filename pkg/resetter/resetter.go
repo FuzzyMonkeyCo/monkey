@@ -10,7 +10,7 @@ import (
 
 // Interface describes ways to reset the system under test to a known initial state
 type Interface interface {
-	ToProto() *fm.Clt_Msg_Fuzz_Resetter
+	ToProto() *fm.Clt_Fuzz_Resetter
 
 	ExecStart(context.Context, fm.FuzzyMonkey_DoClient) error
 	ExecReset(context.Context, fm.FuzzyMonkey_DoClient) error

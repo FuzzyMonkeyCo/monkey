@@ -56,7 +56,7 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	}
 	as.ColorERR.Printf(">>> registeredIRModels: %+v\n", registeredIRModels)
 	for modelName, mdlr := range registeredIRModels {
-		if _, ok := fm.Clt_Msg_Fuzz_ModelKind_value[modelName]; !ok {
+		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {
 			err = fmt.Errorf("unexpected model kind: %q", modelName)
 			return
 		}
