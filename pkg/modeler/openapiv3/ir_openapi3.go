@@ -376,7 +376,7 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	// "items"
 	if sItems := s.Items; nil != sItems {
 		schema["type"] = ensureSchemaType(schema["type"], "array")
-		if sItems.Value.IsEmpty() {
+		if sItems.Value != nil && sItems.Value.IsEmpty() {
 			schema["items"] = []schemaJSON{}
 		} else {
 			schema["items"] = []schemaJSON{vald.schemaOrRefFromOA3(sItems)}

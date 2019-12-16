@@ -41,9 +41,9 @@ func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 
 // FromProto TODO
 func (m *oa3) FromProto(p *fm.Clt_Fuzz_Model) error {
-	if mm := p.GetOpenapiv3(); m != nil {
-		m = &oa3{Clt_Fuzz_Model_OpenAPIv3: *mm}
-		m.vald.Spec = m.Spec // TODO? merge vald with oa3
+	if mm := p.GetOpenapiv3(); mm != nil {
+		m.Clt_Fuzz_Model_OpenAPIv3 = *mm
+		m.vald = &validator{Spec: mm.Spec} // TODO? merge vald with oa3
 		return nil
 	}
 	return fmt.Errorf("unexpected model type: %T", p.GetModel())
