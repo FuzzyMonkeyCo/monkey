@@ -52,15 +52,15 @@ func NewMonkey(name string) (rt *runtime, err error) {
 
 	rt = &runtime{
 		models:  make(map[string]modeler.Interface, 1),
-		globals: make(starlark.StringDict, len(rt.builtins())+len(registeredIRModels)),
+		globals: make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
-	as.ColorERR.Printf(">>> registeredIRModels: %+v\n", registeredIRModels)
-	for modelName, mdlr := range registeredIRModels {
+	as.ColorERR.Printf(">>> registeredModelers: %+v\n", registeredModelers)
+	for modelName, mdl := range registeredModelers {
 		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {
 			err = fmt.Errorf("unexpected model kind: %q", modelName)
 			return
 		}
-		builtin := rt.modelMaker(modelName, mdlr)
+		builtin := rt.modelMaker(modelName, mdl.NewFromKwargs)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
 

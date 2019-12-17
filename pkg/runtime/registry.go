@@ -7,24 +7,17 @@ import (
 	"unicode"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	modeler_openapiv3 "github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
-var registeredIRModels = make(map[string]newModelerFunc)
-
-type newModelerFunc func(starlark.StringDict) (modeler.Interface, *modeler.Error)
-
-// RegisterModeler TODO
-func RegisterModeler(name string, mdlr modeler.Interface) {
-	if _, ok := registeredIRModels[name]; ok {
-		panic(fmt.Sprintf("modeler %q is already registered", name))
-	}
-	registeredIRModels[name] = mdlr.NewFromKwargs
+var registeredModelers = map[string]modeler.Interface{
+	"OpenAPIv3": (*modeler_openapiv3.T)(nil),
 }
 
-func (rt *runtime) modelMaker(modelerName string, mdlr newModelerFunc) builtin {
+func (rt *runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 	return func(
 		th *starlark.Thread,
 		b *starlark.Builtin,

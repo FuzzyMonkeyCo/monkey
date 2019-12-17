@@ -40,6 +40,9 @@ type Interface interface {
 	// Check(...) ...
 }
 
+// Func TODO
+type Func func(starlark.StringDict) (Interface, *Error)
+
 var _ error = (*Error)(nil)
 
 // Error TODO

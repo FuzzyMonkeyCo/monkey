@@ -7,13 +7,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	// "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"go.starlark.net/starlark"
 )
-
-// func init() {
-// 	runtime.RegisterModeler("OpenAPIv3", (*oa3)(nil))
-// }
 
 var _ modeler.Interface = (*oa3)(nil)
 
