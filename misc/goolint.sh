@@ -9,7 +9,7 @@ E() {
     errors=$(( errors + code ))
 }
 
-if ! which ag >/dev/null 2>&1; then
+if ! command -v ag >/dev/null 2>&1; then
     echo Skipping: silver searcher unavailable
     exit 0
 fi

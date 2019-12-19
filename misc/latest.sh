@@ -73,11 +73,11 @@ curl -# --fail --location --output "$sha" "$url".sha256.txt
 tmpdir="$(dirname "$tmp")"
 ( cd "$tmpdir"
   mv "$tmp" "$exe"
-  if   which sha256sum >/dev/null 2>&1; then
+  if   command -v sha256sum >/dev/null 2>&1; then
       sha256sum --check --strict "$sha"
-  elif which shasum >/dev/null 2>&1; then
+  elif command -v shasum >/dev/null 2>&1; then
       shasum -a 256 -c "$sha"
-  elif which openssl >/dev/null 2>&1; then
+  elif command -v openssl >/dev/null 2>&1; then
       sum="$(openssl sha256 "$exe" | cut -d= -f2)"
       grep -F "$sum" "$sha" >/dev/null 2>&1
   else
