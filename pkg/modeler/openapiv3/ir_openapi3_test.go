@@ -52,12 +52,12 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NotEmpty(t, jsn0)
 
 			t.Logf("build & use validator from proto")
-			var m1_ fm.Clt_Fuzz_Model
-			err = proto.Unmarshal(bin0, &m1_)
+			var m1Prime fm.Clt_Fuzz_Model
+			err = proto.Unmarshal(bin0, &m1Prime)
 			require.NoError(t, err)
-			require.NotNil(t, &m1_)
+			require.NotNil(t, &m1Prime)
 			m1 := &oa3{}
-			err = m1.FromProto(&m1_)
+			err = m1.FromProto(&m1Prime)
 			require.NoError(t, err)
 			require.NotNil(t, m1.Clt_Fuzz_Model_OpenAPIv3)
 			require.NotNil(t, m1.vald)

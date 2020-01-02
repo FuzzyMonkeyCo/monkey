@@ -6,50 +6,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 )
 
-// func (act *FuzzProgress) exec(mnk *Monkey) (err error) {
-// 	log.Printf("[ERR] >>> FuzzProgress %+v", act)
-// 	last := mnk.progress.lastLane
-// 	mnk.progress.lastLane = *act
-// 	var str string
-
-// 	// if last.GetTotalTestsCount() == 0 {
-// 	// 	str = ColorNFO.Sprint("[")
-// 	// }
-
-// 	diff := &FuzzProgress{
-// 		TotalTestsCount:  act.GetTotalTestsCount() - last.GetTotalTestsCount(),
-// 		TotalCallsCount:  act.GetTotalCallsCount() - last.GetTotalCallsCount(),
-// 		TotalChecksCount: act.GetTotalChecksCount() - last.GetTotalChecksCount(),
-// 		TestCallsCount:   act.GetTestCallsCount() - last.GetTestCallsCount(),
-// 		CallChecksCount:  act.GetCallChecksCount() - last.GetCallChecksCount(),
-// 	}
-// 	log.Printf("[ERR] diff %+v", diff)
-
-// 	if act.GetLastCheckSuccess() {
-// 		str += "•"
-// 	} else if act.GetLastCheckFailure() {
-// 		str += "!"
-// 	}
-// 	if act.GetLastCallSuccess() {
-// 		str += ColorWRN.Sprint("✓")
-// 	} else if act.GetLastCallFailure() {
-// 		str += ColorERR.Sprint("⨯")
-// 	}
-// 	// if act.GetSuccess() {
-// 	// 	str += ColorWRN.Sprint("PASSED") + ColorNFO.Sprint("]") + "\n"
-// 	// } else if act.GetFailure() {
-// 	// 	str += ColorERR.Sprint("FAILED") + ColorNFO.Sprint("]") + "\n"
-// 	// }
-
-// 	// case act.GetTotalTestsCount() == 0:
-// 	// 	// Avoids getting in below case
-// 	// case act.GetTotalTestsCount() != mnk.progress.lastLane.GetTotalTestsCount():
-// 	// 	str += "]["
-
-// 	// fmt.Print(str)
-// 	return
-// }
-
 // CampaignSummary TODO
 func (p *Cli) CampaignSummary() (success bool) {
 	tests := plural("test", p.totalTestsCount)

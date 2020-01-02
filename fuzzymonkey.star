@@ -13,7 +13,7 @@ else:
 print("Now testing {}.".format(spec))
 
 OpenAPIv3(
-    Name = "my_model",
+    name = "my_model",
     file = spec,
     host = host,
     # header_authorization = 'Bearer ' + ...,

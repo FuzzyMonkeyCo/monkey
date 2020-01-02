@@ -71,7 +71,7 @@ message Clt {
     Model model = 3;
     repeated string usage = 4;
     bytes seed = 5;
-    uint32 intensity = 6;
+    uint32 ntensity = 6;
     repeated uint32 EIDs = 7;
   }
 

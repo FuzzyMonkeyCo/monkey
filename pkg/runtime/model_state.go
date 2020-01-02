@@ -1,6 +1,8 @@
 package runtime
 
 import (
+	"log"
+
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 )
@@ -26,12 +28,14 @@ func (s *modelState) Delete(k starlark.Value) (starlark.Value, bool, error) {
 	if err := slValuePrintableASCII(k); err != nil {
 		return nil, false, err
 	}
+	log.Printf("[NFO] Delete(%v)", k)
 	return s.d.Delete(k)
 }
 func (s *modelState) Get(k starlark.Value) (starlark.Value, bool, error) {
 	if err := slValuePrintableASCII(k); err != nil {
 		return nil, false, err
 	}
+	log.Printf("[NFO] Get(%v)", k)
 	return s.d.Get(k)
 }
 func (s *modelState) Items() []starlark.Tuple    { return s.d.Items() }
@@ -42,6 +46,7 @@ func (s *modelState) SetKey(k, v starlark.Value) error {
 	if err := slValuePrintableASCII(k); err != nil {
 		return err
 	}
+	log.Printf("[NFO] SetKey(%v, %v)", k, v)
 	return s.d.SetKey(k, v)
 }
 func (s *modelState) String() string                           { return s.d.String() }

@@ -254,7 +254,6 @@ func actualMain() int {
 		return code.Failed
 	}
 
-	rt.Ntensity = args.N
 	if args.N == 0 {
 		as.ColorERR.Println("No tests to run.")
 		return code.Failed
@@ -268,7 +267,7 @@ func actualMain() int {
 	}
 	defer closer()
 
-	if err := rt.Fuzz(ctx); err != nil {
+	if err := rt.Fuzz(ctx, args.N); err != nil {
 		log.Println("[ERR]", err)
 		return retryOrReportThenCleanup(err)
 	}

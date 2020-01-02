@@ -42,6 +42,8 @@ type tCapHTTP struct {
 	repProto *fm.Clt_CallResponseRaw_Output_HttpResponse
 
 	reqJSON, repJSON *types.Value
+	repJSONRaw       interface{}
+	repJSONErr       error
 
 	elapsed time.Duration
 	// TODO: pick from these
@@ -103,7 +105,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string
 	m.tcap = &tCapHTTP{
 		showf: showf,
 	}
-	if err := m.callinputProtoToHttpReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
+	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -132,12 +134,18 @@ func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
 }
 
 func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
-	// if m.tcap.repProto.Body != nil {
-	// 	f = append(f, "response body is empty")
-	// 	return
-	// }
+	if m.tcap.repProto.Body == nil {
+		f = append(f, "response body is empty")
+		return
+	}
 
-	// TODO: get Unmarshal error of request() method & return it
+	if m.tcap.repJSONErr != nil {
+		f = append(f, m.tcap.repJSONErr.Error())
+		return
+	}
+
+	m.tcap.repJSON = enumFromGo(m.tcap.repJSONRaw)
+	m.tcap.repJSONRaw = nil
 	s = "response is valid JSON"
 	return
 }
@@ -272,13 +280,12 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 			return
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqProto.Body))
-		// TODO: move decoding to one of CheckFirst
 		var jsn interface{}
-		if err = json.Unmarshal(c.reqProto.Body, &jsn); err != nil {
-			log.Println("[ERR]", err)
-			return
+		if e := json.Unmarshal(c.reqProto.Body, &jsn); e != nil {
+			log.Println("[NFO] request wasn't proper JSON:", e)
+		} else {
+			c.reqJSON = enumFromGo(jsn)
 		}
-		c.reqJSON = enumFromGo(jsn)
 	}
 
 	return
@@ -322,13 +329,7 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 			return
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
-		// TODO: move decoding to one of CheckFirst
-		var jsn interface{}
-		if err = json.Unmarshal(c.repProto.Body, &jsn); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		c.repJSON = enumFromGo(jsn)
+		c.repJSONErr = json.Unmarshal(c.repProto.Body, &c.repJSONRaw)
 	}
 
 	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
@@ -340,8 +341,6 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
-	// FIXME: should we really do json decoding here + encoding as well?
-
 	if err = c.request(req); err != nil {
 		return
 	}
@@ -378,7 +377,7 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	return
 }
 
-func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
+func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
 	if body := input.GetBody(); len(body) != 0 {
 		b := bytes.NewReader(body)

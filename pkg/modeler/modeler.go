@@ -8,6 +8,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
 )
 
@@ -34,7 +35,7 @@ type Interface interface {
 	FilterEndpoints([]string) ([]uint32, error)
 
 	ValidateAgainstSchema(string, []byte) error
-	Validate(uint32, interface{}) []string
+	Validate(uint32, *types.Value) []string
 
 	NewCaller(context.Context, *fm.Srv_Call, func(string, ...interface{})) (Caller, error)
 

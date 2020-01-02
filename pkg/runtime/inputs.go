@@ -6,7 +6,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
-func (rt *runtime) InputsCount() int {
+func (rt *Runtime) InputsCount() int {
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
 		break
@@ -15,7 +15,7 @@ func (rt *runtime) InputsCount() int {
 	return mdl.InputsCount()
 }
 
-func (rt *runtime) WriteAbsoluteReferences(w io.Writer) {
+func (rt *Runtime) WriteAbsoluteReferences(w io.Writer) {
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
 		break
@@ -24,7 +24,7 @@ func (rt *runtime) WriteAbsoluteReferences(w io.Writer) {
 	mdl.WriteAbsoluteReferences(w)
 }
 
-func (rt *runtime) ValidateAgainstSchema(absRef string, data []byte) (err error) {
+func (rt *Runtime) ValidateAgainstSchema(absRef string, data []byte) (err error) {
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
 		break

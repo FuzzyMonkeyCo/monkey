@@ -13,7 +13,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context) error {
+func (rt *Runtime) reset(ctx context.Context) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{

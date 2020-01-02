@@ -1,5 +1,5 @@
 package runtime
 
-func (rt *runtime) ProgressCampaignSummary() bool {
+func (rt *Runtime) ProgressCampaignSummary() bool {
 	return rt.progress.CampaignSummary()
 }

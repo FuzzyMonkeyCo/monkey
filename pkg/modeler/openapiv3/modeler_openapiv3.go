@@ -7,6 +7,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
 )
 
@@ -90,7 +91,7 @@ func (m *oa3) FilterEndpoints(args []string) ([]eid, error) {
 	return m.vald.FilterEndpoints(args)
 }
 
-func (m *oa3) Validate(SID sid, data interface{}) []string {
+func (m *oa3) Validate(SID sid, data *types.Value) []string {
 	return m.vald.Validate(SID, data)
 }
 

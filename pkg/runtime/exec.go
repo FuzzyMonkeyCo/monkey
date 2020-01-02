@@ -21,7 +21,7 @@ func init() {
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
-func (rt *runtime) JustExecREPL() error {
+func (rt *Runtime) JustExecREPL() error {
 	rt.thread.Load = repl.MakeLoad()
 	fmt.Println("Welcome to Starlark (go.starlark.net)")
 	rt.thread.Name = "REPL"
@@ -30,7 +30,7 @@ func (rt *runtime) JustExecREPL() error {
 }
 
 // JustExecStart only executes SUT 'start'
-func (rt *runtime) JustExecStart() error {
+func (rt *Runtime) JustExecStart() error {
 	// FIXME: require a model name
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
@@ -42,7 +42,7 @@ func (rt *runtime) JustExecStart() error {
 }
 
 // JustExecReset only executes SUT 'reset'
-func (rt *runtime) JustExecReset() error {
+func (rt *Runtime) JustExecReset() error {
 	// FIXME: require a model name
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
@@ -54,7 +54,7 @@ func (rt *runtime) JustExecReset() error {
 }
 
 // JustExecStop only executes SUT 'stop'
-func (rt *runtime) JustExecStop() error {
+func (rt *Runtime) JustExecStop() error {
 	// FIXME: require a model name
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {

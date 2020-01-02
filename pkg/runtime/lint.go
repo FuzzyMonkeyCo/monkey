@@ -5,7 +5,7 @@ import (
 )
 
 // Lint TODO
-func (rt *runtime) Lint(showSpec bool) error {
+func (rt *Runtime) Lint(showSpec bool) error {
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
 		break

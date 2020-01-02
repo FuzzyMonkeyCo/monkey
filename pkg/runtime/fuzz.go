@@ -17,7 +17,7 @@ import (
 
 const grpcHost = "do.dev.fuzzymonkey.co:7077"
 
-func (rt *runtime) Dial(ctx context.Context, apiKey string) (
+func (rt *Runtime) Dial(ctx context.Context, apiKey string) (
 	closer func() error,
 	err error,
 ) {
@@ -45,7 +45,7 @@ func (rt *runtime) Dial(ctx context.Context, apiKey string) (
 	return
 }
 
-func (rt *runtime) Fuzz(ctx context.Context) error {
+func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32) error {
 	defer func() {
 		if err := rt.client.CloseSend(); err != nil {
 			log.Println("[ERR]", err)
@@ -58,7 +58,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 	}
 
 	rt.progress = ui.NewCli()
-	rt.progress.MaxTestsCount(rt.Ntensity)
+	rt.progress.MaxTestsCount(ntensity)
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 
 	log.Printf("[DBG] 🡱  initial msg...")
@@ -70,7 +70,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 				Model:     mdl.ToProto(),
 				Usage:     os.Args,
 				Seed:      []byte{42, 42, 42},
-				Intensity: rt.Ntensity,
+				Ntensity:  ntensity,
 				EIDs:      rt.eIds,
 			}}}); err != nil {
 		log.Println("[ERR]", err)
@@ -91,12 +91,10 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 			break
 		}
 
-		log.Println("[DBG] >>>", srv)
 		switch srv.GetMsg().(type) {
 		case *fm.Srv_Call_:
 			log.Println("[NFO] handling fm.Srv_Call_")
 			cll := srv.GetCall()
-			// rt.progress.Before(ui.Call)
 			if err = rt.call(ctx, cll); err != nil {
 				break
 			}

@@ -708,21 +708,14 @@ func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err er
 	return
 }
 
-func (vald *validator) Validate(SID sid, json_data interface{}) []string {
+func (vald *validator) Validate(SID sid, data *types.Value) []string {
 	var sm schemap
 	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)
 
-	data, ok := json_data.(*types.Value)
-	if !ok {
-		panic(fmt.Sprintf("%T", json_data))
-	}
 	toValidate := EnumToGo(data)
 	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, toValidate)
 
-	// FIXME? turns out Compile does not need an $id set?
-	// id := fmt.Sprintf("file:///schema_%d.json", SID)
-	// s["$id"] = id
 	loader := gojsonschema.NewGoLoader(s)
 
 	log.Println("[NFO] compiling schema refs")
@@ -731,10 +724,10 @@ func (vald *validator) Validate(SID sid, json_data interface{}) []string {
 		if ptr := refOrSchema.GetPtr(); ptr != nil {
 			SID, ref := ptr.GetSID(), ptr.GetRef()
 			s := sm.toGo(SID)
-			// log.Printf("[???] SID:%d %s %+v", SID, ref, s)
 			sl := gojsonschema.NewGoLoader(s)
 			if err := refd.AddSchema(ref, sl); err != nil {
-				panic(err)
+				log.Println("[ERR]", err)
+				return []string{err.Error()}
 			}
 		}
 	}

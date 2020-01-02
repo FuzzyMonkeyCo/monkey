@@ -45,7 +45,8 @@ script:
 - ./monkey -h | grep monkey
 - ./monkey --help | grep monkey
 - |
-  # --rm-dist doesn't seem to be doing its job
+  # FIXME: --rm-dist doesn't seem to be doing its job
+  ls -lha ./dist
   rm -rf ./dist
 - |
   git --no-pager diff

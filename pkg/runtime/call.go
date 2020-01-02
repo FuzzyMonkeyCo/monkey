@@ -12,7 +12,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) recvFuzzProgress() error {
+func (rt *Runtime) recvFuzzProgress() error {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
 	srv, err := rt.client.Recv()
 	if err != nil {
@@ -20,7 +20,6 @@ func (rt *runtime) recvFuzzProgress() error {
 		return err
 	}
 
-	log.Println("[DBG] >>>", srv)
 	switch srv.GetMsg().(type) {
 	case *fm.Srv_FuzzProgress_:
 		log.Println("[NFO] handling srvprogress")
@@ -44,7 +43,7 @@ func (rt *runtime) recvFuzzProgress() error {
 	}
 }
 
-func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
+func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Showf(format, s)
@@ -124,7 +123,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 
 // FIXME: turn this into a sync.errgroup with additional tasks being
 // triggers with match-all predicates andalso pure actions
-func (rt *runtime) firstChecks(cllr modeler.Caller) (err error) {
+func (rt *Runtime) firstChecks(cllr modeler.Caller) (err error) {
 	for {
 		var lambda modeler.CheckerFunc
 		v := &fm.Clt_CallVerifProgress{}
@@ -178,7 +177,7 @@ func (rt *runtime) firstChecks(cllr modeler.Caller) (err error) {
 	}
 }
 
-func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
+func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
 	var response starlark.Value
 	//FIXME: replace response copies by calls to this

@@ -17,11 +17,11 @@ import (
 
 const localCfg = "fuzzymonkey.star"
 
-type runtime struct {
+type Runtime struct {
 	binTitle string
 
 	eIds     []uint32
-	Ntensity uint32
+	ntensity uint32
 
 	thread     *starlark.Thread
 	globals    starlark.StringDict
@@ -38,7 +38,7 @@ type runtime struct {
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string) (rt *runtime, err error) {
+func NewMonkey(name string) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("Ook!")
 		log.Println("[ERR]", err)
@@ -51,13 +51,14 @@ func NewMonkey(name string) (rt *runtime, err error) {
 		return
 	}
 
-	rt = &runtime{
+	rt = &Runtime{
 		binTitle: name,
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
-	as.ColorERR.Printf(">>> registeredModelers: %+v\n", registeredModelers)
+	log.Printf("[NFO] %d registered modeler(s):", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
+		log.Printf("[DBG] registered modeler: %q", modelName)
 		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {
 			err = fmt.Errorf("unexpected model kind: %q", modelName)
 			return
@@ -86,32 +87,33 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	return
 }
 
-func (rt *runtime) loadCfg(localCfg string) (err error) {
-	as.ColorERR.Printf(">>> globals: %+v\n", rt.globals)
+func (rt *Runtime) loadCfg(localCfg string) (err error) {
+	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
 	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, nil, rt.globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
 			log.Println("[ERR]", bt)
+			as.ColorWRN.Println(bt)
 			return
 		}
 		log.Println("[ERR]", err)
 		return
 	}
 
-	// Ensure at least one model was defined
-	as.ColorERR.Printf(">>> models: %v\n", rt.models)
+	log.Printf("[DBG] %d defined models: %v", len(rt.models), rt.models)
 	if len(rt.models) == 0 {
 		err = errors.New("no models registered")
 		log.Println("[ERR]", err)
 		return
 	}
 
-	as.ColorERR.Printf(">>> envs: %+v\n", rt.envRead)
-	as.ColorERR.Printf(">>> trigs: %+v\n", rt.triggers)
+	log.Printf("[NFO] froze %d envs: %+v", len(rt.envRead), rt.envRead)
+	log.Printf("[NFO] readying %d triggers", len(rt.triggers))
 
 	for t := range rt.builtins() {
 		delete(rt.globals, t)
 	}
+	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
 
 	const tState = "State"
 	if state, ok := rt.globals[tState]; ok {
@@ -142,7 +144,6 @@ func (rt *runtime) loadCfg(localCfg string) (err error) {
 				log.Println("[ERR]", err)
 				return
 			}
-			as.ColorERR.Printf(">>> modelState: SetKey(%v, %v)\n", k, v)
 			var vv starlark.Value
 			if vv, err = slValueCopy(v); err != nil {
 				log.Println("[ERR]", err)
@@ -171,7 +172,6 @@ func (rt *runtime) loadCfg(localCfg string) (err error) {
 			break
 		}
 	}
-	log.Println("[NFO] starlark cfg globals:", len(rt.globals.Keys()))
-	as.ColorERR.Printf(">>> globals: %#v\n", rt.globals)
+	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
 	return
 }

@@ -14,14 +14,14 @@ type builtin func(
 	[]starlark.Tuple,
 ) (starlark.Value, error)
 
-func (rt *runtime) builtins() map[string]builtin {
+func (rt *Runtime) builtins() map[string]builtin {
 	return map[string]builtin{
 		"Env":                     rt.bEnv,
 		"TriggerActionAfterProbe": rt.bTriggerActionAfterProbe,
 	}
 }
 
-func (rt *runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (rt *Runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var env, def starlark.String
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &env, &def); err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ type triggerActionAfterProbe struct {
 	pred, act *starlark.Function
 }
 
-func (rt *runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+func (rt *Runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var trigger triggerActionAfterProbe
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"name?", &trigger.name,
@@ -53,11 +53,11 @@ func (rt *runtime) bTriggerActionAfterProbe(th *starlark.Thread, b *starlark.Bui
 		return nil, err
 	}
 	// FIXME: enforce arities
-	log.Println("[NFO] registering", b.Name(), trigger)
 	if name := trigger.name.GoString(); name == "" {
 		trigger.name = starlark.String(trigger.act.Name())
 		// FIXME: complain if trigger.Name == "lambda"
 	}
+	log.Printf("[NFO] registering %v %v: %s", b.Name(), trigger.probe, trigger.name)
 	rt.triggers = append(rt.triggers, trigger)
 	return starlark.None, nil
 }

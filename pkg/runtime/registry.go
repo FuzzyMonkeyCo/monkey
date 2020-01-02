@@ -17,7 +17,7 @@ var registeredModelers = map[string]modeler.Interface{
 	"OpenAPIv3": (*modeler_openapiv3.T)(nil),
 }
 
-func (rt *runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
+func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 	return func(
 		th *starlark.Thread,
 		b *starlark.Builtin,
@@ -39,7 +39,7 @@ func (rt *runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 			k, v := kv.Index(0), kv.Index(1)
 			key := k.(starlark.String).GoString()
 
-			if field := "Name"; field == key {
+			if field := "name"; field == key {
 				if name, ok := v.(starlark.String); ok {
 					modelName = name.GoString()
 					continue

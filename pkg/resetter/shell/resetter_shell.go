@@ -38,7 +38,7 @@ type Shell struct {
 func (s *Shell) ToProto() *fm.Clt_Fuzz_Resetter {
 	return &fm.Clt_Fuzz_Resetter{
 		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
-			&s.Clt_Fuzz_Resetter_Shell,
+			Shell: &s.Clt_Fuzz_Resetter_Shell,
 		}}
 }
 
