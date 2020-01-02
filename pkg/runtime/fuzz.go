@@ -41,7 +41,7 @@ func (rt *Runtime) Dial(ctx context.Context, apiKey string) (
 		log.Println("[ERR]", err)
 		return
 	}
-	closer = func() error { return conn.Close() }
+	closer = conn.Close
 	return
 }
 

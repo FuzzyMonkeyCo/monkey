@@ -20,8 +20,7 @@ const localCfg = "fuzzymonkey.star"
 type Runtime struct {
 	binTitle string
 
-	eIds     []uint32
-	ntensity uint32
+	eIds []uint32
 
 	thread     *starlark.Thread
 	globals    starlark.StringDict
