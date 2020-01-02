@@ -1,6 +1,7 @@
 package modeler
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -35,7 +36,7 @@ type Interface interface {
 	ValidateAgainstSchema(string, []byte) error
 	Validate(uint32, interface{}) []string
 
-	NewCaller(*fm.Srv_Call, func(string, ...interface{})) (Caller, error)
+	NewCaller(context.Context, *fm.Srv_Call, func(string, ...interface{})) (Caller, error)
 
 	// Check(...) ...
 }

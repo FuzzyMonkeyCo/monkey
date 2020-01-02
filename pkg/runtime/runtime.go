@@ -15,14 +15,11 @@ import (
 	"go.starlark.net/starlark"
 )
 
-var binTitle string
-
-// Bintitle TODO
-func Bintitle() string {
-	return binTitle
-}
+const localCfg = "fuzzymonkey.star"
 
 type runtime struct {
+	binTitle string
+
 	eIds     []uint32
 	Ntensity uint32
 
@@ -42,8 +39,12 @@ type runtime struct {
 
 // NewMonkey parses and optionally pretty-prints configuration
 func NewMonkey(name string) (rt *runtime, err error) {
-	binTitle = name
-	const localCfg = "fuzzymonkey.star"
+	if name == "" {
+		err = errors.New("Ook!")
+		log.Println("[ERR]", err)
+		return
+	}
+
 	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
 		log.Println("[ERR]", err)
 		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
@@ -51,8 +52,9 @@ func NewMonkey(name string) (rt *runtime, err error) {
 	}
 
 	rt = &runtime{
-		models:  make(map[string]modeler.Interface, 1),
-		globals: make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
+		binTitle: name,
+		models:   make(map[string]modeler.Interface, 1),
+		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
 	as.ColorERR.Printf(">>> registeredModelers: %+v\n", registeredModelers)
 	for modelName, mdl := range registeredModelers {

@@ -9,11 +9,11 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
+	resetter_shell "github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
 	"go.starlark.net/starlark"
 )
 
-func (rt *runtime) reset(ctx context.Context, msg *fm.Srv_Reset) error {
+func (rt *runtime) reset(ctx context.Context) error {
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{

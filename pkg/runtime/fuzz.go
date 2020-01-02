@@ -17,7 +17,7 @@ import (
 
 const grpcHost = "do.dev.fuzzymonkey.co:7077"
 
-func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
+func (rt *runtime) Dial(ctx context.Context, apiKey string) (
 	closer func() error,
 	err error,
 ) {
@@ -33,7 +33,7 @@ func (rt *runtime) Dial(ctx context.Context, ua, apiKey string) (
 	}
 
 	ctx = metadata.AppendToOutgoingContext(ctx,
-		"ua", ua,
+		"ua", rt.binTitle,
 		"apiKey", apiKey,
 	)
 
@@ -57,6 +57,10 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		break
 	}
 
+	rt.progress = ui.NewCli()
+	rt.progress.MaxTestsCount(rt.Ntensity)
+	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
+
 	log.Printf("[DBG] 🡱  initial msg...")
 	if err := rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_Fuzz_{
@@ -72,9 +76,6 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		log.Println("[ERR]", err)
 		return err
 	}
-
-	rt.progress = ui.NewCli()
-	rt.progress.MaxTestsCount(rt.Ntensity)
 
 	var (
 		srv *fm.Srv
@@ -105,8 +106,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 			}
 		case *fm.Srv_Reset_:
 			log.Println("[NFO] handling fm.Srv_Reset_")
-			rst := srv.GetReset_()
-			if err = rt.reset(ctx, rst); err != nil {
+			if err = rt.reset(ctx); err != nil {
 				break
 			}
 			log.Println("[NFO] done handling fm.Srv_Reset_")
@@ -120,7 +120,7 @@ func (rt *runtime) Fuzz(ctx context.Context) error {
 		}
 	}
 
-	log.Println("[DBG] server dialogue ended, cleaning up...")
+	log.Println("[DBG] server dialog ended, cleaning up...")
 	if err2 := mdl.GetResetter().Terminate(ctx, nil); err2 != nil {
 		log.Println("[ERR]", err2)
 		return err2

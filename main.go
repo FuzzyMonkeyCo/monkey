@@ -262,7 +262,7 @@ func actualMain() int {
 	as.ColorNFO.Printf("\n Running tests...\n\n")
 
 	ctx := context.Background()
-	closer, err := rt.Dial(ctx, binTitle, apiKey)
+	closer, err := rt.Dial(ctx, apiKey)
 	if err != nil {
 		return retryOrReport()
 	}

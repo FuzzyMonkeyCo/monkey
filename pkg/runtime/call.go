@@ -55,7 +55,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 		break
 	}
 	var cllr modeler.Caller
-	if cllr, err = mdl.NewCaller(msg, showf); err != nil {
+	if cllr, err = mdl.NewCaller(ctx, msg, showf); err != nil {
 		return
 	}
 	log.Println("[NFO] ▼", msg.GetInput())
@@ -87,7 +87,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	}
 
 	// Just the amount of checks needed to be able to call cllr.Response()
-	if err = rt.firstChecks(mdl, cllr); err != nil {
+	if err = rt.firstChecks(cllr); err != nil {
 		return
 	}
 
@@ -124,7 +124,7 @@ func (rt *runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 
 // FIXME: turn this into a sync.errgroup with additional tasks being
 // triggers with match-all predicates andalso pure actions
-func (rt *runtime) firstChecks(mdl modeler.Interface, cllr modeler.Caller) (err error) {
+func (rt *runtime) firstChecks(cllr modeler.Caller) (err error) {
 	for {
 		var lambda modeler.CheckerFunc
 		v := &fm.Clt_CallVerifProgress{}
@@ -218,7 +218,6 @@ func (rt *runtime) userChecks(callResponse *types.Struct) (err error) {
 		if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err == nil {
 			if triggered, ok := shouldBeBool.(starlark.Bool); ok {
 				if triggered {
-
 					var modelState2, response2 starlark.Value
 					if modelState2, err = slValueCopy(rt.modelState); err != nil {
 						log.Println("[ERR]", err)

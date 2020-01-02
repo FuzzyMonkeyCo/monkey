@@ -17,7 +17,6 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	// "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/gogo/protobuf/types"
 )
 
@@ -100,11 +99,11 @@ func (c *tCapHTTP) CheckFirst() (string, modeler.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func (m *oa3) NewCaller(msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
+func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
 		showf: showf,
 	}
-	if err := m.callinputProtoToHttpReqAndReqStructWithHostAndUA(msg); err != nil {
+	if err := m.callinputProtoToHttpReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
 		return nil, err
 	}
 
@@ -202,7 +201,7 @@ func (c *tCapHTTP) Request() *types.Struct {
 func (c *tCapHTTP) Response() *types.Struct {
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"request": &types.Value{Kind: &types.Value_StructValue{c.Request()}},
+			"request": {Kind: &types.Value_StructValue{c.Request()}},
 			// FIXME? "error"
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),
@@ -273,7 +272,7 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 			return
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqProto.Body))
-		// TOOD: move decoding to one of CheckFirst
+		// TODO: move decoding to one of CheckFirst
 		var jsn interface{}
 		if err = json.Unmarshal(c.reqProto.Body, &jsn); err != nil {
 			log.Println("[ERR]", err)
@@ -323,7 +322,7 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 			return
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
-		// TOOD: move decoding to one of CheckFirst
+		// TODO: move decoding to one of CheckFirst
 		var jsn interface{}
 		if err = json.Unmarshal(c.repProto.Body, &jsn); err != nil {
 			log.Println("[ERR]", err)
@@ -379,7 +378,7 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	return
 }
 
-func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Call) (err error) {
+func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
 	if body := input.GetBody(); len(body) != 0 {
 		b := bytes.NewReader(body)
@@ -398,11 +397,11 @@ func (m *oa3) callinputProtoToHttpReqAndReqStructWithHostAndUA(msg *fm.Srv_Call)
 		}
 	}
 
-	if m.HeaderAuthorization != "" {
-		m.tcap.httpReq.Header.Add("Authorization", m.HeaderAuthorization)
+	if authz := m.HeaderAuthorization; authz != "" {
+		m.tcap.httpReq.Header.Add("Authorization", authz)
 	}
 
-	// m.tcap.httpReq.Header.Set(headerUserAgent, runtime.BinTitle())
+	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value("UserAgent").(string))
 
 	if host := m.Host; host != "" {
 		configured, err := url.ParseRequestURI(host)

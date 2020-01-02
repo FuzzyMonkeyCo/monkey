@@ -52,40 +52,34 @@ func (m *oa3) GetResetter() resetter.Interface { return m.resetter }
 
 func (m *oa3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
 	m = &oa3{}
-	var (
-		found              bool
-		field              string
-		file, host, hAuthz starlark.Value
-	)
+	var err *modeler.Error
 
-	field = "file"
-	if file, found = d[field]; !found || file.Type() != "string" {
-		e := modeler.NewError(field, "a string", file.Type())
-		return nil, e
+	if m.File, err = slGetString(d, "file"); err != nil {
+		return nil, err
 	}
-	m.File = file.(starlark.String).GoString()
-
-	field = "host"
-	if host, found = d[field]; found && host.Type() != "string" {
-		e := modeler.NewError(field, "a string", file.Type())
-		return nil, e
+	if m.Host, err = slGetString(d, "host"); err != nil {
+		return nil, err
 	}
-	if found {
-		h := host.(starlark.String).GoString()
-		m.Host = h
-	}
-
-	field = "header_authorization"
-	if hAuthz, found = d[field]; found && hAuthz.Type() != "string" {
-		e := modeler.NewError(field, "a string", file.Type())
-		return nil, e
-	}
-	if found {
-		authz := hAuthz.(starlark.String).GoString()
-		m.HeaderAuthorization = authz
+	if m.HeaderAuthorization, err = slGetString(d, "header_authorization"); err != nil {
+		return nil, err
 	}
 
 	return m, nil
+}
+
+func slGetString(d starlark.StringDict, field string) (str string, err *modeler.Error) {
+	var (
+		found bool
+		val   starlark.Value
+	)
+	if val, found = d[field]; found && val.Type() != "string" {
+		err = modeler.NewError(field, "a string", val.Type())
+		return
+	}
+	if found {
+		str = val.(starlark.String).GoString()
+	}
+	return
 }
 
 func (m *oa3) InputsCount() int {

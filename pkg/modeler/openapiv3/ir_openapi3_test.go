@@ -42,7 +42,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NoError(t, err)
 			t.Logf("validate some schemas")
 			testSomeSchemas(t, m0)
-			t.Logf("proto marshalling")
+			t.Logf("proto marshaling")
 			proto0 := m0.ToProto()
 			bin0, err := proto.Marshal(proto0)
 			require.NoError(t, err)
