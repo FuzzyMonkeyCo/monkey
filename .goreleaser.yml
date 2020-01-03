@@ -1,7 +1,7 @@
 builds:
 - env:
   - CGO_ENABLED=0
-  - WSURL=wss://api.fuzzymonkey.co:7077/1/fuzz
+  - GRPCHOST=api.fuzzymonkey.co
   goos:
   - darwin
   # TODO: - freebsd
@@ -18,7 +18,7 @@ builds:
   ldflags:
   - '-X main.binSHA={{.ShortCommit}}'
   - '-X main.binVersion={{.Tag}}'
-  - '-X main.wsURL={{.Env.WSURL}}'
+  - '-X fm.grpcHost={{.Env.GRPCHOST}}'
   - '-extldflags "-static"'
   - '-s -w'
 

@@ -4,18 +4,21 @@ EXE = monkey
 
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
+GOGO ?= v1.2.1
+PROTOC = docker run --rm -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 
 all: SHELL = /bin/bash
-all: lib/messages.pb.go lint
+all: pkg/internal/fm/fuzzymonkey.pb.go lint
 	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
 
 update: SHELL := /bin/bash
 update:
-	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
 	go get -u -a
 	go mod tidy
 	go mod verify
+	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
+	[[ 2 = $$(git grep gogo/protobuf -- go.sum | wc -l) ]]
 
 latest:
 	sh -eux <misc/latest.sh
@@ -24,14 +27,13 @@ devdeps:
 	go install -i github.com/wadey/gocovmerge
 	go install -i github.com/kyoh86/richgo
 
-lib/messages.pb.go: PROTOC ?= docker run --rm -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=.
-lib/messages.pb.go: lib/messages.proto
-	$(PROTOC) --gogofast_out=. $^
+pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
+	$(PROTOC) --gogofast_out=plugins=grpc,Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types:. $^
 #	FIXME: don't have this github.com/ folder created in the first place
-	cat github.com/FuzzyMonkeyCo/monkey/lib/messages.pb.go >$@
+	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
 
 lint:
-	gofmt -s -w *.go */*.go
+	go fmt ./...
 	./misc/goolint.sh
 
 debug: all

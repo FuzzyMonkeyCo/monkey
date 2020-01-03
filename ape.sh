@@ -13,7 +13,7 @@ if ls "$dir"/*.cov >/dev/null 2>&1; then
 fi
 
 MONKEY_CODEFILE=$err MONKEY_ARGS="$*" "$dir"/monkey.test \
-               -test.coverprofile="$dir"/$i.cov \
+               -test.coverprofile="$dir/$i".cov \
                -test.run=^TestCov$
 
 code=$(cat $err)

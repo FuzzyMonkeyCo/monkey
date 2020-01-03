@@ -1,0 +1,418 @@
+syntax = "proto3";
+package fm;
+
+option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
+
+import "google/protobuf/struct.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// See: https://github.com/gogo/protobuf/blob/master/extensions.md
+// Enable custom Size method (Required by Marshal and Unmarshal)
+option (gogoproto.sizer_all) = true;
+// Enable custom Marshal method
+option (gogoproto.marshaler_all) = true;
+// stable_marshaler
+// Enable custom Unmarshal method
+option (gogoproto.unmarshaler_all) = true;
+// option (gogoproto.gostring_all) = true;
+// option (gogoproto.goproto_stringer_all) = false;
+// option (gogoproto.stringer_all) =  true;
+
+// Generate func (this *ProtoMessage) Equal(that interface{}) bool
+option (gogoproto.equal_all) = true;
+// Don't generate XXX_unrecognized
+// option (gogoproto.goproto_unrecognized_all) = true;
+// jsontag, moretags:
+// https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
+
+// FIXME
+// option (gogoproto.goproto_testgen_all) = true;
+// option (gogoproto.goproto_benchgen_all) = true;
+// https://godoc.org/github.com/gogo/protobuf/plugin/populate
+
+service FuzzyMonkey {
+  rpc Do(stream Clt) returns (stream Srv) {
+  }
+}
+
+message Clt {
+  message Fuzz {
+    message Resetter {
+      message Shell {
+        string start = 1;
+        string rst = 2;
+        string stop = 3;
+      }
+      oneof resetter {
+        Shell shell = 1;
+      }
+    }
+    Resetter resetter = 1;
+    enum ModelKind {
+      UNKNOWN = 0;
+      OpenAPIv3 = 1;
+    }
+    ModelKind model_kind = 2;
+    message Model {
+      message OpenAPIv3 {
+        // File is a path within current directory pointing to a YAML spec
+        string file = 1;
+        // Host superseeds the spec's base URL
+        string host = 2;
+        // HeaderAuthorization if non-empty is added to requests as bearer
+        // token
+        string header_authorization = 3;
+        SpecIR spec = 4;
+      }
+      oneof model {
+        OpenAPIv3 openapiv3 = 1;
+      }
+    }
+    Model model = 3;
+    repeated string usage = 4;
+    bytes seed = 5;
+    uint32 ntensity = 6;
+    repeated uint32 EIDs = 7;
+  }
+
+  message Metrics {
+  }
+
+  message ResetProgress {
+    enum Status {
+      NOOP = 0;
+      started = 1;
+      ended = 2;
+      failed = 3;
+    }
+    Status status = 1;
+    uint64 ts_diff = 2;
+    repeated string reason = 3;
+  }
+
+  message CallRequestRaw {
+    message Input {
+      message HttpRequest {
+        string method = 1;
+        string url = 2;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 3;
+        bytes body = 4;
+        // same as Srv's but with timings..
+      }
+      oneof input {
+        HttpRequest http_request = 1;
+      }
+    }
+    Input input = 1;
+  }
+
+  // add http timings similar to
+  // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
+
+  message CallResponseRaw {
+    message Output {
+      message HttpResponse {
+        string error = 1;
+        uint32 status_code = 2;
+        string reason = 3;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 4;
+        bytes body = 5;
+        uint32 elapsed = 6;  // TODO: finer timings
+      }
+      oneof output {
+        HttpResponse http_response = 1;
+      }
+    }
+    Output output = 1;
+  }
+
+  message CallVerifProgress {
+    enum Status {
+      done = 0;
+      data = 1;
+      skipped = 2;
+      start = 3;
+      success = 4;
+      failure = 5;
+    }
+    Status status = 1;
+    string name = 2;
+    repeated string reason = 3;
+    google.protobuf.Struct response = 4;
+  }
+
+  oneof msg {
+    // Initiates testing
+    Fuzz fuzz = 1;
+    // Logs & observed SUT
+    Metrics metrics = 2;
+    // SUT state resetting
+    ResetProgress reset_progress = 3;
+    // Actual call to SUT
+    CallRequestRaw call_request_raw = 4;
+    // SUT call response
+    CallResponseRaw call_response_raw = 5;
+    // SUT call verifications
+    CallVerifProgress call_verif_progress = 6;
+  }
+}
+
+message Srv {
+  message Call {
+    message Input {
+      message HttpRequest {
+        string method = 1;
+        string url = 2;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 3;
+        bytes body = 4;
+      }
+      oneof input {
+        HttpRequest http_request = 1;
+      }
+    }
+    Input input = 1;
+    uint32 eId = 2;
+  }
+
+  message Reset {
+    // bool as_final_step = 1;
+  }
+
+  message FuzzProgress {
+    bool failure = 1;
+    bool success = 2;
+    bool last_call_failure = 3;
+    bool last_call_success = 4;
+    bool last_check_failure = 5;
+    bool last_check_success = 6;
+    bool shrinking = 7;
+    uint32 total_tests_count = 8;
+    uint32 total_calls_count = 9;
+    uint32 total_checks_count = 10;
+    uint32 test_calls_count = 11;
+    uint32 call_checks_count = 12;
+    uint32 shrink_amount = 13;
+  }
+
+  oneof msg {
+    // Try call to SUT
+    Call call = 1;
+    // Testing progress & end
+    FuzzProgress fuzz_progress = 2;
+    // Reset SUT state
+    Reset reset = 3;
+  }
+}
+
+message SpecIR {
+  Schemas schemas = 1;
+  // All endpoints are here.
+  // Start at 1 then increases monotonously. 0 (zero) is reserved for bug
+  // finding.
+  map<uint32, Endpoint> endpoints = 2;
+}
+
+message Schemas {
+  // All schemas are here.
+  // Start at 1. 0 (zero) is reserved for bug finding.
+  map<uint32, RefOrSchemaJSON> json = 1;
+}
+
+message RefOrSchemaJSON {
+  oneof ptr_or_schema {
+    // Probably most often from a $ref
+    // Only use SchemaPtr here. Everywhere else use SID.
+    SchemaPtr ptr = 1;
+    // Actual schema when not a $ref
+    Schema.JSON schema = 2;
+  }
+}
+
+message SchemaPtr {
+  // Pointer to actual schema. i.e. key in Schemas message.
+  uint32 SID = 1;
+  // $ref if was ref'd, in canonical/absolute (#/...-like) format.
+  string ref = 2;
+}
+
+message Endpoint {
+  oneof endpoint {
+    EndpointJSON json = 1;
+  }
+}
+
+message EndpointJSON {
+  enum Method {
+    UNKNOWN = 0;
+    GET = 1;
+    HEAD = 2;
+    POST = 3;
+    PUT = 4;
+    PATCH = 5;
+    DELETE = 6;
+    CONNECT = 7;
+    OPTIONS = 8;
+    TRACE = 9;
+  }
+  Method method = 1;
+  repeated PathPartial path_partials = 2;
+  repeated ParamJSON inputs = 3;
+  // The uint32 key replaces an enum of 1XX,...,201,204,...,5XX,XXX.
+  // The uint32 values are SID
+  map<uint32, uint32> outputs = 4;
+}
+
+message ParamJSON {
+  bool is_required = 1;
+  uint32 SID = 2;
+  // Note: bodies have an empty name
+  string name = 3;
+
+  enum Kind {
+    UNKNOWN = 0;
+    body = 1;
+    path = 2;
+    query = 3;
+    header = 4;
+    cookie = 5;
+  }
+  Kind kind = 4;
+
+  // TODO: repeated Example examples
+}
+
+message PathPartial {
+  oneof pp {
+    string part = 1;
+    string ptr = 2;
+  }
+}
+
+/// https://swagger.io/docs/specification/data-models/keywords/
+/// https://tools.ietf.org/html/draft-wright-json-schema-validation-00
+/// http://json-schema.org/draft-06/json-schema-release-notes.html
+/// http://json-schema.org/draft-07/json-schema-release-notes.html
+// https://github.com/mikunn/openapi-schema-to-json-schema
+// https://github.com/kogosoftwarellc/openapi-jsonschema-parameters
+// https://github.com/garethr/openapi2jsonschema
+
+message Schema {
+  message JSON {
+    // (Some) things can be combined (: enum + type)
+    //   so just lay things out flat...
+
+    enum Type {
+      UNKNOWN = 0;
+      any = 1;
+      null = 2;
+      boolean = 3;
+      integer = 4;
+      number = 5;
+      array = 6;
+      string = 7;
+      object = 8;
+    }
+    repeated Type types = 1;  // default: []
+
+    repeated google.protobuf.Value enum
+    = 2;
+
+    // type: string
+    enum Format {
+      NONE = 0;
+      date_time = 1;
+      date = 2;
+      // time = 3;
+      email = 4;
+      // idn-email = 5;
+      hostname = 6;
+      // idn_hostname = 7;
+      ipv4 = 8;
+      ipv6 = 9;
+      uri = 10;
+      uri_reference = 11;
+      // iri = 12;
+      // iri_reference = 13;
+      // uri_template = 14;
+      // json_pointer = 15;
+      // relative_json_pointer = 16;
+      regex = 17;
+      int32 = 18;
+      int64 = 19;
+      float = 20;
+      double = 21;
+      byte = 22;
+      binary = 23;
+      password = 24;
+    }
+    Format format = 3;      // default: NONE
+    uint64 min_length = 4;  // default: 0
+    uint64 max_length = 5;
+    bool has_max_length = 6;
+    string pattern = 7;  // default: ""
+
+    // type: number | integer
+    double minimum = 8;
+    double maximum = 9;
+    bool has_minimum = 10;
+    bool has_maximum = 11;
+    double translated_multiple_of = 12;  // default: 0.0, add +1.0 when reading
+    bool exclusive_minimum = 13;         // default: false
+    bool exclusive_maximum = 14;         // default: false
+
+    // type: array
+    repeated uint32 items = 15;  // default: empty list
+    bool unique_items = 16;      // default: false
+    uint64 min_items = 17;       // default: 0
+    uint64 max_items = 18;
+    bool has_max_items = 19;
+    // TODO: additionalItems :: bool | SID
+
+    // type: object
+    map<string, uint32> properties = 20;  // default {}
+    repeated string required = 21;        // default: []
+    uint64 min_properties = 22;           // default: 0
+    uint64 max_properties = 23;
+    bool has_max_properties = 24;
+    /// FIXME true is equivalent to {}, false is equivalent to {"not": {}}
+    message AdditionalProperties {
+      oneof add_props {
+        bool always_succeed = 1;
+        uint32 SID = 2;
+      }
+    }
+    AdditionalProperties additional_properties = 25;
+    bool has_additional_properties = 26;
+    // TODO: patternProperties :: SID
+
+    repeated uint32 all_of = 27;  // default: []
+    repeated uint32 any_of = 28;  // default: []
+    repeated uint32 one_of = 29;  // default: []
+
+    uint32 not = 30;
+
+    // TODO: default, examples
+    // TODO: draft-04 but not part of OpenAPIv3.0.0
+    //  $schema
+    //  id, $id
+    //  dependencies
+    // TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
+    //  const
+    //  contains
+    //  propertyNames
+    //  some formats
+    // TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
+    //  if, then, else
+    //  (readOnly, writeOnly, contentMediaType, contentEncoding)
+    //  some formats
+  }
+}

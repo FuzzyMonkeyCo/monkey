@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  0.0.0 feedb065  go1.12.7  amd64 linux
+monkey  0.0.0   feedb065        go1.13.5        amd64   linux
 
 Usage:
   monkey [-vvv] init [--with-magic]
@@ -17,7 +17,7 @@ Usage:
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
-  monkey [-vvv] lint [--show-spec] [--hide-config]
+  monkey [-vvv] lint [--show-spec]
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] -h | --help
@@ -31,7 +31,6 @@ Options:
   -h, --help                     Show this screen
   -U, --update                   Ensures monkey is current
   -V, --version                  Show version
-  --hide-config                  Do not show YAML configuration while linting
   --seed=SEED                    Use specific parameters for the RNG
   --validate-against=REF         Schema $ref to validate STDIN against
   --tag=TAG                      Labels that can help classification
@@ -47,6 +46,7 @@ Options:
 Try:
      export FUZZYMONKEY_API_KEY=42
   monkey --update
+  monkey exec reset
   monkey fuzz --only /pets --calls-without-input=NewPet --tests=0
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
@@ -83,63 +83,54 @@ From [https://github.com/bazelbuild/starlark](https://github.com/bazelbuild/star
 > * Focus on tooling. We recognize that the source code will be read, analyzed, modified, by both humans and tools.
 > * Python-like. Python is a widely used language. Keeping the language similar to Python can reduce the learning curve and make the semantics more obvious to users.
 
-#### Example `.fuzzymonkey.star` file
+#### Example `fuzzymonkey.star` file
 
 
 ```python
-Spec(
-  # Data describing Web APIs
-  model = OpenAPIv3(
-    # Note: references to schemas in `file` are resolved relative to file's location.
-    file = 'openapi3.json',
-  ),
-  overrides = {
-    'host': 'http://localhost:6773',
-    'authorization': 'Bearer some-token-here',
-  },
-)
+OpenAPIv3(
+  name = "my model on localhost",
+  # Note: references to schemas in `file` are resolved relative to file's location.
+  file = "openapi3.json",
+  host = "http://localhost:6773",
+  header_authorization = "Bearer " + "MY_DEVTIME_TOKEN",
 
-SUT(reset = ["curl --fail -X DELETE http://localhost:6773/api/1/items"])
+  ExecReset = "curl --fail -X DELETE http://localhost:6773/api/1/items",
+)
 ```
 
-#### A more involved `.fuzzymonkey.star`
+#### A more involved `fuzzymonkey.star`
 
 ```python
-Spec(
-  model = OpenAPIv3(file='dist/openapi3v2.json')
-  overrides = {
-    'host': 'https://localhost:{{ env "CONTAINER_PORT" }}',
-  },
-)
+OpenAPIv3(
+  name = "my other model running with Docker",
+  file = "dist/openapi3v2.json",
+  # `host` does not go through shell execution
+  host_resolver = 'echo "https://localhost:${CONTAINER_PORT}"',
+##host = Eval("echo "https://localhost:${CONTAINER_PORT}"), TODO
 
-# Note: commands are executed in shells sharing the same environment variables,
-# with `set -e` and `set -o pipefail` flags on.
+  # Note: commands are executed in shells sharing the same environment variables,
+  # with `set -e` and `set -o pipefail` flags on.
 
-# The following get executed once per test
-#   so have these commands complete as fast as possible.
-# Also, make sure that each test starts from a clean slate
-#   otherwise results will be unreliable.
+  # The following get executed once per test
+  #   so have these commands complete as fast as possible.
+  # Also, make sure that each test starts from a clean slate
+  #   otherwise results will be unreliable.
+  ExecStart = """
+  CONTAINER_ID=$(docker run --rm -d -p 8080 cake_sample_master)
+  cmd="$(docker port $CONTAINER_ID 6773/tcp)"
+  CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")
+  host=localhost
+  until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
+    printf .
+    sleep 5
+  done
+  """,
 
-SUT(
-  start = [
-    'CONTAINER_ID=$(docker run --rm -d -p 6773 cake_sample_master)',
-    'cmd="$(docker port $CONTAINER_ID 6773/tcp)"',
-    """CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")""",
-    'host=localhost',
-    '''
-    until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
-        printf .
-        sleep 5
-    done
-    ''',
+  ExecReset = """
+  [[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]
+  """,
 
-  reset = [
-    "[[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]",
-  ],
-
-  stop = [
-    'docker stop --time 5 $CONTAINER_ID',
-  ],
+  ExecStop = "docker stop --time 5 $CONTAINER_ID",
 )
 ```
 
