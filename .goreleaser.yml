@@ -23,8 +23,7 @@ builds:
   - '-s -w'
 
 archives:
-- name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}'
-  replacements:
+- replacements:
     # $(uname -s) and $(uname -m)
     386: i386
     amd64: x86_64
@@ -36,9 +35,11 @@ archives:
   format_overrides:
   - goos: windows
     format: zip
+# name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}'
+  name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{end}}'
 
 checksum:
-  name_template: 'checksums.sha256.txt'
+  name_template: checksums.sha256.txt
   algorithm: sha256
 
 signs:
