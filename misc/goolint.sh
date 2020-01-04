@@ -3,6 +3,8 @@
 # goolint: farther than golint
 # go fmt first
 
+[ -f go.mod ] || exit 0
+
 E() {
     code=$?
     [ $code -ne 0 ] && echo "  $*"
@@ -14,27 +16,34 @@ if ! command -v ag >/dev/null 2>&1; then
     exit 0
 fi
 
+g() {
+    ag --ignore '*.pb.go' --ignore 'migrations/bindata.go' "$@"
+}
+
 errors=0
 
-! ag 'return\s+}\s+return\s+}'
+! g 'return\s+}\s+return\s+}'
 E first return can be dropped
 
-! ag '^\s+fmt\.[^\n]+\s+log\.Print'
+! g '^\s+fmt\.[^\n]+\s+log\.Print'
 E log first
 
-! ag ', err = [^;\n]+\s+if err '
+! g ', err = [^;\n]+\s+if err '
 E if can be inlined
 
-! ag '^\s+err :?= [^;\n]+\s+if err '
+! g '^\s+err :?= [^;\n]+\s+if err '
 E if can be inlined
 
-! ag '^\s+fmt\.Errorf'
+! g '^\s+fmt\.Errorf'
 E unused value
 
-! ag --ignore '*.pb.go' 'fmt\.Errorf."[^%\n]*"'
+! g --ignore '*.pb.go' 'fmt\.Errorf."[^%\n]*"'
 E prefer errors.New
 
-! ag '([^ ]+) != nil\s+{\s+for [^=]+ := range \1'
+! g '([^ ]+) != nil\s+{\s+for [^=]+ := range \1'
 E unnecessary nil check around range
+
+# ! g 'make\(\[\][^],]+, [^0]'
+# E you meant capacity
 
 exit $errors
