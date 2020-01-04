@@ -56,13 +56,13 @@ Try:
 Quick install:
 
 ```shell
-sh <(curl -#fSL http://goo.gl/3d7tPe)
+curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh
 ```
 
 or the equivalent:
 
 ```shell
-sh <(curl -#fSL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/misc/latest.sh)
+curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownloader.sh | BINDIR=/usr/local/bin sh
 ```
 
 Or simply install the [latest release from here](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
