@@ -1,4 +1,4 @@
-package runtime
+package house
 
 import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"

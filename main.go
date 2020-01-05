@@ -13,9 +13,9 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/house"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	monkey "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
@@ -170,7 +170,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	rt, err := monkey.NewMonkey(binTitle)
+	rt, err := house.NewMonkey(binTitle)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
