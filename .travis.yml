@@ -11,14 +11,11 @@ before_install: |
     ag --version
     curl -#fL https://git.io/FuzzyMonkey | BINDIR=$GOPATH/bin sh -ex
     monkey -vvv --version
-    set +e
     exit
   fi
-  set -o errexit
   set -o errtrace
   # set -o nounset # TravisCI is unclean
   set -o pipefail
-after_script: set +e
 
 cache:
   directories:
