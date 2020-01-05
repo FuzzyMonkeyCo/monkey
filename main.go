@@ -6,11 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
@@ -24,22 +22,18 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-//go:generate echo Let's go bananas!
-
 const (
 	binName    = "monkey"
-	binSHA     = "feedb065"
-	binVersion = "0.0.0"
 	githubSlug = "FuzzyMonkeyCo/" + binName
 
 	// Environment variables used
 	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
+// These aren't const so ldflags can rewrite them
 var (
-	clientUtils = &http.Client{
-		Timeout: 10 * time.Second,
-	}
+	binSHA     = "feedb065"
+	binVersion = "0.0.0"
 )
 
 func main() {
@@ -311,11 +305,7 @@ func doLogs(offset uint64) int {
 }
 
 func doUpdate() int {
-	rel := &update.GithubRelease{
-		Slug:   githubSlug,
-		Name:   binName,
-		Client: clientUtils,
-	}
+	rel := update.NewGithubRelease(githubSlug, binName)
 	latest, err := rel.PeekLatestRelease()
 	if err != nil {
 		return retryOrReport()

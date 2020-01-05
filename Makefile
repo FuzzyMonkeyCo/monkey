@@ -20,8 +20,10 @@ update:
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
 	[[ 2 = $$(git grep gogo/protobuf -- go.sum | wc -l) ]]
 
+latest: bindir ?= $$HOME/.local/bin
 latest:
-	cat .godownloader.sh | BINDIR=$$HOME/.local/bin sh -ex
+	cat .godownloader.sh | BINDIR=$(bindir) sh -ex
+	$(bindir)/$(EXE) --version
 
 devdeps:
 	go install -i github.com/wadey/gocovmerge

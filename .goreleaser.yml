@@ -18,7 +18,7 @@ builds:
   ldflags:
   - '-X main.binSHA={{.ShortCommit}}'
   - '-X main.binVersion={{.Tag}}'
-  - '-X fm.grpcHost={{.Env.GRPCHOST}}'
+  - '-X runtime.grpcHost={{.Env.GRPCHOST}}'
   - '-extldflags "-static"'
   - '-s -w'
 

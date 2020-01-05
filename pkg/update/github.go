@@ -14,12 +14,23 @@ import (
 	"os/exec"
 	"path"
 	"runtime"
+	"time"
 )
 
 type GithubRelease struct {
 	Slug   string
 	Name   string
 	Client *http.Client
+}
+
+func NewGithubRelease(slug, exe string) *GithubRelease {
+	return &GithubRelease{
+		Slug: slug,
+		Name: exe,
+		Client: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
 }
 
 func (rel *GithubRelease) LatestURL() string {

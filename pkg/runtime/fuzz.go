@@ -15,7 +15,8 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-const grpcHost = "do.dev.fuzzymonkey.co:7077"
+// grpcHost isn't const so ldflags can rewrite it
+var grpcHost = "do.dev.fuzzymonkey.co:7077"
 
 func (rt *Runtime) Dial(ctx context.Context, apiKey string) (
 	closer func() error,
