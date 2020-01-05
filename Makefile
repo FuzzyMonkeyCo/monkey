@@ -21,7 +21,7 @@ update:
 	[[ 2 = $$(git grep gogo/protobuf -- go.sum | wc -l) ]]
 
 latest:
-	sh -eux <misc/latest.sh
+	cat .godownloader.sh | BINDIR=$$HOME/.local/bin sh -ex
 
 devdeps:
 	go install -i github.com/wadey/gocovmerge
