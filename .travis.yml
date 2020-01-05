@@ -27,7 +27,7 @@ install:
 - go version
 
 script:
-- shellcheck $(git ls-files | grep '.sh$')
+- shellcheck $(git ls-files | grep '.sh$' | grep -vF .godownloader.sh)
 - bash -c "! git --no-pager grep -InE 'log.Println\(\"\[...\] \",'"  # lint: log.Println does not need the space before log level
 - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
 - make lint
