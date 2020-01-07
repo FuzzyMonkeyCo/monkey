@@ -10,7 +10,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
@@ -58,7 +58,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32) error {
 		break
 	}
 
-	rt.progress = ui.NewCli()
+	rt.progress = cli.NewCli()
 	rt.progress.MaxTestsCount(ntensity)
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 

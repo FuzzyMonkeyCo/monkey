@@ -1,14 +1,15 @@
-package ui
+package cli
 
 import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
 	"github.com/superhawk610/bar"
 	// See also: https://github.com/reconquest/barely
 )
 
-var _ Progresser = (*Cli)(nil)
+var _ ui.Progresser = (*Cli)(nil)
 
 type Cli struct {
 	maxTestsCount                                      uint32

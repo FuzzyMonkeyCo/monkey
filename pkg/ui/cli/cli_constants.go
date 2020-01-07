@@ -1,4 +1,4 @@
-package ui
+package cli
 
 var cliStates = [...]string{"🙈", "🙉", "🙊", "🐵"}
 
