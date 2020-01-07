@@ -23,6 +23,7 @@ func (rt *Runtime) recvFuzzProgress() error {
 	case *fm.Srv_FuzzProgress_:
 		log.Println("[NFO] handling srvprogress")
 		stts := srv.GetFuzzProgress()
+		log.Println("[DBG] srvprogress:", stts)
 		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
 		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
 		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
