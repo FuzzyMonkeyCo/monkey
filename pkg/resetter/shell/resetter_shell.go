@@ -185,14 +185,14 @@ func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err erro
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
+	log.Printf("[DBG] within %s $ %s", timeoutShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	log.Println("[NFO] snapped env at ", envSerializedPath)
+	log.Println("[NFO] snapped env at", envSerializedPath)
 	return
 }
 

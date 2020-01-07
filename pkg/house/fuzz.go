@@ -100,21 +100,22 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32) error {
 				break
 			}
 			log.Println("[NFO] done handling fm.Srv_Call_")
-			if err = rt.recvFuzzProgress(); err != nil {
-				break
-			}
 		case *fm.Srv_Reset_:
 			log.Println("[NFO] handling fm.Srv_Reset_")
 			if err = rt.reset(ctx); err != nil {
 				break
 			}
 			log.Println("[NFO] done handling fm.Srv_Reset_")
-			if err = rt.recvFuzzProgress(); err != nil {
-				break
-			}
 		default:
 			err = fmt.Errorf("unhandled srv msg %T: %+v", srv.GetMsg(), srv)
 			log.Println("[ERR]", err)
+			break
+		}
+
+		if err2 := rt.recvFuzzProgress(); err2 != nil {
+			if err == nil {
+				err = err2
+			}
 			break
 		}
 	}
@@ -122,11 +123,15 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32) error {
 	log.Println("[DBG] server dialog ended, cleaning up...")
 	if err2 := mdl.GetResetter().Terminate(ctx, nil); err2 != nil {
 		log.Println("[ERR]", err2)
-		return err2
+		if err == nil {
+			err = err2
+		}
 	}
 	if err2 := rt.progress.Terminate(); err2 != nil {
 		log.Println("[ERR]", err2)
-		return err2
+		if err == nil {
+			err = err2
+		}
 	}
 	return err
 }
