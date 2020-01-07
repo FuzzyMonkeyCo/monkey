@@ -103,8 +103,14 @@ func (s *Shell) commands() (cmds string, err error) {
 		return
 
 	case len(s.Start) != 0 && len(s.Rst) == 0 && len(s.Stop) != 0:
-		log.Println("[NFO] running Shell.Stop then Shell.Start")
-		cmds = s.Stop + "\n" + s.Start
+		if s.isNotFirstRun {
+			log.Println("[NFO] running Shell.Stop then Shell.Start")
+			cmds = s.Stop + "\n" + s.Start
+			return
+		}
+
+		log.Println("[NFO] running Shell.Start")
+		cmds = s.Start
 		return
 
 	default:
