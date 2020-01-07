@@ -15,7 +15,7 @@ import (
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
-		rt.progress.Showf(format, s)
+		rt.progress.Printf(format, s)
 	}
 
 	var mdl modeler.Interface
@@ -155,7 +155,9 @@ func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	rt.thread.Print = func(_ *starlark.Thread, msg string) { rt.progress.Showf("%s", msg) }
+	rt.thread.Print = func(_ *starlark.Thread, msg string) {
+		rt.progress.Printf("%s", msg)
+	}
 
 	for i, trggr := range rt.triggers {
 		v := &fm.Clt_CallVerifProgress{}

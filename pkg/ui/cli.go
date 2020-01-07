@@ -69,10 +69,15 @@ func (p *Cli) state(inc int) {
 	advancement := inc + int(p.totalCallsCount)
 	p.bar.Update(advancement, bar.Context{bar.Ctx("state", state)})
 }
-func (p *Cli) show(s string)                         { p.bar.Interrupt(s) }
-func (p *Cli) Showf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
-func (p *Cli) nfo(s string)                          { p.show(as.ColorNFO.Sprintf("%s", s)) }
-func (p *Cli) wrn(s string)                          { p.show(as.ColorWRN.Sprintf("%s", s)) }
+
+func (p *Cli) Printf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
+func (p *Cli) Errorf(format string, s ...interface{}) {
+	p.bar.Interruptf("%s", as.ColorERR.Sprintf(format, s))
+}
+
+func (p *Cli) show(s string) { p.bar.Interrupt(s) }
+func (p *Cli) nfo(s string)  { p.show(as.ColorNFO.Sprintf("%s", s)) }
+func (p *Cli) wrn(s string)  { p.show(as.ColorWRN.Sprintf("%s", s)) }
 func (p *Cli) err(s string) {
 	p.show(as.ColorERR.Sprintf("%s", s))
 	p.failed = true
