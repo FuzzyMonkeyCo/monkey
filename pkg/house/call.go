@@ -12,37 +12,6 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *Runtime) recvFuzzProgress() error {
-	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
-	srv, err := rt.client.Recv()
-	if err != nil {
-		log.Println("[ERR]", err)
-		return err
-	}
-
-	switch srv.GetMsg().(type) {
-	case *fm.Srv_FuzzProgress_:
-		log.Println("[NFO] handling srvprogress")
-		stts := srv.GetFuzzProgress()
-		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
-		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
-		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
-		rt.progress.TestCallsCount(stts.GetTestCallsCount())
-		rt.progress.CallChecksCount(stts.GetCallChecksCount())
-		if stts.GetSuccess() {
-			rt.progress.CampaignSuccess(true)
-		} else if stts.GetFailure() {
-			rt.progress.CampaignSuccess(false)
-		}
-		log.Println("[NFO] done handling srvprogress")
-		return nil
-	default:
-		err := fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
-		log.Println("[ERR]", err)
-		return err
-	}
-}
-
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
