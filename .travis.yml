@@ -38,8 +38,9 @@ script:
 - tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
 - ./monkey -h | grep $TRAVIS_COMMIT
 - ./monkey help | grep monkey
+- ./monkey version
 - '[[ $(./monkey version | wc -l) = 1 ]]'
-- ./monkey version | grep $TRAVIS_TAG
+- ./monkey version | grep $CURRENT_TAG
 - ./monkey --version | grep $TRAVIS_COMMIT
 - rm -rf ./dist
 - git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
