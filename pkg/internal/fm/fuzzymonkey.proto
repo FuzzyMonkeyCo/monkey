@@ -73,6 +73,8 @@ message Clt {
     bytes seed = 5;
     uint32 ntensity = 6;
     repeated uint32 EIDs = 7;
+    map<string, string> tags = 8;
+    map<string, string> env_read = 9;
   }
 
   message Metrics {

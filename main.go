@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
 
@@ -90,7 +92,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	rt, err := house.NewMonkey(binTitle)
+	rt, err := house.NewMonkey(binTitle, args.Tags)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -154,8 +156,21 @@ func actualMain() int {
 		return code.OK
 	}
 
-	var apiKey string
-	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
+	if args.Seed != "" {
+		err := errors.New("--seed=SEED isn't implemented yet.")
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+	if args.Shrink != "" {
+		err := errors.New("--shrink=ID isn't implemented yet.")
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
+	apiKey := os.Getenv(envAPIKey)
+	if apiKey == "" {
 		err := fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
 		as.ColorERR.Println(err)
@@ -168,29 +183,38 @@ func actualMain() int {
 		return code.Failed
 	}
 
-	if args.N == 0 {
-		as.ColorERR.Println("No tests to run.")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, os.Interrupt)
+	go func() {
+		select {
+		case <-ctx.Done():
+			signal.Stop(sigC)
+		case <-sigC:
+			log.Println("[NFO] received ^C: terminating")
+			cancel()
+		}
+	}()
+
+	as.ColorNFO.Printf("\n Running tests...\n\n")
+	err = rt.Fuzz(ctx, args.N, apiKey)
+	log.Println("[ERR]", err)
+	if ctx.Err() == context.Canceled {
+		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	}
-	as.ColorNFO.Printf("\n Running tests...\n\n")
-
-	ctx := context.Background()
-	closer, err := rt.Dial(ctx, apiKey)
-	if err != nil {
-		return retryOrReport()
-	}
-	defer closer()
-
-	if err := rt.Fuzz(ctx, args.N); err != nil {
-		log.Println("[ERR]", err)
-		return retryOrReportThenCleanup(err)
-	}
-	fmt.Println()
-	fmt.Println()
-	if rt.ProgressCampaignSummary() {
+	switch err.(type) {
+	case *resetter.Error:
+		as.ColorERR.Println(err)
+		return code.FailedExec
+	case *house.TestingCampaingSuccess:
 		return code.OK
+	case *house.TestingCampaingFailure:
+		return code.FailedFuzz
 	}
-	return code.FailedFuzz
+	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
+	return retryOrReport()
 }
 
 func logLevel(verbosity uint8) logutils.LogLevel {
@@ -261,15 +285,6 @@ func doEnv(vars []string) int {
 		penv(key)
 	}
 	return code.OK
-}
-
-func retryOrReportThenCleanup(err error) int {
-	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if _, ok := err.(*resetter.Error); ok {
-		as.ColorERR.Println(err)
-		return code.FailedExec
-	}
-	return retryOrReport()
 }
 
 func retryOrReport() int {

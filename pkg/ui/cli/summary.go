@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
@@ -8,6 +9,8 @@ import (
 
 // CampaignSummary concludes the testing campaing and reports to the user.
 func (p *Cli) CampaignSummary() (success bool) {
+	fmt.Println()
+	fmt.Println()
 	as.ColorWRN.Println(
 		"Ran", p.totalTestsCount, plural("test", p.totalTestsCount),
 		"totalling", p.totalCallsCount, plural("request", p.totalCallsCount),

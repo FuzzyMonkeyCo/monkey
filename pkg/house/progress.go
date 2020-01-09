@@ -7,10 +7,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-func (rt *Runtime) ProgressCampaignSummary() bool {
-	return rt.progress.CampaignSummary()
-}
-
 func (rt *Runtime) recvFuzzProgress() error {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
 	srv, err := rt.client.Recv()

@@ -41,10 +41,7 @@ script:
 - '[[ $(./monkey version | wc -l) = 1 ]]'
 - ./monkey version | grep $TRAVIS_TAG
 - ./monkey --version | grep $TRAVIS_COMMIT
-- |
-  # TODO: --rm-dist doesn't seem to be doing its job
-  ls -lha ./dist
-  rm -rf ./dist
+- rm -rf ./dist
 - git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
 
 deploy:

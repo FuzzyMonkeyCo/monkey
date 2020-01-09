@@ -10,13 +10,15 @@ import (
 )
 
 type params struct {
-	Fuzz, Shrink                   bool
-	Lint, Schema                   bool
+	Fuzz, Lint, Schema             bool
 	Init, Env, Login, Logs         bool
 	Update, Version                bool
 	Exec, Start, Reset, Stop, Repl bool
 	ShowSpec                       bool     `mapstructure:"--show-spec"`
-	N                              uint32   `mapstructure:"--tests"`
+	Seed                           string   `mapstructure:"--seed"`
+	Shrink                         string   `mapstructure:"--shrink"`
+	Tags                           []string `mapstructure:"--tag"`
+	N                              uint32   `mapstructure:"--intensity"`
 	Verbosity                      uint8    `mapstructure:"-v"`
 	LogOffset                      uint64   `mapstructure:"--previous"`
 	ValidateAgainst                string   `mapstructure:"--validate-against"`
@@ -30,11 +32,10 @@ func usage() (args *params, ret int) {
 Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] login [--user=USER]
-  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+  ` + B + ` [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   ` + B + ` [-vvv] lint [--show-spec]
   ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
@@ -48,23 +49,23 @@ Options:
   -v, -vv, -vvv                  Debug verbosity level
   version                        Show the version string
   update                         Ensures ` + B + ` is the latest version
+  --intensity=N                  The higher the more complex the tests [default: 10]
   --seed=SEED                    Use specific parameters for the RNG
-  --validate-against=REF         Schema $ref to validate STDIN against
-  --tag=TAG                      Labels that can help classification
-  --test=ID                      Which test to shrink
-  --tests=N                      Number of tests to run [default: 100]
+  --shrink=ID                    Which failed test to minimize
+  --tag=KV                       Labels that can help classification (format: key=value)
   --only=REGEX                   Only test matching calls
   --except=REGEX                 Do not test these calls
   --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA  Test calls which never output schema PTR
   --user=USER                    Authenticate on fuzzymonkey.co as USER
+  --validate-against=REF         Schema $ref to validate STDIN against
   --with-magic                   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   ` + B + ` update
   ` + B + ` exec reset
-  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
+  ` + B + ` fuzz --only /pets --calls-without-input=NewPet
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
 	// https://github.com/docopt/docopt.go/issues/59
