@@ -26,16 +26,16 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	if cllr, err = mdl.NewCaller(ctx, msg, showf); err != nil {
 		return
 	}
-	log.Println("[NFO] ▼", msg.GetInput())
+	log.Println("[NFO] call input:", msg.GetInput())
 
 	var errCall error
 	if errCall = cllr.Do(ctx); errCall != nil && errCall != modeler.ErrCallFailed {
-		log.Println("[NFO] ▲", errCall)
+		log.Println("[NFO] call error:", errCall)
 		return errCall
 	}
 
 	output := cllr.ToProto()
-	log.Println("[NFO] ▲", output)
+	log.Println("[NFO] call output:", output)
 
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_CallResponseRaw_{

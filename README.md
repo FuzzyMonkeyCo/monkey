@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  0.0.0   feedb065        go1.13.5        amd64   linux
+monkey  M.m.p   feedb065        go1.13.5        amd64   linux
 
 Usage:
   monkey [-vvv] init [--with-magic]
@@ -20,17 +20,16 @@ Usage:
   monkey [-vvv] lint [--show-spec]
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
-  monkey [-vvv] -h | --help
-  monkey [-vvv]      --update
-  monkey [-vvv] -V | --version
   monkey [-vvv] env [VAR ...]
   monkey logs [--previous=N]
+  monkey [-vvv] update
+  monkey version | --version
+  monkey help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                  Debug verbosity level
-  -h, --help                     Show this screen
-  -U, --update                   Ensures monkey is current
-  -V, --version                  Show version
+  version                        Show the version string
+  update                         Ensures monkey is the latest version
   --seed=SEED                    Use specific parameters for the RNG
   --validate-against=REF         Schema $ref to validate STDIN against
   --tag=TAG                      Labels that can help classification
@@ -45,7 +44,7 @@ Options:
 
 Try:
      export FUZZYMONKEY_API_KEY=42
-  monkey --update
+  monkey update
   monkey exec reset
   monkey fuzz --only /pets --calls-without-input=NewPet --tests=0
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind

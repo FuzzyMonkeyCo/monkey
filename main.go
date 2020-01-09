@@ -17,9 +17,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
-	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
-	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -30,10 +28,11 @@ const (
 	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
-// These aren't const so ldflags can rewrite them
 var (
 	binSHA     = "feedb065"
-	binVersion = "0.0.0"
+	binVersion = "M.m.p"
+	binTitle   = strings.Join([]string{binName, binVersion, binSHA,
+		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
 )
 
 func main() {
@@ -41,94 +40,15 @@ func main() {
 	os.Exit(actualMain())
 }
 
-type params struct {
-	Fuzz, Shrink                   bool
-	Lint, Schema                   bool
-	Init, Env, Login, Logs         bool
-	Exec, Start, Reset, Stop, Repl bool
-	Update                         bool     `mapstructure:"--update"`
-	ShowSpec                       bool     `mapstructure:"--show-spec"`
-	N                              uint32   `mapstructure:"--tests"`
-	Verbosity                      uint8    `mapstructure:"-v"`
-	LogOffset                      uint64   `mapstructure:"--previous"`
-	ValidateAgainst                string   `mapstructure:"--validate-against"`
-	EnvVars                        []string `mapstructure:"VAR"`
-}
-
-func usage(binTitle string) (args *params, ret int) {
-	B := as.ColorNFO.Sprintf(binName)
-	usage := binTitle + `
-
-Usage:
-  ` + B + ` [-vvv] init [--with-magic]
-  ` + B + ` [-vvv] login [--user=USER]
-  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
-                     [--only=REGEX]... [--except=REGEX]...
-                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
-                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
-  ` + B + ` [-vvv] lint [--show-spec]
-  ` + B + ` [-vvv] schema [--validate-against=REF]
-  ` + B + ` [-vvv] exec (repl | start | reset | stop)
-  ` + B + ` [-vvv] -h | --help
-  ` + B + ` [-vvv]      --update
-  ` + B + ` [-vvv] -V | --version
-  ` + B + ` [-vvv] env [VAR ...]
-  ` + B + ` logs [--previous=N]
-
-Options:
-  -v, -vv, -vvv                  Debug verbosity level
-  -h, --help                     Show this screen
-  -U, --update                   Ensures ` + B + ` is current
-  -V, --version                  Show version
-  --seed=SEED                    Use specific parameters for the RNG
-  --validate-against=REF         Schema $ref to validate STDIN against
-  --tag=TAG                      Labels that can help classification
-  --test=ID                      Which test to shrink
-  --tests=N                      Number of tests to run [default: 100]
-  --only=REGEX                   Only test matching calls
-  --except=REGEX                 Do not test these calls
-  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
-  --calls-without-output=SCHEMA  Test calls which never output schema PTR
-  --user=USER                    Authenticate on fuzzymonkey.co as USER
-  --with-magic                   Auto fill in schemas from random API calls
-
-Try:
-     export FUZZYMONKEY_API_KEY=42
-  ` + B + ` --update
-  ` + B + ` exec reset
-  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
-  echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
-
-	// https://github.com/docopt/docopt.go/issues/59
-	opts, err := docopt.ParseDoc(usage)
-	if err != nil {
-		// Usage shown: bad args
-		as.ColorERR.Println(err)
-		ret = code.Failed
-		return
-	}
-
-	if opts["--version"].(bool) {
-		fmt.Println(binTitle)
-		ret = code.OK
-		return
-	}
-
-	args = &params{}
-	if err := mapstructure.WeakDecode(opts, args); err != nil {
-		as.ColorERR.Println(err)
-		return nil, code.Failed
-	}
-	return
-}
-
 func actualMain() int {
-	binTitle := strings.Join([]string{binName, binVersion, binSHA,
-		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
-	args, ret := usage(binTitle)
+	args, ret := usage()
 	if args == nil {
 		return ret
+	}
+
+	if args.Version {
+		fmt.Println(binTitle)
+		return code.OK
 	}
 
 	if args.Logs {
@@ -356,8 +276,8 @@ func retryOrReport() int {
 	const issues = "https://github.com/" + githubSlug + "/issues"
 	const email = "ook@fuzzymonkey.co"
 	w := os.Stderr
-	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Fprintf(w, "\nYou may want to try `monkey --update`.\n")
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
+	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
 	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)

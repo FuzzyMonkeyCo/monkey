@@ -595,6 +595,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 			i--
 		}
 		if err != nil {
+			// Error printed in main
 			return
 		}
 	}
@@ -604,7 +605,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	if selected == 0 {
 		err = errors.New(e)
 		log.Println("[ERR]", err)
-		// Error printed in main.go
+		// Error printed in main
 		return
 	}
 
