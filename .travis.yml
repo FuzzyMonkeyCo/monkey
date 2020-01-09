@@ -10,12 +10,14 @@ before_install: |
     brew install the_silver_searcher
     ag --version
     curl -#fL https://git.io/FuzzyMonkey | BINDIR=$GOPATH/bin sh -ex
-    monkey version
+    stty size || true
+    type stty || true
+    which stty || true
+    whereis stty || true
+    monkey help || true
+    $GOPATH/bin/monkey version || true
     exit
   fi
-  set -o errtrace
-  # set -o nounset # TravisCI is unclean
-  set -o pipefail
 
 cache:
   directories:
