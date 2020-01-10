@@ -38,11 +38,12 @@ script:
 - git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
 - curl -sL http://git.io/goreleaser | sh -s -- --rm-dist --snapshot --skip-publish
 - tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-- echo "tag: $CURRENT_TAG commit: $TRAVIS_COMMIT"
 - ./monkey -h | grep $TRAVIS_COMMIT
 - ./monkey help | grep monkey
 - ./monkey version
-- '[[ $(./monkey version | wc -l) = 1 ]]'
+- |
+    echo "tag: $CURRENT_TAG commit: $TRAVIS_COMMIT"
+    [[ $(./monkey version | wc -l) = 1 ]]
 - ./monkey version | grep $CURRENT_TAG
 - ./monkey --version | grep $TRAVIS_COMMIT
 - rm -rf ./dist
