@@ -76,7 +76,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, cwid.LogFile(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login

@@ -73,7 +73,7 @@ func (p *Cli) state(inc int) {
 
 func (p *Cli) Printf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
 func (p *Cli) Errorf(format string, s ...interface{}) {
-	p.bar.Interruptf("%s", as.ColorERR.Sprintf(format, s))
+	p.bar.Interruptf("%s", as.ColorERR.Sprintf(format, s...))
 }
 
 func (p *Cli) show(s string) { p.bar.Interrupt(s) }

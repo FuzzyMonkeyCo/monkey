@@ -148,7 +148,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) error {
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout // TODO: plug Progresser here
 	exe.Stderr = &stderr   // TODO: same as above
-	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
+	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
 
 	ch := make(chan error)
 	// https://github.com/golang/go/issues/18874

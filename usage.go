@@ -91,6 +91,10 @@ Try:
 	if opts["--version"].(bool) {
 		args.Version = true
 	}
+	if args.Fuzz && args.N == 0 {
+		// TODO: upstream docopt doesn't handle [default: 10]
+		args.N = 10
+	}
 
 	return
 }
