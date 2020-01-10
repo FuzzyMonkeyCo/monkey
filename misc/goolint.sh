@@ -52,4 +52,7 @@ E unnecessary trailing space
 ! g 'log.Printf\([^,]+\\n.\,'
 E superfluous newline
 
+! g '[^A-Za-z0-9_]byte\("\\?[^"]"\)|'"[^A-Za-z0-9_]byte\\('\\\\?[^']'\\)"
+E that\'s just single quotes with extra steps
+
 exit $errors
