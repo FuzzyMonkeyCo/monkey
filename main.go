@@ -92,7 +92,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	rt, err := house.NewMonkey(binTitle, args.Tags)
+	rt, err := house.NewMonkey(binTitle, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed

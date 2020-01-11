@@ -10,6 +10,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -17,12 +18,6 @@ import (
 
 // grpcHost isn't const so ldflags can rewrite it
 var grpcHost = "do.dev.fuzzymonkey.co:7077"
-
-type TestingCampaingSuccess struct{}
-type TestingCampaingFailure struct{}
-
-func (e *TestingCampaingSuccess) Error() string { return "Found no bug" }
-func (e *TestingCampaingFailure) Error() string { return "Found a bug" }
 
 func (rt *Runtime) dial(ctx context.Context, apiKey string) (
 	closer func(),
@@ -59,6 +54,16 @@ func (rt *Runtime) dial(ctx context.Context, apiKey string) (
 	return
 }
 
+func (rt *Runtime) newProgressWithNtensity(ntensity uint32) {
+	if rt.logLevel != 0 {
+		rt.progress = &ci.Progresser{}
+	} else {
+		rt.progress = &cli.Progresser{}
+	}
+	rt.testingCampaingStart = time.Now()
+	rt.progress.MaxTestsCount(10 * ntensity)
+}
+
 func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {
 	var closer func()
 	if closer, err = rt.dial(ctx, apiKey); err != nil {
@@ -71,8 +76,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		break
 	}
 
-	rt.progress = cli.NewCli()
-	rt.progress.MaxTestsCount(10 * ntensity)
+	rt.newProgressWithNtensity(ntensity)
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
@@ -158,11 +162,8 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		}
 	}
 
-	if err != nil {
-		return
+	if err == nil {
+		err = rt.campaignSummary()
 	}
-	if rt.progress.CampaignSummary() {
-		return &TestingCampaingSuccess{}
-	}
-	return &TestingCampaingFailure{}
+	return
 }

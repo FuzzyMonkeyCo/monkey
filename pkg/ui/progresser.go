@@ -9,7 +9,6 @@ type Progresser interface {
 	TotalChecksCount(uint32)
 	TestCallsCount(uint32)
 	CallChecksCount(uint32)
-	CampaignSuccess(bool)
 
 	CheckFailed([]string)
 	CheckSkipped(string)
@@ -23,6 +22,4 @@ type Progresser interface {
 	// After(Event, io.Writer)
 
 	Terminate() error
-
-	CampaignSummary() bool
 }

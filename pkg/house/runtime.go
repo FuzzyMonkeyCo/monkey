@@ -36,11 +36,14 @@ type Runtime struct {
 
 	client fm.FuzzyMonkey_DoClient
 
-	progress ui.Progresser
+	logLevel             uint8
+	progress             ui.Progresser
+	lastFuzzProgress     *fm.Srv_FuzzProgress
+	testingCampaingStart time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
+func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("Ook!")
 		log.Println("[ERR]", err)
@@ -55,6 +58,7 @@ func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
 
 	rt = &Runtime{
 		binTitle: name,
+		logLevel: vvv,
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
