@@ -14,6 +14,7 @@ all: pkg/internal/fm/fuzzymonkey.pb.go lint
 
 update: SHELL := /bin/bash
 update:
+	go mod edit -replace=github.com/superhawk610/terminal=github.com/mattn/terminal@windows
 	go get -u -a
 	go mod tidy
 	go mod verify
