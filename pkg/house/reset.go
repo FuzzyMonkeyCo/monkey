@@ -36,6 +36,7 @@ func (rt *Runtime) reset(ctx context.Context) error {
 		var reason []string
 		if resetErr, ok := err.(*resetter.Error); ok {
 			reason = resetErr.Reason()
+			rt.progress.Errorf("Error resetting state:\n%s\n", reason)
 		} else {
 			reason = strings.Split(err.Error(), "\n")
 		}

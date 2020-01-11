@@ -74,7 +74,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			doc := toOA3(m1)
 			blob1, err := json.MarshalIndent(doc, "", "  ")
 			require.NoError(t, err)
-			log.Printf("%s\n", blob1)
+			log.Printf("%s", append(blob1, '\n'))
 			m1.vald, err = newSpecFromOA3(&doc)
 			require.NoError(t, err)
 			testSomeSchemas(t, m1)

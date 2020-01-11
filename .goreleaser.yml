@@ -17,7 +17,7 @@ builds:
   ignore: []
   ldflags:
   - '-X main.binSHA={{.ShortCommit}}'
-  - '-X main.binVersion={{.Tag}}'
+  - '-X main.binVersion={{.Env.CURRENT_TAG}}'
   - '-X github.com/FuzzyMonkeyCo/monkey/pkg/house.grpcHost={{.Env.GRPCHOST}}'
   - '-extldflags "-static"'
   - '-s -w'

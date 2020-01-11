@@ -103,7 +103,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 			method := methodFromOA3(docMethod)
 			vald.Spec.Endpoints[eid(1+j+l)] = &fm.Endpoint{
 				Endpoint: &fm.Endpoint_Json{
-					&fm.EndpointJSON{
+					Json: &fm.EndpointJSON{
 						Method:       method,
 						PathPartials: pathFromOA3(basePath, path),
 						Inputs:       inputs,
@@ -554,7 +554,7 @@ func ensureSchemaType(types interface{}, t string) []string {
 
 func pathFromOA3(basePath, path string) (partials []*fm.PathPartial) {
 	if basePath != "/" {
-		p := &fm.PathPartial{Pp: &fm.PathPartial_Part{basePath}}
+		p := &fm.PathPartial{Pp: &fm.PathPartial_Part{Part: basePath}}
 		partials = append(partials, p)
 	}
 
@@ -564,9 +564,9 @@ func pathFromOA3(basePath, path string) (partials []*fm.PathPartial) {
 		var p fm.PathPartial
 		if isCurly || i%2 != 0 {
 			// TODO (vendor): ensure path params are part of inputs
-			p.Pp = &fm.PathPartial_Ptr{part}
+			p.Pp = &fm.PathPartial_Ptr{Ptr: part}
 		} else {
-			p.Pp = &fm.PathPartial_Part{part}
+			p.Pp = &fm.PathPartial_Part{Part: part}
 		}
 		partials = append(partials, &p)
 	}
@@ -576,7 +576,7 @@ func pathFromOA3(basePath, path string) (partials []*fm.PathPartial) {
 		part2 := partials[1].GetPart()
 		if part1 != "" && part2 != "" {
 			partials = partials[1:]
-			partials[0] = &fm.PathPartial{Pp: &fm.PathPartial_Part{part1 + part2}}
+			partials[0] = &fm.PathPartial{Pp: &fm.PathPartial_Part{Part: part1 + part2}}
 			return
 		}
 	}

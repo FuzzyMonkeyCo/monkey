@@ -12,41 +12,10 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *Runtime) recvFuzzProgress() error {
-	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
-	srv, err := rt.client.Recv()
-	if err != nil {
-		log.Println("[ERR]", err)
-		return err
-	}
-
-	switch srv.GetMsg().(type) {
-	case *fm.Srv_FuzzProgress_:
-		log.Println("[NFO] handling srvprogress")
-		stts := srv.GetFuzzProgress()
-		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
-		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
-		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
-		rt.progress.TestCallsCount(stts.GetTestCallsCount())
-		rt.progress.CallChecksCount(stts.GetCallChecksCount())
-		if stts.GetSuccess() {
-			rt.progress.CampaignSuccess(true)
-		} else if stts.GetFailure() {
-			rt.progress.CampaignSuccess(false)
-		}
-		log.Println("[NFO] done handling srvprogress")
-		return nil
-	default:
-		err := fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
-		log.Println("[ERR]", err)
-		return err
-	}
-}
-
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
-		rt.progress.Showf(format, s)
+		rt.progress.Printf(format, s)
 	}
 
 	var mdl modeler.Interface
@@ -57,16 +26,16 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	if cllr, err = mdl.NewCaller(ctx, msg, showf); err != nil {
 		return
 	}
-	log.Println("[NFO] ▼", msg.GetInput())
+	log.Println("[NFO] call input:", msg.GetInput())
 
 	var errCall error
 	if errCall = cllr.Do(ctx); errCall != nil && errCall != modeler.ErrCallFailed {
-		log.Println("[NFO] ▲", errCall)
+		log.Println("[NFO] call error:", errCall)
 		return errCall
 	}
 
 	output := cllr.ToProto()
-	log.Println("[NFO] ▲", output)
+	log.Println("[NFO] call output:", output)
 
 	if err = rt.client.Send(&fm.Clt{
 		Msg: &fm.Clt_CallResponseRaw_{
@@ -186,7 +155,9 @@ func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	rt.thread.Print = func(_ *starlark.Thread, msg string) { rt.progress.Showf("%s", msg) }
+	rt.thread.Print = func(_ *starlark.Thread, msg string) {
+		rt.progress.Printf("%s", msg)
+	}
 
 	for i, trggr := range rt.triggers {
 		v := &fm.Clt_CallVerifProgress{}

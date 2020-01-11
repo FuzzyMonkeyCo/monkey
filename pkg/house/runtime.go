@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 	"unicode"
 
@@ -20,8 +21,6 @@ const localCfg = "fuzzymonkey.star"
 type Runtime struct {
 	binTitle string
 
-	eIds []uint32
-
 	thread     *starlark.Thread
 	globals    starlark.StringDict
 	modelState *modelState
@@ -31,13 +30,20 @@ type Runtime struct {
 
 	models map[string]modeler.Interface
 
+	eIds []uint32
+
+	tags map[string]string
+
 	client fm.FuzzyMonkey_DoClient
 
-	progress ui.Progresser
+	logLevel             uint8
+	progress             ui.Progresser
+	lastFuzzProgress     *fm.Srv_FuzzProgress
+	testingCampaingStart time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string) (rt *Runtime, err error) {
+func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("Ook!")
 		log.Println("[ERR]", err)
@@ -52,6 +58,7 @@ func NewMonkey(name string) (rt *Runtime, err error) {
 
 	rt = &Runtime{
 		binTitle: name,
+		logLevel: vvv,
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
@@ -77,11 +84,33 @@ func NewMonkey(name string) (rt *Runtime, err error) {
 	rt.envRead = make(map[string]string)
 	rt.triggers = make([]triggerActionAfterProbe, 0)
 
+	log.Println("[NFO] loading starlark config from", localCfg)
 	start := time.Now()
 	if err = rt.loadCfg(localCfg); err != nil {
 		return
 	}
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
+
+	for _, kv := range tags {
+		if idx := strings.IndexAny(kv, "="); idx != -1 {
+			k, v := kv[:idx], kv[idx+1:]
+			// NOTE: validation also client side for shorter dev loop
+			if err = printableASCII(k); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			if v == "" {
+				err = fmt.Errorf("value for tag %q is empty", k)
+				log.Println("[ERR]", err)
+				return
+			}
+			rt.tags[k] = v
+		} else {
+			err = fmt.Errorf("tags must follow key=value format: %q", kv)
+			log.Println("[ERR]", err)
+			return
+		}
+	}
 
 	return
 }
@@ -156,6 +185,7 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 	} else {
 		rt.modelState = newModelState(0)
 	}
+
 	for key := range rt.globals {
 		if err = printableASCII(key); err != nil {
 			err = errors.Wrap(err, "illegal export")

@@ -30,7 +30,7 @@ func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 	m.Spec = m.vald.Spec
 	return &fm.Clt_Fuzz_Model{
 		Model: &fm.Clt_Fuzz_Model_Openapiv3{
-			&m.Clt_Fuzz_Model_OpenAPIv3,
+			Openapiv3: &m.Clt_Fuzz_Model_OpenAPIv3,
 		},
 	}
 }

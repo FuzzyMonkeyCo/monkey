@@ -9,19 +9,17 @@ type Progresser interface {
 	TotalChecksCount(uint32)
 	TestCallsCount(uint32)
 	CallChecksCount(uint32)
-	CampaignSuccess(bool)
 
 	CheckFailed([]string)
 	CheckSkipped(string)
 	CheckPassed(string)
 	ChecksPassed()
 
-	Showf(string, ...interface{})
+	Printf(string, ...interface{})
+	Errorf(string, ...interface{})
 
 	// Before(Event, io.Writer)
 	// After(Event, io.Writer)
 
 	Terminate() error
-
-	CampaignSummary() bool
 }

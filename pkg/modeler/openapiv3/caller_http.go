@@ -209,7 +209,7 @@ func (c *tCapHTTP) Request() *types.Struct {
 func (c *tCapHTTP) Response() *types.Struct {
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"request": {Kind: &types.Value_StructValue{c.Request()}},
+			"request": {Kind: &types.Value_StructValue{StructValue: c.Request()}},
 			// FIXME? "error"
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),

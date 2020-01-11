@@ -52,8 +52,8 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 		log.Printf("[DBG] pre-seeding ref '%s'", absRef)
 		refSID := vald.newSID()
 		vald.Spec.Schemas.Json[refSID] = &fm.RefOrSchemaJSON{
-			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{&fm.SchemaPtr{Ref: absRef, SID: 0}},
-		}
+			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{
+				Ptr: &fm.SchemaPtr{Ref: absRef, SID: 0}}}
 		vald.Refs[absRef] = refSID
 	}
 
@@ -76,8 +76,8 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 		refSID := vald.Refs[absRef]
 		vald.Refs[absRef] = sid
 		vald.Spec.Schemas.Json[refSID] = &fm.RefOrSchemaJSON{
-			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{&fm.SchemaPtr{Ref: absRef, SID: sid}},
-		}
+			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{
+				Ptr: &fm.SchemaPtr{Ref: absRef, SID: sid}}}
 	}
 	return
 }
@@ -92,8 +92,8 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		}
 		SID := vald.newSID()
 		vald.Spec.Schemas.Json[SID] = &fm.RefOrSchemaJSON{
-			PtrOrSchema: &fm.RefOrSchemaJSON_Schema{&schema},
-		}
+			PtrOrSchema: &fm.RefOrSchemaJSON_Schema{
+				Schema: &schema}}
 		return SID
 	}
 
@@ -114,8 +114,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 		panic(ref)
 	}
 	vald.Spec.Schemas.Json[SID] = &fm.RefOrSchemaJSON{
-		PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{schemaPtr},
-	}
+		PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{Ptr: schemaPtr}}
 	return SID
 }
 
@@ -471,17 +470,22 @@ func formatToGo(format fm.Schema_JSON_Format) string {
 
 func enumFromGo(value interface{}) *types.Value {
 	if value == nil {
-		return &types.Value{Kind: &types.Value_NullValue{types.NullValue_NULL_VALUE}}
+		return &types.Value{Kind: &types.Value_NullValue{
+			NullValue: types.NullValue_NULL_VALUE}}
 	}
 	switch val := value.(type) {
 	case bool:
-		return &types.Value{Kind: &types.Value_BoolValue{val}}
+		return &types.Value{Kind: &types.Value_BoolValue{
+			BoolValue: val}}
 	case uint32:
-		return &types.Value{Kind: &types.Value_NumberValue{float64(val)}}
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
 	case float64:
-		return &types.Value{Kind: &types.Value_NumberValue{val}}
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: val}}
 	case string:
-		return &types.Value{Kind: &types.Value_StringValue{val}}
+		return &types.Value{Kind: &types.Value_StringValue{
+			StringValue: val}}
 	case []interface{}:
 		vs := make([]*types.Value, len(val))
 		for i, v := range val {
@@ -595,6 +599,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 			i--
 		}
 		if err != nil {
+			// Error printed in main
 			return
 		}
 	}
@@ -604,7 +609,7 @@ func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
 	if selected == 0 {
 		err = errors.New(e)
 		log.Println("[ERR]", err)
-		// Error printed in main.go
+		// Error printed in main
 		return
 	}
 

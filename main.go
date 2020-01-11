@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
 	"runtime"
 	"strings"
 
@@ -17,9 +19,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
-	docopt "github.com/docopt/docopt-go"
 	"github.com/hashicorp/logutils"
-	"github.com/mitchellh/mapstructure"
 )
 
 const (
@@ -30,10 +30,11 @@ const (
 	envAPIKey = "FUZZYMONKEY_API_KEY"
 )
 
-// These aren't const so ldflags can rewrite them
 var (
 	binSHA     = "feedb065"
-	binVersion = "0.0.0"
+	binVersion = "M.m.p"
+	binTitle   = strings.Join([]string{binName, binVersion, binSHA,
+		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
 )
 
 func main() {
@@ -41,94 +42,15 @@ func main() {
 	os.Exit(actualMain())
 }
 
-type params struct {
-	Fuzz, Shrink                   bool
-	Lint, Schema                   bool
-	Init, Env, Login, Logs         bool
-	Exec, Start, Reset, Stop, Repl bool
-	Update                         bool     `mapstructure:"--update"`
-	ShowSpec                       bool     `mapstructure:"--show-spec"`
-	N                              uint32   `mapstructure:"--tests"`
-	Verbosity                      uint8    `mapstructure:"-v"`
-	LogOffset                      uint64   `mapstructure:"--previous"`
-	ValidateAgainst                string   `mapstructure:"--validate-against"`
-	EnvVars                        []string `mapstructure:"VAR"`
-}
-
-func usage(binTitle string) (args *params, ret int) {
-	B := as.ColorNFO.Sprintf(binName)
-	usage := binTitle + `
-
-Usage:
-  ` + B + ` [-vvv] init [--with-magic]
-  ` + B + ` [-vvv] login [--user=USER]
-  ` + B + ` [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
-                     [--only=REGEX]... [--except=REGEX]...
-                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
-                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  ` + B + ` [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
-  ` + B + ` [-vvv] lint [--show-spec]
-  ` + B + ` [-vvv] schema [--validate-against=REF]
-  ` + B + ` [-vvv] exec (repl | start | reset | stop)
-  ` + B + ` [-vvv] -h | --help
-  ` + B + ` [-vvv]      --update
-  ` + B + ` [-vvv] -V | --version
-  ` + B + ` [-vvv] env [VAR ...]
-  ` + B + ` logs [--previous=N]
-
-Options:
-  -v, -vv, -vvv                  Debug verbosity level
-  -h, --help                     Show this screen
-  -U, --update                   Ensures ` + B + ` is current
-  -V, --version                  Show version
-  --seed=SEED                    Use specific parameters for the RNG
-  --validate-against=REF         Schema $ref to validate STDIN against
-  --tag=TAG                      Labels that can help classification
-  --test=ID                      Which test to shrink
-  --tests=N                      Number of tests to run [default: 100]
-  --only=REGEX                   Only test matching calls
-  --except=REGEX                 Do not test these calls
-  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
-  --calls-without-output=SCHEMA  Test calls which never output schema PTR
-  --user=USER                    Authenticate on fuzzymonkey.co as USER
-  --with-magic                   Auto fill in schemas from random API calls
-
-Try:
-     export FUZZYMONKEY_API_KEY=42
-  ` + B + ` --update
-  ` + B + ` exec reset
-  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --tests=0
-  echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
-
-	// https://github.com/docopt/docopt.go/issues/59
-	opts, err := docopt.ParseDoc(usage)
-	if err != nil {
-		// Usage shown: bad args
-		as.ColorERR.Println(err)
-		ret = code.Failed
-		return
-	}
-
-	if opts["--version"].(bool) {
-		fmt.Println(binTitle)
-		ret = code.OK
-		return
-	}
-
-	args = &params{}
-	if err := mapstructure.WeakDecode(opts, args); err != nil {
-		as.ColorERR.Println(err)
-		return nil, code.Failed
-	}
-	return
-}
-
 func actualMain() int {
-	binTitle := strings.Join([]string{binName, binVersion, binSHA,
-		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
-	args, ret := usage(binTitle)
+	args, ret := usage()
 	if args == nil {
 		return ret
+	}
+
+	if args.Version {
+		fmt.Println(binTitle)
+		return code.OK
 	}
 
 	if args.Logs {
@@ -154,7 +76,7 @@ func actualMain() int {
 		Writer:   os.Stderr,
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
-	log.Printf("[ERR] (not an error) %s %s %#v\n", binTitle, cwid.LogFile(), args)
+	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login
@@ -170,7 +92,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	rt, err := house.NewMonkey(binTitle)
+	rt, err := house.NewMonkey(binTitle, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -234,8 +156,21 @@ func actualMain() int {
 		return code.OK
 	}
 
-	var apiKey string
-	if apiKey = os.Getenv(envAPIKey); apiKey == "" {
+	if args.Seed != "" {
+		err := errors.New("--seed=SEED isn't implemented yet.")
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+	if args.Shrink != "" {
+		err := errors.New("--shrink=ID isn't implemented yet.")
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
+	apiKey := os.Getenv(envAPIKey)
+	if apiKey == "" {
 		err := fmt.Errorf("$%s is unset", envAPIKey)
 		log.Println("[ERR]", err)
 		as.ColorERR.Println(err)
@@ -248,29 +183,38 @@ func actualMain() int {
 		return code.Failed
 	}
 
-	if args.N == 0 {
-		as.ColorERR.Println("No tests to run.")
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, os.Interrupt)
+	go func() {
+		select {
+		case <-ctx.Done():
+			signal.Stop(sigC)
+		case <-sigC:
+			log.Println("[NFO] received ^C: terminating")
+			cancel()
+		}
+	}()
+
+	as.ColorNFO.Printf("\n Running tests...\n\n")
+	err = rt.Fuzz(ctx, args.N, apiKey)
+	log.Println("[ERR]", err)
+	if ctx.Err() == context.Canceled {
+		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	}
-	as.ColorNFO.Printf("\n Running tests...\n\n")
-
-	ctx := context.Background()
-	closer, err := rt.Dial(ctx, apiKey)
-	if err != nil {
-		return retryOrReport()
-	}
-	defer closer()
-
-	if err := rt.Fuzz(ctx, args.N); err != nil {
-		log.Println("[ERR]", err)
-		return retryOrReportThenCleanup(err)
-	}
-	fmt.Println()
-	fmt.Println()
-	if rt.ProgressCampaignSummary() {
+	switch err.(type) {
+	case *resetter.Error:
+		as.ColorERR.Println(err)
+		return code.FailedExec
+	case *house.TestingCampaingSuccess:
 		return code.OK
+	case *house.TestingCampaingFailure:
+		return code.FailedFuzz
 	}
-	return code.FailedFuzz
+	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
+	return retryOrReport()
 }
 
 func logLevel(verbosity uint8) logutils.LogLevel {
@@ -343,21 +287,12 @@ func doEnv(vars []string) int {
 	return code.OK
 }
 
-func retryOrReportThenCleanup(err error) int {
-	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
-	if _, ok := err.(*resetter.Error); ok {
-		as.ColorERR.Println(err)
-		return code.FailedExec
-	}
-	return retryOrReport()
-}
-
 func retryOrReport() int {
 	const issues = "https://github.com/" + githubSlug + "/issues"
 	const email = "ook@fuzzymonkey.co"
 	w := os.Stderr
-	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -v?")
-	fmt.Fprintf(w, "\nYou may want to try `monkey --update`.\n")
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
+	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
 	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)

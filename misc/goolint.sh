@@ -46,4 +46,13 @@ E unnecessary nil check around range
 # ! g 'make\(\[\][^],]+, [^0]'
 # E you meant capacity
 
+! g '\.Println\((\"[^"]+ \")+'
+E unnecessary trailing space
+
+! g 'log.Printf\([^,]+\\n.\,'
+E superfluous newline
+
+! g '[^A-Za-z0-9_]byte\("\\?[^"]"\)|'"[^A-Za-z0-9_]byte\\('\\\\?[^']'\\)"
+E that\'s just single quotes with extra steps
+
 exit $errors

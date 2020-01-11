@@ -7,47 +7,45 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  0.0.0   feedb065        go1.13.5        amd64   linux
+monkey  M.m.p   feedb065        go1.13.5        amd64   linux
 
 Usage:
   monkey [-vvv] init [--with-magic]
   monkey [-vvv] login [--user=USER]
-  monkey [-vvv] fuzz [--tests=N] [--seed=SEED] [--tag=TAG]...
+  monkey [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  monkey [-vvv] shrink --test=ID [--seed=SEED] [--tag=TAG]...
   monkey [-vvv] lint [--show-spec]
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
-  monkey [-vvv] -h | --help
-  monkey [-vvv]      --update
-  monkey [-vvv] -V | --version
   monkey [-vvv] env [VAR ...]
   monkey logs [--previous=N]
+  monkey [-vvv] update
+  monkey version | --version
+  monkey help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                  Debug verbosity level
-  -h, --help                     Show this screen
-  -U, --update                   Ensures monkey is current
-  -V, --version                  Show version
+  version                        Show the version string
+  update                         Ensures monkey is the latest version
+  --intensity=N                  The higher the more complex the tests [default: 10]
   --seed=SEED                    Use specific parameters for the RNG
-  --validate-against=REF         Schema $ref to validate STDIN against
-  --tag=TAG                      Labels that can help classification
-  --test=ID                      Which test to shrink
-  --tests=N                      Number of tests to run [default: 100]
+  --shrink=ID                    Which failed test to minimize
+  --tag=KV                       Labels that can help classification (format: key=value)
   --only=REGEX                   Only test matching calls
   --except=REGEX                 Do not test these calls
   --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA  Test calls which never output schema PTR
   --user=USER                    Authenticate on fuzzymonkey.co as USER
+  --validate-against=REF         Schema $ref to validate STDIN against
   --with-magic                   Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
-  monkey --update
+  monkey update
   monkey exec reset
-  monkey fuzz --only /pets --calls-without-input=NewPet --tests=0
+  monkey fuzz --only /pets --calls-without-input=NewPet
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 

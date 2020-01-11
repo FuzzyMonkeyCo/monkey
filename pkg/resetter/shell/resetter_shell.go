@@ -103,8 +103,14 @@ func (s *Shell) commands() (cmds string, err error) {
 		return
 
 	case len(s.Start) != 0 && len(s.Rst) == 0 && len(s.Stop) != 0:
-		log.Println("[NFO] running Shell.Stop then Shell.Start")
-		cmds = s.Stop + "\n" + s.Start
+		if s.isNotFirstRun {
+			log.Println("[NFO] running Shell.Stop then Shell.Start")
+			cmds = s.Stop + "\n" + s.Start
+			return
+		}
+
+		log.Println("[NFO] running Shell.Start")
+		cmds = s.Start
 		return
 
 	default:
@@ -142,7 +148,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) error {
 	exe.Stdin = &script
 	exe.Stdout = os.Stdout // TODO: plug Progresser here
 	exe.Stderr = &stderr   // TODO: same as above
-	log.Printf("[DBG] within %s $ %s\n", timeoutLong, script.Bytes())
+	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
 
 	ch := make(chan error)
 	// https://github.com/golang/go/issues/18874
@@ -185,14 +191,14 @@ func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err erro
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] within %s $ %s\n", timeoutShort, script.Bytes())
+	log.Printf("[DBG] within %s $ %s", timeoutShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	log.Println("[NFO] snapped env at ", envSerializedPath)
+	log.Println("[NFO] snapped env at", envSerializedPath)
 	return
 }
 

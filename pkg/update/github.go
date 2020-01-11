@@ -49,7 +49,7 @@ func (rel *GithubRelease) PeekLatestRelease() (latest string, err error) {
 	}
 
 	get.Header.Set("Accept", "application/vnd.github.v3+json")
-	log.Printf("[NFO] fetching latest version from %s\n", rel.LatestURL())
+	log.Printf("[NFO] fetching latest version from %s", rel.LatestURL())
 	resp, err := rel.Client.Do(get)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -93,7 +93,7 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 	hash := sha256.New()
 	Y := io.MultiWriter(bin, hash)
 
-	log.Printf("[NFO] fetching %s\n", relURL)
+	log.Printf("[NFO] fetching %s", relURL)
 	fmt.Println("Fetching", relURL)
 	resp, err := rel.Client.Get(relURL)
 	if err != nil {
@@ -114,7 +114,7 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 
 	sum := hex.EncodeToString(hash.Sum(nil))
 	log.Printf("[NFO] checksumed: %s", sum)
-	log.Printf("[NFO] fetching checksum from %s\n", sumsURL)
+	log.Printf("[NFO] fetching checksum from %s", sumsURL)
 	fmt.Println("Fetching checksum...")
 	latestSum, err := rel.fetchLatestSum(sumsURL)
 	if err != nil {
@@ -195,7 +195,7 @@ func (rel *GithubRelease) fetchLatestSum(URL string) (sum string, err error) {
 
 	if len(line) > 64 {
 		sum = string(line[:64])
-		log.Printf("[NFO] got checksum: %s\n", sum)
+		log.Printf("[NFO] got checksum: %s", sum)
 		return
 	}
 	err = fmt.Errorf("no checksum in %s", line)
