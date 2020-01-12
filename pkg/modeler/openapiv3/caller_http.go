@@ -134,8 +134,8 @@ func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
 }
 
 func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
-	if m.tcap.repProto.Body == nil {
-		f = append(f, "response body is empty")
+	if m.tcap.isRepBodyEmpty() {
+		s = "response body is empty"
 		return
 	}
 
@@ -329,7 +329,9 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 			return
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
-		c.repJSONErr = json.Unmarshal(c.repProto.Body, &c.repJSONRaw)
+		if !c.isRepBodyEmpty() {
+			c.repJSONErr = json.Unmarshal(c.repProto.Body, &c.repJSONRaw)
+		}
 	}
 
 	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
@@ -338,6 +340,11 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 	// TODO: move httputil.DumpResponse to Response() method
 
 	return
+}
+
+func (c *tCapHTTP) isRepBodyEmpty() bool {
+	// Catches nil & ""
+	return len(c.repProto.Body) == 0
 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
