@@ -151,6 +151,11 @@ func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
 }
 
 func (m *oa3) checkFirstValidatesJSONSchema() (s string, f []string) {
+	if m.tcap.matchedSID == 0 {
+		s = "no JSON Schema specified for response"
+		return
+	}
+
 	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repJSON); len(errs) != 0 {
 		f = errs
 		return
@@ -231,7 +236,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 	s.Fields["headers"] = &types.Value{Kind: &types.Value_StructValue{
 		StructValue: &types.Struct{Fields: headers}}}
 
-	if c.repProto.Body != nil {
+	if !c.isRepBodyEmpty() {
 		s.Fields["json"] = c.repJSON
 	}
 	// TODO? TLS *tls.ConnectionState
@@ -386,7 +391,7 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 
 func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
-	if body := input.GetBody(); len(body) != 0 {
+	if body := input.GetBody(); body != nil {
 		b := bytes.NewReader(body)
 		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
 	} else {
