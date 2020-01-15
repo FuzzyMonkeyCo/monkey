@@ -348,8 +348,7 @@ func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (e
 }
 
 func (c *tCapHTTP) isRepBodyEmpty() bool {
-	// Catches nil & ""
-	return len(c.repProto.Body) == 0
+	return c.repProto.Body == nil || len(c.repProto.Body) == 0
 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {

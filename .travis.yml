@@ -23,9 +23,14 @@ install:
 - git --version
 - shellcheck --version
 - go version
+- |
+  cd /tmp
+  go get -u -v github.com/goreleaser/godownloader && go install github.com/goreleaser/godownloader
+  cd -
 
 script:
-- shellcheck $(git ls-files | grep '.sh$' | grep -vF .godownloader.sh)
+- godownloader -r FuzzyMonkeyCo/monkey -o .godownloader.sh .goreleaser.yml
+- shellcheck $(git ls-files | grep '.sh$' | grep -vF .godownloader.sh) #TODO: fix godownloader warnings upstream
 - '[[ $(git grep -l pwdID | wc -l) = 2 ]]'  # lint: pwdID fiddling happens only in one place
 - make lint
 - go mod tidy
