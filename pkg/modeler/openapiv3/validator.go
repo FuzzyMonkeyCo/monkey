@@ -477,7 +477,31 @@ func enumFromGo(value interface{}) *types.Value {
 	case bool:
 		return &types.Value{Kind: &types.Value_BoolValue{
 			BoolValue: val}}
+	case uint8:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case int8:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case uint16:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case int16:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
 	case uint32:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case int32:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case uint64:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case int64:
+		return &types.Value{Kind: &types.Value_NumberValue{
+			NumberValue: float64(val)}}
+	case float32:
 		return &types.Value{Kind: &types.Value_NumberValue{
 			NumberValue: float64(val)}}
 	case float64:
@@ -528,7 +552,7 @@ func EnumToGo(value *types.Value) interface{} {
 		}
 		return vs
 	default:
-		panic("unreachable")
+		panic(fmt.Errorf("cannot convert from type %T: %+v", value, value))
 	}
 }
 

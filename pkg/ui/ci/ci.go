@@ -34,17 +34,19 @@ func (p *Progresser) ChecksPassed() {
 	as.ColorNFO.Println(" Checks passed.")
 }
 
-func (p *Progresser) CheckPassed(s string) {
+func (p *Progresser) CheckPassed(name, msg string) {
 	as.ColorOK.Printf("PASSED ")
-	as.ColorNFO.Println(s)
+	as.ColorNFO.Printf("%s: ", name)
+	fmt.Println(msg)
 }
 
-func (p *Progresser) CheckSkipped(s string) {
+func (p *Progresser) CheckSkipped(name, msg string) {
 	as.ColorWRN.Printf("SKIPPED ")
-	as.ColorNFO.Println(s)
+	as.ColorNFO.Printf("%s: ", name)
+	fmt.Println(msg)
 }
 
-func (p *Progresser) CheckFailed(ss []string) {
+func (p *Progresser) CheckFailed(name string, ss []string) {
 	if len(ss) > 0 {
 		as.ColorERR.Printf("FAILED ")
 		as.ColorNFO.Println(ss[0])

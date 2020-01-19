@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -28,14 +27,17 @@ var (
 )
 
 var (
-	_ modeler.Caller        = (*tCapHTTP)(nil)
-	_ modeler.CaptureShower = (*tCapHTTP)(nil)
-	_ http.RoundTripper     = (*tCapHTTP)(nil)
+	_ modeler.Caller    = (*tCapHTTP)(nil)
+	_ http.RoundTripper = (*tCapHTTP)(nil)
 )
 
 type tCapHTTP struct {
-	showf    func(string, ...interface{})
-	req, rep []byte
+	showf      func(string, ...interface{})
+	req, rep   []byte
+	doErr      error
+	skipping   string
+	matchedSID sid
+	checks     []namedLambda
 
 	httpReq  *http.Request
 	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
@@ -45,7 +47,6 @@ type tCapHTTP struct {
 	repJSONRaw       interface{}
 	repJSONErr       error
 
-	elapsed time.Duration
 	// TODO: pick from these
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
 	// %{filename_effective} shows the ultimate filename that curl writes out to. This is only meaningful if curl is told to write to a file with the --remote-name or --output option. It's most useful in combination with the --remote-header-name option.
@@ -74,10 +75,6 @@ type tCapHTTP struct {
 	// %{time_starttransfer} shows the time, in seconds, it took from the start until the first byte was just about to be transferred. This includes time_pretransfer and also the time the server needed to calculate the result.
 	// %{time_total} shows the total time, in seconds, that the full operation lasted. The time will be displayed with millisecond resolution.
 	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
-
-	// FIXME: not sure about this
-	firstChecks []namedLambda
-	matchedSID  sid
 }
 
 func (c *tCapHTTP) ToProto() *fm.Clt_CallResponseRaw {
@@ -92,12 +89,12 @@ type namedLambda struct {
 	lambda modeler.CheckerFunc
 }
 
-func (c *tCapHTTP) CheckFirst() (string, modeler.CheckerFunc) {
-	if len(c.firstChecks) == 0 {
+func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
+	if len(c.checks) == 0 {
 		return "", nil
 	}
 	var nameAndLambda namedLambda
-	nameAndLambda, c.firstChecks = c.firstChecks[0], c.firstChecks[1:]
+	nameAndLambda, c.checks = c.checks[0], c.checks[1:]
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
@@ -109,31 +106,67 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string
 		return nil, err
 	}
 
-	m.tcap.firstChecks = []namedLambda{
-		{"HTTP code", m.checkFirstHTTPCode(msg.GetEId())},
-		{"valid JSON response", m.checkFirstValidJSONResponse},
-		{"response validates schema", m.checkFirstValidatesJSONSchema},
+	m.tcap.checks = []namedLambda{
+		{"connection to server", m.checkConn},
+		{"code < 500", m.checkNot5XX},
+		//FIXME: when decoupling modeler/caller move these to modeler
+		{"HTTP code", m.checkHTTPCode(msg.GetEId())},
+		//TODO: check media type matches spec here (Content-Type: application/json)
+		{"valid JSON response", m.checkValidJSONResponse},
+		{"response validates schema", m.checkValidatesJSONSchema},
 	}
 	return m.tcap, nil
 }
 
-func (m *oa3) checkFirstHTTPCode(eId uint32) modeler.CheckerFunc {
-	return func() (s string, f []string) {
+func (m *oa3) checkConn() (s, skipped string, f []string) {
+	if err := m.tcap.doErr; err != nil {
+		f = append(f, "communication with server could not be established")
+		f = append(f, err.Error())
+		return
+	}
+	s = "request sent"
+	return
+}
+
+func (m *oa3) checkNot5XX() (s, skipped string, f []string) {
+	if code := m.tcap.repProto.StatusCode; code >= 500 {
+		f = append(f, fmt.Sprintf("server error: '%d'", code))
+		return
+	}
+	s = "no server error"
+	return
+}
+
+func (m *oa3) checkHTTPCode(eId uint32) modeler.CheckerFunc {
+	return func() (s, skipped string, f []string) {
 		endpoint := m.vald.Spec.Endpoints[eId].GetJson()
 		code := m.tcap.repProto.StatusCode
 		var ok bool
-		// TODO: handle 1,2,3,4,5,XXX
-		// TODO: think about overflow
-		if m.tcap.matchedSID, ok = endpoint.Outputs[uint32(code)]; !ok {
-			f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
-			return
+		if m.tcap.matchedSID, ok = endpoint.Outputs[code]; !ok {
+			var xxx uint32
+			switch {
+			case code < 200:
+				xxx = 1
+			case code < 300:
+				xxx = 2
+			case code < 400:
+				xxx = 3
+			case code < 500:
+				xxx = 4
+			}
+			if m.tcap.matchedSID, ok = endpoint.Outputs[xxx]; !ok {
+				if m.tcap.matchedSID, ok = endpoint.Outputs[0]; !ok {
+					f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
+					return
+				}
+			}
 		}
 		s = "HTTP code checked"
 		return
 	}
 }
 
-func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
+func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
 	if m.tcap.isRepBodyEmpty() {
 		s = "response body is empty"
 		return
@@ -150,12 +183,15 @@ func (m *oa3) checkFirstValidJSONResponse() (s string, f []string) {
 	return
 }
 
-func (m *oa3) checkFirstValidatesJSONSchema() (s string, f []string) {
+func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 	if m.tcap.matchedSID == 0 {
-		s = "no JSON Schema specified for response"
+		skipped = "no JSON Schema specified for response"
 		return
 	}
-
+	if m.tcap.isRepBodyEmpty() {
+		skipped = "response body is empty"
+		return
+	}
 	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repJSON); len(errs) != 0 {
 		f = errs
 		return
@@ -164,17 +200,17 @@ func (m *oa3) checkFirstValidatesJSONSchema() (s string, f []string) {
 	return
 }
 
-func (c *tCapHTTP) ShowRequest(showf func(string, ...interface{})) error {
-	showf("%s", c.req)
-	return nil
+func (c *tCapHTTP) showRequest() {
+	c.showf("%s", c.req)
 }
 
-func (c *tCapHTTP) ShowResponse(showf func(string, ...interface{})) error {
-	if c.rep == nil {
-		return errors.New("response is unset")
+func (c *tCapHTTP) showResponse() {
+	if err := c.doErr; err != nil {
+		c.showf("HTTP error: %s\n", err.Error())
+		return
 	}
-	showf("%s", c.rep)
-	return nil
+	c.showf("%s", c.rep)
+	return
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
@@ -220,6 +256,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 			"reason":      enumFromGo(c.repProto.Reason),
 			// "content" as bytes?
 			// "history" :: []Rep (redirects)?
+			"elapsed_ns": enumFromGo(c.repProto.ElapsedNs),
 		},
 	}
 
@@ -296,15 +333,14 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 	return
 }
 
-func (c *tCapHTTP) response(r *http.Response, elapsed time.Duration, e error) (err error) {
-	c.repProto = &fm.Clt_CallResponseRaw_Output_HttpResponse{
-		StatusCode: uint32(r.StatusCode), // TODO: check bounds
-		Reason:     r.Status,
-		Elapsed:    uint32(elapsed),
-	}
+func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	if e != nil {
 		c.repProto.Error = e.Error()
+		c.rep = []byte(e.Error())
+		return
 	}
+	c.repProto.StatusCode = uint32(r.StatusCode) // TODO: check bounds
+	c.repProto.Reason = r.Status
 
 	headers := fromRepHeader(r.Header)
 	for key, _ := range headers {
@@ -375,15 +411,15 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	}
 
 	start := time.Now()
-	if rep, err = t.RoundTrip(req); err != nil {
-		return
+	rep, err = t.RoundTrip(req)
+	c.repProto = &fm.Clt_CallResponseRaw_Output_HttpResponse{
+		ElapsedNs: time.Since(start).Nanoseconds(),
 	}
-	elapsed := time.Since(start)
 
-	callFailed := err != nil
-	err = c.response(rep, elapsed, err)
-	if callFailed {
-		err = modeler.ErrCallFailed
+	if e := c.response(rep, err); e != nil {
+		if err == nil {
+			err = e
+		}
 	}
 	return
 }
@@ -429,34 +465,25 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 	return
 }
 
-func (c *tCapHTTP) Do(ctx context.Context) (err error) {
-	req := c.httpReq
-
+func (c *tCapHTTP) Do(ctx context.Context) {
 	// TODO: output `curl` requests when showing counterexample
 	//   https://github.com/sethgrid/gencurl
 	//   https://github.com/moul/http2curl
 	// FIXME: info output in `curl` style with timings
-	if c.req, err = httputil.DumpRequestOut(req, false); err != nil {
+	var err error
+	if c.req, err = httputil.DumpRequestOut(c.httpReq, false); err != nil {
+		log.Println("[ERR]", err)
 		return
 	}
 	// TODO: move httputil.DumpRequestOut to Request() method
-	if err = c.ShowRequest(c.showf); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
+	c.showRequest()
 
 	var r *http.Response
-	r, err = (&http.Client{
-		Transport: c,
-	}).Do(req)
-
-	if err == nil {
+	if r, c.doErr = (&http.Client{Transport: c}).Do(c.httpReq); c.doErr == nil {
 		r.Body.Close()
 	}
 
-	if err = c.ShowResponse(c.showf); err != nil {
-		log.Println("[ERR]", err)
-	}
+	c.showResponse()
 	return
 }
 

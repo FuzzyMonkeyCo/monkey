@@ -10,9 +10,9 @@ type Progresser interface {
 	TestCallsCount(uint32)
 	CallChecksCount(uint32)
 
-	CheckFailed([]string)
-	CheckSkipped(string)
-	CheckPassed(string)
+	CheckFailed(string, []string)
+	CheckSkipped(string, string)
+	CheckPassed(string, string)
 	ChecksPassed()
 
 	Printf(string, ...interface{})

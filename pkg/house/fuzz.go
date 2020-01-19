@@ -77,6 +77,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	}
 
 	rt.newProgressWithNtensity(ntensity)
+	// Pass user agent down to caller
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
@@ -149,12 +150,14 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	}
 
 	log.Println("[DBG] server dialog ended, cleaning up...")
+	log.Println("[NFO] terminating resetter")
 	if err2 := mdl.GetResetter().Terminate(ctx, nil); err2 != nil {
 		log.Println("[ERR]", err2)
 		if err == nil {
 			err = err2
 		}
 	}
+	log.Println("[NFO] terminating progresser")
 	if err2 := rt.progress.Terminate(); err2 != nil {
 		log.Println("[ERR]", err2)
 		if err == nil {
@@ -162,7 +165,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		}
 	}
 
-	if err == nil {
+	if err == nil || err == modeler.ErrCheckFailed {
 		err = rt.campaignSummary()
 	}
 	return

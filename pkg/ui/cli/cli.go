@@ -34,7 +34,7 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 	p.ticker = time.Tick(333 * time.Millisecond)
 	go func() {
 		for range p.ticker {
-			p.state(0)
+			p.tick()
 		}
 	}()
 }
@@ -48,7 +48,7 @@ func (p *Progresser) Terminate() error {
 func (p *Progresser) TotalTestsCount(v uint32) { p.totalTestsCount = v }
 func (p *Progresser) TotalCallsCount(v uint32) {
 	if p.totalCallsCount != v {
-		p.state(1)
+		p.tick()
 	}
 	p.totalCallsCount = v
 }
@@ -56,11 +56,10 @@ func (p *Progresser) TotalChecksCount(v uint32) { p.totalChecksCount = v }
 func (p *Progresser) TestCallsCount(v uint32)   { p.testCallsCount = v }
 func (p *Progresser) CallChecksCount(v uint32)  { p.callChecksCount = v }
 
-func (p *Progresser) state(inc int) {
+func (p *Progresser) tick() {
 	state := cliStates[p.stateIdx%len(cliStates)]
 	p.stateIdx++
-	advancement := inc + int(p.totalCallsCount)
-	p.bar.Update(advancement, bar.Context{bar.Ctx("state", state)})
+	p.bar.TickAndUpdate(bar.Context{bar.Ctx("state", state)})
 }
 
 func (p *Progresser) Printf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
@@ -74,13 +73,13 @@ func (p *Progresser) wrn(s string)  { p.show(as.ColorWRN.Sprintf("%s", s)) }
 func (p *Progresser) err(s string)  { p.show(as.ColorERR.Sprintf("%s", s)) }
 
 func (p *Progresser) ChecksPassed() { p.nfo(" Checks passed.\n") }
-func (p *Progresser) CheckPassed(s string) {
-	p.show(" " + as.ColorOK.Sprintf(prefixSucceeded) + " " + as.ColorNFO.Sprintf(s))
+func (p *Progresser) CheckPassed(name, msg string) {
+	p.bar.Interruptf(" %s %s", as.ColorOK.Sprintf(prefixSucceeded), as.ColorNFO.Sprintf(msg))
 }
-func (p *Progresser) CheckSkipped(s string) {
-	p.show(" " + as.ColorWRN.Sprintf(prefixSkipped) + " " + as.ColorNFO.Sprintf(s) + " skipped")
+func (p *Progresser) CheckSkipped(name, msg string) {
+	p.show(" " + as.ColorWRN.Sprintf(prefixSkipped) + " " + msg)
 }
-func (p *Progresser) CheckFailed(ss []string) {
+func (p *Progresser) CheckFailed(name string, ss []string) {
 	if len(ss) > 0 {
 		p.show(" " + as.ColorERR.Sprintf(prefixFailed) + " " + as.ColorNFO.Sprintf(ss[0]))
 	}

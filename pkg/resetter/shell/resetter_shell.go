@@ -143,11 +143,11 @@ func (s *Shell) exec(ctx context.Context, cmds string) error {
 	fmt.Fprintln(&script, "set +o errexit")
 	fmt.Fprintln(&script, "declare -p >", cwid.EnvFile())
 
-	var stderr bytes.Buffer
+	var stderr, stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = os.Stdout // TODO: plug Progresser here
-	exe.Stderr = &stderr   // TODO: same as above
+	exe.Stdout = &stdout //FIXME: plug Progresser here
+	exe.Stderr = &stderr //FIXME: plug Progresser here
 	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
 
 	ch := make(chan error)
@@ -165,13 +165,14 @@ func (s *Shell) exec(ctx context.Context, cmds string) error {
 		ch <- e
 		log.Println("[DBG] execution error:", e)
 	}()
+	log.Printf("[NFO] STDOUT: %q", stdout.String())
 	if err := <-ch; err != nil {
 		// TODO: mux stderr+stdout and fwd to server to track progress
 		reason := stderr.String() + "\n" + err.Error()
 		log.Println("[ERR]", reason)
 		return resetter.NewError(strings.Split(reason, "\n"))
 	}
-	log.Println("[NFO]", stderr.String())
+	log.Printf("[NFO] STDERR: %q", stderr.String())
 	return nil
 }
 
