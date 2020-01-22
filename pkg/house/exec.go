@@ -38,7 +38,7 @@ func (rt *Runtime) JustExecStart() error {
 	}
 
 	resetter := mdl.GetResetter()
-	return resetter.ExecStart(context.Background(), nil)
+	return resetter.ExecStart(context.Background(), true)
 }
 
 // JustExecReset only executes SUT 'reset'
@@ -50,7 +50,7 @@ func (rt *Runtime) JustExecReset() error {
 	}
 
 	resetter := mdl.GetResetter()
-	return resetter.ExecReset(context.Background(), nil)
+	return resetter.ExecReset(context.Background(), true)
 }
 
 // JustExecStop only executes SUT 'stop'
@@ -62,5 +62,5 @@ func (rt *Runtime) JustExecStop() error {
 	}
 
 	resetter := mdl.GetResetter()
-	return resetter.ExecStop(context.Background(), nil)
+	return resetter.ExecStop(context.Background(), true)
 }

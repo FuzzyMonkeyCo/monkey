@@ -1,6 +1,8 @@
 package house
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -9,12 +11,22 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-func (rt *Runtime) recvFuzzProgress() error {
+const tx30sTimeout = 30 * time.Second
+
+var err30sTimeout = errors.New("gRPC recv timeout after 30s")
+
+func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
-	srv, err := rt.client.Recv()
+	var srv *fm.Srv
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case srv = <-rt.client.RcvMsg():
+	case err = <-rt.client.RcvErr():
+	}
 	if err != nil {
 		log.Println("[ERR]", err)
-		return err
+		return
 	}
 
 	switch srv.GetMsg().(type) {
@@ -29,11 +41,11 @@ func (rt *Runtime) recvFuzzProgress() error {
 		rt.progress.CallChecksCount(stts.GetCallChecksCount())
 		rt.lastFuzzProgress = stts
 		log.Println("[NFO] done handling srvprogress")
-		return nil
+		return
 	default:
-		err := fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
+		err = fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
 		log.Println("[ERR]", err)
-		return err
+		return
 	}
 }
 

@@ -88,7 +88,7 @@ message Clt {
       failed = 3;
     }
     Status status = 1;
-    uint64 ts_diff = 2;
+    int64 elapsed_ns = 2;
     repeated string reason = 3;
   }
 

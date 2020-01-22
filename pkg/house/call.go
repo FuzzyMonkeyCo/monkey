@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -32,44 +33,59 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	output := cllr.ToProto()
 	log.Println("[NFO] call output:", output)
 
-	if err = rt.client.Send(&fm.Clt{
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallResponseRaw_{
 			CallResponseRaw: output,
-		}}); err != nil {
+		}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	if err = rt.recvFuzzProgress(); err != nil {
+	if err = rt.recvFuzzProgress(ctx); err != nil {
 		return
 	}
 
 	// Just the amount of checks needed to be able to call cllr.Response()
-	if err = rt.callerChecks(cllr); err != nil {
+	if err = rt.callerChecks(ctx, cllr); err != nil {
 		return
 	}
 
 	callResponse := cllr.Response()
 	// Actionable response data parsed...
-	if err = rt.client.Send(&fm.Clt{
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallVerifProgress_{
 			CallVerifProgress: &fm.Clt_CallVerifProgress{
 				Status:   fm.Clt_CallVerifProgress_data,
 				Response: callResponse,
-			}}}); err != nil {
+			}}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
 	// TODO: user-defined eBPF triggers
-	if err = rt.userChecks(callResponse); err != nil {
+	if err = rt.userChecks(ctx, callResponse); err != nil {
 		return
 	}
 
 	// Through all checks: we're done
-	if err = rt.client.Send(&fm.Clt{
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallVerifProgress_{
 			CallVerifProgress: &fm.Clt_CallVerifProgress{},
-		}}); err != nil {
+		}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -81,7 +97,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 
 // FIXME: turn this into a sync.errgroup with additional tasks being
 // triggers with match-all predicates andalso pure actions
-func (rt *Runtime) callerChecks(cllr modeler.Caller) (err error) {
+func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err error) {
 	for {
 		var lambda modeler.CheckerFunc
 		v := &fm.Clt_CallVerifProgress{}
@@ -93,10 +109,15 @@ func (rt *Runtime) callerChecks(cllr modeler.Caller) (err error) {
 		log.Println("[NFO] checking", v.Name)
 
 		v.Status = fm.Clt_CallVerifProgress_start
-		if err = rt.client.Send(&fm.Clt{
+		select {
+		case <-time.After(tx30sTimeout):
+			err = err30sTimeout
+		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
-			}}); err != nil {
+			}}):
+		}
+		if err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -126,14 +147,19 @@ func (rt *Runtime) callerChecks(cllr modeler.Caller) (err error) {
 			rt.progress.CheckSkipped(v.Name, v.Reason[0])
 		}
 
-		if err = rt.client.Send(&fm.Clt{
+		select {
+		case <-time.After(tx30sTimeout):
+			err = err30sTimeout
+		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
-			}}); err != nil {
+			}}):
+		}
+		if err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = rt.recvFuzzProgress(); err != nil {
+		if err = rt.recvFuzzProgress(ctx); err != nil {
 			return
 		}
 
@@ -145,7 +171,7 @@ func (rt *Runtime) callerChecks(cllr modeler.Caller) (err error) {
 	}
 }
 
-func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
+func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (err error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
 	var response starlark.Value
 	//FIXME: replace response copies by calls to this
@@ -165,10 +191,15 @@ func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
 		log.Println("[NFO] checking user property:", v.Name)
 
 		v.Status = fm.Clt_CallVerifProgress_start
-		if err = rt.client.Send(&fm.Clt{
+		select {
+		case <-time.After(tx30sTimeout):
+			err = err30sTimeout
+		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
-			}}); err != nil {
+			}}):
+		}
+		if err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -244,14 +275,19 @@ func (rt *Runtime) userChecks(callResponse *types.Struct) (err error) {
 			rt.progress.CheckFailed(v.Name, v.Reason)
 		}
 
-		if err = rt.client.Send(&fm.Clt{
+		select {
+		case <-time.After(tx30sTimeout):
+			err = err30sTimeout
+		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
-			}}); err != nil {
+			}}):
+		}
+		if err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = rt.recvFuzzProgress(); err != nil {
+		if err = rt.recvFuzzProgress(ctx); err != nil {
 			return
 		}
 

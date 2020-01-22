@@ -12,47 +12,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/cli"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
-
-// grpcHost isn't const so ldflags can rewrite it
-var grpcHost = "do.dev.fuzzymonkey.co:7077"
-
-func (rt *Runtime) dial(ctx context.Context, apiKey string) (
-	closer func(),
-	err error,
-) {
-	log.Println("[NFO] dialing", grpcHost)
-	var conn *grpc.ClientConn
-	if conn, err = grpc.DialContext(ctx, grpcHost,
-		grpc.WithBlock(),
-		grpc.WithTimeout(4*time.Second),
-		grpc.WithInsecure(),
-	); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	ctx = metadata.AppendToOutgoingContext(ctx,
-		"ua", rt.binTitle,
-		"apiKey", apiKey,
-	)
-
-	if rt.client, err = fm.NewFuzzyMonkeyClient(conn).Do(ctx); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	closer = func() {
-		if err := rt.client.CloseSend(); err != nil {
-			log.Println("[ERR]", err)
-		}
-		if err := conn.Close(); err != nil {
-			log.Println("[ERR]", err)
-		}
-	}
-	return
-}
 
 func (rt *Runtime) newProgressWithNtensity(ntensity uint32) {
 	if rt.logLevel != 0 {
@@ -65,11 +26,15 @@ func (rt *Runtime) newProgressWithNtensity(ntensity uint32) {
 }
 
 func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {
-	var closer func()
-	if closer, err = rt.dial(ctx, apiKey); err != nil {
+	ctx = metadata.AppendToOutgoingContext(ctx,
+		"ua", rt.binTitle,
+		"apiKey", apiKey,
+	)
+
+	if rt.client, err = fm.NewCh(ctx); err != nil {
 		return
 	}
-	defer closer()
+	defer rt.client.Close()
 
 	var mdl modeler.Interface
 	for _, mdl = range rt.models {
@@ -81,7 +46,10 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
-	if err = rt.client.Send(&fm.Clt{
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_Fuzz_{
 			Fuzz: &fm.Clt_Fuzz{
 				EIDs:      rt.eIds,
@@ -94,7 +62,9 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 				Seed:  []byte{42, 42, 42},
 				Tags:  rt.tags,
 				Usage: os.Args,
-			}}}); err != nil {
+			}}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -112,10 +82,15 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
-		if srv, err = rt.client.Recv(); err != nil {
+		select {
+		case <-time.After(tx30sTimeout):
+			err = err30sTimeout
+		case srv = <-rt.client.RcvMsg():
+		case err = <-rt.client.RcvErr():
+		}
+		if err != nil {
 			if err == io.EOF {
 				err = nil
-				break
 			}
 			log.Println("[ERR]", err)
 			break
@@ -141,7 +116,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			break
 		}
 
-		if err2 := rt.recvFuzzProgress(); err2 != nil {
+		if err2 := rt.recvFuzzProgress(ctx); err2 != nil {
 			if err == nil {
 				err = err2
 			}
@@ -151,7 +126,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 	log.Println("[DBG] server dialog ended, cleaning up...")
 	log.Println("[NFO] terminating resetter")
-	if err2 := mdl.GetResetter().Terminate(ctx, nil); err2 != nil {
+	if err2 := mdl.GetResetter().Terminate(ctx, false); err2 != nil {
 		log.Println("[ERR]", err2)
 		if err == nil {
 			err = err2

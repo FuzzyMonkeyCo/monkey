@@ -118,7 +118,7 @@ func actualMain() int {
 			fn = rt.JustExecReset
 		case args.Stop:
 			fn = rt.JustExecStop
-		default:
+		case args.Repl:
 			fn = rt.JustExecREPL
 		}
 		if err := fn(); err != nil {

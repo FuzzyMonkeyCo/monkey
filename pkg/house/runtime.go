@@ -34,7 +34,7 @@ type Runtime struct {
 
 	tags map[string]string
 
-	client fm.FuzzyMonkey_DoClient
+	client *fm.Ch
 
 	logLevel             uint8
 	progress             ui.Progresser
