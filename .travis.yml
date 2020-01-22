@@ -23,10 +23,7 @@ install:
 - git --version
 - shellcheck --version
 - go version
-- |
-  cd /tmp
-  go get -u -v github.com/goreleaser/godownloader && go install github.com/goreleaser/godownloader
-  cd -
+- curl -sfL https://install.goreleaser.com/github.com/goreleaser/goreleaser.sh | BINDIR=$GOPATH/bin sh
 
 script:
 - godownloader -r FuzzyMonkeyCo/monkey -o .godownloader.sh .goreleaser.yml
