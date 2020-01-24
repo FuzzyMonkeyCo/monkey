@@ -1,10 +1,12 @@
 package modeler_openapiv3
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"strings"
 
@@ -16,7 +18,7 @@ import (
 )
 
 // Lint TODO
-func (m *oa3) Lint(showSpec bool) (err error) {
+func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
 	if blob, err = ioutil.ReadFile(m.File); err != nil {
 		log.Println("[ERR]", err)
@@ -28,7 +30,11 @@ func (m *oa3) Lint(showSpec bool) (err error) {
 		return
 	}
 
-	loader := openapi3.NewSwaggerLoader()
+	loader := &openapi3.SwaggerLoader{
+		Context:                ctx,
+		IsExternalRefsAllowed:  true,
+		LoadSwaggerFromURIFunc: m.loadSwaggerFromURI,
+	}
 	doc, err := loader.LoadSwaggerFromData(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -37,7 +43,7 @@ func (m *oa3) Lint(showSpec bool) (err error) {
 	}
 
 	log.Println("[NFO] first validation pass")
-	if err = doc.Validate(loader.Context); err != nil {
+	if err = doc.Validate(ctx); err != nil {
 		log.Println("[ERR]", err)
 		as.ColorERR.Println(err)
 		return
@@ -121,4 +127,9 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 		fmt.Fprintf(os.Stderr, "%s\n", pretty)
 	}
 	return
+}
+
+func (m *oa3) loadSwaggerFromURI(loader *openapi3.SwaggerLoader, uri *url.URL) (*openapi3.Swagger, error) {
+	// TODO: support local & remote URIs
+	return nil, fmt.Errorf("unsupported URI: %q", uri.String())
 }
