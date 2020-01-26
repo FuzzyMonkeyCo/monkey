@@ -37,6 +37,7 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 lint:
 	go fmt ./...
 	./misc/goolint.sh
+	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
 
 debug: all
 	./$(EXE) lint

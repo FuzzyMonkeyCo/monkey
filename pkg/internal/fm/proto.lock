@@ -1,0 +1,1172 @@
+{
+  "definitions": [
+    {
+      "protopath": "fuzzymonkey.proto",
+      "def": {
+        "enums": [
+          {
+            "name": "Fuzz.ModelKind",
+            "enum_fields": [
+              {
+                "name": "UNKNOWN"
+              },
+              {
+                "name": "OpenAPIv3",
+                "integer": 1
+              }
+            ]
+          },
+          {
+            "name": "ResetProgress.Status",
+            "enum_fields": [
+              {
+                "name": "NOOP"
+              },
+              {
+                "name": "started",
+                "integer": 1
+              },
+              {
+                "name": "ended",
+                "integer": 2
+              },
+              {
+                "name": "failed",
+                "integer": 3
+              }
+            ]
+          },
+          {
+            "name": "CallVerifProgress.Status",
+            "enum_fields": [
+              {
+                "name": "done"
+              },
+              {
+                "name": "data",
+                "integer": 1
+              },
+              {
+                "name": "skipped",
+                "integer": 2
+              },
+              {
+                "name": "start",
+                "integer": 3
+              },
+              {
+                "name": "success",
+                "integer": 4
+              },
+              {
+                "name": "failure",
+                "integer": 5
+              }
+            ]
+          },
+          {
+            "name": "EndpointJSON.Method",
+            "enum_fields": [
+              {
+                "name": "UNKNOWN"
+              },
+              {
+                "name": "GET",
+                "integer": 1
+              },
+              {
+                "name": "HEAD",
+                "integer": 2
+              },
+              {
+                "name": "POST",
+                "integer": 3
+              },
+              {
+                "name": "PUT",
+                "integer": 4
+              },
+              {
+                "name": "PATCH",
+                "integer": 5
+              },
+              {
+                "name": "DELETE",
+                "integer": 6
+              },
+              {
+                "name": "CONNECT",
+                "integer": 7
+              },
+              {
+                "name": "OPTIONS",
+                "integer": 8
+              },
+              {
+                "name": "TRACE",
+                "integer": 9
+              }
+            ]
+          },
+          {
+            "name": "ParamJSON.Kind",
+            "enum_fields": [
+              {
+                "name": "UNKNOWN"
+              },
+              {
+                "name": "body",
+                "integer": 1
+              },
+              {
+                "name": "path",
+                "integer": 2
+              },
+              {
+                "name": "query",
+                "integer": 3
+              },
+              {
+                "name": "header",
+                "integer": 4
+              },
+              {
+                "name": "cookie",
+                "integer": 5
+              }
+            ]
+          },
+          {
+            "name": "JSON.Type",
+            "enum_fields": [
+              {
+                "name": "UNKNOWN"
+              },
+              {
+                "name": "any",
+                "integer": 1
+              },
+              {
+                "name": "null",
+                "integer": 2
+              },
+              {
+                "name": "boolean",
+                "integer": 3
+              },
+              {
+                "name": "integer",
+                "integer": 4
+              },
+              {
+                "name": "number",
+                "integer": 5
+              },
+              {
+                "name": "array",
+                "integer": 6
+              },
+              {
+                "name": "string",
+                "integer": 7
+              },
+              {
+                "name": "object",
+                "integer": 8
+              }
+            ]
+          },
+          {
+            "name": "JSON.Format",
+            "enum_fields": [
+              {
+                "name": "NONE"
+              },
+              {
+                "name": "date_time",
+                "integer": 1
+              },
+              {
+                "name": "date",
+                "integer": 2
+              },
+              {
+                "name": "email",
+                "integer": 4
+              },
+              {
+                "name": "hostname",
+                "integer": 6
+              },
+              {
+                "name": "ipv4",
+                "integer": 8
+              },
+              {
+                "name": "ipv6",
+                "integer": 9
+              },
+              {
+                "name": "uri",
+                "integer": 10
+              },
+              {
+                "name": "uri_reference",
+                "integer": 11
+              },
+              {
+                "name": "regex",
+                "integer": 17
+              },
+              {
+                "name": "int32",
+                "integer": 18
+              },
+              {
+                "name": "int64",
+                "integer": 19
+              },
+              {
+                "name": "float",
+                "integer": 20
+              },
+              {
+                "name": "double",
+                "integer": 21
+              },
+              {
+                "name": "byte",
+                "integer": 22
+              },
+              {
+                "name": "binary",
+                "integer": 23
+              },
+              {
+                "name": "password",
+                "integer": 24
+              }
+            ]
+          }
+        ],
+        "messages": [
+          {
+            "name": "Clt",
+            "fields": [
+              {
+                "id": 1,
+                "name": "fuzz",
+                "type": "Fuzz"
+              },
+              {
+                "id": 2,
+                "name": "metrics",
+                "type": "Metrics"
+              },
+              {
+                "id": 3,
+                "name": "reset_progress",
+                "type": "ResetProgress"
+              },
+              {
+                "id": 4,
+                "name": "call_request_raw",
+                "type": "CallRequestRaw"
+              },
+              {
+                "id": 5,
+                "name": "call_response_raw",
+                "type": "CallResponseRaw"
+              },
+              {
+                "id": 6,
+                "name": "call_verif_progress",
+                "type": "CallVerifProgress"
+              }
+            ],
+            "messages": [
+              {
+                "name": "Fuzz",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "resetter",
+                    "type": "Resetter"
+                  },
+                  {
+                    "id": 2,
+                    "name": "model_kind",
+                    "type": "ModelKind"
+                  },
+                  {
+                    "id": 3,
+                    "name": "model",
+                    "type": "Model"
+                  },
+                  {
+                    "id": 4,
+                    "name": "usage",
+                    "type": "string",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 5,
+                    "name": "seed",
+                    "type": "bytes"
+                  },
+                  {
+                    "id": 6,
+                    "name": "ntensity",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 7,
+                    "name": "EIDs",
+                    "type": "uint32",
+                    "is_repeated": true
+                  }
+                ],
+                "maps": [
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 8,
+                      "name": "tags",
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 9,
+                      "name": "env_read",
+                      "type": "string"
+                    }
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "Resetter",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "shell",
+                        "type": "Shell"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "Shell",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "start",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "rst",
+                            "type": "string"
+                          },
+                          {
+                            "id": 3,
+                            "name": "stop",
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "Model",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "openapiv3",
+                        "type": "OpenAPIv3"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "OpenAPIv3",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "file",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "host",
+                            "type": "string"
+                          },
+                          {
+                            "id": 3,
+                            "name": "header_authorization",
+                            "type": "string"
+                          },
+                          {
+                            "id": 4,
+                            "name": "spec",
+                            "type": "SpecIR"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Metrics"
+              },
+              {
+                "name": "ResetProgress",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "status",
+                    "type": "Status"
+                  },
+                  {
+                    "id": 2,
+                    "name": "elapsed_ns",
+                    "type": "int64"
+                  },
+                  {
+                    "id": 3,
+                    "name": "reason",
+                    "type": "string",
+                    "is_repeated": true
+                  }
+                ]
+              },
+              {
+                "name": "CallRequestRaw",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "input",
+                    "type": "Input"
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "Input",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "http_request",
+                        "type": "HttpRequest"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "HttpRequest",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "method",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "url",
+                            "type": "string"
+                          },
+                          {
+                            "id": 4,
+                            "name": "body",
+                            "type": "bytes"
+                          }
+                        ],
+                        "maps": [
+                          {
+                            "key_type": "string",
+                            "field": {
+                              "id": 3,
+                              "name": "headers",
+                              "type": "HeaderValues"
+                            }
+                          }
+                        ],
+                        "messages": [
+                          {
+                            "name": "HeaderValues",
+                            "fields": [
+                              {
+                                "id": 1,
+                                "name": "values",
+                                "type": "string",
+                                "is_repeated": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "CallResponseRaw",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "output",
+                    "type": "Output"
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "Output",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "http_response",
+                        "type": "HttpResponse"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "HttpResponse",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "error",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "status_code",
+                            "type": "uint32"
+                          },
+                          {
+                            "id": 3,
+                            "name": "reason",
+                            "type": "string"
+                          },
+                          {
+                            "id": 5,
+                            "name": "body",
+                            "type": "bytes"
+                          },
+                          {
+                            "id": 6,
+                            "name": "elapsed_ns",
+                            "type": "int64"
+                          }
+                        ],
+                        "maps": [
+                          {
+                            "key_type": "string",
+                            "field": {
+                              "id": 4,
+                              "name": "headers",
+                              "type": "HeaderValues"
+                            }
+                          }
+                        ],
+                        "messages": [
+                          {
+                            "name": "HeaderValues",
+                            "fields": [
+                              {
+                                "id": 1,
+                                "name": "values",
+                                "type": "string",
+                                "is_repeated": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "CallVerifProgress",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "id": 2,
+                    "name": "status",
+                    "type": "Status"
+                  },
+                  {
+                    "id": 3,
+                    "name": "user_property",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 4,
+                    "name": "reason",
+                    "type": "string",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 5,
+                    "name": "response",
+                    "type": "google.protobuf.Struct"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Srv",
+            "fields": [
+              {
+                "id": 1,
+                "name": "call",
+                "type": "Call"
+              },
+              {
+                "id": 2,
+                "name": "fuzz_progress",
+                "type": "FuzzProgress"
+              },
+              {
+                "id": 3,
+                "name": "reset",
+                "type": "Reset"
+              }
+            ],
+            "messages": [
+              {
+                "name": "Call",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "input",
+                    "type": "Input"
+                  },
+                  {
+                    "id": 2,
+                    "name": "eId",
+                    "type": "uint32"
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "Input",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "http_request",
+                        "type": "HttpRequest"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "HttpRequest",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "method",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "url",
+                            "type": "string"
+                          },
+                          {
+                            "id": 4,
+                            "name": "body",
+                            "type": "bytes"
+                          }
+                        ],
+                        "maps": [
+                          {
+                            "key_type": "string",
+                            "field": {
+                              "id": 3,
+                              "name": "headers",
+                              "type": "HeaderValues"
+                            }
+                          }
+                        ],
+                        "messages": [
+                          {
+                            "name": "HeaderValues",
+                            "fields": [
+                              {
+                                "id": 1,
+                                "name": "values",
+                                "type": "string",
+                                "is_repeated": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Reset"
+              },
+              {
+                "name": "FuzzProgress",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "failure",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 2,
+                    "name": "success",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 3,
+                    "name": "last_call_failure",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 4,
+                    "name": "last_call_success",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 5,
+                    "name": "last_check_failure",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 6,
+                    "name": "last_check_success",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 7,
+                    "name": "shrinking",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 8,
+                    "name": "total_tests_count",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 9,
+                    "name": "total_calls_count",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 10,
+                    "name": "total_checks_count",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 11,
+                    "name": "test_calls_count",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 12,
+                    "name": "call_checks_count",
+                    "type": "uint32"
+                  },
+                  {
+                    "id": 13,
+                    "name": "shrink_amount",
+                    "type": "uint32"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "SpecIR",
+            "fields": [
+              {
+                "id": 1,
+                "name": "schemas",
+                "type": "Schemas"
+              }
+            ],
+            "maps": [
+              {
+                "key_type": "uint32",
+                "field": {
+                  "id": 2,
+                  "name": "endpoints",
+                  "type": "Endpoint"
+                }
+              }
+            ]
+          },
+          {
+            "name": "Schemas",
+            "maps": [
+              {
+                "key_type": "uint32",
+                "field": {
+                  "id": 1,
+                  "name": "json",
+                  "type": "RefOrSchemaJSON"
+                }
+              }
+            ]
+          },
+          {
+            "name": "RefOrSchemaJSON",
+            "fields": [
+              {
+                "id": 1,
+                "name": "ptr",
+                "type": "SchemaPtr"
+              },
+              {
+                "id": 2,
+                "name": "schema",
+                "type": "Schema.JSON"
+              }
+            ]
+          },
+          {
+            "name": "SchemaPtr",
+            "fields": [
+              {
+                "id": 1,
+                "name": "SID",
+                "type": "uint32"
+              },
+              {
+                "id": 2,
+                "name": "ref",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "Endpoint",
+            "fields": [
+              {
+                "id": 1,
+                "name": "json",
+                "type": "EndpointJSON"
+              }
+            ]
+          },
+          {
+            "name": "EndpointJSON",
+            "fields": [
+              {
+                "id": 1,
+                "name": "method",
+                "type": "Method"
+              },
+              {
+                "id": 2,
+                "name": "path_partials",
+                "type": "PathPartial",
+                "is_repeated": true
+              },
+              {
+                "id": 3,
+                "name": "inputs",
+                "type": "ParamJSON",
+                "is_repeated": true
+              }
+            ],
+            "maps": [
+              {
+                "key_type": "uint32",
+                "field": {
+                  "id": 4,
+                  "name": "outputs",
+                  "type": "uint32"
+                }
+              }
+            ]
+          },
+          {
+            "name": "ParamJSON",
+            "fields": [
+              {
+                "id": 1,
+                "name": "is_required",
+                "type": "bool"
+              },
+              {
+                "id": 2,
+                "name": "SID",
+                "type": "uint32"
+              },
+              {
+                "id": 3,
+                "name": "name",
+                "type": "string"
+              },
+              {
+                "id": 4,
+                "name": "kind",
+                "type": "Kind"
+              }
+            ]
+          },
+          {
+            "name": "PathPartial",
+            "fields": [
+              {
+                "id": 1,
+                "name": "part",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "ptr",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "Schema",
+            "messages": [
+              {
+                "name": "JSON",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "types",
+                    "type": "Type",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 2,
+                    "name": "enum",
+                    "type": "google.protobuf.Value",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 3,
+                    "name": "format",
+                    "type": "Format"
+                  },
+                  {
+                    "id": 4,
+                    "name": "min_length",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 5,
+                    "name": "max_length",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 6,
+                    "name": "has_max_length",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 7,
+                    "name": "pattern",
+                    "type": "string"
+                  },
+                  {
+                    "id": 8,
+                    "name": "minimum",
+                    "type": "double"
+                  },
+                  {
+                    "id": 9,
+                    "name": "maximum",
+                    "type": "double"
+                  },
+                  {
+                    "id": 10,
+                    "name": "has_minimum",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 11,
+                    "name": "has_maximum",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 12,
+                    "name": "translated_multiple_of",
+                    "type": "double"
+                  },
+                  {
+                    "id": 13,
+                    "name": "exclusive_minimum",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 14,
+                    "name": "exclusive_maximum",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 15,
+                    "name": "items",
+                    "type": "uint32",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 16,
+                    "name": "unique_items",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 17,
+                    "name": "min_items",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 18,
+                    "name": "max_items",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 19,
+                    "name": "has_max_items",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 21,
+                    "name": "required",
+                    "type": "string",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 22,
+                    "name": "min_properties",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 23,
+                    "name": "max_properties",
+                    "type": "uint64"
+                  },
+                  {
+                    "id": 24,
+                    "name": "has_max_properties",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 25,
+                    "name": "additional_properties",
+                    "type": "AdditionalProperties"
+                  },
+                  {
+                    "id": 26,
+                    "name": "has_additional_properties",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 27,
+                    "name": "all_of",
+                    "type": "uint32",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 28,
+                    "name": "any_of",
+                    "type": "uint32",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 29,
+                    "name": "one_of",
+                    "type": "uint32",
+                    "is_repeated": true
+                  },
+                  {
+                    "id": 30,
+                    "name": "not",
+                    "type": "uint32"
+                  }
+                ],
+                "maps": [
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 20,
+                      "name": "properties",
+                      "type": "uint32"
+                    }
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "AdditionalProperties",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "always_succeed",
+                        "type": "bool"
+                      },
+                      {
+                        "id": 2,
+                        "name": "SID",
+                        "type": "uint32"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "services": [
+          {
+            "name": "FuzzyMonkey",
+            "rpcs": [
+              {
+                "name": "Do",
+                "in_type": "Clt",
+                "out_type": "Srv",
+                "in_streamed": true,
+                "out_streamed": true
+              }
+            ]
+          }
+        ],
+        "imports": [
+          {
+            "path": "google/protobuf/struct.proto"
+          },
+          {
+            "path": "github.com/gogo/protobuf/gogoproto/gogo.proto"
+          }
+        ],
+        "package": {
+          "name": "fm"
+        },
+        "options": [
+          {
+            "name": "go_package",
+            "value": "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+          },
+          {
+            "name": "(gogoproto.sizer_all)",
+            "value": "true"
+          },
+          {
+            "name": "(gogoproto.marshaler_all)",
+            "value": "true"
+          },
+          {
+            "name": "(gogoproto.unmarshaler_all)",
+            "value": "true"
+          },
+          {
+            "name": "(gogoproto.equal_all)",
+            "value": "true"
+          }
+        ]
+      }
+    }
+  ]
+}
