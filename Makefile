@@ -14,7 +14,7 @@ all: pkg/internal/fm/fuzzymonkey.pb.go lint
 
 update: SHELL := /bin/bash
 update:
-	go get -u -a
+	go get -u -a -v ./...
 	go mod tidy
 	go mod verify
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
