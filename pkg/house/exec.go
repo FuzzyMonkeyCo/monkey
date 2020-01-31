@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/house/assert"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
+	"go.starlark.net/starlark"
 )
 
 func init() {
@@ -18,6 +20,7 @@ func init() {
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
+	starlark.Universe["AssertThat"] = starlark.NewBuiltin("AssertTthat", assert.Starlark)
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
