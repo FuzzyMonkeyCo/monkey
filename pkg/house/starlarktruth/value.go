@@ -35,7 +35,10 @@ func (t *T) AttrNames() []string                      { return attrNames }
 
 var (
 	methods = map[string]func(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error){
-		"isAtMost": isAtMost,
+		"isAtLeast":     IsAtLeast,
+		"isAtMost":      IsAtMost,
+		"isGreaterThan": IsGreaterThan,
+		"isLessThan":    IsLessThan,
 	}
 
 	attrNames = func() []string {
@@ -56,7 +59,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		switch b.Name() {
 		// 1-arg attributes
-		case "isAtMost":
+		case "isAtLeast", "isAtMost", "isGreaterThan", "isLessThan":
 			var arg1 starlark.Value
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err

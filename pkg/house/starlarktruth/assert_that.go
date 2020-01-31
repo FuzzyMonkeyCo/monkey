@@ -5,6 +5,9 @@ import (
 	"go.starlark.net/syntax"
 )
 
+// Maximum nesting browsed when comparing values
+const maxdepth = 10
+
 // const (
 // 	tyNoneType = "NoneType"
 // 	tyBool="bool"
@@ -19,19 +22,32 @@ import (
 // 	// *Builtin
 // )
 
-const maxdepth = 10
-
-func isAtMost(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
-	other := args[0]
+func comparable(t *T, b *starlark.Builtin, verb string, op syntax.Token, other starlark.Value) (starlark.Value, error) {
 	if err := t.checkNone(b.Name(), other); err != nil {
 		return nil, err
 	}
-	ok, err := starlark.CompareDepth(syntax.GT, t.actual, other, maxdepth)
+	ok, err := starlark.CompareDepth(op, t.actual, other, maxdepth)
 	if err != nil {
 		return nil, err
 	}
 	if ok {
-		return nil, t.failComparingValues("is at most", other, "")
+		return nil, t.failComparingValues(verb, other, "")
 	}
 	return starlark.None, nil
+}
+
+func IsAtLeast(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	return comparable(t, b, "is at least", syntax.LT, args[0])
+}
+
+func IsAtMost(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	return comparable(t, b, "is at most", syntax.GT, args[0])
+}
+
+func IsGreaterThan(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	return comparable(t, b, "is greater than", syntax.LE, args[0])
+}
+
+func IsLessThan(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	return comparable(t, b, "is less than", syntax.GE, args[0])
 }
