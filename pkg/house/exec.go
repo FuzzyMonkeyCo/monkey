@@ -20,6 +20,8 @@ func init() {
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
+
+	// AssertThat: https://truth.dev/ for Starlark
 	starlark.Universe["AssertThat"] = starlark.NewBuiltin("AssertTthat", starlarktruth.AssertThat)
 }
 
