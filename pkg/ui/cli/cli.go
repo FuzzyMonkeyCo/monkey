@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
@@ -12,13 +13,16 @@ import (
 var _ ui.Progresser = (*Progresser)(nil)
 
 type Progresser struct {
+	ctx                                                context.Context
 	maxTestsCount                                      uint32
 	totalTestsCount, totalCallsCount, totalChecksCount uint32
 	testCallsCount, callChecksCount                    uint32
 	bar                                                *bar.Bar
-	ticker                                             <-chan time.Time
+	ticker                                             *time.Ticker
 	stateIdx                                           int
 }
+
+func (p *Progresser) WithContext(ctx context.Context) { p.ctx = ctx }
 
 func (p *Progresser) MaxTestsCount(v uint32) {
 	p.maxTestsCount = v
@@ -31,16 +35,22 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 		bar.WithFormat(":state :bar :rate ops/s :eta"),
 	)
 
-	p.ticker = time.Tick(333 * time.Millisecond)
+	p.ticker = time.NewTicker(333 * time.Millisecond)
 	go func() {
-		for range p.ticker {
-			p.tick()
+		defer p.ticker.Stop()
+		for {
+			select {
+			case <-p.ctx.Done():
+				return
+			case <-p.ticker.C:
+				p.tick()
+			}
 		}
 	}()
 }
 
 func (p *Progresser) Terminate() error {
-	p.ticker = nil
+	p.ticker.Stop()
 	p.bar.Done()
 	return nil
 }

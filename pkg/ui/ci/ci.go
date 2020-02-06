@@ -1,6 +1,7 @@
 package ci
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
@@ -19,13 +20,14 @@ func dot(n uint32, o *uint32) {
 	}
 }
 
-func (p *Progresser) MaxTestsCount(v uint32)    {}
-func (p *Progresser) Terminate() error          { return nil }
-func (p *Progresser) TotalTestsCount(v uint32)  { dot(v, &p.totalTestsCount) }
-func (p *Progresser) TotalCallsCount(v uint32)  { dot(v, &p.totalCallsCount) }
-func (p *Progresser) TotalChecksCount(v uint32) { dot(v, &p.totalChecksCount) }
-func (p *Progresser) TestCallsCount(v uint32)   {}
-func (p *Progresser) CallChecksCount(v uint32)  {}
+func (p *Progresser) WithContext(ctx context.Context) {}
+func (p *Progresser) MaxTestsCount(v uint32)          {}
+func (p *Progresser) Terminate() error                { return nil }
+func (p *Progresser) TotalTestsCount(v uint32)        { dot(v, &p.totalTestsCount) }
+func (p *Progresser) TotalCallsCount(v uint32)        { dot(v, &p.totalCallsCount) }
+func (p *Progresser) TotalChecksCount(v uint32)       { dot(v, &p.totalChecksCount) }
+func (p *Progresser) TestCallsCount(v uint32)         {}
+func (p *Progresser) CallChecksCount(v uint32)        {}
 
 func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format, s...) }
 func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format, s...) }

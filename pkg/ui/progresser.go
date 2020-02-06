@@ -1,7 +1,12 @@
 package ui
 
+import (
+	"context"
+)
+
 // Progresser TODO
 type Progresser interface {
+	WithContext(context.Context)
 	MaxTestsCount(uint32)
 
 	TotalTestsCount(uint32)

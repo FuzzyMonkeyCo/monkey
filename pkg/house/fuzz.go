@@ -15,13 +15,14 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func (rt *Runtime) newProgressWithNtensity(ntensity uint32) {
+func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	if rt.logLevel != 0 {
 		rt.progress = &ci.Progresser{}
 	} else {
 		rt.progress = &cli.Progresser{}
 	}
 	rt.testingCampaingStart = time.Now()
+	rt.progress.WithContext(ctx)
 	rt.progress.MaxTestsCount(10 * ntensity)
 }
 
@@ -41,7 +42,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		break
 	}
 
-	rt.newProgressWithNtensity(ntensity)
+	rt.newProgress(ctx, ntensity)
 	// Pass user agent down to caller
 	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
 
