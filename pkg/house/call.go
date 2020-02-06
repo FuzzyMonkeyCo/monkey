@@ -71,9 +71,17 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 		return
 	}
 
-	// TODO: user-defined eBPF triggers
-	if err = rt.userChecks(ctx, callResponse); err != nil {
-		return
+	{
+		printfunc := func(_ *starlark.Thread, msg string) {
+			rt.progress.Printf("%s", msg)
+		}
+		printfunc, rt.thread.Print = rt.thread.Print, printfunc
+		// TODO: user-defined eBPF triggers
+		if err = rt.userChecks(ctx, callResponse); err != nil {
+			return
+		}
+		rt.thread.Print = printfunc
+		log.Printf(">>> %+v", rt.thread.Local("closeness"))
 	}
 
 	// Through all checks: we're done
@@ -179,9 +187,6 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 		Kind: &types.Value_StructValue{StructValue: callResponse}}); err != nil {
 		log.Println("[ERR]", err)
 		return
-	}
-	rt.thread.Print = func(_ *starlark.Thread, msg string) {
-		rt.progress.Printf("%s", msg)
 	}
 
 	for _, trggr := range rt.triggers {
