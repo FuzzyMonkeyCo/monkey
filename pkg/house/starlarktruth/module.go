@@ -7,59 +7,92 @@ import (
 	"go.starlark.net/starlark"
 )
 
+const module = "AssertThat"
+
 var (
 	_ starlark.Value    = (*T)(nil)
 	_ starlark.HasAttrs = (*T)(nil)
 )
 
-func AssertThat(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	//TODO: store closedness in thread?
-	// Use bltn.Receiver() to check closedness
-	var target starlark.Value
-	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
-		return nil, err
-	}
-	t := &T{
-		actual: target,
-	}
-	return t, nil
+// NewModule registers a Starlark module of https://truth.dev/
+func NewModule(predeclared starlark.StringDict) {
+	predeclared[module] = starlark.NewBuiltin(module, func(
+		thread *starlark.Thread,
+		b *starlark.Builtin,
+		args starlark.Tuple,
+		kwargs []starlark.Tuple,
+	) (starlark.Value, error) {
+		//TODO: store closedness in thread? bltn.Receiver() to check closedness
+		var target starlark.Value
+		if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
+			return nil, err
+		}
+		t := &T{
+			actual: target,
+		}
+		return t, nil
+	})
 }
 
-func (t *T) String() string                           { return fmt.Sprintf("AssertThat(%s)", t.actual.String()) }
-func (t *T) Type() string                             { return "AssertThat" }
+func (t *T) String() string                           { return fmt.Sprintf("%s(%s)", module, t.actual.String()) }
+func (t *T) Type() string                             { return module }
 func (t *T) Freeze()                                  { t.actual.Freeze() }
 func (t *T) Truth() starlark.Bool                     { return t.actual.Truth() }
 func (t *T) Hash() (uint32, error)                    { return t.actual.Hash() }
 func (t *T) Attr(name string) (starlark.Value, error) { return builtinAttr(t, name) }
 func (t *T) AttrNames() []string                      { return attrNames }
 
+type (
+	attr  func(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error)
+	attrs map[string]attr
+)
+
 var (
-	methods = map[string]func(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error){
-		"isAtLeast":     IsAtLeast,
-		"isAtMost":      IsAtMost,
-		"isGreaterThan": IsGreaterThan,
-		"isLessThan":    IsLessThan,
-	}
+	methods = []attrs{methods1arg}
 
 	attrNames = func() []string {
-		names := make([]string, 0, len(methods))
-		for name := range methods {
-			names = append(names, name)
+		names := make([]string, 0, len(methods1arg))
+		for _, ms := range methods {
+			for name := range ms {
+				names = append(names, name)
+			}
 		}
 		sort.Strings(names)
 		return names
 	}()
+
+	methods1arg = attrs{
+		"named":         named,
+		"isAtLeast":     isAtLeast,
+		"isAtMost":      isAtMost,
+		"isGreaterThan": isGreaterThan,
+		"isLessThan":    isLessThan,
+	}
 )
 
+func findAttr(name string) (attr, int) {
+	for i, ms := range methods {
+		if m, ok := ms[name]; ok {
+			return m, 1 + i
+		}
+	}
+	return nil, 0
+}
+
 func builtinAttr(t *T, name string) (starlark.Value, error) {
-	method := methods[name]
+	method, nArgs := findAttr(name)
 	if method == nil {
 		return nil, nil // no such method
 	}
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		switch b.Name() {
-		// 1-arg attributes
-		case "isAtLeast", "isAtMost", "isGreaterThan", "isLessThan":
+		closeness := 0
+		if c, ok := thread.Local("closeness").(int); ok {
+			thread.Print(thread, fmt.Sprintf(">>> closeness = %d", c))
+			closeness = c
+		}
+		defer thread.SetLocal("closeness", 1+closeness)
+		switch nArgs {
+		case 1:
 			var arg1 starlark.Value
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err

@@ -17,8 +17,7 @@ type TruthAssertion struct {
 
 var _ error = (*TruthAssertion)(nil)
 
-func (a *TruthAssertion) Error() string { return a.e }
+func NewTruthAssertion(msg string) *TruthAssertion { return &TruthAssertion{e: msg} }
+func (a *TruthAssertion) Error() string            { return a.e }
 
-func (t *T) fail(msg string) error {
-	return &TruthAssertion{e: msg}
-}
+func (t *T) fail(msg string) error { return NewTruthAssertion(msg) }

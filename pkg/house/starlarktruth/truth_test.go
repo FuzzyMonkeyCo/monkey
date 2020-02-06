@@ -1,20 +1,24 @@
 package starlarktruth
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.starlark.net/starlark"
 )
 
-var predeclared = starlark.StringDict{
-	"AssertThat": starlark.NewBuiltin("AssertTthat", AssertThat),
-}
-
 func helper(t *testing.T, program string) (starlark.StringDict, error) {
+	predeclared := starlark.StringDict{}
+	NewModule(predeclared)
 	thread := &starlark.Thread{
-		Name:  t.Name(),
-		Print: func(_ *starlark.Thread, msg string) { t.Logf("--> %s", msg) },
+		Name: t.Name(),
+		Print: func(_ *starlark.Thread, msg string) {
+			t.Logf("--> %s", msg)
+		},
+		Load: func(_ *starlark.Thread, module string) (starlark.StringDict, error) {
+			return nil, errors.New("load() unsupported")
+		},
 	}
 	return starlark.ExecFile(thread, t.Name()+".star", program, predeclared)
 	// if err != nil {
@@ -33,16 +37,22 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 }
 
 func TestComparables(t *testing.T) {
-	for _, data := range []string{
-		`AssertThat(5).isAtMost(5)`,
-		`AssertThat(5).isAtMost(8)`,
-		`AssertThat(5).isAtMost(3)`,
+	for code, expectedErr := range map[string]error{
+		`AssertThat(5).isAtMost(5)`: nil,
+		`AssertThat(5).isAtMost(8)`: nil,
+		`AssertThat(5).isAtMost(3)`: NewTruthAssertion("Not true that <5> is at most <3>."),
 	} {
-		t.Run(data, func(t *testing.T) {
-			globals, err := helper(t, data)
+		t.Run(code, func(t *testing.T) {
+			globals, err := helper(t, code)
 			require.Empty(t, globals)
-			require.NotNil(t, err)
-			require.IsType(t, &TruthAssertion{}, err)
+			if expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.EqualError(t, err, expectedErr.Error())
+				require.True(t, errors.As(err, &expectedErr))
+				require.IsType(t, expectedErr, err)
+			}
 		})
 	}
 
