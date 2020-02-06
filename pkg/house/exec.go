@@ -21,8 +21,7 @@ func init() {
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
 
-	// AssertThat: https://truth.dev/ for Starlark
-	starlark.Universe["AssertThat"] = starlark.NewBuiltin("AssertTthat", starlarktruth.AssertThat)
+	starlarktruth.NewModule(starlark.Universe)
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
