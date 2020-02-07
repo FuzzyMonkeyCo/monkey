@@ -1,14 +1,21 @@
 package starlarktruth
 
+import (
+	"fmt"
+)
+
 // InvalidAssertion signifies an invalid assertion was attempted
 // such as comparing with None.
 type InvalidAssertion struct {
-	e string
+	p string
 }
 
 var _ error = (*InvalidAssertion)(nil)
 
-func (a *InvalidAssertion) Error() string { return a.e }
+func NewInvalidAssertion(prop string) *InvalidAssertion { return &InvalidAssertion{p: prop} }
+func (a *InvalidAssertion) Error() string {
+	return fmt.Sprintf("It is illegal to compare using %s(None)", a.p)
+}
 
 // TruthAssertion signifies an assertion predicate was invalidated.
 type TruthAssertion struct {

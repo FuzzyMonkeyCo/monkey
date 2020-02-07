@@ -36,12 +36,8 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 	// require.Len(t, globals, 0)
 }
 
-func TestComparables(t *testing.T) {
-	for code, expectedErr := range map[string]error{
-		`AssertThat(5).isAtMost(5)`: nil,
-		`AssertThat(5).isAtMost(8)`: nil,
-		`AssertThat(5).isAtMost(3)`: NewTruthAssertion("Not true that <5> is at most <3>."),
-	} {
+func testEach(t *testing.T, m map[string]error) {
+	for code, expectedErr := range m {
 		t.Run(code, func(t *testing.T) {
 			globals, err := helper(t, code)
 			require.Empty(t, globals)
@@ -55,5 +51,31 @@ func TestComparables(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestComparables(t *testing.T) {
+	testEach(t, map[string]error{
+		//
+		`AssertThat(5).isAtLeast(3)`: nil,
+		`AssertThat(5).isAtLeast(5)`: nil,
+		`AssertThat(5).isAtLeast(8)`: NewTruthAssertion("Not true that <5> is at least <8>."),
+		//
+		`AssertThat(5).isAtMost(5)`: nil,
+		`AssertThat(5).isAtMost(8)`: nil,
+		`AssertThat(5).isAtMost(3)`: NewTruthAssertion("Not true that <5> is at most <3>."),
+		//
+		`AssertThat(5).isGreaterThan(3)`: nil,
+		`AssertThat(5).isGreaterThan(5)`: NewTruthAssertion("Not true that <5> is greater than <5>."),
+		`AssertThat(5).isGreaterThan(8)`: NewTruthAssertion("Not true that <5> is greater than <8>."),
+		//
+		`AssertThat(5).isLessThan(8)`: nil,
+		`AssertThat(5).isLessThan(5)`: NewTruthAssertion("Not true that <5> is less than <5>."),
+		`AssertThat(5).isLessThan(3)`: NewTruthAssertion("Not true that <5> is less than <3>."),
+		//
+		`AssertThat(5).isAtLeast(None)`:     NewInvalidAssertion("isAtLeast"),
+		`AssertThat(5).isAtMost(None)`:      NewInvalidAssertion("isAtMost"),
+		`AssertThat(5).isGreaterThan(None)`: NewInvalidAssertion("isGreaterThan"),
+		`AssertThat(5).isLessThan(None)`:    NewInvalidAssertion("isLessThan"),
+		//
+	})
 }

@@ -13,8 +13,7 @@ func (t *T) checkNone(proposition string, other starlark.Value) error {
 		return err
 	}
 	if ok {
-		msg := fmt.Sprintf("It is illegal to compare using %s(None)", proposition)
-		return &InvalidAssertion{e: msg}
+		return NewInvalidAssertion(proposition)
 	}
 	return nil
 }

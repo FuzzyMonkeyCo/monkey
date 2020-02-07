@@ -62,11 +62,11 @@ var (
 	}()
 
 	methods1arg = attrs{
-		"named":         named,
 		"isAtLeast":     isAtLeast,
 		"isAtMost":      isAtMost,
 		"isGreaterThan": isGreaterThan,
 		"isLessThan":    isLessThan,
+		"named":         named,
 	}
 )
 
