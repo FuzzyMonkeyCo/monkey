@@ -5,10 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
 
 func helper(t *testing.T, program string) (starlark.StringDict, error) {
+	// Enabled so they can be tested
+	resolve.AllowFloat = true
+	resolve.AllowSet = true
+	// resolve.AllowLambda = true
+
 	predeclared := starlark.StringDict{}
 	NewModule(predeclared)
 	thread := &starlark.Thread{
@@ -51,6 +57,73 @@ func testEach(t *testing.T, m map[string]error) {
 			}
 		})
 	}
+}
+
+func TestBooleans(t *testing.T) {
+	testEach(t, map[string]error{
+		//
+		`AssertThat(True).isTrue()`:  nil,
+		`AssertThat(True).isFalse()`: NewTruthAssertion("Not true that <True> is False."),
+		//
+		`AssertThat(False).isFalse()`: nil,
+		`AssertThat(False).isTrue()`:  NewTruthAssertion("Not true that <False> is True."),
+		//
+	})
+}
+
+func TestTruthyThings(t *testing.T) {
+	values := []string{
+		`1`,
+		`True`,
+		`2.5`,
+		`"Hi"`,
+		`[3]`,
+		`{4: "four"}`,
+		`("my", "tuple")`,
+		`set([5])`,
+		`-1`,
+	}
+	m := make(map[string]error, 4*len(values))
+	for _, v := range values {
+		m[`AssertThat(`+v+`).isTruthy()`] = nil
+		m[`AssertThat(`+v+`).isFalsy()`] = NewTruthAssertion("Not true that <" + v + "> is falsy.")
+		m[`AssertThat(`+v+`).isFalse()`] = NewTruthAssertion("Not true that <" + v + "> is False.")
+		if v != `True` {
+			m[`AssertThat(`+v+`).isTrue()`] = NewTruthAssertion("Not true that <" + v + "> is True. However, it is truthy. Did you mean to call isTruthy() instead?")
+		}
+	}
+	testEach(t, m)
+}
+
+func TestFalsyThings(t *testing.T) {
+	values := []string{
+		`None`,
+		`False`,
+		`0`,
+		`0.0`,
+		`""`,
+		`()`, // tuple
+		`[]`,
+		`{}`,
+		`set()`,
+	}
+	m := make(map[string]error, 4*len(values))
+	for _, v := range values {
+		vv := v
+		if v == `0.0` {
+			vv = `0`
+		}
+		if v == `set()` {
+			vv = `set([])`
+		}
+		m[`AssertThat(`+v+`).isFalsy()`] = nil
+		m[`AssertThat(`+v+`).isTruthy()`] = NewTruthAssertion("Not true that <" + vv + "> is truthy.")
+		m[`AssertThat(`+v+`).isTrue()`] = NewTruthAssertion("Not true that <" + vv + "> is True.")
+		if v != `False` {
+			m[`AssertThat(`+v+`).isFalse()`] = NewTruthAssertion("Not true that <" + vv + "> is False. However, it is falsy. Did you mean to call isFalsy() instead?")
+		}
+	}
+	testEach(t, m)
 }
 
 func TestComparables(t *testing.T) {

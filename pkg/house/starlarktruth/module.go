@@ -48,7 +48,25 @@ type (
 )
 
 var (
-	methods = []attrs{methods1arg}
+	methods0args = attrs{
+		"isFalse":  isFalse,
+		"isFalsy":  isFalsy,
+		"isTrue":   isTrue,
+		"isTruthy": isTruthy,
+	}
+
+	methods1arg = attrs{
+		"isAtLeast":     isAtLeast,
+		"isAtMost":      isAtMost,
+		"isGreaterThan": isGreaterThan,
+		"isLessThan":    isLessThan,
+		"named":         named,
+	}
+
+	methods = []attrs{
+		methods0args,
+		methods1arg,
+	}
 
 	attrNames = func() []string {
 		names := make([]string, 0, len(methods1arg))
@@ -60,20 +78,12 @@ var (
 		sort.Strings(names)
 		return names
 	}()
-
-	methods1arg = attrs{
-		"isAtLeast":     isAtLeast,
-		"isAtMost":      isAtMost,
-		"isGreaterThan": isGreaterThan,
-		"isLessThan":    isLessThan,
-		"named":         named,
-	}
 )
 
 func findAttr(name string) (attr, int) {
 	for i, ms := range methods {
 		if m, ok := ms[name]; ok {
-			return m, 1 + i
+			return m, i
 		}
 	}
 	return nil, 0
@@ -92,6 +102,11 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		}
 		defer thread.SetLocal("closeness", 1+closeness)
 		switch nArgs {
+		case 0:
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
+				return nil, err
+			}
+			return method(t, b)
 		case 1:
 			var arg1 starlark.Value
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {

@@ -28,6 +28,11 @@ func (t *T) failWithProposition(proposition, suffix string) error {
 	return t.fail(msg)
 }
 
+// func (t *T) failWithSubject(verb string) error {
+// 	msg := fmt.Sprintf("%s %s", t.subject(), verb)
+// 	return t.fail(msg)
+// }
+
 func (t *T) subject() string {
 	if s, ok := t.actual.(starlark.String); ok {
 		if strings.Contains(s.GoString(), "\n") {

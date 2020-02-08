@@ -33,6 +33,42 @@ func named(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, e
 	return t, nil
 }
 
+func isFalse(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	if b, ok := t.actual.(starlark.Bool); ok && b == starlark.False {
+		return starlark.None, nil
+	}
+	suffix := ""
+	if !t.actual.Truth() {
+		suffix = " However, it is falsy. Did you mean to call isFalsy() instead?"
+	}
+	return nil, t.failWithProposition("is False", suffix)
+}
+
+func isFalsy(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	if t.actual.Truth() {
+		return nil, t.failWithProposition("is falsy", "")
+	}
+	return starlark.None, nil
+}
+
+func isTrue(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	if b, ok := t.actual.(starlark.Bool); ok && b == starlark.True {
+		return starlark.None, nil
+	}
+	suffix := ""
+	if t.actual.Truth() {
+		suffix = " However, it is truthy. Did you mean to call isTruthy() instead?"
+	}
+	return nil, t.failWithProposition("is True", suffix)
+}
+
+func isTruthy(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	if !t.actual.Truth() {
+		return nil, t.failWithProposition("is truthy", "")
+	}
+	return starlark.None, nil
+}
+
 func comparable(t *T, b *starlark.Builtin, verb string, op syntax.Token, other starlark.Value) (starlark.Value, error) {
 	if err := t.checkNone(b.Name(), other); err != nil {
 		return nil, err
