@@ -2,7 +2,9 @@ package starlarktruth
 
 import (
 	"errors"
+	"strings"
 
+	"github.com/pmezard/go-difflib/difflib"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 )
@@ -24,10 +26,55 @@ const maxdepth = 10
 // 	// *Builtin
 // )
 
+func isEqualTo(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
+	switch other := args[0].(type) {
+	case starlark.String:
+		if actual, ok := t.actual.(starlark.String); ok {
+			a := actual.GoString()
+			o := other.GoString()
+			// Use unified diff strategy when comparing multiline strings.
+			if strings.Contains(a, "\n") && strings.Contains(o, "\n") {
+				diff := difflib.ContextDiff{
+					A:        difflib.SplitLines(o),
+					B:        difflib.SplitLines(a),
+					FromFile: "Expected",
+					ToFile:   "Actual",
+					Context:  3,
+					Eol:      "\n",
+				}
+				pretty, err := difflib.GetContextDiffString(diff)
+				if err != nil {
+					return nil, err
+				}
+				pretty = strings.Replace(pretty, "\t", " ", -1)
+				msg := "is equal to expected, found diff:\n" + pretty
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+	case starlark.Sliceable: // e.g. tuple, list
+		return containsExactlyElementsInOrderIn(t, b, other)
+	case starlark.Iterable: // e.g. dict, set
+		return containsExactlyElementsIn(other)
+	default:
+		ok, err := starlark.CompareDepth(syntax.EQL, t.actual, other, maxdepth)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			suffix := ""
+			if t.actual.String() == other.String() {
+				suffix = " However, their str() representations are equal."
+			}
+			return nil, t.failComparingValues("is equal to", other, suffix)
+		}
+		return starlark.None, nil
+	}
+}
+
 func named(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
 	str, ok := args[0].(starlark.String)
-	if !ok {
-		return nil, errors.New(".named() expects a string")
+	if !ok || str.Len() == 0 {
+		return nil, errors.New("named() expects a (non empty) string")
 	}
 	t.name = str.GoString()
 	return t, nil
@@ -69,8 +116,8 @@ func isTruthy(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value
 	return starlark.None, nil
 }
 
-func comparable(t *T, b *starlark.Builtin, verb string, op syntax.Token, other starlark.Value) (starlark.Value, error) {
-	if err := t.checkNone(b.Name(), other); err != nil {
+func (t *T) comparable(bName, verb string, op syntax.Token, other starlark.Value) (starlark.Value, error) {
+	if err := t.checkNone(bName, other); err != nil {
 		return nil, err
 	}
 	ok, err := starlark.CompareDepth(op, t.actual, other, maxdepth)
@@ -83,12 +130,12 @@ func comparable(t *T, b *starlark.Builtin, verb string, op syntax.Token, other s
 	return starlark.None, nil
 }
 
-func isAtLeast(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
-	return comparable(t, b, "is at least", syntax.LT, args[0])
+func isAtLeast(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.comparable("isAtLeast", "is at least", syntax.LT, args[0])
 }
 
-func isAtMost(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {
-	return comparable(t, b, "is at most", syntax.GT, args[0])
+func isAtMost(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.comparable("isAtMost", "is at most", syntax.GT, args[0])
 }
 
 func isGreaterThan(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error) {

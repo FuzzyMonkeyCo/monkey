@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1
+	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.3.0
 	github.com/superhawk610/bar v0.0.0-20190614064228-4fbf44d086fd
 	github.com/superhawk610/terminal v0.0.0-20200123193603-cbc69427a94a // indirect
