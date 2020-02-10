@@ -12,7 +12,7 @@ type InvalidAssertion struct {
 
 var _ error = (*InvalidAssertion)(nil)
 
-func NewInvalidAssertion(prop string) *InvalidAssertion { return &InvalidAssertion{p: prop} }
+func newInvalidAssertion(prop string) *InvalidAssertion { return &InvalidAssertion{p: prop} }
 func (a *InvalidAssertion) Error() string {
 	return fmt.Sprintf("It is illegal to compare using %s(None)", a.p)
 }
@@ -24,7 +24,5 @@ type TruthAssertion struct {
 
 var _ error = (*TruthAssertion)(nil)
 
-func NewTruthAssertion(msg string) *TruthAssertion { return &TruthAssertion{e: msg} }
+func newTruthAssertion(msg string) *TruthAssertion { return &TruthAssertion{e: msg} }
 func (a *TruthAssertion) Error() string            { return a.e }
-
-func (t *T) fail(msg string) error { return NewTruthAssertion(msg) }

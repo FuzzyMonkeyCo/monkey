@@ -7,13 +7,9 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (t *T) checkNone(proposition string, other starlark.Value) error {
-	ok, err := starlark.EqualDepth(starlark.None, other, maxdepth)
-	if err != nil {
-		return err
-	}
-	if ok {
-		return NewInvalidAssertion(proposition)
+func (t *T) failNone(proposition string, other starlark.Value) error {
+	if other == starlark.None {
+		return newInvalidAssertion(proposition)
 	}
 	return nil
 }
@@ -25,7 +21,18 @@ func (t *T) failComparingValues(verb string, other starlark.Value, suffix string
 
 func (t *T) failWithProposition(proposition, suffix string) error {
 	msg := fmt.Sprintf("Not true that %s %s.%s", t.subject(), proposition, suffix)
-	return t.fail(msg)
+	return newTruthAssertion(msg)
+}
+
+func (t *T) failWithBadResults(
+	verb string, other starlark.Value,
+	fail_verb string, actual fmt.Stringer,
+	suffix string,
+) error {
+	msg := fmt.Sprintf("%s <%s>. It %s <%s>",
+		verb, other.String(),
+		fail_verb, actual.String())
+	return t.failWithProposition(msg, suffix)
 }
 
 // func (t *T) failWithSubject(verb string) error {

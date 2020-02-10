@@ -43,7 +43,7 @@ func (t *T) Attr(name string) (starlark.Value, error) { return builtinAttr(t, na
 func (t *T) AttrNames() []string                      { return attrNames }
 
 type (
-	attr  func(t *T, b *starlark.Builtin, args ...starlark.Value) (starlark.Value, error)
+	attr  func(t *T, args ...starlark.Value) (starlark.Value, error)
 	attrs map[string]attr
 )
 
@@ -58,8 +58,10 @@ var (
 	methods1arg = attrs{
 		"isAtLeast":     isAtLeast,
 		"isAtMost":      isAtMost,
+		"isEqualTo":     isEqualTo,
 		"isGreaterThan": isGreaterThan,
 		"isLessThan":    isLessThan,
+		"isNotEqualTo":  isNotEqualTo,
 		"named":         named,
 	}
 
@@ -106,13 +108,13 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
 				return nil, err
 			}
-			return method(t, b)
+			return method(t)
 		case 1:
 			var arg1 starlark.Value
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err
 			}
-			return method(t, b, arg1)
+			return method(t, arg1)
 		default:
 			return nil, fmt.Errorf("missing clause for attribute %q", b.Name())
 		}
