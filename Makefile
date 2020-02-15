@@ -34,9 +34,11 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 #	FIXME: don't have this github.com/ folder created in the first place
 	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
 
+lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./misc/goolint.sh
+	[[ $$(git grep -InE 'func [^,]*?T,[^,]*?[.]{3}starlark.Value[)]' | tee /dev/stderr | wc -l) -eq $$(git grep -InE '"[^"]+": ' -- pkg/house/starlarktruth/module.go | tee /dev/stderr | wc -l) ]]
 	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
 
 debug: all

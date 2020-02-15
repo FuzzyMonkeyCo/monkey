@@ -7,11 +7,44 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (t *T) failNone(proposition string, other starlark.Value) error {
+const warnContainsExactlySingleIterable = "" +
+	" Passing a single iterable to .containsExactly(*expected) is often" +
+	" not the correct thing to do. Did you mean to call" +
+	" .containsExactlyElementsIn(Iterable) instead?"
+
+func (t *T) unhandled(bName string, args ...starlark.Value) (starlark.Value, error) {
+	// FIXME: make prettier
+	err := fmt.Errorf("unhandled .%s%s", bName, starlark.Tuple(args).String())
+	return nil, err
+}
+
+func errMustBeEqualNumberOfKVPairs(count int) error {
+	return newInvalidAssertion(
+		fmt.Sprintf("There must be an equal number of key/value pairs"+
+			" (i.e., the number of key/value parameters (%d) must be even).", count))
+}
+
+func (t *T) failNone(check string, other starlark.Value) error {
 	if other == starlark.None {
-		return newInvalidAssertion(proposition)
+		msg := fmt.Sprintf("It is illegal to compare using .%s(None)", check)
+		return newInvalidAssertion(msg)
 	}
 	return nil
+}
+
+func (t *T) failIterable() (starlark.Iterable, error) {
+	itermap, ok := t.actual.(starlark.IterableMapping)
+	if ok {
+		iter := newTupleSlice(itermap.Items())
+		return iter, nil
+	}
+
+	iter, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		msg := fmt.Sprintf("Cannot use %s as Iterable.", t.subject())
+		return nil, newInvalidAssertion(msg)
+	}
+	return iter, nil
 }
 
 func (t *T) failComparingValues(verb string, other starlark.Value, suffix string) error {
@@ -41,16 +74,25 @@ func (t *T) failWithBadResults(
 // }
 
 func (t *T) subject() string {
-	if s, ok := t.actual.(starlark.String); ok {
-		if strings.Contains(s.GoString(), "\n") {
+	switch actual := t.actual.(type) {
+	case starlark.String:
+		if strings.Contains(actual.GoString(), "\n") {
 			if t.name == "" {
 				return "actual"
 			}
 			return fmt.Sprintf("actual %s", t.name)
 		}
+	case starlark.Tuple:
+		if t.actualIsIterableFromString && len(actual) == 0 {
+			// When printing an empty string that was turned into a tuple
+			// it makes more sense to turn it back into a string
+			// just to display it.
+			t.actual = starlark.String("")
+		}
+	default:
 	}
 	if t.name == "" {
 		return fmt.Sprintf("<%s>", t.actual.String())
 	}
-	return fmt.Sprintf("%s<%s>", t.name, t.actual.String())
+	return fmt.Sprintf("%s(<%s>)", t.name, t.actual.String())
 }

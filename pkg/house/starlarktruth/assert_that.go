@@ -40,10 +40,10 @@ func isNotEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 }
 
 func isEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
-	other := args[0]
-	switch other := other.(type) {
+	arg1 := args[0]
+	switch actual := t.actual.(type) {
 	case starlark.String:
-		if actual, ok := t.actual.(starlark.String); ok {
+		if other, ok := arg1.(starlark.String); ok {
 			a := actual.GoString()
 			o := other.GoString()
 			// Use unified diff strategy when comparing multiline strings.
@@ -60,37 +60,125 @@ func isEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 				if err != nil {
 					return nil, err
 				}
-				pretty = strings.Replace(pretty, "\t", " ", -1)
+				if pretty == "" {
+					return starlark.None, nil
+				}
 				msg := "is equal to expected, found diff:\n" + pretty
 				return nil, t.failWithProposition(msg, "")
 			}
 		}
-	case starlark.Indexable: // e.g. tuple, list
-		return containsExactlyElementsInOrderIn(t, other)
-	case starlark.Iterable: // e.g. dict, set
-		return containsExactlyElementsIn(t, other)
+	case starlark.Iterable:
+		if t.actual.Type() == arg1.Type() {
+			switch other := arg1.(type) {
+			case starlark.IterableMapping: // e.g. dict
+				return containsExactlyItemsIn(t, other)
+			case starlark.Indexable: // e.g. tuple, list
+				return containsExactlyElementsInOrderIn(t, other)
+			default: // e.g. set (any other Iterable)
+				return containsExactlyElementsIn(t, other)
+			}
+		}
 	default:
 	}
-	ok, err := starlark.CompareDepth(syntax.NEQ, t.actual, other, maxdepth)
+	ok, err := starlark.CompareDepth(syntax.NEQ, t.actual, arg1, maxdepth)
 	if err != nil {
 		return nil, err
 	}
 	if ok {
 		suffix := ""
-		if t.actual.String() == other.String() {
+		if t.actual.String() == arg1.String() {
 			suffix = " However, their str() representations are equal."
 		}
-		return nil, t.failComparingValues("is equal to", other, suffix)
+		return nil, t.failComparingValues("is equal to", arg1, suffix)
 	}
 	return starlark.None, nil
 }
 
-func containsExactlyElementsInOrderIn(t *T, expected starlark.Value) (starlark.Value, error) {
-	return t.containsExactlyElementsIn(expected, inOrder())
+func iterEmpty(able starlark.Iterable) bool {
+	iter := able.Iterate()
+	defer iter.Done()
+	var v starlark.Value
+	return !iter.Next(&v)
 }
 
-func containsExactlyElementsIn(t *T, expected starlark.Value) (starlark.Value, error) {
-	return t.containsExactlyElementsIn(expected)
+func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
+	argc := len(args)
+	switch actual := t.actual.(type) {
+	case starlark.IterableMapping:
+		if argc == 0 {
+			if iterEmpty(actual) {
+				return starlark.None, nil
+			}
+			return nil, t.failWithProposition("is empty", "")
+		}
+		if argc%2 != 0 {
+			return nil, errMustBeEqualNumberOfKVPairs(argc)
+		}
+		dic := starlark.NewDict(argc / 2)
+		for i := 0; i < argc/2; i += 2 {
+			if err := dic.SetKey(args[i], args[i+1]); err != nil {
+				return nil, err
+			}
+		}
+		return containsExactlyItemsIn(t, dic)
+	case starlark.Iterable:
+		if argc == 0 {
+			if iterEmpty(actual) {
+				return starlark.None, nil
+			}
+			return nil, t.failWithProposition("is empty", "")
+		}
+		tup := starlark.Tuple(args)
+		expectingSingleIterable := false
+		if argc == 1 {
+			_, isIterable := args[0].(starlark.Iterable)
+			_, isString := args[0].(starlark.String)
+			expectingSingleIterable = isIterable && !isString
+		}
+		opts := []containsOption{}
+		if expectingSingleIterable {
+			opts = append(opts, warnElementsIn())
+		}
+		return t.containsExactlyElementsIn(tup, opts...)
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		return containsExactly(t, args...)
+	default:
+		return t.unhandled("containsExactly", args...)
+	}
+}
+
+// TODO: fix to .inOrder()
+func containsExactlyInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
+	//fixme: replace opts with t.askInOrder() (fetches Receiver())
+	return containsExactly(t, args...)
+}
+
+// TODO: fix to .notInOrder()
+func containsExactlyNotInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
+	//fixme: replace opts with t.askNotInOrder() (fetches Receiver())
+	return containsExactly(t, args...)
+}
+
+// TODO: fix to .inOrder()
+func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	arg1 := args[0]
+	if imActual, ok := t.actual.(starlark.IterableMapping); ok {
+		if imExpected, ok := arg1.(starlark.IterableMapping); ok {
+			return containsExactly(newT(newTupleSlice(imActual.Items())),
+				newTupleSlice(imExpected.Items()).Values()...)
+		}
+	}
+	return t.unhandled("containsExactlyItemsIn", args...)
+}
+
+// TODO: fix to .inOrder()
+func containsExactlyElementsInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsExactlyElementsIn(args[0], inOrder())
+}
+
+func containsExactlyElementsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsExactlyElementsIn(args[0])
 }
 
 type containsOptions struct {
@@ -109,13 +197,13 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		o(opts)
 	}
 
-	iterableActual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, t.failWithProposition("is not Iterable", "")
+	iterableActual, err := t.failIterable()
+	if err != nil {
+		return nil, err
 	}
-	iterableExpected, ok := expected.(starlark.Iterable)
-	if !ok {
-		return nil, (&T{actual: expected}).failWithProposition("is not Iterable", "")
+	iterableExpected, err := newT(expected).failIterable()
+	if err != nil {
+		return nil, err
 	}
 
 	missing := newDuplicateCounter()
@@ -127,10 +215,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 
 	warning := ""
 	if opts.warnElementsIn {
-		warning = "" +
-			" Passing a single iterable to .containsExactly(*expected) is often" +
-			" not the correct thing to do. Did you mean to call" +
-			" .containsExactlyElementsIn(Iterable) instead?"
+		warning = warnContainsExactlySingleIterable
 	}
 
 	var elemActual, elemExpected starlark.Value
@@ -141,7 +226,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			break
 		}
 		if !iterExpected.Next(&elemExpected) {
-			extra.increment(elemActual)
+			extra.Increment(elemActual)
 			break
 		}
 		iterations += 1
@@ -156,25 +241,25 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		}
 		if ok {
 			// Missing elements; elements that are not missing will be removed.
-			missing.increment(elemExpected)
+			missing.Increment(elemExpected)
 			var m starlark.Value
 			for iterExpected.Next(&m) {
-				missing.increment(m)
+				missing.Increment(m)
 			}
 
 			// Remove all actual elements from missing, and add any that weren't
 			// in missing to extra.
 			if missing.contains(elemActual) {
-				missing.decrement(elemActual)
+				missing.Decrement(elemActual)
 			} else {
-				extra.increment(elemActual)
+				extra.Increment(elemActual)
 			}
 			var e starlark.Value
 			for iterActual.Next(&e) {
 				if missing.contains(e) {
-					missing.decrement(e)
+					missing.Decrement(e)
 				} else {
-					extra.increment(e)
+					extra.Increment(e)
 				}
 			}
 
@@ -214,7 +299,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	// they're extras. If the required iterator has elements, they're missing.
 	var e starlark.Value
 	for iterActual.Next(&e) {
-		extra.increment(e)
+		extra.Increment(e)
 	}
 	if !extra.empty() {
 		return nil, t.failWithBadResults("contains exactly", expected,
@@ -223,7 +308,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 
 	var m starlark.Value
 	for iterExpected.Next(&m) {
-		missing.increment(m)
+		missing.Increment(m)
 	}
 	if !missing.empty() {
 		return nil, t.failWithBadResults("contains exactly", expected,

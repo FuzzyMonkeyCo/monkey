@@ -27,19 +27,6 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 		},
 	}
 	return starlark.ExecFile(thread, t.Name()+".star", program, predeclared)
-	// if err != nil {
-	// 	if evalErr, ok := err.(*starlark.EvalError); ok {
-	// 		log.Fatal(evalErr.Backtrace())
-	// 	}
-	// 	log.Fatal(err)
-	// }
-	// require.NoError(t,err)
-
-	// for _, name := range globals.Keys() {
-	// 	v := globals[name]
-	// 	t.Logf("%s (%s) = %s\n", name, v.Type(), v.String())
-	// }
-	// require.Len(t, globals, 0)
 }
 
 func testEach(t *testing.T, m map[string]error) {
@@ -172,11 +159,12 @@ func TestIsLessThan(t *testing.T) {
 }
 
 func TestCannotCompareToNone(t *testing.T) {
+	p := "It is illegal to compare using ."
 	testEach(t, map[string]error{
-		`AssertThat(5).isAtLeast(None)`:     newInvalidAssertion("isAtLeast"),
-		`AssertThat(5).isAtMost(None)`:      newInvalidAssertion("isAtMost"),
-		`AssertThat(5).isGreaterThan(None)`: newInvalidAssertion("isGreaterThan"),
-		`AssertThat(5).isLessThan(None)`:    newInvalidAssertion("isLessThan"),
+		`AssertThat(5).isAtLeast(None)`:     newInvalidAssertion(p + "isAtLeast(None)"),
+		`AssertThat(5).isAtMost(None)`:      newInvalidAssertion(p + "isAtMost(None)"),
+		`AssertThat(5).isGreaterThan(None)`: newInvalidAssertion(p + "isGreaterThan(None)"),
+		`AssertThat(5).isLessThan(None)`:    newInvalidAssertion(p + "isLessThan(None)"),
 	})
 }
 
@@ -184,6 +172,8 @@ func TestIsEqualTo(t *testing.T) {
 	testEach(t, map[string]error{
 		`AssertThat(5).isEqualTo(5)`: nil,
 		`AssertThat(5).isEqualTo(3)`: fail("5", "is equal to <3>"),
+		`AssertThat({1:2,3:4}).isEqualTo([1,2,3,4])`: fail(`{1: 2, 3: 4}`,
+			"is equal to <[1, 2, 3, 4]>"),
 	})
 }
 
@@ -274,12 +264,8 @@ func TestOrderedDictIsEqualToUsesContainsExactlyItemsInPlusInOrder(t *testing.T)
 		s + d2 + `)`: nil,
 		s + d3 + `)`: fail(d1, "contains exactly these elements in order <"+d3+">"),
 
-		// TODO: *expected
-		// with self.Failure(
-		//     "contains exactly <((2, 'two'),)>",
-		//     "has unexpected items <[(4, 'four')]>",
-		//     'often not the correct thing to do'):
-		//   s.IsEqualTo(collections.OrderedDict(((2, 'two'),)))
+		s + `((2, "two"),))`: fail(d1,
+			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`),
 
 		s + d4 + `)`: fail(d1,
 			"contains exactly <"+d4+`>. It is missing <(4, "for")> and has unexpected items <(4, "four")>`),
@@ -292,28 +278,20 @@ func TestDictIsEqualToUsesContainsExactlyItemsIn(t *testing.T) {
 	d := `{2: "two", 4: "four"}`
 	dd := `{2: "two", 4: "for"}`
 	ddd := `{2: "two", 4: "four", 5: "five"}`
+	dBis := `items([(2, "two"), (4, "four")])`
 	s := `AssertThat(` + d + `).isEqualTo(`
 	testEach(t, map[string]error{
 		s + d + `)`: nil,
 
-		// TODO: *expected
-		//     with self.Failure(
-		//         "contains exactly <((2, 'two'),)>",
-		//         "has unexpected items <[(4, 'four')]>",
-		//         'often not the correct thing to do'):
-		//       s.IsEqualTo({2: 'two'})
+		s + `{2: "two"})`: fail(dBis,
+			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`,
+			warnContainsExactlySingleIterable),
 
-		s + dd + `)`: fail(d,
-			"contains exactly <"+dd+`>. It is missing <(4, "for")> and has unexpected items <(4, "four")>`),
-		//     expected = {2: 'two', 4: 'for'}
-		//     with self.Failure(
-		//         'contains exactly <{0!r}>'.format(tuple(expected.items())),
-		//         "missing <[(4, 'for')]>",
-		//         "has unexpected items <[(4, 'four')]>"):
-		//       s.IsEqualTo(expected)
-
-		s + ddd + `)`: fail(d,
-			"contains exactly <"+ddd+`>. It is missing <(5, "five")>`),
+		s + dd + `)`: fail(dBis,
+			`contains exactly <((2, "two"), (4, "for"))>. It is missing <(4, "for")> and has unexpected items <(4, "four")>`),
+		s + ddd + `)`: fail(dBis,
+			`contains exactly <((2, "two"), (4, "four"), (5, "five"))>. It is missing <(5, "five")>`),
+		s + `{})`: fail(`items([(2, "two"), (4, "four")])`, "is empty"),
 	})
 }
 
@@ -326,19 +304,25 @@ func TestIsEqualToComparedWithNonDictionary(t *testing.T) {
 	})
 }
 
-// func (t *testing.T) {
-// 	testEach(t, map[string]error{
-// //Named
-//   def testNamedMultilineString(self):
-//     s = truth._StringSubject('line1\nline2').Named('string-name')
-//     self.assertEqual(s._GetSubject(), 'actual string-name')
-
-//   def testIsEqualToVerifiesEquality(self):
-//     s = truth._StringSubject('line1\nline2\n')
-//     s.IsEqualTo('line1\nline2\n')
-
-// 	})
-// }
+func TestNamedMultilineString(t *testing.T) {
+	s := `AssertThat("line1\nline2").named("some-name")`
+	testEach(t, map[string]error{
+		s + `.isEqualTo("line1\nline2")`: nil,
+		s + `.isEqualTo("")`: newTruthAssertion(
+			`Not true that actual some-name is equal to <"">.`),
+		s + `.isEqualTo("line1\nline2\n")`: newTruthAssertion(
+			`Not true that actual some-name is equal to expected, found diff:
+*** Expected
+--- Actual
+***************
+*** 1,3 ****
+  line1
+  line2
+- 
+--- 1,2 ----
+.`),
+	})
+}
 
 func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
 	testEach(t, map[string]error{
@@ -361,6 +345,150 @@ func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
   line4
 ! line5
   
-`),
+.`),
+	})
+}
+
+func TestContainsExactly(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := `AssertThat(` + ss + `).containsExactly(`
+	testEach(t, map[string]error{
+		`AssertThat(` + ss + `).containsExactlyInOrder(3, 5, [])`:    nil,
+		`AssertThat(` + ss + `).containsExactlyNotInOrder([], 3, 5)`: nil,
+
+		s + `3, 5, [], 9)`: fail(ss,
+			`contains exactly <(3, 5, [], 9)>. It is missing <9>`),
+		s + `9, 3, 5, [], 10)`: fail(ss,
+			`contains exactly <(9, 3, 5, [], 10)>. It is missing <9, 10>`),
+		s + `3, 5)`: fail(ss,
+			`contains exactly <(3, 5)>. It has unexpected items <[]>`),
+		s + `[], 3)`: fail(ss,
+			`contains exactly <([], 3)>. It has unexpected items <5>`),
+		s + `3)`: fail(ss,
+			`contains exactly <(3,)>. It has unexpected items <5, []>`),
+		s + `4, 4)`: fail(ss,
+			`contains exactly <(4, 4)>. It is missing <4 [2 copies]> and has unexpected items <3, 5, []>`),
+		s + `3, 5, 9)`: fail(ss,
+			`contains exactly <(3, 5, 9)>. It is missing <9> and has unexpected items <[]>`),
+		s + `(3, 5, []))`: fail(ss,
+			`contains exactly <((3, 5, []),)>. It is missing <(3, 5, [])> and has unexpected items <3, 5, []>`,
+			warnContainsExactlySingleIterable),
+		s + `)`: fail(ss, "is empty"),
+	})
+}
+
+func TestContainsExactlyDoesNotWarnIfSingleStringNotContained(t *testing.T) {
+	s := `.containsExactly("abc")`
+	testEach(t, map[string]error{
+		`AssertThat(())` + s:      fail(`()`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`AssertThat([])` + s:      fail(`[]`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`AssertThat({})` + s:      errMustBeEqualNumberOfKVPairs(1),
+		`AssertThat("")` + s:      fail(`""`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`AssertThat(set([]))` + s: fail(`set([])`, `contains exactly <("abc",)>. It is missing <"abc">`),
+	})
+}
+
+func TestContainsExactlyEmptyContainer(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(` + x + `).containsExactly(3)`
+	}
+	testEach(t, map[string]error{
+		s(`()`): fail(`()`, `contains exactly <(3,)>. It is missing <3>`),
+		s(`[]`): fail(`[]`, `contains exactly <(3,)>. It is missing <3>`),
+		s(`{}`): errMustBeEqualNumberOfKVPairs(1),
+		s(`""`): fail(`""`, `contains exactly <(3,)>. It is missing <3>`),
+		//FIXME: Not true that <''> contains exactly <(3,)>. It is missing <[3]>. warnContainsExactlySingleIterable
+		s(`set([])`): fail(`set([])`, `contains exactly <(3,)>. It is missing <3>`),
+	})
+}
+
+func TestContainsExactlyNothing(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(` + x + `).containsExactly()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):      nil,
+		s(`[]`):      nil,
+		s(`{}`):      nil,
+		s(`""`):      nil,
+		s(`set([])`): nil,
+	})
+}
+
+func TestContainsExactlyElementsIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsExactlyElementsIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		`AssertThat(` + ss + `).containsExactlyElementsInOrderIn((3, 5, []))`: nil,
+		// FIXME: impl. notinorder
+		// `AssertThat(` + ss + `).containsExactlyElementsNotInOrderIn(([], 3, 5))`: nil,
+
+		s(`(3, 5, [], 9)`):     fail(ss, `contains exactly <(3, 5, [], 9)>. It is missing <9>`),
+		s(`(9, 3, 5, [], 10)`): fail(ss, `contains exactly <(9, 3, 5, [], 10)>. It is missing <9, 10>`),
+		s(`(3, 5)`):            fail(ss, `contains exactly <(3, 5)>. It has unexpected items <[]>`),
+		s(`([], 3)`):           fail(ss, `contains exactly <([], 3)>. It has unexpected items <5>`),
+		s(`(3,)`):              fail(ss, `contains exactly <(3,)>. It has unexpected items <5, []>`),
+		s(`(4, 4)`):            fail(ss, `contains exactly <(4, 4)>. It is missing <4 [2 copies]> and has unexpected items <3, 5, []>`),
+		s(`(3, 5, 9)`):         fail(ss, `contains exactly <(3, 5, 9)>. It is missing <9> and has unexpected items <[]>`),
+		s(`()`):                fail(ss, `is empty`),
+	})
+}
+
+func TestContainsExactlyElementsInEmptyContainer(t *testing.T) {
+	testEach(t, map[string]error{
+		`AssertThat(()).containsExactlyElementsIn(())`: nil,
+		`AssertThat(()).containsExactlyElementsIn((3,))`: fail(`()`,
+			`contains exactly <(3,)>. It is missing <3>`),
+	})
+}
+
+func TestContainsExactlyTargetingOrderedDict(t *testing.T) {
+	ss := `((2, "two"), (4, "four"))`
+	s := `AssertThat(` + ss + `).containsExactly(`
+	testEach(t, map[string]error{
+		`AssertThat(` + ss + `).containsExactlyInOrder((2, "two"), (4, "four"))`:    nil,
+		`AssertThat(` + ss + `).containsExactlyNotInOrder((4, "four"), (2, "two"))`: nil,
+
+		s + `2, "two")`: fail(ss,
+			`contains exactly <(2, "two")>. It is missing <2, "two"> and has unexpected items <(2, "two"), (4, "four")>`),
+
+		s + `2, "two", 4, "for")`: fail(ss,
+			`contains exactly <(2, "two", 4, "for")>. It is missing <2, "two", 4, "for"> and has unexpected items <(2, "two"), (4, "four")>`),
+
+		s + `2, "two", 4, "four", 5, "five")`: fail(ss,
+			`contains exactly <(2, "two", 4, "four", 5, "five")>. It is missing <2, "two", 4, "four", 5, "five"> and has unexpected items <(2, "two"), (4, "four")>`),
+	})
+}
+
+func TestContainsExactlyPassingOddNumberOfArgs(t *testing.T) {
+	testEach(t, map[string]error{
+		`AssertThat({}).containsExactly("key1", "value1", "key2")`: errMustBeEqualNumberOfKVPairs(3),
+	})
+}
+
+func TestContainsExactlyItemsIn(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat({2: "two", 4: "four"}).containsExactlyItemsIn(` + x + `)`
+	}
+	ss := `items([(2, "two"), (4, "four")])`
+	testEach(t, map[string]error{
+		// NOTE: not ported over from pytruth
+		// as Starlark's Dict is not ordered (it's insertion order)
+		// d2 = collections.OrderedDict(((2, 'two'), (4, 'four')))
+		// d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
+		// self.assertIsInstance(s.ContainsExactlyItemsIn(d2), truth._InOrder)
+		// self.assertIsInstance(s.ContainsExactlyItemsIn(d3), truth._NotInOrder)
+
+		s(`{2: "two"}`): fail(ss,
+			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`,
+			warnContainsExactlySingleIterable),
+
+		s(`{2: "two", 4: "for"}`): fail(ss,
+			`contains exactly <((2, "two"), (4, "for"))>. It is missing <(4, "for")> and has unexpected items <(4, "four")>`),
+
+		s(`{2: "two", 4: "four", 5: "five"}`): fail(ss,
+			`contains exactly <((2, "two"), (4, "four"), (5, "five"))>. It is missing <(5, "five")>`),
 	})
 }

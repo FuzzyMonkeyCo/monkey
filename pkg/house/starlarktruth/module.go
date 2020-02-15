@@ -1,6 +1,7 @@
 package starlarktruth
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 
@@ -27,12 +28,11 @@ func NewModule(predeclared starlark.StringDict) {
 		if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
 			return nil, err
 		}
-		t := &T{
-			actual: target,
-		}
-		return t, nil
+		return newT(target), nil
 	})
 }
+
+func newT(target starlark.Value) *T { return &T{actual: target} }
 
 func (t *T) String() string                           { return fmt.Sprintf("%s(%s)", module, t.actual.String()) }
 func (t *T) Type() string                             { return module }
@@ -56,13 +56,22 @@ var (
 	}
 
 	methods1arg = attrs{
-		"isAtLeast":     isAtLeast,
-		"isAtMost":      isAtMost,
-		"isEqualTo":     isEqualTo,
-		"isGreaterThan": isGreaterThan,
-		"isLessThan":    isLessThan,
-		"isNotEqualTo":  isNotEqualTo,
-		"named":         named,
+		"containsExactlyElementsIn":        containsExactlyElementsIn,
+		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
+		"containsExactlyItemsIn":           containsExactlyItemsIn,
+		"isAtLeast":                        isAtLeast,
+		"isAtMost":                         isAtMost,
+		"isEqualTo":                        isEqualTo,
+		"isGreaterThan":                    isGreaterThan,
+		"isLessThan":                       isLessThan,
+		"isNotEqualTo":                     isNotEqualTo,
+		"named":                            named,
+	}
+
+	methodsNargs = attrs{
+		"containsExactly":           containsExactly,
+		"containsExactlyInOrder":    containsExactlyInOrder,
+		"containsExactlyNotInOrder": containsExactlyNotInOrder,
 	}
 
 	methods = []attrs{
@@ -88,6 +97,9 @@ func findAttr(name string) (attr, int) {
 			return m, i
 		}
 	}
+	if m, ok := methodsNargs[name]; ok {
+		return m, -1
+	}
 	return nil, 0
 }
 
@@ -103,7 +115,19 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			closeness = c
 		}
 		defer thread.SetLocal("closeness", 1+closeness)
+		if len(kwargs) > 0 {
+			return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
+		}
 		switch nArgs {
+		case -1:
+			argz := make([]starlark.Value, 0, args.Len())
+			iter := args.Iterate()
+			defer iter.Done()
+			var arg starlark.Value
+			for iter.Next(&arg) {
+				argz = append(argz, arg)
+			}
+			return method(t, argz...)
 		case 0:
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
 				return nil, err
@@ -115,39 +139,8 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 				return nil, err
 			}
 			return method(t, arg1)
-		default:
-			return nil, fmt.Errorf("missing clause for attribute %q", b.Name())
 		}
+		return nil, errors.New("unreachable")
 	}
 	return starlark.NewBuiltin(name, impl).BindReceiver(t), nil
 }
-
-// AssertThat(actual).IsEqualTo(expected)
-// AssertThat(actual).IsIn(expected_possibilities)
-// assertThat(actual).containsExactly(64, 128, 256, 128).inOrder()
-
-/// comparable :: lt + le + gt + ge
-/// const +inf, -inf, nan
-
-// func describeTimes(times int) string {
-// 	if times == 1 {
-// 		return "once"
-// 	}
-// 	return fmt.Sprintf("%d times", times)
-// }
-
-// func (s *emptySubject) checkUnresolved() {
-// 	if len(s.unresolvedSubjects) != 0 {
-//         msg := []string{
-// 			`The following assertions were unresolved. Perhaps you called`+
-// 				` "AssertThat(thing.IsEmpty())" instead of`+
-// 				` "AssertThat(thing).IsEmpty()".`,
-// 		}
-// 		//TODO: sort
-// 		for u := range unresolvedSubjects {
-// 			msg=append(msg,fmt.Sprintf(`    * %s`, u))
-// 		}
-// 		panic(strings.Join(msg, "\n")
-// 		}
-// 	}
-// }
