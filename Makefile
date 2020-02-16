@@ -7,9 +7,7 @@ GPB_IMG ?= znly/protoc:0.4.0
 GOGO ?= v1.2.1
 PROTOC = docker run --rm -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 
-all: SHELL = /bin/bash
 all: pkg/internal/fm/fuzzymonkey.pb.go lint
-	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
 
 update: SHELL := /bin/bash
@@ -38,8 +36,8 @@ lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./misc/goolint.sh
-	[[ $$(git grep -InE 'func [^,]*?T,[^,]*?[.]{3}starlark.Value[)]' | tee /dev/stderr | wc -l) -eq $$(git grep -InE '"[^"]+": ' -- pkg/house/starlarktruth/module.go | tee /dev/stderr | wc -l) ]]
 	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
+	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
 
 debug: all
 	./$(EXE) lint

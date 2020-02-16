@@ -475,7 +475,7 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 	ss := `items([(2, "two"), (4, "four")])`
 	testEach(t, map[string]error{
 		// NOTE: not ported over from pytruth
-		// as Starlark's Dict is not ordered (it's insertion order)
+		// as Starlark's Dict is not ordered (uses insertion order)
 		// d2 = collections.OrderedDict(((2, 'two'), (4, 'four')))
 		// d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
 		// self.assertIsInstance(s.ContainsExactlyItemsIn(d2), truth._InOrder)
@@ -490,5 +490,14 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 
 		s(`{2: "two", 4: "four", 5: "five"}`): fail(ss,
 			`contains exactly <((2, "two"), (4, "four"), (5, "five"))>. It is missing <(5, "five")>`),
+	})
+}
+
+func TestNone(t *testing.T) {
+	testEach(t, map[string]error{
+		`AssertThat(None).isNone()`:     nil,
+		`AssertThat(None).isNotNone()`:  fail(`None`, `is not None`),
+		`AssertThat("abc").isNotNone()`: nil,
+		`AssertThat("abc").isNone()`:    fail(`"abc"`, `is None`),
 	})
 }

@@ -49,10 +49,12 @@ type (
 
 var (
 	methods0args = attrs{
-		"isFalse":  isFalse,
-		"isFalsy":  isFalsy,
-		"isTrue":   isTrue,
-		"isTruthy": isTruthy,
+		"isFalse":   isFalse,
+		"isFalsy":   isFalsy,
+		"isNone":    isNone,
+		"isNotNone": isNotNone,
+		"isTrue":    isTrue,
+		"isTruthy":  isTruthy,
 	}
 
 	methods1arg = attrs{

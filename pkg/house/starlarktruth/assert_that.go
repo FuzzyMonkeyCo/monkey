@@ -320,6 +320,12 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	return starlark.None, nil
 }
 
+// Adds a prefix to the subject, when it is displayed in error messages.
+//
+// This is especially useful in the context of types that have no helpful
+// string representation (e.g., boolean). Writing
+// AssertThat(foo).Named('foo').IsTrue()
+// then results in a more reasonable error.
 func named(t *T, args ...starlark.Value) (starlark.Value, error) {
 	str, ok := args[0].(starlark.String)
 	if !ok || str.Len() == 0 {
@@ -327,6 +333,20 @@ func named(t *T, args ...starlark.Value) (starlark.Value, error) {
 	}
 	t.name = str.GoString()
 	return t, nil
+}
+
+func isNone(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if t.actual != starlark.None {
+		return nil, t.failWithProposition("is None", "")
+	}
+	return starlark.None, nil
+}
+
+func isNotNone(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if t.actual == starlark.None {
+		return nil, t.failWithProposition("is not None", "")
+	}
+	return starlark.None, nil
 }
 
 func isFalse(t *T, args ...starlark.Value) (starlark.Value, error) {
