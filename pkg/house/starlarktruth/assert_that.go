@@ -710,3 +710,27 @@ func containsNoDuplicates(t *T, args ...starlark.Value) (starlark.Value, error) 
 	}
 	return starlark.None, nil
 }
+
+// TODO: inorder
+func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.Iterable); ok {
+		return t.containsAll("contains all elements in", arg1)
+	}
+	return t.unhandled("containsAllIn", args...)
+}
+
+// TODO: inorder
+func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsAll("contains all of", starlark.Tuple(args))
+}
+
+// Determines if the subject contains all the expected elements.
+// TODO: inorder
+func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value, error) {
+	_, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return t.unhandled("containsAllIn", expected)
+	}
+
+	return nil, nil //FIXME
+}
