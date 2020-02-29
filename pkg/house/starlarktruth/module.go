@@ -49,24 +49,36 @@ type (
 
 var (
 	methods0args = attrs{
-		"isFalse":   isFalse,
-		"isFalsy":   isFalsy,
-		"isNone":    isNone,
-		"isNotNone": isNotNone,
-		"isTrue":    isTrue,
-		"isTruthy":  isTruthy,
+		"containsNoDuplicates": containsNoDuplicates,
+		"isCallable":           isCallable,
+		"isEmpty":              isEmpty,
+		"isFalse":              isFalse,
+		"isFalsy":              isFalsy,
+		"isNone":               isNone,
+		"isNotCallable":        isNotCallable,
+		"isNotEmpty":           isNotEmpty,
+		"isNotNone":            isNotNone,
+		"isTrue":               isTrue,
+		"isTruthy":             isTruthy,
 	}
 
 	methods1arg = attrs{
+		"contains":                         contains,
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
+		"doesNotContain":                   doesNotContain,
+		"doesNotHaveAttribute":             doesNotHaveAttribute,
+		"hasAttribute":                     hasAttribute,
+		"hasSize":                          hasSize,
 		"isAtLeast":                        isAtLeast,
 		"isAtMost":                         isAtMost,
 		"isEqualTo":                        isEqualTo,
 		"isGreaterThan":                    isGreaterThan,
+		"isIn":                             isIn,
 		"isLessThan":                       isLessThan,
 		"isNotEqualTo":                     isNotEqualTo,
+		"isNotIn":                          isNotIn,
 		"named":                            named,
 	}
 
@@ -74,6 +86,8 @@ var (
 		"containsExactly":           containsExactly,
 		"containsExactlyInOrder":    containsExactlyInOrder,
 		"containsExactlyNotInOrder": containsExactlyNotInOrder,
+		"isAnyOf":                   isAnyOf,
+		"isNoneOf":                  isNoneOf,
 	}
 
 	methods = []attrs{

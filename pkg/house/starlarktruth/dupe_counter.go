@@ -2,7 +2,6 @@ package starlarktruth
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"go.starlark.net/starlark"
@@ -23,6 +22,7 @@ var _ fmt.Stringer = (*duplicateCounter)(nil)
 type duplicateCounter struct {
 	m map[string]uint
 	s []string
+	d uint
 }
 
 func newDuplicateCounter() *duplicateCounter {
@@ -31,38 +31,57 @@ func newDuplicateCounter() *duplicateCounter {
 	}
 }
 
-func (c *duplicateCounter) empty() bool { return len(c.m) == 0 }
+// HasDupes indicates whether there are values that appears > 1 times.
+func (c *duplicateCounter) HasDupes() bool { return c.d != 0 }
 
-func (c *duplicateCounter) contains(v starlark.Value) bool {
-	_, ok := c.m[v.String()]
+func (c *duplicateCounter) Empty() bool { return len(c.m) == 0 }
+
+func (c *duplicateCounter) Contains(v starlark.Value) bool {
+	return c.contains(v.String())
+}
+
+func (c *duplicateCounter) contains(v string) bool {
+	_, ok := c.m[v]
 	return ok
 }
 
 // Increment increments a count by 1. Inserts the item if not present.
 func (c *duplicateCounter) Increment(v starlark.Value) {
-	vv := v.String()
-	if _, ok := c.m[vv]; !ok {
-		c.m[vv] = 0
-		c.s = append(c.s, vv)
+	c.increment(v.String())
+}
+
+func (c *duplicateCounter) increment(v string) {
+	if _, ok := c.m[v]; !ok {
+		c.m[v] = 0
+		c.s = append(c.s, v)
 	}
-	c.m[vv] += 1
+	c.m[v]++
+	if c.m[v] == 2 {
+		c.d++
+	}
 }
 
 // Decrement decrements a count by 1. Expunges the item if the count is 0.
 // If the item is not present, has no effect.
 func (c *duplicateCounter) Decrement(v starlark.Value) {
-	vv := v.String()
-	if count, ok := c.m[vv]; ok {
+	c.decrement(v.String())
+}
+
+func (c *duplicateCounter) decrement(v string) {
+	if count, ok := c.m[v]; ok {
 		if count != 1 {
-			c.m[vv] -= 1
+			c.m[v]--
+			if c.m[v] == 1 {
+				c.d--
+			}
 			return
 		}
-		delete(c.m, vv)
+		delete(c.m, v)
 		if sz := len(c.s); sz != 1 {
 			s := make([]string, 0, len(c.s)-1)
-			for _, vvv := range c.s {
-				if vvv != vv {
-					s = append(s, vvv)
+			for _, vv := range c.s {
+				if vv != v {
+					s = append(s, vv)
 				}
 			}
 			c.s = s
@@ -92,10 +111,30 @@ func (c *duplicateCounter) String() string {
 		b.WriteString(vv)
 		if count := c.m[vv]; count != 1 {
 			b.WriteString(" [")
-			b.WriteString(strconv.FormatUint(uint64(count), 10))
+			b.WriteString(fmt.Sprintf("%d", count))
 			b.WriteString(" copies]")
 		}
 	}
 	// b.WriteString("]")
+	return b.String()
+}
+
+// Dupes shows only items whose count > 1.
+func (c *duplicateCounter) Dupes() string {
+	var b strings.Builder
+	first := true
+	for _, vv := range c.s {
+		if count := c.m[vv]; count != 1 {
+			if !first {
+				b.WriteString(", ")
+			}
+			first = false
+
+			b.WriteString(vv)
+			b.WriteString(" [")
+			b.WriteString(fmt.Sprintf("%d", count))
+			b.WriteString(" copies]")
+		}
+	}
 	return b.String()
 }

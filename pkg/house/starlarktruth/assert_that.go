@@ -247,26 +247,28 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 				missing.Increment(m)
 			}
 
+			eStrActual := elemActual.String()
 			// Remove all actual elements from missing, and add any that weren't
 			// in missing to extra.
-			if missing.contains(elemActual) {
-				missing.Decrement(elemActual)
+			if missing.contains(eStrActual) {
+				missing.decrement(eStrActual)
 			} else {
-				extra.Increment(elemActual)
+				extra.increment(eStrActual)
 			}
 			var e starlark.Value
 			for iterActual.Next(&e) {
-				if missing.contains(e) {
-					missing.Decrement(e)
+				eStr := e.String()
+				if missing.contains(eStr) {
+					missing.decrement(eStr)
 				} else {
-					extra.Increment(e)
+					extra.increment(eStr)
 				}
 			}
 
 			// Fail if there are either missing or extra elements.
 
-			if !missing.empty() {
-				if !extra.empty() {
+			if !missing.Empty() {
+				if !extra.Empty() {
 					// Subject is missing required elements and has extra elements.
 					msg := fmt.Sprintf("contains exactly <%s>."+
 						" It is missing <%s> and has unexpected items <%s>",
@@ -278,7 +280,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 				}
 			}
 
-			if !extra.empty() {
+			if !extra.Empty() {
 				return nil, t.failWithBadResults("contains exactly", expected,
 					"has unexpected items", extra, warning)
 			}
@@ -290,7 +292,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			}
 		}
 	}
-	if iterations == 0 && missing.empty() && !extra.empty() {
+	if iterations == 0 && missing.Empty() && !extra.Empty() {
 		return nil, t.failWithProposition("is empty", "")
 	}
 
@@ -301,7 +303,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	for iterActual.Next(&e) {
 		extra.Increment(e)
 	}
-	if !extra.empty() {
+	if !extra.Empty() {
 		return nil, t.failWithBadResults("contains exactly", expected,
 			"has unexpected items", extra, warning)
 	}
@@ -310,7 +312,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	for iterExpected.Next(&m) {
 		missing.Increment(m)
 	}
-	if !missing.empty() {
+	if !missing.Empty() {
 		return nil, t.failWithBadResults("contains exactly", expected,
 			"is missing", missing, warning)
 	}
@@ -413,4 +415,298 @@ func isGreaterThan(t *T, args ...starlark.Value) (starlark.Value, error) {
 
 func isLessThan(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.comparable("isLessThan", "is less than", syntax.GE, args[0])
+}
+
+func isIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch iterable := args[0].(type) {
+	case starlark.Iterable:
+		// NOTE: operates on Dict keys.
+		it := iterable.Iterate()
+		defer it.Done()
+		var e starlark.Value
+		for it.Next(&e) {
+			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				return starlark.None, nil
+			}
+		}
+		return nil, t.failComparingValues("is equal to any of", iterable, "")
+	case starlark.String:
+		if actual, ok := t.actual.(starlark.String); ok {
+			if strings.Contains(iterable.GoString(), actual.GoString()) {
+				return starlark.None, nil
+			}
+			return nil, t.failComparingValues("is equal to any of", iterable, "")
+		}
+	default:
+	}
+	return t.unhandled("isIn", args...)
+}
+
+// Asserts that this subject is not a member of the given iterable.
+func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	arg1 := args[0]
+	switch iterable := arg1.(type) {
+	case starlark.String:
+		if actual, ok := t.actual.(starlark.String); ok {
+			if ix := strings.Index(iterable.GoString(), actual.GoString()); ix != -1 {
+				msg := fmt.Sprintf("is not in %s. It was found at index %d",
+					arg1.String(), ix)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	case starlark.Indexable:
+		for ix := 0; ix < iterable.Len(); ix++ {
+			e := iterable.Index(ix)
+			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				msg := fmt.Sprintf("is not in %s. It was found at index %d",
+					arg1.String(), ix)
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+		return starlark.None, nil
+	case starlark.Iterable:
+		// NOTE: operates on Dict keys.
+		it := iterable.Iterate()
+		defer it.Done()
+		var e starlark.Value
+		for it.Next(&e) {
+			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				msg := fmt.Sprintf("is not in %s", arg1.String())
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+		return starlark.None, nil
+	default:
+	}
+	return t.unhandled("isIn", args...)
+}
+
+func isAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isIn(t, starlark.Tuple(args))
+}
+
+func isNoneOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isNotIn(t, starlark.Tuple(args))
+}
+
+// From https://github.com/google/starlark-go/blob/6677ee5c7211380ec7e6a1b50dc45287e40ca9e1/starlark/library.go#L383
+func (t *T) hasattr(name string) bool {
+	if o, ok := t.actual.(starlark.HasAttrs); ok {
+		v, err := o.Attr(name)
+		if err == nil {
+			return (v != nil)
+		}
+		for _, x := range o.AttrNames() {
+			if x == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func hasAttribute(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.String); ok {
+		attr := arg1.GoString()
+		if !t.hasattr(attr) {
+			return nil, t.failComparingValues("has attribute", arg1, "")
+		}
+		return starlark.None, nil
+	}
+	return t.unhandled("hasAttribute", args...)
+}
+
+func doesNotHaveAttribute(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.String); ok {
+		attr := arg1.GoString()
+		if t.hasattr(attr) {
+			return nil, t.failComparingValues("does not have attribute", arg1, "")
+		}
+		return starlark.None, nil
+	}
+	return t.unhandled("doesNotHaveAttribute", args...)
+}
+
+func isCallable(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if _, ok := t.actual.(starlark.Callable); !ok {
+		return nil, t.failWithProposition("is callable", "")
+	}
+	return starlark.None, nil
+}
+
+func isNotCallable(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if _, ok := t.actual.(starlark.Callable); ok {
+		return nil, t.failWithProposition("is not callable", "")
+	}
+	return starlark.None, nil
+}
+
+func sizeOf(v starlark.Value) int {
+	switch v := v.(type) {
+	case starlark.Indexable:
+		return v.Len()
+	case starlark.Sequence:
+		return v.Len()
+	default:
+		return -1
+	}
+}
+
+type int64Stringer int64
+
+var _ fmt.Stringer = (int64Stringer)(0)
+
+func (i int64Stringer) String() string { return fmt.Sprintf("%d", i) }
+
+func hasSize(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch arg1 := args[0].(type) {
+	case starlark.Int:
+		size, ok := arg1.Int64()
+		if ok {
+			if actualSize := sizeOf(t.actual); actualSize != -1 {
+				if int64(actualSize) != size {
+					x := int64Stringer(actualSize)
+					return nil, t.failWithBadResults("has a size of", arg1, "is", x, "")
+				}
+				return starlark.None, nil
+			}
+		}
+	default:
+	}
+	return t.unhandled("hasSize", args...)
+}
+
+func isEmpty(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch iterable := t.actual.(type) {
+	case starlark.Iterable:
+		if !iterEmpty(iterable) {
+			return nil, t.failWithProposition("is empty", "")
+		}
+		return starlark.None, nil
+	case starlark.String:
+		if iterable.Len() != 0 {
+			return nil, t.failWithProposition("is empty", "")
+		}
+		return starlark.None, nil
+	default:
+		return t.unhandled("isEmpty", args...)
+	}
+}
+
+func isNotEmpty(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch iterable := t.actual.(type) {
+	case starlark.Iterable:
+		if iterEmpty(iterable) {
+			return nil, t.failWithProposition("is not empty", "")
+		}
+		return starlark.None, nil
+	case starlark.String:
+		if iterable.Len() == 0 {
+			return nil, t.failWithProposition("is not empty", "")
+		}
+		return starlark.None, nil
+	default:
+		return t.unhandled("isEmpty", args...)
+	}
+}
+
+func contains(t *T, args ...starlark.Value) (starlark.Value, error) {
+	arg1 := args[0]
+	switch iterable := t.actual.(type) {
+	case starlark.Iterable:
+		// NOTE: operates on Dict keys.
+		it := iterable.Iterate()
+		defer it.Done()
+		var e starlark.Value
+		for it.Next(&e) {
+			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				return starlark.None, nil
+			}
+		}
+		return nil, t.failWithSubject(fmt.Sprintf("should have contained %s", arg1))
+	case starlark.String:
+		if arg1, ok := arg1.(starlark.String); ok {
+			if strings.Contains(iterable.GoString(), arg1.GoString()) {
+				return starlark.None, nil
+			}
+			return nil, t.failWithSubject(fmt.Sprintf("should have contained %s", arg1))
+		}
+	default:
+	}
+	return t.unhandled("contains", args...)
+}
+
+func doesNotContain(t *T, args ...starlark.Value) (starlark.Value, error) {
+	arg1 := args[0]
+	switch iterable := t.actual.(type) {
+	case starlark.Iterable:
+		// NOTE: operates on Dict keys.
+		it := iterable.Iterate()
+		defer it.Done()
+		var e starlark.Value
+		for it.Next(&e) {
+			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				return nil, t.failWithSubject(fmt.Sprintf("should not have contained %s", arg1))
+			}
+		}
+		return starlark.None, nil
+	case starlark.String:
+		if arg1, ok := arg1.(starlark.String); ok {
+			if strings.Contains(iterable.GoString(), arg1.GoString()) {
+				return nil, t.failWithSubject(fmt.Sprintf("should not have contained %s", arg1))
+			}
+			return starlark.None, nil
+		}
+	default:
+	}
+	return t.unhandled("doesNotContain", args...)
+}
+
+// Asserts that this subject contains no two elements that are the same.
+func containsNoDuplicates(t *T, args ...starlark.Value) (starlark.Value, error) {
+	counter := newDuplicateCounter()
+	switch actual := t.actual.(type) {
+	case starlark.IterableMapping, *starlark.Set:
+		// Dictionaries and Sets have unique members by definition; avoid iterating.
+		return starlark.None, nil
+	case starlark.Iterable:
+		it := actual.Iterate()
+		defer it.Done()
+		var e starlark.Value
+		for it.Next(&e) {
+			counter.Increment(e)
+		}
+	case starlark.String:
+		for _, s := range actual.GoString() {
+			counter.increment(fmt.Sprintf("%q", string(s)))
+		}
+	default:
+		return t.unhandled("containsNoDuplicates", args...)
+	}
+	if counter.HasDupes() {
+		msg := fmt.Sprintf("has the following duplicates: <%s>", counter.Dupes())
+		return nil, t.failWithSubject(msg)
+	}
+	return starlark.None, nil
 }

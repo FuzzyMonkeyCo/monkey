@@ -68,12 +68,13 @@ func (t *T) failWithBadResults(
 	return t.failWithProposition(msg, suffix)
 }
 
-// func (t *T) failWithSubject(verb string) error {
-// 	msg := fmt.Sprintf("%s %s", t.subject(), verb)
-// 	return t.fail(msg)
-// }
+func (t *T) failWithSubject(verb string) error {
+	msg := fmt.Sprintf("%s %s", t.subject(), verb)
+	return newTruthAssertion(msg)
+}
 
 func (t *T) subject() string {
+	str := ""
 	switch actual := t.actual.(type) {
 	case starlark.String:
 		if strings.Contains(actual.GoString(), "\n") {
@@ -82,17 +83,22 @@ func (t *T) subject() string {
 			}
 			return fmt.Sprintf("actual %s", t.name)
 		}
+	case starlark.Callable:
+		str = t.actual.String()
 	case starlark.Tuple:
 		if t.actualIsIterableFromString && len(actual) == 0 {
 			// When printing an empty string that was turned into a tuple
 			// it makes more sense to turn it back into a string
 			// just to display it.
-			t.actual = starlark.String("")
+			str = `<"">`
 		}
 	default:
 	}
-	if t.name == "" {
-		return fmt.Sprintf("<%s>", t.actual.String())
+	if str == "" {
+		str = fmt.Sprintf("<%s>", t.actual.String())
 	}
-	return fmt.Sprintf("%s(<%s>)", t.name, t.actual.String())
+	if t.name == "" {
+		return str
+	}
+	return fmt.Sprintf("%s(%s)", t.name, str)
 }

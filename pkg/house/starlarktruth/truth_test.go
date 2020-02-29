@@ -13,7 +13,7 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 	// Enabled so they can be tested
 	resolve.AllowFloat = true
 	resolve.AllowSet = true
-	// resolve.AllowLambda = true
+	resolve.AllowLambda = true
 
 	predeclared := starlark.StringDict{}
 	NewModule(predeclared)
@@ -499,5 +499,209 @@ func TestNone(t *testing.T) {
 		`AssertThat(None).isNotNone()`:  fail(`None`, `is not None`),
 		`AssertThat("abc").isNotNone()`: nil,
 		`AssertThat("abc").isNone()`:    fail(`"abc"`, `is None`),
+	})
+}
+
+func TestIsIn(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(3).isIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		`AssertThat("a").isIn("abc")`: nil,
+		`AssertThat("d").isIn("abc")`: fail(`"d"`, `is equal to any of <"abc">`),
+		s(`(3,)`):                     nil,
+		s(`(3, 5)`):                   nil,
+		s(`(1, 3, 5)`):                nil,
+		s(`{3: "three"}`):             nil,
+		s(`set([3, 5])`):              nil,
+		s(`()`):                       fail(`3`, `is equal to any of <()>`),
+		s(`(2,)`):                     fail(`3`, `is equal to any of <(2,)>`),
+	})
+}
+
+func TestIsNotIn(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(3).isNotIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		`AssertThat("a").isNotIn("abc")`: fail(`"a"`, `is not in "abc". It was found at index 0`),
+		`AssertThat("d").isNotIn("abc")`: nil,
+		s(`(5,)`):                        nil,
+		s(`set([5])`):                    nil,
+		s(`("3",)`):                      nil,
+		s(`(3,)`):                        fail(`3`, `is not in (3,). It was found at index 0`),
+		s(`(1, 3)`):                      fail(`3`, `is not in (1, 3). It was found at index 1`),
+		s(`set([3])`):                    fail(`3`, `is not in set([3])`),
+	})
+}
+
+func TestIsAnyOf(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(3).isAnyOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):       nil,
+		s(`3, 5`):    nil,
+		s(`1, 3, 5`): nil,
+		s(``):        fail(`3`, `is equal to any of <()>`),
+		s(`2`):       fail(`3`, `is equal to any of <(2,)>`),
+	})
+}
+
+func TestIsNoneOf(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat(3).isNoneOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`5`):    nil,
+		s(`"3"`):  nil,
+		s(`3`):    fail(`3`, `is not in (3,). It was found at index 0`),
+		s(`1, 3`): fail(`3`, `is not in (1, 3). It was found at index 1`),
+	})
+}
+
+func TestHasAttribute(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat("my str").hasAttribute(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"elems"`):    nil,
+		s(`"index"`):    nil,
+		s(`"isdigit"`):  nil,
+		s(`""`):         fail(`"my str"`, `has attribute <"">`),
+		s(`"ermagerd"`): fail(`"my str"`, `has attribute <"ermagerd">`),
+	})
+}
+
+func TestDoesNotHaveAttribute(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat({1: ()}).doesNotHaveAttribute(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"other_attribute"`): nil,
+		s(`""`):                nil,
+		s(`"keys"`):            fail(`{1: ()}`, `does not have attribute <"keys">`),
+		s(`"values"`):          fail(`{1: ()}`, `does not have attribute <"values">`),
+		s(`"setdefault"`):      fail(`{1: ()}`, `does not have attribute <"setdefault">`),
+	})
+}
+
+func TestIsCallable(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isCallable()`
+	}
+	testEach(t, map[string]error{
+		s(`lambda x: x`):    nil,
+		s(`"str".endswith`): nil,
+		s(`AssertThat`):     nil,
+		s(`None`):           fail(`None`, `is callable`),
+		s(`"abc"`):          fail(`"abc"`, `is callable`),
+	})
+}
+
+func TestIsNotCallable(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isNotCallable()`
+	}
+	testEach(t, map[string]error{
+		s(`None`):           nil,
+		s(`"abc"`):          nil,
+		s(`lambda x: x`):    fail(`function lambda`, `is not callable`),
+		s(`"str".endswith`): fail(`built-in method endswith of string value`, `is not callable`),
+		s(`AssertThat`):     fail(`built-in function AssertThat`, `is not callable`),
+	})
+}
+
+func TestHasSize(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat((2, 5, 8)).hasSize(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):  nil,
+		s(`-1`): fail(`(2, 5, 8)`, `has a size of <-1>. It is <3>`),
+		s(`2`):  fail(`(2, 5, 8)`, `has a size of <2>. It is <3>`),
+	})
+}
+
+func TestIsEmpty(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isEmpty()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):       nil,
+		s(`[]`):       nil,
+		s(`{}`):       nil,
+		s(`set([])`):  nil,
+		s(`""`):       nil,
+		s(`(3,)`):     fail(`(3,)`, `is empty`),
+		s(`[4]`):      fail(`[4]`, `is empty`),
+		s(`{5: 6}`):   fail(`{5: 6}`, `is empty`),
+		s(`set([7])`): fail(`set([7])`, `is empty`),
+		s(`"height"`): fail(`"height"`, `is empty`),
+	})
+}
+
+func TestIsNotEmpty(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isNotEmpty()`
+	}
+	testEach(t, map[string]error{
+		s(`(3,)`):     nil,
+		s(`[4]`):      nil,
+		s(`{5: 6}`):   nil,
+		s(`set([7])`): nil,
+		s(`"height"`): nil,
+		s(`()`):       fail(`()`, `is not empty`),
+		s(`[]`):       fail(`[]`, `is not empty`),
+		s(`{}`):       fail(`{}`, `is not empty`),
+		s(`set([])`):  fail(`set([])`, `is not empty`),
+		s(`""`):       fail(`""`, `is not empty`),
+	})
+}
+
+func TestContains(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat((2, 5, [])).contains(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2`):   nil,
+		s(`5`):   nil,
+		s(`[]`):  nil,
+		s(`3`):   newTruthAssertion(`<(2, 5, [])> should have contained 3`),
+		s(`"2"`): newTruthAssertion(`<(2, 5, [])> should have contained "2"`),
+		s(`{}`):  newTruthAssertion(`<(2, 5, [])> should have contained {}`),
+	})
+}
+
+func TestDoesNotContain(t *testing.T) {
+	s := func(x string) string {
+		return `AssertThat((2, 5, [])).doesNotContain(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):   nil,
+		s(`"2"`): nil,
+		s(`{}`):  nil,
+		s(`2`):   newTruthAssertion(`<(2, 5, [])> should not have contained 2`),
+		s(`5`):   newTruthAssertion(`<(2, 5, [])> should not have contained 5`),
+		s(`[]`):  newTruthAssertion(`<(2, 5, [])> should not have contained []`),
+	})
+}
+
+func TestContainsNoDuplicates(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).containsNoDuplicates()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):           nil,
+		s(`"abc"`):        nil,
+		s(`(2,)`):         nil,
+		s(`(2, 5)`):       nil,
+		s(`{2: 2}`):       nil,
+		s(`set([2])`):     nil,
+		s(`"aaa"`):        newTruthAssertion(`<"aaa"> has the following duplicates: <"a" [3 copies]>`),
+		s(`(3, 2, 5, 2)`): newTruthAssertion(`<(3, 2, 5, 2)> has the following duplicates: <2 [2 copies]>`),
+		s(`"abcabc"`): newTruthAssertion(
+			`<"abcabc"> has the following duplicates:` +
+				` <"a" [2 copies], "b" [2 copies], "c" [2 copies]>`),
 	})
 }
