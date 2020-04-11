@@ -12,12 +12,6 @@ const warnContainsExactlySingleIterable = "" +
 	" not the correct thing to do. Did you mean to call" +
 	" .containsExactlyElementsIn(Iterable) instead?"
 
-func (t *T) unhandled(bName string, args ...starlark.Value) (starlark.Value, error) {
-	// FIXME: make prettier
-	err := fmt.Errorf("unhandled .%s%s", bName, starlark.Tuple(args).String())
-	return nil, err
-}
-
 func errMustBeEqualNumberOfKVPairs(count int) error {
 	return newInvalidAssertion(
 		fmt.Sprintf("There must be an equal number of key/value pairs"+

@@ -1,7 +1,6 @@
 package starlarktruth
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
@@ -47,6 +46,8 @@ type (
 	attrs map[string]attr
 )
 
+// TODO: turn all builtins matching *InOrder* into closedness-aware .inOrder()s
+
 var (
 	methods0args = attrs{
 		"containsNoDuplicates": containsNoDuplicates,
@@ -64,6 +65,8 @@ var (
 
 	methods1arg = attrs{
 		"contains":                         contains,
+		"containsAllIn":                    containsAllIn,
+		"containsAllInOrderIn":             containsAllInOrderIn,
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
@@ -83,11 +86,12 @@ var (
 	}
 
 	methodsNargs = attrs{
-		"containsExactly":           containsExactly,
-		"containsExactlyInOrder":    containsExactlyInOrder,
-		"containsExactlyNotInOrder": containsExactlyNotInOrder,
-		"isAnyOf":                   isAnyOf,
-		"isNoneOf":                  isNoneOf,
+		"containsAllOf":          containsAllOf,
+		"containsAllOfInOrder":   containsAllOfInOrder,
+		"containsExactly":        containsExactly,
+		"containsExactlyInOrder": containsExactlyInOrder,
+		"isAnyOf":                isAnyOf,
+		"isNoneOf":               isNoneOf,
 	}
 
 	methods = []attrs{
@@ -136,27 +140,45 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		}
 		switch nArgs {
 		case -1:
-			argz := make([]starlark.Value, 0, args.Len())
-			iter := args.Iterate()
-			defer iter.Done()
-			var arg starlark.Value
-			for iter.Next(&arg) {
-				argz = append(argz, arg)
+			ret, err := method(t, []starlark.Value(args)...)
+			switch err {
+			case nil:
+				return ret, nil
+			case errUnhandled:
+				return nil, t.unhandled(b.Name(), args)
+			default:
+				return nil, err
 			}
-			return method(t, argz...)
 		case 0:
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
 				return nil, err
 			}
-			return method(t)
+			ret, err := method(t)
+			switch err {
+			case nil:
+				return ret, nil
+			case errUnhandled:
+				return nil, t.unhandled(b.Name(), args)
+			default:
+				return nil, err
+			}
 		case 1:
 			var arg1 starlark.Value
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err
 			}
-			return method(t, arg1)
+			ret, err := method(t, arg1)
+			switch err {
+			case nil:
+				return ret, nil
+			case errUnhandled:
+				return nil, t.unhandled(b.Name(), args)
+			default:
+				return nil, err
+			}
+		default:
+			panic("unreachable")
 		}
-		return nil, errors.New("unreachable")
 	}
 	return starlark.NewBuiltin(name, impl).BindReceiver(t), nil
 }

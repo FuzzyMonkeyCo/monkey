@@ -19,10 +19,11 @@ func TestContainsExactlyHandlesStringsAsCodepoints(t *testing.T) {
 		`AssertThat("abc").containsExactly("abc")`: fail(abc,
 			`contains exactly <("abc",)>. It is missing <"abc"> and has unexpected items <"a", "b", "c">`),
 
-		`AssertThat("abc").containsExactly("a", "b", "c")`:           nil,
-		`AssertThat("abc").containsExactlyInOrder("a", "b", "c")`:    nil,
-		`AssertThat("abc").containsExactly("c", "b", "a")`:           nil,
-		`AssertThat("abc").containsExactlyNotInOrder("c", "b", "a")`: nil,
+		`AssertThat("abc").containsExactly("a", "b", "c")`:        nil,
+		`AssertThat("abc").containsExactlyInOrder("a", "b", "c")`: nil,
+		`AssertThat("abc").containsExactly("c", "b", "a")`:        nil,
+		`AssertThat("abc").containsExactlyInOrder("c", "b", "a")`: fail(abc,
+			`contains exactly these elements in order <("c", "b", "a")>`),
 
 		`AssertThat("abc").containsExactly("a", "bc")`: fail(abc,
 			`contains exactly <("a", "bc")>. It is missing <"bc"> and has unexpected items <"b", "c">`),
@@ -30,9 +31,8 @@ func TestContainsExactlyHandlesStringsAsCodepoints(t *testing.T) {
 		`AssertThat(` + tuple + `).containsExactly` + tuple + ``:        nil,
 		`AssertThat(` + tuple + `).containsExactly` + elput + ``:        nil,
 		`AssertThat(` + tuple + `).containsExactlyInOrder` + tuple + ``: nil,
-		// FIXME: impl. inorder
-		// `AssertThat(` + tuple + `).containsExactlyInOrder` + elput + ``: fail(tuple,
-		// 	`not in order`),
+		`AssertThat(` + tuple + `).containsExactlyInOrder` + elput + ``: fail(tuple,
+			`contains exactly these elements in order <`+elput+`>`),
 
 		`AssertThat(` + full + `).containsExactly("a", "` + u1 + `")`: fail(fullTuple,
 			`contains exactly <("a", "`+u1+`")>. It has unexpected items <"b", "c", "`+u2+`">`),

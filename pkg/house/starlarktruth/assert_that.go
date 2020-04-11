@@ -13,20 +13,6 @@ import (
 // Maximum nesting browsed when comparing values
 const maxdepth = 10
 
-// const (
-// 	tyNoneType = "NoneType"
-// 	tyBool="bool"
-// 	tyInt="int"
-// 	tyFloat="float"
-// 	tyString="string"
-// 	tyList ="list" // ptr
-// 	tyTuple="tuple"
-// 	tyDict="dict" // ptr
-// 	tySet="set" // ptr
-// 	// *Function
-// 	// *Builtin
-// )
-
 func isNotEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 	other := args[0]
 	ok, err := starlark.CompareDepth(syntax.EQL, t.actual, other, maxdepth)
@@ -144,37 +130,33 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 		t.turnActualIntoIterableFromString()
 		return containsExactly(t, args...)
 	default:
-		return t.unhandled("containsExactly", args...)
+		return nil, errUnhandled
 	}
 }
 
-// TODO: fix to .inOrder()
 func containsExactlyInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
-	//fixme: replace opts with t.askInOrder() (fetches Receiver())
+	t.askedInOrder = true
 	return containsExactly(t, args...)
 }
 
-// TODO: fix to .notInOrder()
-func containsExactlyNotInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
-	//fixme: replace opts with t.askNotInOrder() (fetches Receiver())
-	return containsExactly(t, args...)
-}
-
-// TODO: fix to .inOrder()
 func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	arg1 := args[0]
+	if t.askedInOrder {
+		// TODO: error about how inOrder is invalid with dicts
+		return nil, errUnhandled
+	}
+	arg1 := args[0] // TODO: what when passed **kwargs?
 	if imActual, ok := t.actual.(starlark.IterableMapping); ok {
 		if imExpected, ok := arg1.(starlark.IterableMapping); ok {
 			return containsExactly(newT(newTupleSlice(imActual.Items())),
 				newTupleSlice(imExpected.Items()).Values()...)
 		}
 	}
-	return t.unhandled("containsExactlyItemsIn", args...)
+	return nil, errUnhandled
 }
 
-// TODO: fix to .inOrder()
 func containsExactlyElementsInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.containsExactlyElementsIn(args[0], inOrder())
+	t.askedInOrder = true
+	return t.containsExactlyElementsIn(args[0])
 }
 
 func containsExactlyElementsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -182,13 +164,11 @@ func containsExactlyElementsIn(t *T, args ...starlark.Value) (starlark.Value, er
 }
 
 type containsOptions struct {
-	inOrder        bool
 	warnElementsIn bool
 }
 
 type containsOption func(*containsOptions)
 
-func inOrder() containsOption        { return func(o *containsOptions) { o.inOrder = true } }
 func warnElementsIn() containsOption { return func(o *containsOptions) { o.warnElementsIn = true } }
 
 func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOption) (starlark.Value, error) {
@@ -286,7 +266,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			}
 
 			// The iterables were not in the same order.
-			if opts.inOrder {
+			if t.askedInOrder {
 				return nil, t.failComparingValues(
 					"contains exactly these elements in order", expected, "")
 			}
@@ -443,7 +423,7 @@ func isIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	default:
 	}
-	return t.unhandled("isIn", args...)
+	return nil, errUnhandled
 }
 
 // Asserts that this subject is not a member of the given iterable.
@@ -491,7 +471,7 @@ func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		return starlark.None, nil
 	default:
 	}
-	return t.unhandled("isIn", args...)
+	return nil, errUnhandled
 }
 
 func isAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -526,7 +506,7 @@ func hasAttribute(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 		return starlark.None, nil
 	}
-	return t.unhandled("hasAttribute", args...)
+	return nil, errUnhandled
 }
 
 func doesNotHaveAttribute(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -537,7 +517,7 @@ func doesNotHaveAttribute(t *T, args ...starlark.Value) (starlark.Value, error) 
 		}
 		return starlark.None, nil
 	}
-	return t.unhandled("doesNotHaveAttribute", args...)
+	return nil, errUnhandled
 }
 
 func isCallable(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -586,7 +566,7 @@ func hasSize(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	default:
 	}
-	return t.unhandled("hasSize", args...)
+	return nil, errUnhandled
 }
 
 func isEmpty(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -602,7 +582,7 @@ func isEmpty(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 		return starlark.None, nil
 	default:
-		return t.unhandled("isEmpty", args...)
+		return nil, errUnhandled
 	}
 }
 
@@ -619,7 +599,7 @@ func isNotEmpty(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 		return starlark.None, nil
 	default:
-		return t.unhandled("isEmpty", args...)
+		return nil, errUnhandled
 	}
 }
 
@@ -650,7 +630,7 @@ func contains(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	default:
 	}
-	return t.unhandled("contains", args...)
+	return nil, errUnhandled
 }
 
 func doesNotContain(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -680,7 +660,7 @@ func doesNotContain(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	default:
 	}
-	return t.unhandled("doesNotContain", args...)
+	return nil, errUnhandled
 }
 
 // Asserts that this subject contains no two elements that are the same.
@@ -702,7 +682,7 @@ func containsNoDuplicates(t *T, args ...starlark.Value) (starlark.Value, error) 
 			counter.increment(fmt.Sprintf("%q", string(s)))
 		}
 	default:
-		return t.unhandled("containsNoDuplicates", args...)
+		return nil, errUnhandled
 	}
 	if counter.HasDupes() {
 		msg := fmt.Sprintf("has the following duplicates: <%s>", counter.Dupes())
@@ -711,26 +691,98 @@ func containsNoDuplicates(t *T, args ...starlark.Value) (starlark.Value, error) 
 	return starlark.None, nil
 }
 
-// TODO: inorder
+func containsAllInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	t.askedInOrder = true
+	return containsAllIn(t, args...)
+}
 func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if arg1, ok := args[0].(starlark.Iterable); ok {
 		return t.containsAll("contains all elements in", arg1)
 	}
-	return t.unhandled("containsAllIn", args...)
+	return nil, errUnhandled
 }
 
-// TODO: inorder
+func containsAllOfInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
+	t.askedInOrder = true
+	return containsAllOf(t, args...)
+}
 func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.containsAll("contains all of", starlark.Tuple(args))
 }
 
+func collect(iterable starlark.Iterable) []starlark.Value {
+	var xs []starlark.Value
+	iter := iterable.Iterate()
+	defer iter.Done()
+	var x starlark.Value
+	for iter.Next(&x) {
+		xs = append(xs, x)
+	}
+	return xs
+}
+
+func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
+	for i, x := range xs {
+		ok, err := starlark.CompareDepth(syntax.EQL, v, x, maxdepth)
+		if err != nil {
+			return -2, err
+		}
+		if ok {
+			return i, nil
+		}
+	}
+	return -1, nil
+}
+
 // Determines if the subject contains all the expected elements.
-// TODO: inorder
 func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	_, ok := t.actual.(starlark.Iterable)
+	actual, ok := t.actual.(starlark.Iterable)
 	if !ok {
-		return t.unhandled("containsAllIn", expected)
+		return nil, errUnhandled
+	}
+	actualSlice := collect(actual)
+	missing := newDuplicateCounter()
+	var actualNotInOrder []starlark.Value // = Tuple
+	ordered := true
+
+	iterExpected := expected.Iterate()
+	defer iterExpected.Done()
+	var i starlark.Value
+	// Step through the expected elements.
+	for iterExpected.Next(&i) {
+		index, err := indexOf(i, actualSlice)
+		if err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			// Drain all the elements before that element into actual_not_in_order.
+			actualNotInOrder = append(actualNotInOrder, actualSlice[0:index]...)
+			// And remove the element from the actual_list.
+			actualSlice = actualSlice[1:]
+			continue
+		}
+
+		// The expected value was not in the actual list.
+		if index, err = indexOf(i, actualNotInOrder); err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			actualNotInOrder = append(actualNotInOrder[:index], actualNotInOrder[index+1:]...)
+			// If it was in actual_not_in_order, we're not in order.
+			ordered = false
+		} else {
+			// It is not in actual_not_in_order, we're missing an expected element.
+			missing.Increment(i)
+		}
 	}
 
-	return nil, nil //FIXME
+	// If we have any missing expected elements, fail.
+	if !missing.Empty() {
+		return nil, t.failWithBadResults(verb, expected, "is missing", missing, "")
+	}
+
+	if t.askedInOrder && !ordered {
+		return nil, t.failComparingValues("contains all elements in order", expected, "")
+	}
+	return starlark.None, nil
 }

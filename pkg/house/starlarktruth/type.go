@@ -18,6 +18,9 @@ type T struct {
 	// FIXME: closedness
 	// Whether an AssertThat(x)... call chain was properly terminated
 	closed bool
+
+	// True when asserting order
+	askedInOrder bool
 }
 
 func (t *T) turnActualIntoIterableFromString() {

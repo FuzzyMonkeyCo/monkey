@@ -47,9 +47,13 @@ func testEach(t *testing.T, m map[string]error) {
 }
 
 func fail(value, expected string, suffixes ...string) error {
-	suffix := ""
-	if len(suffixes) == 1 {
+	var suffix string
+	switch len(suffixes) {
+	case 0:
+	case 1:
 		suffix = suffixes[0]
+	default:
+		panic(`There must be only one suffix`)
 	}
 	msg := "Not true that <" + value + "> " + expected + "." + suffix
 	return newTruthAssertion(msg)
@@ -351,29 +355,34 @@ func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
 
 func TestContainsExactly(t *testing.T) {
 	ss := `(3, 5, [])`
-	s := `AssertThat(` + ss + `).containsExactly(`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsExactly(` + `)`
+	}
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsExactlyInOrder(3, 5, [])`:    nil,
-		`AssertThat(` + ss + `).containsExactlyNotInOrder([], 3, 5)`: nil,
+		`AssertThat(` + ss + `).containsExactlyInOrder(3, 5, [])`: nil,
+		`AssertThat(` + ss + `).containsExactly(3, 5, [])`:        nil,
+		`AssertThat(` + ss + `).containsExactly([], 3, 5)`:        nil,
+		`AssertThat(` + ss + `).containsExactlyInOrder([], 3, 5)`: fail(ss,
+			"contains exactly these elements in order <([], 3, 5)>"),
 
-		s + `3, 5, [], 9)`: fail(ss,
+		s(`3, 5, [], 9`): fail(ss,
 			`contains exactly <(3, 5, [], 9)>. It is missing <9>`),
-		s + `9, 3, 5, [], 10)`: fail(ss,
+		s(`9, 3, 5, [], 10`): fail(ss,
 			`contains exactly <(9, 3, 5, [], 10)>. It is missing <9, 10>`),
-		s + `3, 5)`: fail(ss,
+		s(`3, 5`): fail(ss,
 			`contains exactly <(3, 5)>. It has unexpected items <[]>`),
-		s + `[], 3)`: fail(ss,
+		s(`[], 3`): fail(ss,
 			`contains exactly <([], 3)>. It has unexpected items <5>`),
-		s + `3)`: fail(ss,
+		s(`3`): fail(ss,
 			`contains exactly <(3,)>. It has unexpected items <5, []>`),
-		s + `4, 4)`: fail(ss,
+		s(`4, 4`): fail(ss,
 			`contains exactly <(4, 4)>. It is missing <4 [2 copies]> and has unexpected items <3, 5, []>`),
-		s + `3, 5, 9)`: fail(ss,
+		s(`3, 5, 9`): fail(ss,
 			`contains exactly <(3, 5, 9)>. It is missing <9> and has unexpected items <[]>`),
-		s + `(3, 5, []))`: fail(ss,
+		s(`(3, 5, [])`): fail(ss,
 			`contains exactly <((3, 5, []),)>. It is missing <(3, 5, [])> and has unexpected items <3, 5, []>`,
 			warnContainsExactlySingleIterable),
-		s + `)`: fail(ss, "is empty"),
+		s(``): fail(ss, "is empty"),
 	})
 }
 
@@ -422,8 +431,9 @@ func TestContainsExactlyElementsIn(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		`AssertThat(` + ss + `).containsExactlyElementsInOrderIn((3, 5, []))`: nil,
-		// FIXME: impl. notinorder
-		// `AssertThat(` + ss + `).containsExactlyElementsNotInOrderIn(([], 3, 5))`: nil,
+		`AssertThat(` + ss + `).containsExactlyElementsIn(([], 3, 5))`:        nil,
+		`AssertThat(` + ss + `).containsExactlyElementsInOrderIn(([], 3, 5))`: fail(ss,
+			"contains exactly these elements in order <([], 3, 5)>"),
 
 		s(`(3, 5, [], 9)`):     fail(ss, `contains exactly <(3, 5, [], 9)>. It is missing <9>`),
 		s(`(9, 3, 5, [], 10)`): fail(ss, `contains exactly <(9, 3, 5, [], 10)>. It is missing <9, 10>`),
@@ -448,8 +458,11 @@ func TestContainsExactlyTargetingOrderedDict(t *testing.T) {
 	ss := `((2, "two"), (4, "four"))`
 	s := `AssertThat(` + ss + `).containsExactly(`
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsExactlyInOrder((2, "two"), (4, "four"))`:    nil,
-		`AssertThat(` + ss + `).containsExactlyNotInOrder((4, "four"), (2, "two"))`: nil,
+		`AssertThat(` + ss + `).containsExactlyInOrder((2, "two"), (4, "four"))`: nil,
+		`AssertThat(` + ss + `).containsExactly((2, "two"), (4, "four"))`:        nil,
+		`AssertThat(` + ss + `).containsExactly((4, "four"), (2, "two"))`:        nil,
+		`AssertThat(` + ss + `).containsExactlyInOrder((4, "four"), (2, "two"))`: fail(ss,
+			`contains exactly these elements in order <((4, "four"), (2, "two"))>`),
 
 		s + `2, "two")`: fail(ss,
 			`contains exactly <(2, "two")>. It is missing <2, "two"> and has unexpected items <(2, "two"), (4, "four")>`),
@@ -480,6 +493,7 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 		// d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
 		// self.assertIsInstance(s.ContainsExactlyItemsIn(d2), truth._InOrder)
 		// self.assertIsInstance(s.ContainsExactlyItemsIn(d3), truth._NotInOrder)
+		// FIXME: still test for unhandled
 
 		s(`{2: "two"}`): fail(ss,
 			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`,
@@ -703,5 +717,67 @@ func TestContainsNoDuplicates(t *testing.T) {
 		s(`"abcabc"`): newTruthAssertion(
 			`<"abcabc"> has the following duplicates:` +
 				` <"a" [2 copies], "b" [2 copies], "c" [2 copies]>`),
+	})
+}
+
+func TestContainsAllIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAllIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`()`): nil,
+		`AssertThat(` + ss + `).containsAllIn(())`:                nil,
+		`AssertThat(` + ss + `).containsAllInOrderIn(())`:         nil,
+		`AssertThat(` + ss + `).containsAllIn((3,))`:              nil,
+		`AssertThat(` + ss + `).containsAllInOrderIn((3,))`:       nil,
+		`AssertThat(` + ss + `).containsAllIn((3, []))`:           nil,
+		`AssertThat(` + ss + `).containsAllInOrderIn((3, []))`:    nil,
+		`AssertThat(` + ss + `).containsAllIn((3, 5, []))`:        nil,
+		`AssertThat(` + ss + `).containsAllInOrderIn((3, 5, []))`: nil,
+		`AssertThat(` + ss + `).containsAllIn(([], 5, 3))`:        nil,
+		`AssertThat(` + ss + `).containsAllInOrderIn(([], 5, 3))`: fail(ss,
+			`contains all elements in order <([], 5, 3)>`),
+		s(`(2, 3)`):    fail(ss, "contains all elements in <(2, 3)>. It is missing <2>"),
+		s(`(2, 3, 6)`): fail(ss, "contains all elements in <(2, 3, 6)>. It is missing <2, 6>"),
+	})
+}
+
+func TestContainsAllOf(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAllOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		`AssertThat(` + ss + `).containsAllOf()`:                nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder()`:         nil,
+		`AssertThat(` + ss + `).containsAllOf(3)`:               nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder(3)`:        nil,
+		`AssertThat(` + ss + `).containsAllOf(3, [])`:           nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder(3, [])`:    nil,
+		`AssertThat(` + ss + `).containsAllOf(3, 5, [])`:        nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder(3, 5, [])`: nil,
+		`AssertThat(` + ss + `).containsAllOf([], 3, 5)`:        nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder([], 3, 5)`: fail(ss,
+			`contains all elements in order <([], 3, 5)>`),
+		s(`2, 3`):    fail(ss, "contains all of <(2, 3)>. It is missing <2>"),
+		s(`2, 3, 6`): fail(ss, "contains all of <(2, 3, 6)>. It is missing <2, 6>"),
+	})
+}
+
+func TestContainsAllMixedHashableElements(t *testing.T) {
+	ss := `(3, [], 5, 8)`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAllOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		`AssertThat(` + ss + `).containsAllOf(3, [], 5, 8)`:        nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder(3, [], 5, 8)`: nil,
+		`AssertThat(` + ss + `).containsAllOf(5, 3, 8, [])`:        nil,
+		`AssertThat(` + ss + `).containsAllOfInOrder(5, 3, 8, [])`: fail(ss,
+			`contains all elements in order <(5, 3, 8, [])>`),
+		s(`3, [], 8, 5, 9`):  fail(ss, "contains all of <(3, [], 8, 5, 9)>. It is missing <9>"),
+		s(`3, [], 8, 5, {}`): fail(ss, "contains all of <(3, [], 8, 5, {})>. It is missing <{}>"),
+		s(`8, 3, [], 9, 5`):  fail(ss, "contains all of <(8, 3, [], 9, 5)>. It is missing <9>"),
 	})
 }

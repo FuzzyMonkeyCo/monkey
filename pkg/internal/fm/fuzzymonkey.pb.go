@@ -3663,8 +3663,9 @@ type Schema_JSON_AdditionalProperties_SID struct {
 	SID uint32 `protobuf:"varint,2,opt,name=SID,proto3,oneof"`
 }
 
-func (*Schema_JSON_AdditionalProperties_AlwaysSucceed) isSchema_JSON_AdditionalProperties_AddProps() {}
-func (*Schema_JSON_AdditionalProperties_SID) isSchema_JSON_AdditionalProperties_AddProps()           {}
+func (*Schema_JSON_AdditionalProperties_AlwaysSucceed) isSchema_JSON_AdditionalProperties_AddProps() {
+}
+func (*Schema_JSON_AdditionalProperties_SID) isSchema_JSON_AdditionalProperties_AddProps() {}
 
 func (m *Schema_JSON_AdditionalProperties) GetAddProps() isSchema_JSON_AdditionalProperties_AddProps {
 	if m != nil {
