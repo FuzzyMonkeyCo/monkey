@@ -356,7 +356,7 @@ func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
 func TestContainsExactly(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsExactly(` + `)`
+		return `AssertThat(` + ss + `).containsExactly(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		`AssertThat(` + ss + `).containsExactlyInOrder(3, 5, [])`: nil,
