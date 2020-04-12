@@ -12,8 +12,8 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/getkin/kin-openapi/openapi3"
-	openapi_v3 "github.com/googleapis/gnostic/OpenAPIv3"
 	"github.com/googleapis/gnostic/compiler"
+	openapi_v3 "github.com/googleapis/gnostic/openapiv3"
 	"gopkg.in/yaml.v2"
 )
 

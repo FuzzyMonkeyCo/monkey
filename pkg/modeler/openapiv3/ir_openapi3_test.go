@@ -93,7 +93,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 
 func toOA3(m *oa3) (doc openapi3.Swagger) {
 	doc.OpenAPI = "3.0.0"
-	doc.Info = openapi3.Info{
+	doc.Info = &openapi3.Info{
 		Title:   someDescription,
 		Version: "1.42.3",
 	}
