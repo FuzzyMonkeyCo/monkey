@@ -29,7 +29,6 @@ type Ch struct {
 // don't close a channel if the channel has multiple concurrent senders
 
 func NewCh(ctx context.Context) (*Ch, error) {
-	ctx, cancel := context.WithCancel(ctx)
 	log.Println("[NFO] dialing", grpcHost)
 	conn, err := grpc.DialContext(ctx, grpcHost,
 		grpc.WithBlock(),
@@ -46,6 +45,8 @@ func NewCh(ctx context.Context) (*Ch, error) {
 		log.Println("[ERR]", err)
 		return nil, err
 	}
+
+	ctx, cancel := context.WithCancel(ctx)
 
 	//https://godoc.org/google.golang.org/grpc#ClientStream
 	// It is safe to have a goroutine calling SendMsg and another goroutine
