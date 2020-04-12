@@ -10,6 +10,8 @@ import (
 	// See also: https://github.com/reconquest/barely
 )
 
+const tickEvery = 333 * time.Millisecond
+
 var _ ui.Progresser = (*Progresser)(nil)
 
 type Progresser struct {
@@ -35,7 +37,7 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 		bar.WithFormat(":state :bar :rate ops/s :eta"),
 	)
 
-	p.ticker = time.NewTicker(333 * time.Millisecond)
+	p.ticker = time.NewTicker(tickEvery)
 	go func() {
 		defer p.ticker.Stop()
 		for {

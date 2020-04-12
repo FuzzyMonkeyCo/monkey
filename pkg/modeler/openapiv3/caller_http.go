@@ -209,7 +209,6 @@ func (c *tCapHTTP) showResponse() {
 		return
 	}
 	c.showf("%s", c.rep)
-	return
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
