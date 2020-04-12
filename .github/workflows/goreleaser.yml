@@ -1,0 +1,56 @@
+name: goreleaser
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Unshallow (for CHANGELOG)
+      run: git fetch --prune --unshallow
+
+    - uses: actions/setup-go@v1
+      with:
+        go-version: 1.x
+
+    - name: Verify
+      run: |
+        [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
+        make lint
+        go mod tidy
+        go mod verify
+        make test.ci
+        git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+
+    - name: Build
+      uses: goreleaser/goreleaser-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
+        args: release --rm-dist --snapshot --skip-publish
+
+    - name: Test
+      run: |
+        tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
+        SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
+        CURRENT_TAG=M.m.p; if [[ "$GITHUB_REF" =~ ^refs/tags/ ]]; then CURRENT_TAG=${GITHUB_REF#refs/tags/}; fi
+        ./monkey -h | grep $SHORT_COMMIT
+        ./monkey help | grep monkey
+        ./monkey version
+        [[ $(./monkey version | wc -l) = 1 ]]
+        ./monkey version | grep $CURRENT_TAG
+        ./monkey --version | grep $SHORT_COMMIT
+
+    - name: Publish
+      uses: goreleaser/goreleaser-action@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
+        args: release
+      if: startsWith(github.ref, 'refs/tags/')
