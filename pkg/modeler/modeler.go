@@ -28,7 +28,7 @@ type Interface interface {
 	SetResetter(resetter.Interface)
 	GetResetter() resetter.Interface
 
-	Lint(bool) error
+	Lint(context.Context, bool) error
 
 	InputsCount() int
 	WriteAbsoluteReferences(io.Writer)

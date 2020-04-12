@@ -34,7 +34,7 @@ var (
 	binSHA     = "feedb065"
 	binVersion = "M.m.p"
 	binTitle   = strings.Join([]string{binName, binVersion, binSHA,
-		runtime.Version(), runtime.GOARCH, runtime.GOOS}, "\t")
+		runtime.Version(), runtime.GOOS, runtime.GOARCH}, "\t")
 )
 
 func main() {
@@ -97,8 +97,24 @@ func actualMain() int {
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, os.Interrupt)
+	go func() {
+		select {
+		case <-ctx.Done():
+			log.Println("[NFO] background context done")
+			signal.Stop(sigC)
+		case <-sigC:
+			log.Println("[NFO] received ^C: terminating")
+			cancel()
+		}
+	}()
+
 	// Always lint
-	if err := rt.Lint(args.ShowSpec); err != nil {
+	if err := rt.Lint(ctx, args.ShowSpec); err != nil {
 		as.ColorERR.Println(err)
 		return code.FailedLint
 	}
@@ -118,7 +134,7 @@ func actualMain() int {
 			fn = rt.JustExecReset
 		case args.Stop:
 			fn = rt.JustExecStop
-		default:
+		case args.Repl:
 			fn = rt.JustExecREPL
 		}
 		if err := fn(); err != nil {
@@ -182,20 +198,6 @@ func actualMain() int {
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	sigC := make(chan os.Signal, 1)
-	signal.Notify(sigC, os.Interrupt)
-	go func() {
-		select {
-		case <-ctx.Done():
-			signal.Stop(sigC)
-		case <-sigC:
-			log.Println("[NFO] received ^C: terminating")
-			cancel()
-		}
-	}()
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
 	err = rt.Fuzz(ctx, args.N, apiKey)

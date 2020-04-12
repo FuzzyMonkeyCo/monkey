@@ -18,7 +18,7 @@ builds:
   ldflags:
   - '-X main.binSHA={{.ShortCommit}}'
   - '-X main.binVersion={{.Env.CURRENT_TAG}}'
-  - '-X github.com/FuzzyMonkeyCo/monkey/pkg/house.grpcHost={{.Env.GRPCHOST}}'
+  - '-X github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm.grpcHost={{.Env.GRPCHOST}}'
   - '-extldflags "-static"'
   - '-s -w'
 

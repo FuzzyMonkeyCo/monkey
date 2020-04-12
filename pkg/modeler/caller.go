@@ -8,30 +8,19 @@ import (
 	"github.com/gogo/protobuf/types"
 )
 
-var (
-	ErrCallFailed  = errors.New("call to SUT unexpectedly failed")
-	ErrCheckFailed = errors.New("call check failed")
-)
+var ErrCheckFailed = errors.New("call check failed")
 
-// CheckerFunc TODO
-type CheckerFunc func() (string, []string)
+// CheckerFunc returns whether validation succeeded, was skipped or failed.
+type CheckerFunc func() (string, string, []string)
 
-// Caller TODO
+// Caller performs a request and awaits a response.
 type Caller interface {
 	ToProto() *fm.Clt_CallResponseRaw
 
-	Do(context.Context) error
+	Do(context.Context)
 
 	Request() *types.Struct
 	Response() *types.Struct
 
-	// Check(...) ...
-	// FIXME: really not sure that this belongs here:
-	CheckFirst() (string, CheckerFunc)
-}
-
-// CaptureShower TODO
-type CaptureShower interface {
-	ShowRequest(func(string, ...interface{})) error
-	ShowResponse(func(string, ...interface{})) error
+	NextCallerCheck() (string, CheckerFunc)
 }

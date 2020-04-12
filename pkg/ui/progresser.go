@@ -1,7 +1,12 @@
 package ui
 
+import (
+	"context"
+)
+
 // Progresser TODO
 type Progresser interface {
+	WithContext(context.Context)
 	MaxTestsCount(uint32)
 
 	TotalTestsCount(uint32)
@@ -10,9 +15,9 @@ type Progresser interface {
 	TestCallsCount(uint32)
 	CallChecksCount(uint32)
 
-	CheckFailed([]string)
-	CheckSkipped(string)
-	CheckPassed(string)
+	CheckFailed(string, []string)
+	CheckSkipped(string, string)
+	CheckPassed(string, string)
 	ChecksPassed()
 
 	Printf(string, ...interface{})

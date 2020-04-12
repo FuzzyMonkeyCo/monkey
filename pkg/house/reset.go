@@ -13,14 +13,19 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func (rt *Runtime) reset(ctx context.Context) error {
-	if err := rt.client.Send(&fm.Clt{
+func (rt *Runtime) reset(ctx context.Context) (err error) {
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{
 				Status: fm.Clt_ResetProgress_started,
-			}}}); err != nil {
+			}}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
-		return err
+		return
 	}
 
 	var rsttr resetter.Interface
@@ -29,8 +34,11 @@ func (rt *Runtime) reset(ctx context.Context) error {
 		break
 	}
 	start := time.Now()
-	err := rsttr.ExecReset(ctx, rt.client)
-	elapsed := uint64(time.Since(start))
+	err = rsttr.ExecReset(ctx, false)
+	elapsed := time.Since(start).Nanoseconds()
+	if err != nil {
+		log.Println("[ERR] ExecReset:", err)
+	}
 
 	if err != nil {
 		var reason []string
@@ -41,28 +49,39 @@ func (rt *Runtime) reset(ctx context.Context) error {
 			reason = strings.Split(err.Error(), "\n")
 		}
 
-		if err2 := rt.client.Send(&fm.Clt{
+		var err2 error
+		select {
+		case <-time.After(tx30sTimeout):
+			err2 = err30sTimeout
+		case err2 = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_ResetProgress_{
 				ResetProgress: &fm.Clt_ResetProgress{
-					Status: fm.Clt_ResetProgress_failed,
-					TsDiff: elapsed,
-					Reason: reason,
-				}}}); err != nil {
+					Status:    fm.Clt_ResetProgress_failed,
+					ElapsedNs: elapsed,
+					Reason:    reason,
+				}}}):
+		}
+		if err2 != nil {
 			log.Println("[ERR]", err2)
 			// nothing to continue on
 		}
-		return err
+		return
 	}
 
-	if err = rt.client.Send(&fm.Clt{
+	select {
+	case <-time.After(tx30sTimeout):
+		err = err30sTimeout
+	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{
-				Status: fm.Clt_ResetProgress_ended,
-				TsDiff: elapsed,
-			}}}); err != nil {
+				Status:    fm.Clt_ResetProgress_ended,
+				ElapsedNs: elapsed,
+			}}}):
+	}
+	if err != nil {
 		log.Println("[ERR]", err)
 	}
-	return err
+	return
 }
 
 func newFromKwargs(modelerName string, r starlark.StringDict) (resetter.Interface, error) {

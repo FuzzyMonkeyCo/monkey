@@ -21,12 +21,7 @@ const (
 	timeoutLong  = 2 * time.Minute
 )
 
-var (
-	errUndecided = errors.New("unhandled Reset() case")
-	errNoScript  = errors.New("no usable script")
-
-	_ resetter.Interface = (*Shell)(nil)
-)
+var _ resetter.Interface = (*Shell)(nil)
 
 // Shell implements resetter.Interface
 type Shell struct {
@@ -43,13 +38,13 @@ func (s *Shell) ToProto() *fm.Clt_Fuzz_Resetter {
 }
 
 // ExecStart TODO
-func (s *Shell) ExecStart(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
+func (s *Shell) ExecStart(ctx context.Context, only bool) error {
 	return s.exec(ctx, s.Start)
 }
 
 // ExecReset TODO
-func (s *Shell) ExecReset(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
-	if clt == nil {
+func (s *Shell) ExecReset(ctx context.Context, only bool) error {
+	if only {
 		return s.exec(ctx, s.Rst)
 	}
 
@@ -74,12 +69,15 @@ func (s *Shell) ExecReset(ctx context.Context, clt fm.FuzzyMonkey_DoClient) erro
 }
 
 // ExecStop TODO
-func (s *Shell) ExecStop(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
+func (s *Shell) ExecStop(ctx context.Context, only bool) error {
 	return s.exec(ctx, s.Stop)
 }
 
 // Terminate cleans up after resetter
-func (s *Shell) Terminate(ctx context.Context, clt fm.FuzzyMonkey_DoClient) error {
+func (s *Shell) Terminate(ctx context.Context, only bool) error {
+	if only {
+		return nil
+	}
 	// TODO: maybe run s.Stop
 	return os.Remove(cwid.EnvFile())
 }
@@ -114,15 +112,16 @@ func (s *Shell) commands() (cmds string, err error) {
 		return
 
 	default:
-		err = errUndecided
+		err = errors.New("unhandled Reset() case")
 		log.Println("[ERR]", err)
 		return
 	}
 }
 
-func (s *Shell) exec(ctx context.Context, cmds string) error {
+func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	if len(cmds) == 0 {
-		return errNoScript
+		err = errors.New("no usable script")
+		return
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, timeoutLong)
@@ -143,36 +142,43 @@ func (s *Shell) exec(ctx context.Context, cmds string) error {
 	fmt.Fprintln(&script, "set +o errexit")
 	fmt.Fprintln(&script, "declare -p >", cwid.EnvFile())
 
-	var stderr bytes.Buffer
+	var stderr, stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
-	exe.Stdout = os.Stdout // TODO: plug Progresser here
-	exe.Stderr = &stderr   // TODO: same as above
+	exe.Stdout = &stdout //FIXME: plug Progresser here
+	exe.Stderr = &stderr //FIXME: plug Progresser here
 	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
 
 	ch := make(chan error)
 	// https://github.com/golang/go/issues/18874
 	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
 	// Racing for ctx.Done() is a workaround to ^
+	if err = exe.Start(); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
 	go func() {
-		<-ctx.Done()
-		e := errors.New("script timed out")
+		e := exe.Wait()
 		ch <- e
-		log.Println("[DBG]", e)
+		log.Println("[ERR] shell script execution error:", e)
+		cancel()
 	}()
-	go func() {
-		e := exe.Run()
-		ch <- e
-		log.Println("[DBG] execution error:", e)
-	}()
-	if err := <-ch; err != nil {
+	select {
+	case err = <-ch:
+	case <-ctx.Done():
+		if err = ctx.Err(); err == context.Canceled {
+			return
+		}
+	}
+	if err != nil {
 		// TODO: mux stderr+stdout and fwd to server to track progress
 		reason := stderr.String() + "\n" + err.Error()
-		log.Println("[ERR]", reason)
-		return resetter.NewError(strings.Split(reason, "\n"))
+		err = resetter.NewError(strings.Split(reason, "\n"))
+		return
 	}
-	log.Println("[NFO]", stderr.String())
-	return nil
+	log.Printf("[NFO] STDOUT: %q", stdout.String())
+	log.Printf("[NFO] STDERR: %q", stderr.String())
+	return
 }
 
 func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err error) {

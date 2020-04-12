@@ -7,15 +7,12 @@ GPB_IMG ?= znly/protoc:0.4.0
 GOGO ?= v1.2.1
 PROTOC = docker run --rm -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 
-all: SHELL = /bin/bash
 all: pkg/internal/fm/fuzzymonkey.pb.go lint
-	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
 
 update: SHELL := /bin/bash
 update:
-	go mod edit -replace=github.com/superhawk610/terminal=github.com/mattn/terminal@windows # https://github.com/superhawk610/terminal/pull/1
-	go get -u -a
+	go get -u -a -v ./...
 	go mod tidy
 	go mod verify
 	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
@@ -35,9 +32,12 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 #	FIXME: don't have this github.com/ folder created in the first place
 	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
 
+lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./misc/goolint.sh
+	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
+	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet ./...; fi
 
 debug: all
 	./$(EXE) lint

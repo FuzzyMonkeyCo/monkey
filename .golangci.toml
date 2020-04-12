@@ -18,4 +18,8 @@
   disable = [
     "gochecknoglobals",
     "nakedret",
+    "gocognit",
+    "wsl",
+    "funlen",
+    "godox",
   ]

@@ -34,7 +34,7 @@ type Runtime struct {
 
 	tags map[string]string
 
-	client fm.FuzzyMonkey_DoClient
+	client *fm.Ch
 
 	logLevel             uint8
 	progress             ui.Progresser
@@ -80,6 +80,9 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	rt.thread = &starlark.Thread{
 		Name:  "cfg",
 		Print: func(_ *starlark.Thread, msg string) { as.ColorWRN.Println(msg) },
+		Load: func(_ *starlark.Thread, module string) (starlark.StringDict, error) {
+			return nil, errors.New("load() disabled")
+		},
 	}
 	rt.envRead = make(map[string]string)
 	rt.triggers = make([]triggerActionAfterProbe, 0)

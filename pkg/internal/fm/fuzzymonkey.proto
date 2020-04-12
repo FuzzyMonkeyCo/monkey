@@ -88,7 +88,7 @@ message Clt {
       failed = 3;
     }
     Status status = 1;
-    uint64 ts_diff = 2;
+    int64 elapsed_ns = 2;
     repeated string reason = 3;
   }
 
@@ -125,7 +125,7 @@ message Clt {
         }
         map<string, HeaderValues> headers = 4;
         bytes body = 5;
-        uint32 elapsed = 6;  // TODO: finer timings
+        int64 elapsed_ns = 6;  // TODO: finer timings (name lookup, connection, ...)
       }
       oneof output {
         HttpResponse http_response = 1;
@@ -135,6 +135,7 @@ message Clt {
   }
 
   message CallVerifProgress {
+    string name = 1;
     enum Status {
       done = 0;
       data = 1;
@@ -143,10 +144,10 @@ message Clt {
       success = 4;
       failure = 5;
     }
-    Status status = 1;
-    string name = 2;
-    repeated string reason = 3;
-    google.protobuf.Struct response = 4;
+    Status status = 2;
+    bool user_property = 3;
+    repeated string reason = 4;
+    google.protobuf.Struct response = 5;
   }
 
   oneof msg {

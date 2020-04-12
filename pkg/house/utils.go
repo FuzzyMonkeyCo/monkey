@@ -70,7 +70,7 @@ func slValueFromProto(value *types.Value) (starlark.Value, error) {
 		}
 		return vals, nil
 	default:
-		panic("unreachable")
+		panic(fmt.Errorf("unhandled: %T %+v", value, value))
 	}
 }
 

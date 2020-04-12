@@ -44,7 +44,7 @@ State = {
 }
 
 def actionAfterPosts(State, response):
-    # Response has already been validated and JSON decoded
+    # When entering actions, response has already been validated and decoded.
     for post in response["json"]:
         # Set some state
         State["posts"][post["id"]] = post
@@ -52,31 +52,23 @@ def actionAfterPosts(State, response):
     return State
 
 def ensureIdMatchesURL(State, response):
+    # TODO: easy access to generated parameters. For instance:
+    # postId = response["request"]["parameters"]["path"]["{id}"] (note decoded int)
     postId = int(response["request"]["url"].split("/")[-1])
 
+    post = response["json"]
+
     # Implied: postId in State['posts'] and post == State['posts'][postId]
-    # Ensure an API contract
-    #AssertThat(postId).Equals(post['id'])
-    if postId != response["json"]["id"]:
-        fail("Post Id from URL must match Id in body")
-    return State
+    # Ensure an API contract:
+    AssertThat(post["id"]).isEqualTo(postId)
 
 def actionAfterGetExistingPost(State, response):
     postId = int(response["request"]["url"].split("/")[-1])
     post = response["json"]
 
-    # Verify state
-    #AssertThat(post).Equals(State['posts'][postId])
-    if post != State["posts"][postId]:
-        fail(
-            "wrong data for post:",
-            postId,
-            "expected",
-            State["posts"][postId],
-            "got",
-            post,
-        )
-    return State
+    # Verify that retrieved post matches local model
+    AssertThat(State["posts"]).contains(postId)
+    AssertThat(post).isEqualTo(State["posts"][postId])
 
 TriggerActionAfterProbe(
     name = "Collect things",

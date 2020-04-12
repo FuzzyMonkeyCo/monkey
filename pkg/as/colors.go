@@ -4,7 +4,6 @@ import (
 	"github.com/fatih/color"
 )
 
-// TODO: move within default (CLI) UI?
 var (
 	// ColorERR TODO
 	ColorERR = color.New(color.FgRed)

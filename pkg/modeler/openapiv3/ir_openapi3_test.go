@@ -1,6 +1,7 @@
 package modeler_openapiv3
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"path/filepath"
@@ -38,7 +39,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			t.Logf("lint spec from OpenAPIv3 file")
 			m0 := &oa3{}
 			m0.File = docPath
-			err := m0.Lint(false)
+			err := m0.Lint(context.TODO(), false)
 			require.NoError(t, err)
 			t.Logf("validate some schemas")
 			testSomeSchemas(t, m0)
@@ -92,7 +93,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 
 func toOA3(m *oa3) (doc openapi3.Swagger) {
 	doc.OpenAPI = "3.0.0"
-	doc.Info = openapi3.Info{
+	doc.Info = &openapi3.Info{
 		Title:   someDescription,
 		Version: "1.42.3",
 	}
