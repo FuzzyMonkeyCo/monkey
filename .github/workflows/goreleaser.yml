@@ -61,7 +61,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
-        args: release
+        args: release --rm-dist
       if: startsWith(github.ref, 'refs/tags/')
 
 
