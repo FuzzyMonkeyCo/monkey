@@ -12,7 +12,9 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/cli"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
@@ -84,10 +86,10 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
 		select {
+		case err = <-rt.client.RcvErr():
+		case srv = <-rt.client.RcvMsg():
 		case <-time.After(tx30sTimeout):
 			err = err30sTimeout
-		case srv = <-rt.client.RcvMsg():
-		case err = <-rt.client.RcvErr():
 		}
 		if err != nil {
 			if err == io.EOF {
@@ -117,7 +119,14 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			break
 		}
 
+		if err != nil {
+			if e, ok := status.FromError(err); ok && e.Code() == codes.Canceled {
+				log.Println("[NFO] got canceled...")
+				break
+			}
+		}
 		if err2 := rt.recvFuzzProgress(ctx); err2 != nil {
+			log.Println("[ERR]", err2)
 			if err == nil {
 				err = err2
 			}

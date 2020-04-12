@@ -743,7 +743,7 @@ func (vald *validator) Validate(SID sid, data *types.Value) []string {
 	s := sm.toGo(SID)
 
 	toValidate := EnumToGo(data)
-	log.Printf("[DBG] SID:%d -> %+v against %+v", SID, s, toValidate)
+	log.Printf("[DBG] SID:%d -> %+.100v against %+.100v", SID, s, toValidate)
 
 	loader := gojsonschema.NewGoLoader(s)
 

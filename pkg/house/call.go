@@ -28,10 +28,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 		return
 	}
 
-	log.Println("[NFO] call input:", msg.GetInput())
+	log.Printf("[NFO] call input: %.200v", msg.GetInput())
 	cllr.Do(ctx)
 	output := cllr.ToProto()
-	log.Println("[NFO] call output:", output)
+	log.Printf("[NFO] call output: %.200v", output)
 
 	select {
 	case <-time.After(tx30sTimeout):
@@ -81,7 +81,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 			return
 		}
 		rt.thread.Print = printfunc
-		log.Printf(">>> %+v", rt.thread.Local("closeness"))
+		log.Printf("[DBG] closeness >>> %+v", rt.thread.Local("closeness"))
 	}
 
 	// Through all checks: we're done

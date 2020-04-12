@@ -19,10 +19,10 @@ func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
 	var srv *fm.Srv
 	select {
+	case err = <-rt.client.RcvErr():
+	case srv = <-rt.client.RcvMsg():
 	case <-time.After(tx30sTimeout):
 		err = err30sTimeout
-	case srv = <-rt.client.RcvMsg():
-	case err = <-rt.client.RcvErr():
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
