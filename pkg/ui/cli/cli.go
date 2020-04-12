@@ -38,7 +38,6 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 	p.ticker = time.NewTicker(333 * time.Millisecond)
 	go func() {
 		defer p.ticker.Stop()
-
 		for {
 			select {
 			case <-p.ctx.Done():

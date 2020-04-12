@@ -35,7 +35,6 @@ type tCapHTTP struct {
 	showf      func(string, ...interface{})
 	req, rep   []byte
 	doErr      error
-	skipping   string
 	matchedSID sid
 	checks     []namedLambda
 
