@@ -37,7 +37,7 @@ lint:
 	go fmt ./...
 	./misc/goolint.sh
 	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
-	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet; fi
+	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet ./...; fi
 
 debug: all
 	./$(EXE) lint

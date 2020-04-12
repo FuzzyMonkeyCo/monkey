@@ -1,9 +1,0 @@
-version: '{build}'
-platform:
-  - x64
-  - x86
-clone_folder: c:\gopath\src\github.com\FuzzyMonkeyCo\monkey
-
-build_script:
-  - curl -#fL https://git.io/FuzzyMonkey | env BINDIR=c:\gopath\bin sh -ex
-  - monkey -vvv --version
