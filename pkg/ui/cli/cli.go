@@ -19,7 +19,7 @@ type Progresser struct {
 	testCallsCount, callChecksCount                    uint32
 	bar                                                *bar.Bar
 	ticker                                             *time.Ticker
-	stateIdx                                           int
+	ticks, stateIdx                                    int
 }
 
 func (p *Progresser) WithContext(ctx context.Context) { p.ctx = ctx }
@@ -38,12 +38,13 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 	p.ticker = time.NewTicker(333 * time.Millisecond)
 	go func() {
 		defer p.ticker.Stop()
+
 		for {
 			select {
 			case <-p.ctx.Done():
 				return
 			case <-p.ticker.C:
-				p.tick()
+				p.tick(0)
 			}
 		}
 	}()
@@ -58,7 +59,7 @@ func (p *Progresser) Terminate() error {
 func (p *Progresser) TotalTestsCount(v uint32) { p.totalTestsCount = v }
 func (p *Progresser) TotalCallsCount(v uint32) {
 	if p.totalCallsCount != v {
-		p.tick()
+		p.tick(1)
 	}
 	p.totalCallsCount = v
 }
@@ -66,10 +67,11 @@ func (p *Progresser) TotalChecksCount(v uint32) { p.totalChecksCount = v }
 func (p *Progresser) TestCallsCount(v uint32)   { p.testCallsCount = v }
 func (p *Progresser) CallChecksCount(v uint32)  { p.callChecksCount = v }
 
-func (p *Progresser) tick() {
+func (p *Progresser) tick(offset int) {
 	state := cliStates[p.stateIdx%len(cliStates)]
 	p.stateIdx++
-	p.bar.TickAndUpdate(bar.Context{bar.Ctx("state", state)})
+	p.ticks += offset
+	p.bar.Update(p.ticks, bar.Context{bar.Ctx("state", state)})
 }
 
 func (p *Progresser) Printf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
