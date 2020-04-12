@@ -209,7 +209,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			extra.Increment(elemActual)
 			break
 		}
-		iterations += 1
+		iterations++
 
 		// As soon as we encounter a pair of elements that differ, we know that
 		// inOrder cannot succeed, so we can check the rest of the elements
@@ -254,10 +254,9 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 						" It is missing <%s> and has unexpected items <%s>",
 						expected.String(), missing.String(), extra.String())
 					return nil, t.failWithProposition(msg, warning)
-				} else {
-					return nil, t.failWithBadResults("contains exactly", expected,
-						"is missing", missing, warning)
 				}
+				return nil, t.failWithBadResults("contains exactly", expected,
+					"is missing", missing, warning)
 			}
 
 			if !extra.Empty() {

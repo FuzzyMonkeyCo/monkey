@@ -53,12 +53,12 @@ func (t *T) failWithProposition(proposition, suffix string) error {
 
 func (t *T) failWithBadResults(
 	verb string, other starlark.Value,
-	fail_verb string, actual fmt.Stringer,
+	failVerb string, actual fmt.Stringer,
 	suffix string,
 ) error {
 	msg := fmt.Sprintf("%s <%s>. It %s <%s>",
 		verb, other.String(),
-		fail_verb, actual.String())
+		failVerb, actual.String())
 	return t.failWithProposition(msg, suffix)
 }
 

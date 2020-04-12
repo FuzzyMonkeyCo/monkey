@@ -136,9 +136,9 @@ func (m *oa3) checkNot5XX() (s, skipped string, f []string) {
 	return
 }
 
-func (m *oa3) checkHTTPCode(eId uint32) modeler.CheckerFunc {
+func (m *oa3) checkHTTPCode(eID uint32) modeler.CheckerFunc {
 	return func() (s, skipped string, f []string) {
-		endpoint := m.vald.Spec.Endpoints[eId].GetJson()
+		endpoint := m.vald.Spec.Endpoints[eID].GetJson()
 		code := m.tcap.repProto.StatusCode
 		var ok bool
 		if m.tcap.matchedSID, ok = endpoint.Outputs[code]; !ok {
