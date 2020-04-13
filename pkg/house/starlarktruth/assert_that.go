@@ -171,6 +171,7 @@ type containsOption func(*containsOptions)
 
 func warnElementsIn() containsOption { return func(o *containsOptions) { o.warnElementsIn = true } }
 
+// Determines if the subject contains exactly the expected elements.
 func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOption) (starlark.Value, error) {
 	opts := &containsOptions{}
 	for _, o := range os {
@@ -694,6 +695,7 @@ func containsAllInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) 
 	t.askedInOrder = true
 	return containsAllIn(t, args...)
 }
+
 func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if arg1, ok := args[0].(starlark.Iterable); ok {
 		return t.containsAll("contains all elements in", arg1)
@@ -705,6 +707,7 @@ func containsAllOfInOrder(t *T, args ...starlark.Value) (starlark.Value, error) 
 	t.askedInOrder = true
 	return containsAllOf(t, args...)
 }
+
 func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.containsAll("contains all of", starlark.Tuple(args))
 }
@@ -784,4 +787,38 @@ func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value
 		return nil, t.failComparingValues("contains all elements in order", expected, "")
 	}
 	return starlark.None, nil
+}
+
+func containsAnyIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.Iterable); ok {
+		return t.containsAny("contains any element in", arg1)
+	}
+	return nil, errUnhandled
+}
+
+func containsAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsAny("contains any of", starlark.Tuple(args))
+}
+
+// Determines if the subject contains any of the expected elements.
+func (t *T) containsAny(verb string, expected starlark.Iterable) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	actualSlice := collect(actual)
+
+	iterExpected := expected.Iterate()
+	defer iterExpected.Done()
+	var i starlark.Value
+	for iterExpected.Next(&i) {
+		index, err := indexOf(i, actualSlice)
+		if err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			return starlark.None, nil
+		}
+	}
+	return nil, t.failComparingValues(verb, expected, "")
 }

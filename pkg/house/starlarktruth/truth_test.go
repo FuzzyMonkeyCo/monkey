@@ -781,3 +781,29 @@ func TestContainsAllMixedHashableElements(t *testing.T) {
 		s(`8, 3, [], 9, 5`):  fail(ss, "contains all of <(8, 3, [], 9, 5)>. It is missing <9>"),
 	})
 }
+
+func TestContainsAnyIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAnyIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`(3,)`):   nil,
+		s(`(7, 3)`): nil,
+		s(`()`):     fail(ss, "contains any element in <()>"),
+		s(`(2, 6)`): fail(ss, "contains any element in <(2, 6)>"),
+	})
+}
+
+func TestContainsAnyOf(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAnyOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3,`):   nil,
+		s(`7, 3`): nil,
+		s(``):     fail(ss, "contains any of <()>"),
+		s(`2, 6`): fail(ss, "contains any of <(2, 6)>"),
+	})
+}

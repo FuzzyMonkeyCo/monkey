@@ -67,6 +67,7 @@ var (
 		"contains":                         contains,
 		"containsAllIn":                    containsAllIn,
 		"containsAllInOrderIn":             containsAllInOrderIn,
+		"containsAnyIn":                    containsAnyIn,
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
@@ -88,6 +89,7 @@ var (
 	methodsNargs = attrs{
 		"containsAllOf":          containsAllOf,
 		"containsAllOfInOrder":   containsAllOfInOrder,
+		"containsAnyOf":          containsAnyOf,
 		"containsExactly":        containsExactly,
 		"containsExactlyInOrder": containsExactlyInOrder,
 		"isAnyOf":                isAnyOf,
