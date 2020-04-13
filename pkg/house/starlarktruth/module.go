@@ -71,6 +71,7 @@ var (
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
+		"containsNoneIn":                   containsNoneIn,
 		"doesNotContain":                   doesNotContain,
 		"doesNotHaveAttribute":             doesNotHaveAttribute,
 		"hasAttribute":                     hasAttribute,
@@ -92,6 +93,7 @@ var (
 		"containsAnyOf":          containsAnyOf,
 		"containsExactly":        containsExactly,
 		"containsExactlyInOrder": containsExactlyInOrder,
+		"containsNoneOf":         containsNoneOf,
 		"isAnyOf":                isAnyOf,
 		"isNoneOf":               isNoneOf,
 	}

@@ -801,9 +801,37 @@ func TestContainsAnyOf(t *testing.T) {
 		return `AssertThat(` + ss + `).containsAnyOf(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		s(`3,`):   nil,
+		s(`3`):    nil,
 		s(`7, 3`): nil,
 		s(``):     fail(ss, "contains any of <()>"),
 		s(`2, 6`): fail(ss, "contains any of <(2, 6)>"),
+	})
+}
+
+func TestContainsNoneIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsNoneIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):     nil,
+		s(`(2,)`):   nil,
+		s(`(2, 6)`): nil,
+		s(`(5,)`):   fail(ss, "contains no elements in <(5,)>. It contains <5>"),
+		s(`(2, 5)`): fail(ss, "contains no elements in <(2, 5)>. It contains <5>"),
+	})
+}
+
+func TestContainsNoneOf(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsNoneOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(``):     nil,
+		s(`2`):    nil,
+		s(`2, 6`): nil,
+		s(`5`):    fail(ss, "contains none of <(5,)>. It contains <5>"),
+		s(`2, 5`): fail(ss, "contains none of <(2, 5)>. It contains <5>"),
 	})
 }

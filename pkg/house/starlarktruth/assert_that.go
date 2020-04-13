@@ -822,3 +822,42 @@ func (t *T) containsAny(verb string, expected starlark.Iterable) (starlark.Value
 	}
 	return nil, t.failComparingValues(verb, expected, "")
 }
+
+func containsNoneIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.Iterable); ok {
+		return t.containsNone("contains no elements in", arg1)
+	}
+	return nil, errUnhandled
+}
+
+func containsNoneOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsNone("contains none of", starlark.Tuple(args))
+}
+
+// Determines if the subject contains none of the excluded elements.
+func (t *T) containsNone(failVerb string, excluded starlark.Iterable) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	actualSlice := collect(actual)
+
+	iterExcluded := excluded.Iterate()
+	defer iterExcluded.Done()
+	var i starlark.Value
+	present := newDuplicateCounter()
+
+	for iterExcluded.Next(&i) {
+		index, err := indexOf(i, actualSlice)
+		if err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			present.Increment(i)
+		}
+	}
+	if !present.Empty() {
+		return nil, t.failWithBadResults(failVerb, excluded, "contains", present, "")
+	}
+	return starlark.None, nil
+}
