@@ -43,7 +43,7 @@ type UnhandledError struct {
 
 var _ error = (*UnhandledError)(nil)
 
-func (t *T) unhandled(name string, args starlark.Tuple) *UnhandledError {
+func (t *T) unhandled(name string, args ...starlark.Value) *UnhandledError {
 	return &UnhandledError{
 		name:   name,
 		actual: t.actual,

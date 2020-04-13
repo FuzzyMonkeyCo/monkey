@@ -144,12 +144,13 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		}
 		switch nArgs {
 		case -1:
-			ret, err := method(t, []starlark.Value(args)...)
+			argz := []starlark.Value(args)
+			ret, err := method(t, argz...)
 			switch err {
 			case nil:
 				return ret, nil
 			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
+				return nil, t.unhandled(b.Name(), argz...)
 			default:
 				return nil, err
 			}
@@ -162,7 +163,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			case nil:
 				return ret, nil
 			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
+				return nil, t.unhandled(b.Name())
 			default:
 				return nil, err
 			}
@@ -176,7 +177,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			case nil:
 				return ret, nil
 			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
+				return nil, t.unhandled(b.Name(), arg1)
 			default:
 				return nil, err
 			}
