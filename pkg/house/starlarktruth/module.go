@@ -59,6 +59,8 @@ var (
 		"isNotCallable":        isNotCallable,
 		"isNotEmpty":           isNotEmpty,
 		"isNotNone":            isNotNone,
+		"isOrdered":            isOrdered,
+		"isStrictlyOrdered":    isStrictlyOrdered,
 		"isTrue":               isTrue,
 		"isTruthy":             isTruthy,
 	}
@@ -84,6 +86,8 @@ var (
 		"isLessThan":                       isLessThan,
 		"isNotEqualTo":                     isNotEqualTo,
 		"isNotIn":                          isNotIn,
+		"isOrderedAccordingTo":             isOrderedAccordingTo,
+		"isStrictlyOrderedAccordingTo":     isStrictlyOrderedAccordingTo,
 		"named":                            named,
 	}
 
@@ -133,15 +137,21 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		return nil, nil // no such method
 	}
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		if len(kwargs) > 0 {
+			return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
+		}
+
 		closeness := 0
 		if c, ok := thread.Local("closeness").(int); ok {
 			thread.Print(thread, fmt.Sprintf(">>> closeness = %d", c))
 			closeness = c
 		}
 		defer thread.SetLocal("closeness", 1+closeness)
-		if len(kwargs) > 0 {
-			return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
+
+		if err := t.registerValues(thread); err != nil {
+			return nil, err
 		}
+
 		switch nArgs {
 		case -1:
 			argz := []starlark.Value(args)

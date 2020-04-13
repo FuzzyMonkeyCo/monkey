@@ -861,3 +861,66 @@ func (t *T) containsNone(failVerb string, excluded starlark.Iterable) (starlark.
 	}
 	return starlark.None, nil
 }
+
+func isOrdered(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isOrderedAccordingTo(t, t.registered.Cmp)
+}
+
+func isOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(*starlark.Function); ok {
+		return t.pairwiseCheck(arg1, false)
+	}
+	return nil, errUnhandled
+}
+
+func isStrictlyOrdered(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isStrictlyOrderedAccordingTo(t, t.registered.Cmp)
+}
+
+func isStrictlyOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(*starlark.Function); ok {
+		return t.pairwiseCheck(arg1, true)
+	}
+	return nil, errUnhandled
+}
+
+// Iterates over this subject and compares adjacent elements.
+func (t *T) pairwiseCheck(pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	iterActual := actual.Iterate()
+	defer iterActual.Done()
+
+	var prev, current starlark.Value
+	if iterActual.Next(&prev) {
+		for {
+			if !iterActual.Next(&current) {
+				break
+			}
+
+			args := starlark.Tuple{prev, current}
+			someInt, err := t.registered.Apply(pairComparator, args)
+			if err != nil {
+				return nil, err
+			}
+			r, err := starlark.AsInt32(someInt)
+			if err != nil {
+				return nil, err
+			}
+			switch {
+			case r < 0:
+			case r == 0 && !strict:
+			default:
+				msg := "is ordered"
+				if strict {
+					msg = "is strictly ordered"
+				}
+				return nil, t.failComparingValues(msg, args, "")
+			}
+			prev = current
+		}
+	}
+	return starlark.None, nil
+}

@@ -2,6 +2,7 @@ package starlarktruth
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,13 +27,20 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 			return nil, errors.New("load() unsupported")
 		},
 	}
-	return starlark.ExecFile(thread, t.Name()+".star", program, predeclared)
+	script := strings.Join([]string{
+		`dfltCmp = ` + cmpSrc,
+		`someCmp = lambda a, b: dfltCmp(b, a)`,
+		program,
+	}, "\n")
+	return starlark.ExecFile(thread, t.Name()+".star", script, predeclared)
 }
 
 func testEach(t *testing.T, m map[string]error) {
 	for code, expectedErr := range m {
 		t.Run(code, func(t *testing.T) {
 			globals, err := helper(t, code)
+			delete(globals, "dfltCmp")
+			delete(globals, "someCmp")
 			require.Empty(t, globals)
 			if expectedErr == nil {
 				require.NoError(t, err)
@@ -833,5 +841,59 @@ func TestContainsNoneOf(t *testing.T) {
 		s(`2, 6`): nil,
 		s(`5`):    fail(ss, "contains none of <(5,)>. It contains <5>"),
 		s(`2, 5`): fail(ss, "contains none of <(2, 5)>. It contains <5>"),
+	})
+}
+
+func TestIsOrdered(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isOrdered()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(3, 5, 8)`): nil,
+		s(`(3, 5, 5)`): nil,
+		s(`(5, 4)`):    newTruthAssertion(`Not true that <(5, 4)> is ordered <(5, 4)>.`),
+		s(`(3, 5, 4)`): newTruthAssertion(`Not true that <(3, 5, 4)> is ordered <(5, 4)>.`),
+	})
+}
+
+func TestIsOrderedAccordingTo(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isOrderedAccordingTo(someCmp)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(8, 5, 3)`): nil,
+		s(`(5, 5, 3)`): nil,
+		s(`(4, 5)`):    newTruthAssertion(`Not true that <(4, 5)> is ordered <(4, 5)>.`),
+		s(`(3, 5, 4)`): newTruthAssertion(`Not true that <(3, 5, 4)> is ordered <(3, 5)>.`),
+	})
+}
+
+func TestIsStrictlyOrdered(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isStrictlyOrdered()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(3, 5, 8)`): nil,
+		s(`(5, 4)`):    newTruthAssertion(`Not true that <(5, 4)> is strictly ordered <(5, 4)>.`),
+		s(`(3, 5, 5)`): newTruthAssertion(`Not true that <(3, 5, 5)> is strictly ordered <(5, 5)>.`),
+	})
+}
+
+func TestIsStrictlyOrderedAccordingTo(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isStrictlyOrderedAccordingTo(someCmp)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(8, 5, 3)`): nil,
+		s(`(4, 5)`):    newTruthAssertion(`Not true that <(4, 5)> is strictly ordered <(4, 5)>.`),
+		s(`(5, 5, 3)`): newTruthAssertion(`Not true that <(5, 5, 3)> is strictly ordered <(5, 5)>.`),
 	})
 }
