@@ -73,7 +73,7 @@ jobs:
     - run: |
         ! which monkey
         ! monkey help
-        curl -#fL https://git.io/FuzzyMonkey | BINDIR=$GOPATH/bin sh -ex
+        curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh -ex
         monkey help
         monkey version
 
@@ -85,7 +85,7 @@ jobs:
     - run: |
         ! which monkey
         ! monkey help
-        curl -#fL https://git.io/FuzzyMonkey | BINDIR=$GOPATH/bin sh -ex
+        curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh -ex
         monkey help
         monkey version
 
@@ -98,6 +98,6 @@ jobs:
       run: |
         ! which monkey
         ! monkey help
-        curl -#fL https://git.io/FuzzyMonkey | env BINDIR=c:\gopath\bin sh -ex
+        curl -#fL https://git.io/FuzzyMonkey | env BINDIR=/c/npm/prefix sh -ex
         monkey help
         monkey -vvv --version
