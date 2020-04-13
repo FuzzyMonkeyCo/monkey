@@ -50,8 +50,8 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 	log.Printf("[DBG] sending initial msg")
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_Fuzz_{
 			Fuzz: &fm.Clt_Fuzz{
@@ -88,8 +88,8 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		select {
 		case err = <-rt.client.RcvErr():
 		case srv = <-rt.client.RcvMsg():
-		case <-time.After(tx30sTimeout):
-			err = err30sTimeout
+		case <-time.After(txTimeout):
+			err = errTXTimeout
 		}
 		if err != nil {
 			if err == io.EOF {

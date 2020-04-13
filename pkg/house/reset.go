@@ -15,8 +15,8 @@ import (
 
 func (rt *Runtime) reset(ctx context.Context) (err error) {
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{
@@ -51,8 +51,8 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 
 		var err2 error
 		select {
-		case <-time.After(tx30sTimeout):
-			err2 = err30sTimeout
+		case <-time.After(txTimeout):
+			err2 = errTXTimeout
 		case err2 = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_ResetProgress_{
 				ResetProgress: &fm.Clt_ResetProgress{
@@ -69,8 +69,8 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 	}
 
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_ResetProgress_{
 			ResetProgress: &fm.Clt_ResetProgress{

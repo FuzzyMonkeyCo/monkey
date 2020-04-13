@@ -2,7 +2,6 @@ package house
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,9 +10,9 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-const tx30sTimeout = 30 * time.Second
+const txTimeout = 10 * time.Second
 
-var err30sTimeout = errors.New("gRPC recv timeout after 30s")
+var errTXTimeout = fmt.Errorf("gRPC snd/rcv after %s", txTimeout)
 
 func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
@@ -21,8 +20,8 @@ func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	select {
 	case err = <-rt.client.RcvErr():
 	case srv = <-rt.client.RcvMsg():
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
