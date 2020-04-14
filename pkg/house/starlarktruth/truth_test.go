@@ -897,3 +897,58 @@ func TestIsStrictlyOrderedAccordingTo(t *testing.T) {
 		s(`(5, 5, 3)`): newTruthAssertion(`Not true that <(5, 5, 3)> is strictly ordered <(5, 5)>.`),
 	})
 }
+
+func TestContainsKey(t *testing.T) {
+	ss := `{2: "two", None: "None"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsKey(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2`):     nil,
+		s(`None`):  nil,
+		s(`3`):     fail(ss, `contains key <3>`),
+		s(`"two"`): fail(ss, `contains key <"two">`),
+	})
+}
+
+func TestDoesNotContainKey(t *testing.T) {
+	ss := `{2: "two", None: "None"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotContainKey(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):     nil,
+		s(`"two"`): nil,
+		s(`2`):     fail(ss, `does not contain key <2>`),
+		s(`None`):  fail(ss, `does not contain key <None>`),
+	})
+}
+
+func TestContainsItem(t *testing.T) {
+	ss := `{2: "two", 4: "four", "too": "two"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsItem(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2, "two"`):     nil,
+		s(`4, "four"`):    nil,
+		s(`"too", "two"`): nil,
+		s(`2, "to"`):      fail(ss, `contains item <(2, "to")>. However, it has a mapping from <2> to <"two">`),
+		s(`7, "two"`):     fail(ss, `contains item <(7, "two")>. However, the following keys are mapped to <"two">: [2, "too"]`),
+		s(`7, "seven"`):   fail(ss, `contains item <(7, "seven")>`),
+	})
+}
+
+func TestDoesNotContainItem(t *testing.T) {
+	ss := `{2: "two", 4: "four", "too": "two"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotContainItem(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2, "to"`):    nil,
+		s(`7, "two"`):   nil,
+		s(`7, "seven"`): nil,
+		s(`2, "two"`):   fail(ss, `does not contain item <(2, "two")>`),
+		s(`4, "four"`):  fail(ss, `does not contain item <(4, "four")>`),
+	})
+}

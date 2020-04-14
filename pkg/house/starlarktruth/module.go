@@ -73,8 +73,10 @@ var (
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
+		"containsKey":                      containsKey,
 		"containsNoneIn":                   containsNoneIn,
 		"doesNotContain":                   doesNotContain,
+		"doesNotContainKey":                doesNotContainKey,
 		"doesNotHaveAttribute":             doesNotHaveAttribute,
 		"hasAttribute":                     hasAttribute,
 		"hasSize":                          hasSize,
@@ -91,6 +93,11 @@ var (
 		"named":                            named,
 	}
 
+	methods2args = attrs{
+		"containsItem":       containsItem,
+		"doesNotContainItem": doesNotContainItem,
+	}
+
 	methodsNargs = attrs{
 		"containsAllOf":          containsAllOf,
 		"containsAllOfInOrder":   containsAllOfInOrder,
@@ -103,12 +110,18 @@ var (
 	}
 
 	methods = []attrs{
+		methodsNargs,
 		methods0args,
 		methods1arg,
+		methods2args,
 	}
 
 	attrNames = func() []string {
-		names := make([]string, 0, len(methods1arg))
+		count := 0
+		for _, ms := range methods {
+			count += len(ms)
+		}
+		names := make([]string, 0, count)
 		for _, ms := range methods {
 			for name := range ms {
 				names = append(names, name)
@@ -120,7 +133,7 @@ var (
 )
 
 func findAttr(name string) (attr, int) {
-	for i, ms := range methods {
+	for i, ms := range methods[1:] {
 		if m, ok := ms[name]; ok {
 			return m, i
 		}
@@ -137,10 +150,6 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		return nil, nil // no such method
 	}
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		if len(kwargs) > 0 {
-			return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
-		}
-
 		closeness := 0
 		if c, ok := thread.Local("closeness").(int); ok {
 			thread.Print(thread, fmt.Sprintf(">>> closeness = %d", c))
@@ -152,29 +161,15 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			return nil, err
 		}
 
+		var argz []starlark.Value
 		switch nArgs {
 		case -1:
-			argz := []starlark.Value(args)
-			ret, err := method(t, argz...)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name(), argz...)
-			default:
-				return nil, err
+			if len(kwargs) > 0 {
+				return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
 			}
+			argz = []starlark.Value(args)
 		case 0:
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
-				return nil, err
-			}
-			ret, err := method(t)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name())
-			default:
 				return nil, err
 			}
 		case 1:
@@ -182,17 +177,25 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err
 			}
-			ret, err := method(t, arg1)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name(), arg1)
-			default:
+			argz = append(argz, arg1)
+		case 2:
+			var arg1, arg2 starlark.Value
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1, &arg2); err != nil {
 				return nil, err
 			}
+			argz = append(argz, []starlark.Value{arg1, arg2}...)
 		default:
 			panic("unreachable")
+		}
+
+		ret, err := method(t, argz...)
+		switch err {
+		case nil:
+			return ret, nil
+		case errUnhandled:
+			return nil, t.unhandled(b.Name(), argz...)
+		default:
+			return nil, err
 		}
 	}
 	return starlark.NewBuiltin(name, impl).BindReceiver(t), nil

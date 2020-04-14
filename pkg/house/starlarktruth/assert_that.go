@@ -924,3 +924,116 @@ func (t *T) pairwiseCheck(pairComparator *starlark.Function, strict bool) (starl
 	}
 	return starlark.None, nil
 }
+
+func containsKey(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key := args[0]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		_, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if !found {
+			msg := fmt.Sprintf("contains key <%s>", key.String())
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainKey(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key := args[0]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		_, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			msg := fmt.Sprintf("does not contain key <%s>", key.String())
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+// Assertion that the subject contains the key mapping to the value.
+func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key, value := args[0], args[1]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		val, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				return starlark.None, nil
+			}
+			msg := fmt.Sprintf(
+				"contains item <%s>. However, it has a mapping from <%s> to <%s>",
+				starlark.Tuple{key, value}.String(),
+				key.String(),
+				val.String(),
+			)
+			return nil, t.failWithProposition(msg, "")
+		}
+
+		if actual, ok := t.actual.(starlark.IterableMapping); ok {
+			var otherKeys []starlark.Value
+			for _, kv := range actual.Items() {
+				if len(kv) != 2 {
+					break
+				}
+				ok, err := starlark.CompareDepth(syntax.EQL, value, kv[1], maxdepth)
+				if err != nil {
+					return nil, err
+				}
+				if ok {
+					otherKeys = append(otherKeys, kv[0])
+				}
+			}
+			if len(otherKeys) != 0 {
+				msg := fmt.Sprintf(
+					"contains item <%s>. However, the following keys are mapped to <%s>: %s",
+					starlark.Tuple{key, value}.String(),
+					value.String(),
+					starlark.NewList(otherKeys).String(),
+				)
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+
+		msg := fmt.Sprintf("contains item <%s>", starlark.Tuple{key, value}.String())
+		return nil, t.failWithProposition(msg, "")
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainItem(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key, value := args[0], args[1]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		val, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				msg := fmt.Sprintf(
+					"does not contain item <%s>",
+					starlark.Tuple{key, value}.String(),
+				)
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
