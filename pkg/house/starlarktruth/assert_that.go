@@ -3,6 +3,7 @@ package starlarktruth
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/pmezard/go-difflib/difflib"
@@ -1034,6 +1035,122 @@ func doesNotContainItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 			}
 		}
 		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func hasLength(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		expected, err := starlark.AsInt32(args[0])
+		if err != nil {
+			return nil, errUnhandled
+		}
+		actualLength := actual.Len()
+		if actualLength != expected {
+			msg := fmt.Sprintf("has a length of %d. It is %d", expected, actualLength)
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func startsWith(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if prefix, ok := args[0].(starlark.String); ok {
+			if !strings.HasPrefix(actual.GoString(), prefix.GoString()) {
+				return nil, t.failComparingValues("starts with", prefix, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func endsWith(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if suffix, ok := args[0].(starlark.String); ok {
+			if !strings.HasSuffix(actual.GoString(), suffix.GoString()) {
+				return nil, t.failComparingValues("ends with", suffix, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func newRegex(regex string) (*regexp.Regexp, error) {
+	if strings.Contains(regex, "\\C") {
+		// https://github.com/google/starlark-go/issues/241#issuecomment-529663462
+		return nil, errors.New("unsupported regex class \\C")
+	}
+	return regexp.Compile(regex)
+}
+
+func matches(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex("^" + regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if !r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("matches <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func doesNotMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex("^" + regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("fails to match <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func containsMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex(regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if !r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("should have contained a match for <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex(regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("should not have contained a match for <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
 	}
 	return nil, errUnhandled
 }

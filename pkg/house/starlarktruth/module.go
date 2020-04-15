@@ -74,11 +74,16 @@ var (
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
 		"containsKey":                      containsKey,
+		"containsMatch":                    containsMatch,
 		"containsNoneIn":                   containsNoneIn,
 		"doesNotContain":                   doesNotContain,
 		"doesNotContainKey":                doesNotContainKey,
+		"doesNotContainMatch":              doesNotContainMatch,
 		"doesNotHaveAttribute":             doesNotHaveAttribute,
+		"doesNotMatch":                     doesNotMatch,
+		"endsWith":                         endsWith,
 		"hasAttribute":                     hasAttribute,
+		"hasLength":                        hasLength,
 		"hasSize":                          hasSize,
 		"isAtLeast":                        isAtLeast,
 		"isAtMost":                         isAtMost,
@@ -90,7 +95,9 @@ var (
 		"isNotIn":                          isNotIn,
 		"isOrderedAccordingTo":             isOrderedAccordingTo,
 		"isStrictlyOrderedAccordingTo":     isStrictlyOrderedAccordingTo,
+		"matches":                          matches,
 		"named":                            named,
+		"startsWith":                       startsWith,
 	}
 
 	methods2args = attrs{
