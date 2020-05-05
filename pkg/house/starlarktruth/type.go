@@ -50,7 +50,7 @@ func (t *T) registerValues(thread *starlark.Thread) error {
 		}
 
 		apply := func(f *starlark.Function, args starlark.Tuple) (starlark.Value, error) {
-			return starlark.Call(thread, f, starlark.Tuple(args), nil)
+			return starlark.Call(thread, f, args, nil)
 		}
 
 		t.registered = &registeredValues{

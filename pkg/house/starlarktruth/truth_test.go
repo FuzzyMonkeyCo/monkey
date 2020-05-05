@@ -10,6 +10,8 @@ import (
 	"go.starlark.net/starlark"
 )
 
+const abc = `"abc"` // Please linter
+
 func helper(t *testing.T, program string) (starlark.StringDict, error) {
 	// Enabled so they can be tested
 	resolve.AllowFloat = true
@@ -520,7 +522,7 @@ func TestNone(t *testing.T) {
 		`AssertThat(None).isNone()`:     nil,
 		`AssertThat(None).isNotNone()`:  fail(`None`, `is not None`),
 		`AssertThat("abc").isNotNone()`: nil,
-		`AssertThat("abc").isNone()`:    fail(`"abc"`, `is None`),
+		`AssertThat("abc").isNone()`:    fail(abc, `is None`),
 	})
 }
 
@@ -617,7 +619,7 @@ func TestIsCallable(t *testing.T) {
 		s(`"str".endswith`): nil,
 		s(`AssertThat`):     nil,
 		s(`None`):           fail(`None`, `is callable`),
-		s(`"abc"`):          fail(`"abc"`, `is callable`),
+		s(abc):              fail(abc, `is callable`),
 	})
 }
 
@@ -627,7 +629,7 @@ func TestIsNotCallable(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`None`):           nil,
-		s(`"abc"`):          nil,
+		s(abc):              nil,
 		s(`lambda x: x`):    fail(`function lambda`, `is not callable`),
 		s(`"str".endswith`): fail(`built-in method endswith of string value`, `is not callable`),
 		s(`AssertThat`):     fail(`built-in function AssertThat`, `is not callable`),
@@ -715,7 +717,7 @@ func TestContainsNoDuplicates(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`()`):           nil,
-		s(`"abc"`):        nil,
+		s(abc):            nil,
 		s(`(2,)`):         nil,
 		s(`(2, 5)`):       nil,
 		s(`{2: 2}`):       nil,
@@ -934,8 +936,9 @@ func TestContainsItem(t *testing.T) {
 		s(`4, "four"`):    nil,
 		s(`"too", "two"`): nil,
 		s(`2, "to"`):      fail(ss, `contains item <(2, "to")>. However, it has a mapping from <2> to <"two">`),
-		s(`7, "two"`):     fail(ss, `contains item <(7, "two")>. However, the following keys are mapped to <"two">: [2, "too"]`),
-		s(`7, "seven"`):   fail(ss, `contains item <(7, "seven")>`),
+		s(`7, "two"`): fail(ss, `contains item <(7, "two")>.`+
+			` However, the following keys are mapped to <"two">: [2, "too"]`),
+		s(`7, "seven"`): fail(ss, `contains item <(7, "seven")>`),
 	})
 }
 
@@ -954,7 +957,7 @@ func TestDoesNotContainItem(t *testing.T) {
 }
 
 func TestHasLength(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).hasLength(` + x + `)`
 	}
@@ -966,35 +969,35 @@ func TestHasLength(t *testing.T) {
 }
 
 func TestStartsWith(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).startsWith(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		s(`""`):    nil,
-		s(`"a"`):   nil,
-		s(`"ab"`):  nil,
-		s(`"abc"`): nil,
-		s(`"b"`):   fail(ss, `starts with <"b">`),
+		s(`""`):   nil,
+		s(`"a"`):  nil,
+		s(`"ab"`): nil,
+		s(abc):    nil,
+		s(`"b"`):  fail(ss, `starts with <"b">`),
 	})
 }
 
 func TestEndsWith(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).endsWith(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		s(`""`):    nil,
-		s(`"c"`):   nil,
-		s(`"bc"`):  nil,
-		s(`"abc"`): nil,
-		s(`"b"`):   fail(ss, `ends with <"b">`),
+		s(`""`):   nil,
+		s(`"c"`):  nil,
+		s(`"bc"`): nil,
+		s(abc):    nil,
+		s(`"b"`):  fail(ss, `ends with <"b">`),
 	})
 }
 
 func TestMatches(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).matches(` + x + `)`
 	}
@@ -1008,7 +1011,7 @@ func TestMatches(t *testing.T) {
 }
 
 func TestDoesNotMatch(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).doesNotMatch(` + x + `)`
 	}
@@ -1026,7 +1029,7 @@ func TestDoesNotMatch(t *testing.T) {
 }
 
 func TestContainsMatch(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).containsMatch(` + x + `)`
 	}
@@ -1040,7 +1043,7 @@ func TestContainsMatch(t *testing.T) {
 }
 
 func TestDoesNotContainMatch(t *testing.T) {
-	ss := `"abc"`
+	ss := abc
 	s := func(x string) string {
 		return `AssertThat(` + ss + `).doesNotContainMatch(` + x + `)`
 	}
