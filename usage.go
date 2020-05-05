@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
@@ -14,15 +15,16 @@ type params struct {
 	Init, Env, Login, Logs         bool
 	Update, Version                bool
 	Exec, Start, Reset, Stop, Repl bool
-	ShowSpec                       bool     `mapstructure:"--show-spec"`
-	Seed                           string   `mapstructure:"--seed"`
-	Shrink                         string   `mapstructure:"--shrink"`
-	Tags                           []string `mapstructure:"--tag"`
-	N                              uint32   `mapstructure:"--intensity"`
-	Verbosity                      uint8    `mapstructure:"-v"`
-	LogOffset                      uint64   `mapstructure:"--previous"`
-	ValidateAgainst                string   `mapstructure:"--validate-against"`
-	EnvVars                        []string `mapstructure:"VAR"`
+	ShowSpec                       bool          `mapstructure:"--show-spec"`
+	Seed                           string        `mapstructure:"--seed"`
+	Shrink                         string        `mapstructure:"--shrink"`
+	Tags                           []string      `mapstructure:"--tag"`
+	N                              uint32        `mapstructure:"--intensity"`
+	Verbosity                      uint8         `mapstructure:"-v"`
+	LogOffset                      uint64        `mapstructure:"--previous"`
+	ValidateAgainst                string        `mapstructure:"--validate-against"`
+	EnvVars                        []string      `mapstructure:"VAR"`
+	BudgetTime                     time.Duration `mapstructure:"--time-budget"`
 }
 
 func usage() (args *params, ret int) {
@@ -33,6 +35,7 @@ Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] login [--user=USER]
   ` + B + ` [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
+                     [--time-budget=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -50,7 +53,8 @@ Options:
   version                        Show the version string
   update                         Ensures ` + B + ` is the latest version
   --intensity=N                  The higher the more complex the tests [default: 10]
-  --seed=SEED                    Use specific parameters for the RNG
+  --time-budget=DURATION         Stop testing after DURATION (e.g. '30s' or '5h')
+  --seed=SEED                    Use specific parameters for the Random Number Generator
   --shrink=ID                    Which failed test to minimize
   --tag=KV                       Labels that can help classification (format: key=value)
   --only=REGEX                   Only test matching calls
@@ -84,10 +88,23 @@ Try:
 	}
 
 	args = &params{}
-	if err := mapstructure.WeakDecode(opts, args); err != nil {
+	cfg := &mapstructure.DecoderConfig{
+		Result:           &args,
+		WeaklyTypedInput: true,
+		DecodeHook: mapstructure.ComposeDecodeHookFunc(
+			mapstructure.StringToTimeDurationHookFunc(),
+		),
+	}
+	d, err := mapstructure.NewDecoder(cfg)
+	if err != nil {
 		as.ColorERR.Println(err)
 		return nil, code.Failed
 	}
+	if err := d.Decode(opts); err != nil {
+		as.ColorERR.Println(err)
+		return nil, code.Failed
+	}
+
 	if opts["--version"].(bool) {
 		args.Version = true
 	}

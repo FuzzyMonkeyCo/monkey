@@ -100,6 +100,10 @@ func actualMain() int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	if timeout := args.BudgetTime; timeout != 0 {
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer cancel()
 	sigC := make(chan os.Signal, 1)
 	signal.Notify(sigC, os.Interrupt)
 	go func() {
