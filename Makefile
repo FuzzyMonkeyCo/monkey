@@ -4,8 +4,10 @@ EXE = monkey
 
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
-GOGO ?= v1.2.1
-PROTOC = docker run --rm -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
+GOGO ?= v1.3.1
+RUN ?= docker run --rm --user $$(id -u):$$(id -g)
+PROTOC = $(RUN) -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
+PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
 all: pkg/internal/fm/fuzzymonkey.pb.go lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
@@ -15,8 +17,8 @@ update:
 	go get -u -a -v ./...
 	go mod tidy
 	go mod verify
-	[[ 'libprotoc $(GPB)' = "$$(docker run --rm $(GPB_IMG) --version)" ]]
-	[[ 2 = $$(git grep gogo/protobuf -- go.sum | wc -l) ]]
+	[[ 'libprotoc $(GPB)' = "$$($(RUN) $(GPB_IMG) --version)" ]]
+	git grep -F 'github.com/gogo/protobuf $(GOGO)' -- go.mod
 
 latest: bindir ?= $$HOME/.local/bin
 latest:
@@ -28,15 +30,15 @@ devdeps:
 	go install -i github.com/kyoh86/richgo
 
 pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
+	cd pkg/internal/fm && $(PROTOLOCK) commit
 	$(PROTOC) --gogofast_out=plugins=grpc,Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types:. $^
-#	FIXME: don't have this github.com/ folder created in the first place
-	cat github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go >$@
+	mv github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go $@
+	git clean -xdff -- ./github.com
 
 lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./misc/goolint.sh
-	cd pkg/internal/fm && docker run --rm --user $$(id -u):$$(id -g) -v $$PWD:/protolock -w /protolock nilslice/protolock commit
 	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet ./...; fi
 
 debug: all

@@ -289,7 +289,7 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 	}
 
 	headers := fromReqHeader(r.Header)
-	for key, _ := range headers {
+	for key := range headers {
 		switch key {
 		case headerContentLength:
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
@@ -341,7 +341,7 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	c.repProto.Reason = r.Status
 
 	headers := fromRepHeader(r.Header)
-	for key, _ := range headers {
+	for key := range headers {
 		switch key {
 		case headerContentLength:
 			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
