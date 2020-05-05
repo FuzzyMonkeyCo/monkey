@@ -59,6 +59,8 @@ var (
 		"isNotCallable":        isNotCallable,
 		"isNotEmpty":           isNotEmpty,
 		"isNotNone":            isNotNone,
+		"isOrdered":            isOrdered,
+		"isStrictlyOrdered":    isStrictlyOrdered,
 		"isTrue":               isTrue,
 		"isTruthy":             isTruthy,
 	}
@@ -67,12 +69,21 @@ var (
 		"contains":                         contains,
 		"containsAllIn":                    containsAllIn,
 		"containsAllInOrderIn":             containsAllInOrderIn,
+		"containsAnyIn":                    containsAnyIn,
 		"containsExactlyElementsIn":        containsExactlyElementsIn,
 		"containsExactlyElementsInOrderIn": containsExactlyElementsInOrderIn,
 		"containsExactlyItemsIn":           containsExactlyItemsIn,
+		"containsKey":                      containsKey,
+		"containsMatch":                    containsMatch,
+		"containsNoneIn":                   containsNoneIn,
 		"doesNotContain":                   doesNotContain,
+		"doesNotContainKey":                doesNotContainKey,
+		"doesNotContainMatch":              doesNotContainMatch,
 		"doesNotHaveAttribute":             doesNotHaveAttribute,
+		"doesNotMatch":                     doesNotMatch,
+		"endsWith":                         endsWith,
 		"hasAttribute":                     hasAttribute,
+		"hasLength":                        hasLength,
 		"hasSize":                          hasSize,
 		"isAtLeast":                        isAtLeast,
 		"isAtMost":                         isAtMost,
@@ -82,25 +93,42 @@ var (
 		"isLessThan":                       isLessThan,
 		"isNotEqualTo":                     isNotEqualTo,
 		"isNotIn":                          isNotIn,
+		"isOrderedAccordingTo":             isOrderedAccordingTo,
+		"isStrictlyOrderedAccordingTo":     isStrictlyOrderedAccordingTo,
+		"matches":                          matches,
 		"named":                            named,
+		"startsWith":                       startsWith,
+	}
+
+	methods2args = attrs{
+		"containsItem":       containsItem,
+		"doesNotContainItem": doesNotContainItem,
 	}
 
 	methodsNargs = attrs{
 		"containsAllOf":          containsAllOf,
 		"containsAllOfInOrder":   containsAllOfInOrder,
+		"containsAnyOf":          containsAnyOf,
 		"containsExactly":        containsExactly,
 		"containsExactlyInOrder": containsExactlyInOrder,
+		"containsNoneOf":         containsNoneOf,
 		"isAnyOf":                isAnyOf,
 		"isNoneOf":               isNoneOf,
 	}
 
 	methods = []attrs{
+		methodsNargs,
 		methods0args,
 		methods1arg,
+		methods2args,
 	}
 
 	attrNames = func() []string {
-		names := make([]string, 0, len(methods1arg))
+		count := 0
+		for _, ms := range methods {
+			count += len(ms)
+		}
+		names := make([]string, 0, count)
 		for _, ms := range methods {
 			for name := range ms {
 				names = append(names, name)
@@ -112,7 +140,7 @@ var (
 )
 
 func findAttr(name string) (attr, int) {
-	for i, ms := range methods {
+	for i, ms := range methods[1:] {
 		if m, ok := ms[name]; ok {
 			return m, i
 		}
@@ -135,31 +163,20 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			closeness = c
 		}
 		defer thread.SetLocal("closeness", 1+closeness)
-		if len(kwargs) > 0 {
-			return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
+
+		if err := t.registerValues(thread); err != nil {
+			return nil, err
 		}
+
+		var argz []starlark.Value
 		switch nArgs {
 		case -1:
-			ret, err := method(t, []starlark.Value(args)...)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
-			default:
-				return nil, err
+			if len(kwargs) > 0 {
+				return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
 			}
+			argz = []starlark.Value(args)
 		case 0:
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
-				return nil, err
-			}
-			ret, err := method(t)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
-			default:
 				return nil, err
 			}
 		case 1:
@@ -167,17 +184,25 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
 				return nil, err
 			}
-			ret, err := method(t, arg1)
-			switch err {
-			case nil:
-				return ret, nil
-			case errUnhandled:
-				return nil, t.unhandled(b.Name(), args)
-			default:
+			argz = append(argz, arg1)
+		case 2:
+			var arg1, arg2 starlark.Value
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1, &arg2); err != nil {
 				return nil, err
 			}
+			argz = append(argz, []starlark.Value{arg1, arg2}...)
 		default:
 			panic("unreachable")
+		}
+
+		ret, err := method(t, argz...)
+		switch err {
+		case nil:
+			return ret, nil
+		case errUnhandled:
+			return nil, t.unhandled(b.Name(), argz...)
+		default:
+			return nil, err
 		}
 	}
 	return starlark.NewBuiltin(name, impl).BindReceiver(t), nil

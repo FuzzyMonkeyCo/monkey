@@ -34,8 +34,8 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	log.Printf("[NFO] call output: %.200v", output)
 
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallResponseRaw_{
 			CallResponseRaw: output,
@@ -57,8 +57,8 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	callResponse := cllr.Response()
 	// Actionable response data parsed...
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallVerifProgress_{
 			CallVerifProgress: &fm.Clt_CallVerifProgress{
@@ -86,8 +86,8 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 
 	// Through all checks: we're done
 	select {
-	case <-time.After(tx30sTimeout):
-		err = err30sTimeout
+	case <-time.After(txTimeout):
+		err = errTXTimeout
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_CallVerifProgress_{
 			CallVerifProgress: &fm.Clt_CallVerifProgress{},
@@ -118,8 +118,8 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err e
 
 		v.Status = fm.Clt_CallVerifProgress_start
 		select {
-		case <-time.After(tx30sTimeout):
-			err = err30sTimeout
+		case <-time.After(txTimeout):
+			err = errTXTimeout
 		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
@@ -156,8 +156,8 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err e
 		}
 
 		select {
-		case <-time.After(tx30sTimeout):
-			err = err30sTimeout
+		case <-time.After(txTimeout):
+			err = errTXTimeout
 		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
@@ -197,8 +197,8 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 
 		v.Status = fm.Clt_CallVerifProgress_start
 		select {
-		case <-time.After(tx30sTimeout):
-			err = err30sTimeout
+		case <-time.After(txTimeout):
+			err = errTXTimeout
 		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,
@@ -281,8 +281,8 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 		}
 
 		select {
-		case <-time.After(tx30sTimeout):
-			err = err30sTimeout
+		case <-time.After(txTimeout):
+			err = errTXTimeout
 		case err = <-rt.client.Snd(&fm.Clt{
 			Msg: &fm.Clt_CallVerifProgress_{
 				CallVerifProgress: v,

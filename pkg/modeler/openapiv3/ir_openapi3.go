@@ -1,7 +1,6 @@
 package modeler_openapiv3
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/url"
@@ -17,9 +16,6 @@ import (
 const (
 	mimeJSON             = "application/json"
 	oa3ComponentsSchemas = "#/components/schemas/"
-
-	// For testing
-	someDescription = "some description"
 )
 
 var xxx2uint32 = map[string]uint32{
@@ -60,40 +56,22 @@ func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	return vald.seed(oa3ComponentsSchemas, schemas)
 }
 
-// For testing
-func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
-	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm))
-	for _, refOrSchema := range sm {
-		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
-			if ref := schemaPtr.GetRef(); ref != "" {
-				name := strings.TrimPrefix(ref, oa3ComponentsSchemas)
-				seededSchemas[name] = sm.schemaToOA3(schemaPtr.GetSID())
-			}
-		}
-	}
-	doc.Components.Schemas = seededSchemas
-}
-
 func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
-	i, paths := 0, make([]string, len(docPaths))
+	paths := make([]string, 0, len(docPaths))
 	for path := range docPaths {
-		paths[i] = path
-		i++
+		paths = append(paths, path)
 	}
 	sort.Strings(paths)
 
-	for j := 0; j != i; j++ {
-		path := paths[j]
+	for j, path := range paths {
 		docOps := docPaths[path].Operations()
-		k, methods := 0, make([]string, len(docOps))
+		methods := make([]string, 0, len(docOps))
 		for docMethod := range docOps {
-			methods[k] = docMethod
-			k++
+			methods = append(methods, docMethod)
 		}
 		sort.Strings(methods)
 
-		for l := 0; l != k; l++ {
-			docMethod := methods[l]
+		for l, docMethod := range methods {
 			log.Println("[DBG] through", docMethod, path)
 			docOp := docOps[docMethod]
 			inputs := make([]*fm.ParamJSON, 0, 1+len(docOp.Parameters))
@@ -112,27 +90,6 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 				},
 			}
 		}
-	}
-}
-
-// For testing
-func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*fm.Endpoint) {
-	doc.Paths = make(openapi3.Paths, len(es))
-	for _, e := range es {
-		endpoint := e.GetJson()
-		url := pathToOA3(endpoint.GetPathPartials())
-		inputs := endpoint.GetInputs()
-		reqBody := sm.inputBodyToOA3(inputs)
-		params := sm.inputsToOA3(inputs)
-		op := &openapi3.Operation{
-			RequestBody: reqBody,
-			Parameters:  params,
-			Responses:   sm.outputsToOA3(endpoint.GetOutputs()),
-		}
-		if doc.Paths[url] == nil {
-			doc.Paths[url] = &openapi3.PathItem{}
-		}
-		methodToOA3(endpoint.GetMethod(), op, doc.Paths[url])
 	}
 }
 
@@ -157,37 +114,20 @@ func (vald *validator) inputBodyFromOA3(inputs *[]*fm.ParamJSON, docReqBody *ope
 	}
 }
 
-// For testing
-func (sm schemap) inputBodyToOA3(inputs []*fm.ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
-	if len(inputs) > 0 {
-		body := inputs[0]
-		if body != nil && isInputBody(body) {
-			reqBody := &openapi3.RequestBody{
-				Content:     sm.contentToOA3(body.GetSID()),
-				Required:    body.GetIsRequired(),
-				Description: someDescription,
-			}
-			reqBodyRef = &openapi3.RequestBodyRef{Value: reqBody}
-		}
-	}
-	return
-}
-
 func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
-	i, names := 0, make([]string, paramsCount)
+	names := make([]string, 0, paramsCount)
 	for _, docParamRef := range docParams {
 		docParam := docParamRef.Value
 		name := docParam.In + docParam.Name
-		names[i] = name
+		names = append(names, name)
 		paramap[name] = docParamRef
-		i++
 	}
 	sort.Strings(names)
 
-	for j := 0; j != i; j++ {
-		docParamRef := paramap[names[j]]
+	for _, name := range names {
+		docParamRef := paramap[name]
 		//FIXME: handle .Ref
 		docParam := docParamRef.Value
 		kind := fm.ParamJSON_UNKNOWN
@@ -213,51 +153,17 @@ func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3
 	}
 }
 
-// For testing
-func (sm schemap) inputsToOA3(inputs []*fm.ParamJSON) (params openapi3.Parameters) {
-	for _, input := range inputs {
-		if isInputBody(input) {
-			continue
-		}
-
-		var in string
-		switch input.GetKind() {
-		case fm.ParamJSON_path:
-			in = openapi3.ParameterInPath
-		case fm.ParamJSON_query:
-			in = openapi3.ParameterInQuery
-		case fm.ParamJSON_header:
-			in = openapi3.ParameterInHeader
-		case fm.ParamJSON_cookie:
-			in = openapi3.ParameterInCookie
-		}
-
-		param := &openapi3.Parameter{
-			Name:        input.GetName(),
-			Required:    input.GetIsRequired(),
-			In:          in,
-			Description: someDescription,
-			Schema:      sm.schemaToOA3(input.GetSID()),
-		}
-
-		params = append(params, &openapi3.ParameterRef{Value: param})
-	}
-	return
-}
-
 func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
-	i, codes := 0, make([]string, len(docResponses))
+	codes := make([]string, 0, len(docResponses))
 	for code := range docResponses {
-		codes[i] = code
-		i++
+		codes = append(codes, code)
 	}
 	sort.Strings(codes)
 
-	for j := 0; j != i; j++ {
-		code := codes[j]
+	for _, code := range codes {
 		responseRef := docResponses[code]
 		xxx := makeXXXFromOA3(code)
 		// NOTE: Responses MAY have a schema
@@ -278,26 +184,6 @@ func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 		}
 	}
 	return
-}
-
-// For testing
-func (sm schemap) outputsToOA3(outs map[uint32]sid) openapi3.Responses {
-	responses := make(openapi3.Responses, len(outs))
-	for xxx, SID := range outs {
-		XXX := makeXXXToOA3(xxx)
-		responses[XXX] = &openapi3.ResponseRef{
-			Value: &openapi3.Response{Description: someDescription}}
-		if SID != 0 {
-			responses[XXX].Value.Content = sm.contentToOA3(SID)
-		}
-	}
-	return responses
-}
-
-// For testing
-func (sm schemap) contentToOA3(SID sid) openapi3.Content {
-	schemaRef := sm.schemaToOA3(SID)
-	return openapi3.NewContentWithJSONSchemaRef(schemaRef)
 }
 
 func (vald *validator) schemaOrRefFromOA3(s *openapi3.SchemaRef) (schema schemaJSON) {
@@ -399,15 +285,13 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	if count := len(s.Properties); count != 0 {
 		schema["type"] = ensureSchemaType(schema["type"], "object")
 		properties := make(schemasJSON, count)
-		i, props := 0, make([]string, count)
+		props := make([]string, 0, count)
 		for propName := range s.Properties {
-			props[i] = propName
-			i++
+			props = append(props, propName)
 		}
 		sort.Strings(props)
 
-		for j := 0; j != i; j++ {
-			propName := props[j]
+		for _, propName := range props {
 			properties[propName] = vald.schemaOrRefFromOA3(s.Properties[propName])
 		}
 		schema["properties"] = properties
@@ -419,27 +303,27 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 
 	// "allOf"
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
-		allOf := make([]schemaJSON, len(sAllOf))
-		for i, sOf := range sAllOf {
-			allOf[i] = vald.schemaOrRefFromOA3(sOf)
+		allOf := make([]schemaJSON, 0, len(sAllOf))
+		for _, sOf := range sAllOf {
+			allOf = append(allOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["allOf"] = allOf
 	}
 
 	// "anyOf"
 	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
-		anyOf := make([]schemaJSON, len(sAnyOf))
-		for i, sOf := range sAnyOf {
-			anyOf[i] = vald.schemaOrRefFromOA3(sOf)
+		anyOf := make([]schemaJSON, 0, len(sAnyOf))
+		for _, sOf := range sAnyOf {
+			anyOf = append(anyOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["anyOf"] = anyOf
 	}
 
 	// "oneOf"
 	if sOneOf := s.OneOf; len(sOneOf) != 0 {
-		oneOf := make([]schemaJSON, len(sOneOf))
-		for i, sOf := range sOneOf {
-			oneOf[i] = vald.schemaOrRefFromOA3(sOf)
+		oneOf := make([]schemaJSON, 0, len(sOneOf))
+		for _, sOf := range sOneOf {
+			oneOf = append(oneOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["oneOf"] = oneOf
 	}
@@ -450,93 +334,6 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	}
 
 	return
-}
-
-// For testing
-func (sm schemap) schemaToOA3(SID sid) *openapi3.SchemaRef {
-	s := sm.toGo(SID)
-	s = transformSchemaToOA3(s)
-
-	sJSON, err := json.Marshal(s)
-	if err != nil {
-		panic(err)
-	}
-	schema := openapi3.NewSchema()
-	if err := json.Unmarshal(sJSON, &schema); err != nil {
-		panic(err)
-	}
-
-	return schema.NewRef()
-}
-
-// For testing
-func transformSchemaToOA3(s schemaJSON) schemaJSON {
-	// "type", "nullable"
-	if v, ok := s["type"]; ok {
-		sTypes := v.([]string)
-		sType := ""
-		for _, v := range sTypes {
-			switch v {
-			case "":
-				continue
-			case fm.Schema_JSON_null.String():
-				s["nullable"] = true
-			default:
-				sType = v
-			}
-		}
-		s["type"] = sType
-	}
-
-	// "items"
-	if v, ok := s["items"]; ok {
-		if vv := v.([]schemaJSON); len(vv) > 0 {
-			s["items"] = transformSchemaToOA3(vv[0])
-		}
-	}
-
-	// "properties"
-	if v, ok := s["properties"]; ok {
-		props := v.(schemaJSON)
-		for propName, propSchema := range props {
-			props[propName] = transformSchemaToOA3(propSchema.(schemaJSON))
-		}
-		s["properties"] = props
-	}
-
-	// "allOf"
-	if v, ok := s["allOf"]; ok {
-		allOf := v.([]schemaJSON)
-		for i, schemaOf := range allOf {
-			allOf[i] = transformSchemaToOA3(schemaOf)
-		}
-		s["allOf"] = allOf
-	}
-
-	// "anyOf"
-	if v, ok := s["anyOf"]; ok {
-		anyOf := v.([]schemaJSON)
-		for i, schemaOf := range anyOf {
-			anyOf[i] = transformSchemaToOA3(schemaOf)
-		}
-		s["anyOf"] = anyOf
-	}
-
-	// "oneOf"
-	if v, ok := s["oneOf"]; ok {
-		oneOf := v.([]schemaJSON)
-		for i, schemaOf := range oneOf {
-			oneOf[i] = transformSchemaToOA3(schemaOf)
-		}
-		s["oneOf"] = oneOf
-	}
-
-	// "not"
-	if v, ok := s["not"]; ok {
-		s["not"] = transformSchemaToOA3(v.(schemaJSON))
-	}
-
-	return s
 }
 
 func ensureSchemaType(types interface{}, t string) []string {

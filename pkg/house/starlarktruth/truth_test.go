@@ -2,12 +2,15 @@ package starlarktruth
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
+
+const abc = `"abc"` // Please linter
 
 func helper(t *testing.T, program string) (starlark.StringDict, error) {
 	// Enabled so they can be tested
@@ -26,13 +29,20 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 			return nil, errors.New("load() unsupported")
 		},
 	}
-	return starlark.ExecFile(thread, t.Name()+".star", program, predeclared)
+	script := strings.Join([]string{
+		`dfltCmp = ` + cmpSrc,
+		`someCmp = lambda a, b: dfltCmp(b, a)`,
+		program,
+	}, "\n")
+	return starlark.ExecFile(thread, t.Name()+".star", script, predeclared)
 }
 
 func testEach(t *testing.T, m map[string]error) {
 	for code, expectedErr := range m {
 		t.Run(code, func(t *testing.T) {
 			globals, err := helper(t, code)
+			delete(globals, "dfltCmp")
+			delete(globals, "someCmp")
 			require.Empty(t, globals)
 			if expectedErr == nil {
 				require.NoError(t, err)
@@ -512,7 +522,7 @@ func TestNone(t *testing.T) {
 		`AssertThat(None).isNone()`:     nil,
 		`AssertThat(None).isNotNone()`:  fail(`None`, `is not None`),
 		`AssertThat("abc").isNotNone()`: nil,
-		`AssertThat("abc").isNone()`:    fail(`"abc"`, `is None`),
+		`AssertThat("abc").isNone()`:    fail(abc, `is None`),
 	})
 }
 
@@ -609,7 +619,7 @@ func TestIsCallable(t *testing.T) {
 		s(`"str".endswith`): nil,
 		s(`AssertThat`):     nil,
 		s(`None`):           fail(`None`, `is callable`),
-		s(`"abc"`):          fail(`"abc"`, `is callable`),
+		s(abc):              fail(abc, `is callable`),
 	})
 }
 
@@ -619,7 +629,7 @@ func TestIsNotCallable(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`None`):           nil,
-		s(`"abc"`):          nil,
+		s(abc):              nil,
 		s(`lambda x: x`):    fail(`function lambda`, `is not callable`),
 		s(`"str".endswith`): fail(`built-in method endswith of string value`, `is not callable`),
 		s(`AssertThat`):     fail(`built-in function AssertThat`, `is not callable`),
@@ -707,7 +717,7 @@ func TestContainsNoDuplicates(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`()`):           nil,
-		s(`"abc"`):        nil,
+		s(abc):            nil,
 		s(`(2,)`):         nil,
 		s(`(2, 5)`):       nil,
 		s(`{2: 2}`):       nil,
@@ -779,5 +789,273 @@ func TestContainsAllMixedHashableElements(t *testing.T) {
 		s(`3, [], 8, 5, 9`):  fail(ss, "contains all of <(3, [], 8, 5, 9)>. It is missing <9>"),
 		s(`3, [], 8, 5, {}`): fail(ss, "contains all of <(3, [], 8, 5, {})>. It is missing <{}>"),
 		s(`8, 3, [], 9, 5`):  fail(ss, "contains all of <(8, 3, [], 9, 5)>. It is missing <9>"),
+	})
+}
+
+func TestContainsAnyIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAnyIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`(3,)`):   nil,
+		s(`(7, 3)`): nil,
+		s(`()`):     fail(ss, "contains any element in <()>"),
+		s(`(2, 6)`): fail(ss, "contains any element in <(2, 6)>"),
+	})
+}
+
+func TestContainsAnyOf(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsAnyOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):    nil,
+		s(`7, 3`): nil,
+		s(``):     fail(ss, "contains any of <()>"),
+		s(`2, 6`): fail(ss, "contains any of <(2, 6)>"),
+	})
+}
+
+func TestContainsNoneIn(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsNoneIn(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):     nil,
+		s(`(2,)`):   nil,
+		s(`(2, 6)`): nil,
+		s(`(5,)`):   fail(ss, "contains no elements in <(5,)>. It contains <5>"),
+		s(`(2, 5)`): fail(ss, "contains no elements in <(2, 5)>. It contains <5>"),
+	})
+}
+
+func TestContainsNoneOf(t *testing.T) {
+	ss := `(3, 5, [])`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsNoneOf(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(``):     nil,
+		s(`2`):    nil,
+		s(`2, 6`): nil,
+		s(`5`):    fail(ss, "contains none of <(5,)>. It contains <5>"),
+		s(`2, 5`): fail(ss, "contains none of <(2, 5)>. It contains <5>"),
+	})
+}
+
+func TestIsOrdered(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isOrdered()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(3, 5, 8)`): nil,
+		s(`(3, 5, 5)`): nil,
+		s(`(5, 4)`):    newTruthAssertion(`Not true that <(5, 4)> is ordered <(5, 4)>.`),
+		s(`(3, 5, 4)`): newTruthAssertion(`Not true that <(3, 5, 4)> is ordered <(5, 4)>.`),
+	})
+}
+
+func TestIsOrderedAccordingTo(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isOrderedAccordingTo(someCmp)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(8, 5, 3)`): nil,
+		s(`(5, 5, 3)`): nil,
+		s(`(4, 5)`):    newTruthAssertion(`Not true that <(4, 5)> is ordered <(4, 5)>.`),
+		s(`(3, 5, 4)`): newTruthAssertion(`Not true that <(3, 5, 4)> is ordered <(3, 5)>.`),
+	})
+}
+
+func TestIsStrictlyOrdered(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isStrictlyOrdered()`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(3, 5, 8)`): nil,
+		s(`(5, 4)`):    newTruthAssertion(`Not true that <(5, 4)> is strictly ordered <(5, 4)>.`),
+		s(`(3, 5, 5)`): newTruthAssertion(`Not true that <(3, 5, 5)> is strictly ordered <(5, 5)>.`),
+	})
+}
+
+func TestIsStrictlyOrderedAccordingTo(t *testing.T) {
+	s := func(t string) string {
+		return `AssertThat(` + t + `).isStrictlyOrderedAccordingTo(someCmp)`
+	}
+	testEach(t, map[string]error{
+		s(`()`):        nil,
+		s(`(3,)`):      nil,
+		s(`(8, 5, 3)`): nil,
+		s(`(4, 5)`):    newTruthAssertion(`Not true that <(4, 5)> is strictly ordered <(4, 5)>.`),
+		s(`(5, 5, 3)`): newTruthAssertion(`Not true that <(5, 5, 3)> is strictly ordered <(5, 5)>.`),
+	})
+}
+
+func TestContainsKey(t *testing.T) {
+	ss := `{2: "two", None: "None"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsKey(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2`):     nil,
+		s(`None`):  nil,
+		s(`3`):     fail(ss, `contains key <3>`),
+		s(`"two"`): fail(ss, `contains key <"two">`),
+	})
+}
+
+func TestDoesNotContainKey(t *testing.T) {
+	ss := `{2: "two", None: "None"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotContainKey(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`):     nil,
+		s(`"two"`): nil,
+		s(`2`):     fail(ss, `does not contain key <2>`),
+		s(`None`):  fail(ss, `does not contain key <None>`),
+	})
+}
+
+func TestContainsItem(t *testing.T) {
+	ss := `{2: "two", 4: "four", "too": "two"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsItem(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2, "two"`):     nil,
+		s(`4, "four"`):    nil,
+		s(`"too", "two"`): nil,
+		s(`2, "to"`):      fail(ss, `contains item <(2, "to")>. However, it has a mapping from <2> to <"two">`),
+		s(`7, "two"`): fail(ss, `contains item <(7, "two")>.`+
+			` However, the following keys are mapped to <"two">: [2, "too"]`),
+		s(`7, "seven"`): fail(ss, `contains item <(7, "seven")>`),
+	})
+}
+
+func TestDoesNotContainItem(t *testing.T) {
+	ss := `{2: "two", 4: "four", "too": "two"}`
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotContainItem(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`2, "to"`):    nil,
+		s(`7, "two"`):   nil,
+		s(`7, "seven"`): nil,
+		s(`2, "two"`):   fail(ss, `does not contain item <(2, "two")>`),
+		s(`4, "four"`):  fail(ss, `does not contain item <(4, "four")>`),
+	})
+}
+
+func TestHasLength(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).hasLength(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`3`): nil,
+		s(`4`): fail(ss, `has a length of 4. It is 3`),
+		s(`2`): fail(ss, `has a length of 2. It is 3`),
+	})
+}
+
+func TestStartsWith(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).startsWith(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`""`):   nil,
+		s(`"a"`):  nil,
+		s(`"ab"`): nil,
+		s(abc):    nil,
+		s(`"b"`):  fail(ss, `starts with <"b">`),
+	})
+}
+
+func TestEndsWith(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).endsWith(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`""`):   nil,
+		s(`"c"`):  nil,
+		s(`"bc"`): nil,
+		s(abc):    nil,
+		s(`"b"`):  fail(ss, `ends with <"b">`),
+	})
+}
+
+func TestMatches(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).matches(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"a"`):     nil,
+		s(`r".b"`):   nil, // TODO: call re.compile if re module loaded
+		s(`r"[Aa]"`): nil, // TODO: use re.I flag if re module loaded
+		s(`"d"`):     fail(ss, `matches <"d">`),
+		s(`"b"`):     fail(ss, `matches <"b">`),
+	})
+}
+
+func TestDoesNotMatch(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotMatch(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"b"`): nil,
+		s(`"d"`): nil,
+		s(`"a"`): fail(ss, `fails to match <"a">`),
+		s(`r".b"`): fail(ss,
+			// TODO: call re.compile if re module loaded
+			`fails to match <".b">`),
+		s(`r"[Aa]"`): fail(ss,
+			// TODO: use re.I flag if re module loaded
+			`fails to match <"[Aa]">`),
+	})
+}
+
+func TestContainsMatch(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).containsMatch(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"a"`):     nil,
+		s(`r".b"`):   nil, // TODO: call re.compile if re module loaded
+		s(`r"[Aa]"`): nil, // TODO: use re.I flag if re module loaded
+		s(`"b"`):     nil,
+		s(`"d"`):     fail(ss, `should have contained a match for <"d">`),
+	})
+}
+
+func TestDoesNotContainMatch(t *testing.T) {
+	ss := abc
+	s := func(x string) string {
+		return `AssertThat(` + ss + `).doesNotContainMatch(` + x + `)`
+	}
+	testEach(t, map[string]error{
+		s(`"d"`): nil,
+		s(`"a"`): fail(ss, `should not have contained a match for <"a">`),
+		s(`"b"`): fail(ss, `should not have contained a match for <"b">`),
+		s(`r".b"`): fail(ss,
+			// TODO: call re.compile if re module loaded
+			`should not have contained a match for <".b">`),
+		s(`r"[Aa]"`): fail(ss,
+			// TODO: use re.I flag if re module loaded
+			`should not have contained a match for <"[Aa]">`),
 	})
 }

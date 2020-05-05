@@ -223,9 +223,9 @@ func (c *tCapHTTP) Request() *types.Struct {
 	headers := make(map[string]*types.Value, len(c.reqProto.Headers))
 	for key, values0 := range c.reqProto.Headers {
 		values := values0.GetValues()
-		vals := make([]*types.Value, len(values))
-		for i, val := range values {
-			vals[i] = enumFromGo(val)
+		vals := make([]*types.Value, 0, len(values))
+		for _, val := range values {
+			vals = append(vals, enumFromGo(val))
 		}
 		headers[key] = &types.Value{Kind: &types.Value_ListValue{
 			ListValue: &types.ListValue{Values: vals}}}
@@ -261,9 +261,9 @@ func (c *tCapHTTP) Response() *types.Struct {
 	headers := make(map[string]*types.Value, len(c.repProto.Headers))
 	for key, values0 := range c.repProto.Headers {
 		values := values0.GetValues()
-		vals := make([]*types.Value, len(values))
-		for i, val := range values {
-			vals[i] = enumFromGo(val)
+		vals := make([]*types.Value, 0, len(values))
+		for _, val := range values {
+			vals = append(vals, enumFromGo(val))
 		}
 		headers[key] = &types.Value{Kind: &types.Value_ListValue{
 			ListValue: &types.ListValue{Values: vals}}}
@@ -289,17 +289,15 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 	}
 
 	headers := fromReqHeader(r.Header)
-	for key, _ := range headers {
+	for key := range headers {
 		switch key {
 		case headerContentLength:
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
 			}
 		case headerTransferEncoding:
-			values := make([]string, len(r.TransferEncoding))
-			copy(values, r.TransferEncoding)
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: values,
+				Values: r.TransferEncoding,
 			}
 		case headerHost:
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
@@ -341,17 +339,15 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	c.repProto.Reason = r.Status
 
 	headers := fromRepHeader(r.Header)
-	for key, _ := range headers {
+	for key := range headers {
 		switch key {
 		case headerContentLength:
 			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
 			}
 		case headerTransferEncoding:
-			values := make([]string, len(r.TransferEncoding))
-			copy(values, r.TransferEncoding)
 			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-				Values: values,
+				Values: r.TransferEncoding,
 			}
 		default:
 		}
@@ -492,10 +488,8 @@ func fromReqHeader(src http.Header) map[string]*fm.Clt_CallRequestRaw_Input_Http
 	dst := make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(src))
 	for h, hs := range src {
 		if len(hs) != 0 {
-			vs := make([]string, len(hs))
-			copy(vs, hs)
 			dst[h] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: vs,
+				Values: hs,
 			}
 		}
 	}
@@ -509,10 +503,8 @@ func fromRepHeader(src http.Header) map[string]*fm.Clt_CallResponseRaw_Output_Ht
 	dst := make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(src))
 	for h, hs := range src {
 		if len(hs) != 0 {
-			vs := make([]string, len(hs))
-			copy(vs, hs)
 			dst[h] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-				Values: vs,
+				Values: hs,
 			}
 		}
 	}

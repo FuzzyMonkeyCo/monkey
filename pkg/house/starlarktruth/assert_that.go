@@ -3,6 +3,7 @@ package starlarktruth
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/pmezard/go-difflib/difflib"
@@ -171,6 +172,7 @@ type containsOption func(*containsOptions)
 
 func warnElementsIn() containsOption { return func(o *containsOptions) { o.warnElementsIn = true } }
 
+// Determines if the subject contains exactly the expected elements.
 func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOption) (starlark.Value, error) {
 	opts := &containsOptions{}
 	for _, o := range os {
@@ -694,6 +696,7 @@ func containsAllInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) 
 	t.askedInOrder = true
 	return containsAllIn(t, args...)
 }
+
 func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if arg1, ok := args[0].(starlark.Iterable); ok {
 		return t.containsAll("contains all elements in", arg1)
@@ -705,6 +708,7 @@ func containsAllOfInOrder(t *T, args ...starlark.Value) (starlark.Value, error) 
 	t.askedInOrder = true
 	return containsAllOf(t, args...)
 }
+
 func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.containsAll("contains all of", starlark.Tuple(args))
 }
@@ -784,4 +788,369 @@ func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value
 		return nil, t.failComparingValues("contains all elements in order", expected, "")
 	}
 	return starlark.None, nil
+}
+
+func containsAnyIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.Iterable); ok {
+		return t.containsAny("contains any element in", arg1)
+	}
+	return nil, errUnhandled
+}
+
+func containsAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsAny("contains any of", starlark.Tuple(args))
+}
+
+// Determines if the subject contains any of the expected elements.
+func (t *T) containsAny(verb string, expected starlark.Iterable) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	actualSlice := collect(actual)
+
+	iterExpected := expected.Iterate()
+	defer iterExpected.Done()
+	var i starlark.Value
+	for iterExpected.Next(&i) {
+		index, err := indexOf(i, actualSlice)
+		if err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			return starlark.None, nil
+		}
+	}
+	return nil, t.failComparingValues(verb, expected, "")
+}
+
+func containsNoneIn(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(starlark.Iterable); ok {
+		return t.containsNone("contains no elements in", arg1)
+	}
+	return nil, errUnhandled
+}
+
+func containsNoneOf(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.containsNone("contains none of", starlark.Tuple(args))
+}
+
+// Determines if the subject contains none of the excluded elements.
+func (t *T) containsNone(failVerb string, excluded starlark.Iterable) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	actualSlice := collect(actual)
+
+	iterExcluded := excluded.Iterate()
+	defer iterExcluded.Done()
+	var i starlark.Value
+	present := newDuplicateCounter()
+
+	for iterExcluded.Next(&i) {
+		index, err := indexOf(i, actualSlice)
+		if err != nil {
+			return nil, err
+		}
+		if index != -1 {
+			present.Increment(i)
+		}
+	}
+	if !present.Empty() {
+		return nil, t.failWithBadResults(failVerb, excluded, "contains", present, "")
+	}
+	return starlark.None, nil
+}
+
+func isOrdered(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isOrderedAccordingTo(t, t.registered.Cmp)
+}
+
+func isOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(*starlark.Function); ok {
+		return t.pairwiseCheck(arg1, false)
+	}
+	return nil, errUnhandled
+}
+
+func isStrictlyOrdered(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isStrictlyOrderedAccordingTo(t, t.registered.Cmp)
+}
+
+func isStrictlyOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if arg1, ok := args[0].(*starlark.Function); ok {
+		return t.pairwiseCheck(arg1, true)
+	}
+	return nil, errUnhandled
+}
+
+// Iterates over this subject and compares adjacent elements.
+func (t *T) pairwiseCheck(pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
+	actual, ok := t.actual.(starlark.Iterable)
+	if !ok {
+		return nil, errUnhandled
+	}
+	iterActual := actual.Iterate()
+	defer iterActual.Done()
+
+	var prev, current starlark.Value
+	if iterActual.Next(&prev) {
+		for {
+			if !iterActual.Next(&current) {
+				break
+			}
+
+			args := starlark.Tuple{prev, current}
+			someInt, err := t.registered.Apply(pairComparator, args)
+			if err != nil {
+				return nil, err
+			}
+			r, err := starlark.AsInt32(someInt)
+			if err != nil {
+				return nil, err
+			}
+			switch {
+			case r < 0:
+			case r == 0 && !strict:
+			default:
+				msg := "is ordered"
+				if strict {
+					msg = "is strictly ordered"
+				}
+				return nil, t.failComparingValues(msg, args, "")
+			}
+			prev = current
+		}
+	}
+	return starlark.None, nil
+}
+
+func containsKey(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key := args[0]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		_, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if !found {
+			msg := fmt.Sprintf("contains key <%s>", key.String())
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainKey(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key := args[0]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		_, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			msg := fmt.Sprintf("does not contain key <%s>", key.String())
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+// Assertion that the subject contains the key mapping to the value.
+func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key, value := args[0], args[1]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		val, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				return starlark.None, nil
+			}
+			msg := fmt.Sprintf(
+				"contains item <%s>. However, it has a mapping from <%s> to <%s>",
+				starlark.Tuple{key, value}.String(),
+				key.String(),
+				val.String(),
+			)
+			return nil, t.failWithProposition(msg, "")
+		}
+
+		if actual, ok := t.actual.(starlark.IterableMapping); ok {
+			var otherKeys []starlark.Value
+			for _, kv := range actual.Items() {
+				if len(kv) != 2 {
+					break
+				}
+				ok, err := starlark.CompareDepth(syntax.EQL, value, kv[1], maxdepth)
+				if err != nil {
+					return nil, err
+				}
+				if ok {
+					otherKeys = append(otherKeys, kv[0])
+				}
+			}
+			if len(otherKeys) != 0 {
+				msg := fmt.Sprintf(
+					"contains item <%s>. However, the following keys are mapped to <%s>: %s",
+					starlark.Tuple{key, value}.String(),
+					value.String(),
+					starlark.NewList(otherKeys).String(),
+				)
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+
+		msg := fmt.Sprintf("contains item <%s>", starlark.Tuple{key, value}.String())
+		return nil, t.failWithProposition(msg, "")
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainItem(t *T, args ...starlark.Value) (starlark.Value, error) {
+	key, value := args[0], args[1]
+	if actual, ok := t.actual.(starlark.Mapping); ok {
+		val, found, err := actual.Get(key)
+		if err != nil {
+			return nil, err
+		}
+		if found {
+			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				msg := fmt.Sprintf(
+					"does not contain item <%s>",
+					starlark.Tuple{key, value}.String(),
+				)
+				return nil, t.failWithProposition(msg, "")
+			}
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func hasLength(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		expected, err := starlark.AsInt32(args[0])
+		if err != nil {
+			return nil, errUnhandled
+		}
+		actualLength := actual.Len()
+		if actualLength != expected {
+			msg := fmt.Sprintf("has a length of %d. It is %d", expected, actualLength)
+			return nil, t.failWithProposition(msg, "")
+		}
+		return starlark.None, nil
+	}
+	return nil, errUnhandled
+}
+
+func startsWith(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if prefix, ok := args[0].(starlark.String); ok {
+			if !strings.HasPrefix(actual.GoString(), prefix.GoString()) {
+				return nil, t.failComparingValues("starts with", prefix, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func endsWith(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if suffix, ok := args[0].(starlark.String); ok {
+			if !strings.HasSuffix(actual.GoString(), suffix.GoString()) {
+				return nil, t.failComparingValues("ends with", suffix, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func newRegex(regex string) (*regexp.Regexp, error) {
+	if strings.Contains(regex, "\\C") {
+		// https://github.com/google/starlark-go/issues/241#issuecomment-529663462
+		return nil, errors.New("unsupported regex class \\C")
+	}
+	return regexp.Compile(regex)
+}
+
+func matches(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex("^" + regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if !r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("matches <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func doesNotMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex("^" + regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("fails to match <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func containsMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex(regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if !r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("should have contained a match for <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
+}
+
+func doesNotContainMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if actual, ok := t.actual.(starlark.String); ok {
+		if regex, ok := args[0].(starlark.String); ok {
+			r, err := newRegex(regex.GoString())
+			if err != nil {
+				return nil, err
+			}
+			if r.MatchString(actual.GoString()) {
+				msg := fmt.Sprintf("should not have contained a match for <%s>", regex)
+				return nil, t.failWithProposition(msg, "")
+			}
+			return starlark.None, nil
+		}
+	}
+	return nil, errUnhandled
 }

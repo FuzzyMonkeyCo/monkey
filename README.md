@@ -7,12 +7,13 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  M.m.p   feedb065        go1.13.5        amd64   linux
+monkey  M.m.p   feedb065        go1.14.2        linux   amd64
 
 Usage:
   monkey [-vvv] init [--with-magic]
   monkey [-vvv] login [--user=USER]
   monkey [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
+                     [--time-budget=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -30,7 +31,8 @@ Options:
   version                        Show the version string
   update                         Ensures monkey is the latest version
   --intensity=N                  The higher the more complex the tests [default: 10]
-  --seed=SEED                    Use specific parameters for the RNG
+  --time-budget=DURATION         Stop testing after DURATION (e.g. '30s' or '5h')
+  --seed=SEED                    Use specific parameters for the Random Number Generator
   --shrink=ID                    Which failed test to minimize
   --tag=KV                       Labels that can help classification (format: key=value)
   --only=REGEX                   Only test matching calls

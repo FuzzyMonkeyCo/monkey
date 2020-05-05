@@ -27,6 +27,3 @@ vendor/
 /monkey-*
 /*.cov
 /cov.out
-
-#FIXME
-/github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go
