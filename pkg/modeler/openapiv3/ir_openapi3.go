@@ -57,25 +57,21 @@ func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 }
 
 func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
-	i, paths := 0, make([]string, len(docPaths))
+	paths := make([]string, 0, len(docPaths))
 	for path := range docPaths {
-		paths[i] = path
-		i++
+		paths = append(paths, path)
 	}
 	sort.Strings(paths)
 
-	for j := 0; j != i; j++ {
-		path := paths[j]
+	for j, path := range paths {
 		docOps := docPaths[path].Operations()
-		k, methods := 0, make([]string, len(docOps))
+		methods := make([]string, 0, len(docOps))
 		for docMethod := range docOps {
-			methods[k] = docMethod
-			k++
+			methods = append(methods, docMethod)
 		}
 		sort.Strings(methods)
 
-		for l := 0; l != k; l++ {
-			docMethod := methods[l]
+		for l, docMethod := range methods {
 			log.Println("[DBG] through", docMethod, path)
 			docOp := docOps[docMethod]
 			inputs := make([]*fm.ParamJSON, 0, 1+len(docOp.Parameters))
@@ -121,18 +117,17 @@ func (vald *validator) inputBodyFromOA3(inputs *[]*fm.ParamJSON, docReqBody *ope
 func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3.Parameters) {
 	paramsCount := len(docParams)
 	paramap := make(map[string]*openapi3.ParameterRef, paramsCount)
-	i, names := 0, make([]string, paramsCount)
+	names := make([]string, 0, paramsCount)
 	for _, docParamRef := range docParams {
 		docParam := docParamRef.Value
 		name := docParam.In + docParam.Name
-		names[i] = name
+		names = append(names, name)
 		paramap[name] = docParamRef
-		i++
 	}
 	sort.Strings(names)
 
-	for j := 0; j != i; j++ {
-		docParamRef := paramap[names[j]]
+	for _, name := range names {
+		docParamRef := paramap[name]
 		//FIXME: handle .Ref
 		docParam := docParamRef.Value
 		kind := fm.ParamJSON_UNKNOWN
@@ -162,15 +157,13 @@ func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
-	i, codes := 0, make([]string, len(docResponses))
+	codes := make([]string, 0, len(docResponses))
 	for code := range docResponses {
-		codes[i] = code
-		i++
+		codes = append(codes, code)
 	}
 	sort.Strings(codes)
 
-	for j := 0; j != i; j++ {
-		code := codes[j]
+	for _, code := range codes {
 		responseRef := docResponses[code]
 		xxx := makeXXXFromOA3(code)
 		// NOTE: Responses MAY have a schema
@@ -292,15 +285,13 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 	if count := len(s.Properties); count != 0 {
 		schema["type"] = ensureSchemaType(schema["type"], "object")
 		properties := make(schemasJSON, count)
-		i, props := 0, make([]string, count)
+		props := make([]string, 0, count)
 		for propName := range s.Properties {
-			props[i] = propName
-			i++
+			props = append(props, propName)
 		}
 		sort.Strings(props)
 
-		for j := 0; j != i; j++ {
-			propName := props[j]
+		for _, propName := range props {
 			properties[propName] = vald.schemaOrRefFromOA3(s.Properties[propName])
 		}
 		schema["properties"] = properties
@@ -312,27 +303,27 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 
 	// "allOf"
 	if sAllOf := s.AllOf; len(sAllOf) != 0 {
-		allOf := make([]schemaJSON, len(sAllOf))
-		for i, sOf := range sAllOf {
-			allOf[i] = vald.schemaOrRefFromOA3(sOf)
+		allOf := make([]schemaJSON, 0, len(sAllOf))
+		for _, sOf := range sAllOf {
+			allOf = append(allOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["allOf"] = allOf
 	}
 
 	// "anyOf"
 	if sAnyOf := s.AnyOf; len(sAnyOf) != 0 {
-		anyOf := make([]schemaJSON, len(sAnyOf))
-		for i, sOf := range sAnyOf {
-			anyOf[i] = vald.schemaOrRefFromOA3(sOf)
+		anyOf := make([]schemaJSON, 0, len(sAnyOf))
+		for _, sOf := range sAnyOf {
+			anyOf = append(anyOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["anyOf"] = anyOf
 	}
 
 	// "oneOf"
 	if sOneOf := s.OneOf; len(sOneOf) != 0 {
-		oneOf := make([]schemaJSON, len(sOneOf))
-		for i, sOf := range sOneOf {
-			oneOf[i] = vald.schemaOrRefFromOA3(sOf)
+		oneOf := make([]schemaJSON, 0, len(sOneOf))
+		for _, sOf := range sOneOf {
+			oneOf = append(oneOf, vald.schemaOrRefFromOA3(sOf))
 		}
 		schema["oneOf"] = oneOf
 	}

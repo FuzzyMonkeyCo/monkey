@@ -39,15 +39,13 @@ func (vald *validator) newSID() sid {
 }
 
 func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
-	i, names := 0, make([]string, len(schemas))
+	names := make([]string, 0, len(schemas))
 	for name := range schemas {
-		names[i] = name
-		i++
+		names = append(names, name)
 	}
 	sort.Strings(names)
 
-	for j := 0; j != i; j++ {
-		name := names[j]
+	for _, name := range names {
 		absRef := base + name
 		log.Printf("[DBG] pre-seeding ref '%s'", absRef)
 		refSID := vald.newSID()
@@ -57,8 +55,7 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 		vald.Refs[absRef] = refSID
 	}
 
-	for j := 0; j != i; j++ {
-		name := names[j]
+	for _, name := range names {
 		absRef := base + name
 		schema := schemas[name]
 		log.Printf("[DBG] seeding schema '%s'", absRef)
@@ -122,18 +119,18 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
-		schema.Enum = make([]*types.Value, len(enum))
-		for i, vv := range enum {
-			schema.Enum[i] = enumFromGo(vv)
+		schema.Enum = make([]*types.Value, 0, len(enum))
+		for _, vv := range enum {
+			schema.Enum = append(schema.Enum, enumFromGo(vv))
 		}
 	}
 
 	// "type"
 	if v, ok := s["type"]; ok {
 		types := v.([]string)
-		schema.Types = make([]fm.Schema_JSON_Type, len(types))
-		for i, vv := range types {
-			schema.Types[i] = fm.Schema_JSON_Type(fm.Schema_JSON_Type_value[vv])
+		schema.Types = make([]fm.Schema_JSON_Type, 0, len(types))
+		for _, vv := range types {
+			schema.Types = append(schema.Types, fm.Schema_JSON_Type(fm.Schema_JSON_Type_value[vv]))
 		}
 	}
 
@@ -194,13 +191,13 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "items"
 	if v, ok := s["items"]; ok {
 		items := v.([]schemaJSON)
-		schema.Items = make([]sid, len(items))
-		for i, ss := range items {
+		schema.Items = make([]sid, 0, len(items))
+		for _, ss := range items {
 			var ref string
 			if v, ok := ss["$ref"]; ok {
 				ref = v.(string)
 			}
-			schema.Items[i] = vald.ensureMapped(ref, ss)
+			schema.Items = append(schema.Items, vald.ensureMapped(ref, ss))
 		}
 	}
 
@@ -222,15 +219,13 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 		properties := v.(schemasJSON)
 		if count := len(properties); count != 0 {
 			schema.Properties = make(map[string]sid, count)
-			i, props := 0, make([]string, count)
+			props := make([]string, 0, count)
 			for propName := range properties {
-				props[i] = propName
-				i++
+				props = append(props, propName)
 			}
 			sort.Strings(props)
 
-			for j := 0; j != i; j++ {
-				propName := props[j]
+			for _, propName := range props {
 				ss := properties[propName]
 				var ref string
 				if v, ok := ss["$ref"]; ok {
@@ -245,39 +240,39 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "allOf"
 	if v, ok := s["allOf"]; ok {
 		of := v.([]schemaJSON)
-		schema.AllOf = make([]sid, len(of))
-		for i, ss := range of {
+		schema.AllOf = make([]sid, 0, len(of))
+		for _, ss := range of {
 			var ref string
 			if v, ok := ss["$ref"]; ok {
 				ref = v.(string)
 			}
-			schema.AllOf[i] = vald.ensureMapped(ref, ss)
+			schema.AllOf = append(schema.AllOf, vald.ensureMapped(ref, ss))
 		}
 	}
 
 	// "anyOf"
 	if v, ok := s["anyOf"]; ok {
 		of := v.([]schemaJSON)
-		schema.AnyOf = make([]sid, len(of))
-		for i, ss := range of {
+		schema.AnyOf = make([]sid, 0, len(of))
+		for _, ss := range of {
 			var ref string
 			if v, ok := ss["$ref"]; ok {
 				ref = v.(string)
 			}
-			schema.AnyOf[i] = vald.ensureMapped(ref, ss)
+			schema.AnyOf = append(schema.AnyOf, vald.ensureMapped(ref, ss))
 		}
 	}
 
 	// "oneOf"
 	if v, ok := s["oneOf"]; ok {
 		of := v.([]schemaJSON)
-		schema.OneOf = make([]sid, len(of))
-		for i, ss := range of {
+		schema.OneOf = make([]sid, 0, len(of))
+		for _, ss := range of {
 			var ref string
 			if v, ok := ss["$ref"]; ok {
 				ref = v.(string)
 			}
-			schema.OneOf[i] = vald.ensureMapped(ref, ss)
+			schema.OneOf = append(schema.OneOf, vald.ensureMapped(ref, ss))
 		}
 	}
 
@@ -309,18 +304,18 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 
 	// "enum"
 	if schemaEnum := schema.GetEnum(); len(schemaEnum) != 0 {
-		enum := make([]interface{}, len(schemaEnum))
-		for i, v := range schemaEnum {
-			enum[i] = EnumToGo(v)
+		enum := make([]interface{}, 0, len(schemaEnum))
+		for _, v := range schemaEnum {
+			enum = append(enum, EnumToGo(v))
 		}
 		s["enum"] = enum
 	}
 
 	// "type"
 	if schemaTypes := schema.GetTypes(); len(schemaTypes) != 0 {
-		types := make([]string, len(schemaTypes))
-		for i, v := range schemaTypes {
-			types[i] = v.String()
+		types := make([]string, 0, len(schemaTypes))
+		for _, v := range schemaTypes {
+			types = append(types, v.String())
 		}
 		s["type"] = types
 	}
@@ -377,9 +372,9 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	}
 	// "items"
 	if schemaItems := schema.GetItems(); len(schemaItems) > 0 {
-		items := make([]schemaJSON, len(schemaItems))
-		for i, itemSchema := range schemaItems {
-			items[i] = sm.toGo(itemSchema)
+		items := make([]schemaJSON, 0, len(schemaItems))
+		for _, itemSchema := range schemaItems {
+			items = append(items, sm.toGo(itemSchema))
 		}
 		s["items"] = items
 	}
@@ -407,27 +402,27 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 
 	// "allOf"
 	if schemaAllOf := schema.GetAllOf(); len(schemaAllOf) != 0 {
-		allOf := make([]schemaJSON, len(schemaAllOf))
-		for i, schemaOf := range schemaAllOf {
-			allOf[i] = sm.toGo(schemaOf)
+		allOf := make([]schemaJSON, 0, len(schemaAllOf))
+		for _, schemaOf := range schemaAllOf {
+			allOf = append(allOf, sm.toGo(schemaOf))
 		}
 		s["allOf"] = allOf
 	}
 
 	// "anyOf"
 	if schemaAnyOf := schema.GetAnyOf(); len(schemaAnyOf) != 0 {
-		anyOf := make([]schemaJSON, len(schemaAnyOf))
-		for i, schemaOf := range schemaAnyOf {
-			anyOf[i] = sm.toGo(schemaOf)
+		anyOf := make([]schemaJSON, 0, len(schemaAnyOf))
+		for _, schemaOf := range schemaAnyOf {
+			anyOf = append(anyOf, sm.toGo(schemaOf))
 		}
 		s["anyOf"] = anyOf
 	}
 
 	// "oneOf"
 	if schemaOneOf := schema.GetOneOf(); len(schemaOneOf) != 0 {
-		oneOf := make([]schemaJSON, len(schemaOneOf))
-		for i, schemaOf := range schemaOneOf {
-			oneOf[i] = sm.toGo(schemaOf)
+		oneOf := make([]schemaJSON, 0, len(schemaOneOf))
+		for _, schemaOf := range schemaOneOf {
+			oneOf = append(oneOf, sm.toGo(schemaOf))
 		}
 		s["oneOf"] = oneOf
 	}
@@ -511,9 +506,9 @@ func enumFromGo(value interface{}) *types.Value {
 		return &types.Value{Kind: &types.Value_StringValue{
 			StringValue: val}}
 	case []interface{}:
-		vs := make([]*types.Value, len(val))
-		for i, v := range val {
-			vs[i] = enumFromGo(v)
+		vs := make([]*types.Value, 0, len(val))
+		for _, v := range val {
+			vs = append(vs, enumFromGo(v))
 		}
 		return &types.Value{Kind: &types.Value_ListValue{ListValue: &types.ListValue{Values: vs}}}
 	case map[string]interface{}:
@@ -539,9 +534,9 @@ func EnumToGo(value *types.Value) interface{} {
 		return value.GetStringValue()
 	case *types.Value_ListValue:
 		val := value.GetListValue().GetValues()
-		vs := make([]interface{}, len(val))
-		for i, v := range val {
-			vs[i] = EnumToGo(v)
+		vs := make([]interface{}, 0, len(val))
+		for _, v := range val {
+			vs = append(vs, EnumToGo(v))
 		}
 		return vs
 	case *types.Value_StructValue:
