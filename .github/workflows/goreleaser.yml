@@ -5,7 +5,7 @@ on:
   push:
 
 jobs:
-  goreleaser-build-maybe-publish:
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
