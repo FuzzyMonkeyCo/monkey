@@ -71,11 +71,10 @@ jobs:
     needs: goreleaser
     steps:
     - run: echo $PATH
-    - run: 'while read -d: -r path; do ls -lhd $path; done <<<"$PATH"'
-    # - run: echo "::add-path::/path/to/dir"
+    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
     - run: '! which monkey'
     - run: '! monkey help'
-    - run: curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/bin sh -ex
+    - run: curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/share/rust/.cargo/bin sh -ex
     - run: monkey help
     - run: monkey version
 
@@ -85,7 +84,7 @@ jobs:
     needs: goreleaser
     steps:
     - run: echo $PATH
-    - run: 'while read -d: -r path; do ls -lhd $path; done <<<"$PATH"'
+    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
     - run: '! which monkey'
     - run: '! monkey help'
     - run: curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh -ex
@@ -99,7 +98,7 @@ jobs:
     steps:
     - run: echo $PATH
       shell: bash
-    - run: 'while read -d: -r path; do ls -lhd $path; done <<<"$PATH"'
+    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
       shell: bash
     - run: '! which monkey'
       shell: bash
