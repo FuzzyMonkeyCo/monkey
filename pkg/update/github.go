@@ -1,6 +1,10 @@
+// TODO: generate this with godownloader
 package update
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,8 +16,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -79,19 +84,8 @@ func (rel *GithubRelease) PeekLatestRelease() (latest string, err error) {
 // assumes never re-tagging releases
 // assumes only releasing newer tags
 func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
-	exe := rel.Executable()
-	relURL := rel.DownloadURL() + latest + "/" + exe
-	sumsURL := relURL + ".sha256.txt"
-	updateID := path.Join(os.TempDir(), exe+".bin")
-
-	bin, err := os.OpenFile(updateID, os.O_WRONLY|os.O_CREATE, 0744)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	defer bin.Close()
-	hash := sha256.New()
-	Y := io.MultiWriter(bin, hash)
+	relURL := rel.DownloadURL() + latest + "/" + rel.archive()
+	sumsURL := rel.DownloadURL() + latest + "/checksums.sha256.txt"
 
 	log.Printf("[NFO] fetching %s", relURL)
 	fmt.Println("Fetching", relURL)
@@ -107,16 +101,62 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 		return
 	}
 
-	if _, err = io.Copy(Y, resp.Body); err != nil {
+	var rchiv bytes.Buffer
+	hash := sha256.New()
+	Y := io.MultiWriter(&rchiv, hash)
+
+	tee := io.TeeReader(resp.Body, Y)
+
+	var zr *gzip.Reader
+	if zr, err = gzip.NewReader(tee); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
+	tr := tar.NewReader(zr)
+
+	var dst string
+	if dst, err = exec.LookPath(os.Args[0]); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	// Create tmp file in hopefully the same filesystem as dst
+	distDirname := filepath.Dir(dst)
+
+	exe := rel.Executable()
+	var bin *os.File
+	if bin, err = ioutil.TempFile(distDirname, exe); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	defer os.Remove(bin.Name())
+	defer bin.Close()
+
+	for {
+		var header *tar.Header
+		header, err = tr.Next()
+		switch err {
+		case nil:
+		case io.EOF:
+			break
+		default:
+			log.Println("[ERR]", err)
+			return
+		}
+
+		if header.Typeflag == tar.TypeReg && header.Name == rel.Name {
+			if _, err = io.Copy(bin, tr); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
+			break
+		}
+	}
 
 	sum := hex.EncodeToString(hash.Sum(nil))
-	log.Printf("[NFO] checksumed: %s", sum)
+	log.Printf("[NFO] checksumed %s", sum)
 	log.Printf("[NFO] fetching checksum from %s", sumsURL)
 	fmt.Println("Fetching checksum...")
-	latestSum, err := rel.fetchLatestSum(sumsURL)
+	latestSum, err := rel.fetchLatestSum(sumsURL, exe)
 	if err != nil {
 		return
 	}
@@ -127,14 +167,17 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 		return
 	}
 
-	dst, err := exec.LookPath(os.Args[0])
-	if err != nil {
+	log.Println("[NFO] replacing", dst)
+	fmt.Println("Replacing", dst)
+	if err = bin.Chmod(os.FileMode(0744)); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Println("[NFO] replacing", dst)
-	fmt.Println("Replacing", dst)
-	err = os.Rename(updateID, dst)
+	if err = os.Rename(bin.Name(), dst); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	err = nil
 	return
 }
 
@@ -144,6 +187,14 @@ func (rel *GithubRelease) Executable() (exe string) {
 		exe += ".exe"
 	}
 	return
+}
+
+func (rel *GithubRelease) archive() string {
+	name := rel.Name + "-" + unameS(runtime.GOOS) + "-" + unameM(runtime.GOARCH)
+	if runtime.GOOS == "windows" {
+		return name + ".zip"
+	}
+	return name + ".tar.gz"
 }
 
 // Sync with https://github.com/mitchellh/gox/pull/103
@@ -173,7 +224,7 @@ func unameM(arch string) string {
 	}[arch]
 }
 
-func (rel *GithubRelease) fetchLatestSum(URL string) (sum string, err error) {
+func (rel *GithubRelease) fetchLatestSum(URL, exe string) (sum string, err error) {
 	resp, err := rel.Client.Get(URL)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -187,22 +238,24 @@ func (rel *GithubRelease) fetchLatestSum(URL string) (sum string, err error) {
 		return
 	}
 
-	line, err := ioutil.ReadAll(resp.Body)
+	contents, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
-	if len(line) > 64 {
-		sum = string(line[:64])
-		log.Printf("[NFO] got checksum: %s", sum)
-		return
+	for _, line := range strings.Split(string(contents), "\n") {
+		if strings.Contains(line, exe) {
+			sum = line[:64]
+			log.Printf("[NFO] expecting checksum %q", sum)
+			return
+		}
 	}
-	err = fmt.Errorf("no checksum in %s", line)
+	err = fmt.Errorf("no checksum in %q", contents)
 	log.Println("[ERR]", err)
 	return
 }
 
 func newStatusError(expectedCode int, got string) error {
-	return fmt.Errorf("expected status %d but got '%v'", expectedCode, got)
+	return fmt.Errorf("expected status %d but got %q", expectedCode, got)
 }

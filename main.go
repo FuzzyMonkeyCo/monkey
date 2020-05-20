@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -177,15 +176,15 @@ func actualMain() int {
 	}
 
 	if args.Seed != "" {
-		err := errors.New("--seed=SEED isn't implemented yet.")
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
+		msg := "--seed=SEED isn't implemented yet."
+		log.Println("[ERR]", msg)
+		as.ColorERR.Println(msg)
 		return code.Failed
 	}
 	if args.Shrink != "" {
-		err := errors.New("--shrink=ID isn't implemented yet.")
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
+		msg := "--shrink=ID isn't implemented yet."
+		log.Println("[ERR]", msg)
+		as.ColorERR.Println(msg)
 		return code.Failed
 	}
 
@@ -264,7 +263,9 @@ func doUpdate() int {
 	if latest != binVersion {
 		fmt.Println("A version newer than", binVersion, "is out:", latest)
 		if err := rel.ReplaceCurrentRelease(latest); err != nil {
-			fmt.Println("The update failed 🙈 please try again")
+			as.ColorERR.Println("The update failed 🙈 please try again later")
+			const latest = "https://github.com/" + githubSlug + "/releases/latest"
+			fmt.Println("You can always upgrade from", latest)
 			return code.FailedUpdate
 		}
 	}
