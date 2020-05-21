@@ -56,16 +56,6 @@ func (s *Shell) ExecReset(ctx context.Context, only bool) error {
 
 	if !s.isNotFirstRun {
 		s.isNotFirstRun = true
-
-		// FIXME? should this be only in ExecReset
-		if _, err := os.Stat(s.shell()); os.IsNotExist(err) {
-			err = fmt.Errorf("shell %s is required", s.shell())
-			log.Println("[ERR]", err)
-			return err
-		}
-		if err := s.snapEnv(ctx, cwid.EnvFile()); err != nil {
-			return err
-		}
 	}
 
 	return s.exec(ctx, cmds)
@@ -82,7 +72,11 @@ func (s *Shell) Terminate(ctx context.Context, only bool) error {
 		return nil
 	}
 	// TODO: maybe run s.Stop
-	return os.Remove(cwid.EnvFile())
+	if err := os.Remove(cwid.EnvFile()); err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+	return nil
 }
 
 func (s *Shell) commands() (cmds string, err error) {
@@ -130,8 +124,26 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, timeoutLong)
 	defer cancel()
 
+	envFile := cwid.EnvFile()
+	var fi os.FileInfo
+	if fi, err = os.Stat(envFile); err != nil {
+		if !os.IsNotExist(err) {
+			log.Println("[ERR]", err)
+			return
+		}
+		if err = s.snapEnv(ctx, envFile); err != nil {
+			return
+		}
+		if fi, err = os.Stat(envFile); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+	}
+	originalMTime := fi.ModTime()
+
 	var script bytes.Buffer
-	fmt.Fprintln(&script, "source", cwid.EnvFile(), ">/dev/null 2>&1")
+	fmt.Fprintln(&script, "")
+	fmt.Fprintln(&script, "source", envFile, ">/dev/null 2>&1")
 	fmt.Fprintln(&script, "set -o errexit")
 	fmt.Fprintln(&script, "set -o errtrace")
 	fmt.Fprintln(&script, "set -o nounset")
@@ -143,7 +155,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	fmt.Fprintln(&script, "set +o nounset")
 	fmt.Fprintln(&script, "set +o errtrace")
 	fmt.Fprintln(&script, "set +o errexit")
-	fmt.Fprintln(&script, "declare -p >", cwid.EnvFile())
+	fmt.Fprintln(&script, "declare -p >", envFile)
 
 	var stderr, stdout bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
@@ -151,10 +163,9 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	exe.Stdout = &stdout //FIXME: plug Progresser here
 	exe.Stderr = &stderr //FIXME: plug Progresser here
 	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
-	log.Println("[NFO] make sure to run code that uses `exec` in a (subshell) :-)")
-	start := time.Now()
 
 	ch := make(chan error)
+	start := time.Now()
 	// https://github.com/golang/go/issues/18874
 	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
 	// Workaround: race for ctx.Done()
@@ -184,6 +195,18 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	}
 	log.Printf("[NFO] STDOUT: %q", stdout.String())
 	log.Printf("[NFO] STDERR: %q", stderr.String())
+
+	if fi, err = os.Stat(envFile); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	if fi.ModTime() == originalMTime {
+		err = errors.New("make sure to run code that uses `exec` in a (subshell): script did not run to completion")
+		log.Println("[ERR]", err)
+		return
+	}
+
+	// Whole script ran without error
 	return
 }
 
