@@ -148,11 +148,13 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	exe.Stdout = &stdout //FIXME: plug Progresser here
 	exe.Stderr = &stderr //FIXME: plug Progresser here
 	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
+	log.Println("[NFO] make sure to run code that uses `exec` in a (subshell) :-)")
+	start := time.Now()
 
 	ch := make(chan error)
 	// https://github.com/golang/go/issues/18874
 	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
-	// Racing for ctx.Done() is a workaround to ^
+	// Workaround: race for ctx.Done()
 	if err = exe.Start(); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -170,6 +172,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 			return
 		}
 	}
+	log.Printf("[NFO] exec'd in %s", time.Since(start))
 	if err != nil {
 		// TODO: mux stderr+stdout and fwd to server to track progress
 		reason := stderr.String() + "\n" + err.Error()

@@ -28,10 +28,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 		return
 	}
 
-	log.Printf("[NFO] call input: %.200v", msg.GetInput())
+	log.Printf("[NFO] call input: %.999v", msg.GetInput())
 	cllr.Do(ctx)
 	output := cllr.ToProto()
-	log.Printf("[NFO] call output: %.200v", output)
+	log.Printf("[NFO] call output: %.999v", output)
 
 	select {
 	case <-time.After(txTimeout):
