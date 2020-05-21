@@ -45,7 +45,8 @@ func (s *Shell) ExecStart(ctx context.Context, only bool) error {
 // ExecReset TODO
 func (s *Shell) ExecReset(ctx context.Context, only bool) error {
 	if only {
-		return s.exec(ctx, s.Rst)
+		// Makes $ monkey exec reset run as if in between tests
+		s.isNotFirstRun = true
 	}
 
 	cmds, err := s.commands()
@@ -55,6 +56,8 @@ func (s *Shell) ExecReset(ctx context.Context, only bool) error {
 
 	if !s.isNotFirstRun {
 		s.isNotFirstRun = true
+
+		// FIXME? should this be only in ExecReset
 		if _, err := os.Stat(s.shell()); os.IsNotExist(err) {
 			err = fmt.Errorf("shell %s is required", s.shell())
 			log.Println("[ERR]", err)
