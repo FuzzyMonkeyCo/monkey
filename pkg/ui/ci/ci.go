@@ -33,19 +33,23 @@ func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format
 func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format, s...) }
 
 func (p *Progresser) ChecksPassed() {
-	as.ColorNFO.Println(" Checks passed.")
+	as.ColorOK.Println("PASSED CHECKS")
 }
 
 func (p *Progresser) CheckPassed(name, msg string) {
 	as.ColorOK.Printf("PASSED ")
-	as.ColorNFO.Printf("%s: ", name)
-	fmt.Println(msg)
+	as.ColorNFO.Printf("%s", name)
+	if msg != "" {
+		fmt.Printf(" (%s)\n", msg)
+	}
 }
 
 func (p *Progresser) CheckSkipped(name, msg string) {
 	as.ColorWRN.Printf("SKIPPED ")
-	as.ColorNFO.Printf("%s: ", name)
-	fmt.Println(msg)
+	as.ColorNFO.Printf("%s", name)
+	if msg != "" {
+		fmt.Printf(" (%s)\n", msg)
+	}
 }
 
 func (p *Progresser) CheckFailed(name string, ss []string) {

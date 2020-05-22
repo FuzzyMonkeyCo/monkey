@@ -241,11 +241,11 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 						switch newModelState := newModelState.(type) {
 						case starlark.NoneType:
 							v.Status = fm.Clt_CallVerifProgress_success
-							rt.progress.CheckPassed(v.Name, "")
+							rt.progress.CheckPassed(v.Name, trggr.act.String())
 						case *modelState:
 							v.Status = fm.Clt_CallVerifProgress_success
 							rt.modelState = newModelState
-							rt.progress.CheckPassed(v.Name, "")
+							rt.progress.CheckPassed(v.Name, trggr.act.String())
 						default:
 							v.Status = fm.Clt_CallVerifProgress_failure
 							err = fmt.Errorf(

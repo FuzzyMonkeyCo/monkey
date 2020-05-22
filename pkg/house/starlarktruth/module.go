@@ -159,7 +159,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 		closeness := 0
 		if c, ok := thread.Local("closeness").(int); ok {
-			thread.Print(thread, fmt.Sprintf(">>> closeness = %d", c))
+			// thread.Print(thread, fmt.Sprintf(">>> closeness = %d", c))
 			closeness = c
 		}
 		defer thread.SetLocal("closeness", 1+closeness)
