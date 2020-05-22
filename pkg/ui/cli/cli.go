@@ -75,7 +75,9 @@ func (p *Progresser) tick(offset int) {
 	p.bar.Update(p.ticks, bar.Context{bar.Ctx("state", state)})
 }
 
-func (p *Progresser) Printf(format string, s ...interface{}) { p.bar.Interruptf(format, s...) }
+func (p *Progresser) Printf(format string, s ...interface{}) {
+	p.bar.Interruptf(format, s...)
+}
 func (p *Progresser) Errorf(format string, s ...interface{}) {
 	p.bar.Interruptf("%s", as.ColorERR.Sprintf(format, s...))
 }
@@ -85,13 +87,32 @@ func (p *Progresser) nfo(s string)  { p.show(as.ColorNFO.Sprintf("%s", s)) }
 func (p *Progresser) wrn(s string)  { p.show(as.ColorWRN.Sprintf("%s", s)) }
 func (p *Progresser) err(s string)  { p.show(as.ColorERR.Sprintf("%s", s)) }
 
-func (p *Progresser) ChecksPassed() { p.nfo(" Checks passed.\n") }
+func (p *Progresser) ChecksPassed() {
+	p.nfo(" Checks passed.\n")
+}
+
 func (p *Progresser) CheckPassed(name, msg string) {
-	p.bar.Interruptf(" %s %s", as.ColorOK.Sprintf(prefixSucceeded), as.ColorNFO.Sprintf(msg))
+	if msg != "" {
+		msg = ": " + msg
+	}
+	p.bar.Interruptf(" %s %s%s",
+		as.ColorOK.Sprintf(prefixSucceeded),
+		as.ColorNFO.Sprintf(name),
+		msg,
+	)
 }
+
 func (p *Progresser) CheckSkipped(name, msg string) {
-	p.show(" " + as.ColorWRN.Sprintf(prefixSkipped) + " " + msg)
+	if msg != "" {
+		msg = ": " + msg
+	}
+	p.bar.Interruptf(" %s %s SKIPPED%s",
+		as.ColorWRN.Sprintf(prefixSkipped),
+		name,
+		msg,
+	)
 }
+
 func (p *Progresser) CheckFailed(name string, ss []string) {
 	if len(ss) > 0 {
 		p.show(" " + as.ColorERR.Sprintf(prefixFailed) + " " + as.ColorNFO.Sprintf(ss[0]))
