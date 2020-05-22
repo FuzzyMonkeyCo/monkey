@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -141,28 +142,41 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	}
 	originalMTime := fi.ModTime()
 
-	var script bytes.Buffer
-	fmt.Fprintln(&script, "")
-	fmt.Fprintln(&script, "source", envFile, ">/dev/null 2>&1")
-	fmt.Fprintln(&script, "set -o errexit")
-	fmt.Fprintln(&script, "set -o errtrace")
-	fmt.Fprintln(&script, "set -o nounset")
-	fmt.Fprintln(&script, "set -o pipefail")
-	fmt.Fprintln(&script, "set -o xtrace")
-	fmt.Fprintln(&script, cmds)
-	fmt.Fprintln(&script, "set +o xtrace")
-	fmt.Fprintln(&script, "set +o pipefail")
-	fmt.Fprintln(&script, "set +o nounset")
-	fmt.Fprintln(&script, "set +o errtrace")
-	fmt.Fprintln(&script, "set +o errexit")
-	fmt.Fprintln(&script, "declare -p >", envFile)
+	scriptFile := cwid.ScriptFile()
+	var scriptListing bytes.Buffer
+	{
+		var script *os.File
+		if script, err = os.OpenFile(scriptFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		defer script.Close()
 
-	var stderr, stdout bytes.Buffer
-	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
-	exe.Stdin = &script
-	exe.Stdout = &stdout //FIXME: plug Progresser here
-	exe.Stderr = &stderr //FIXME: plug Progresser here
-	log.Printf("[DBG] within %s $ %s", timeoutLong, script.Bytes())
+		Y := io.MultiWriter(script, &scriptListing)
+		fmt.Fprintln(Y, "source", envFile, ">/dev/null 2>&1")
+		fmt.Fprintln(Y, "set -o errexit")
+		fmt.Fprintln(Y, "set -o errtrace")
+		fmt.Fprintln(Y, "set -o nounset")
+		fmt.Fprintln(Y, "set -o pipefail")
+		fmt.Fprintln(Y, "set -o xtrace")
+		fmt.Fprintln(Y, cmds)
+		fmt.Fprintln(Y, "set +o xtrace")
+		fmt.Fprintln(Y, "set +o pipefail")
+		fmt.Fprintln(Y, "set +o nounset")
+		fmt.Fprintln(Y, "set +o errtrace")
+		fmt.Fprintln(Y, "set +o errexit")
+		fmt.Fprintln(Y, "declare -p >", envFile)
+	}
+	defer os.Remove(scriptFile)
+
+	// NOTE: if piping script to Bash and the script calls exec,
+	// even in a subshell, bash will stop execution.
+	var stderr, stdout, stdboth bytes.Buffer
+	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
+	exe.Stdin = nil
+	exe.Stdout = io.MultiWriter(&stdboth, &stdout) //FIXME: plug Progresser here
+	exe.Stderr = io.MultiWriter(&stdboth, &stderr) //FIXME: plug Progresser here
+	log.Printf("[DBG] executing script within %s:\n%s", timeoutLong, scriptListing.Bytes())
 
 	ch := make(chan error)
 	start := time.Now()
@@ -193,15 +207,21 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 		err = resetter.NewError(strings.Split(reason, "\n"))
 		return
 	}
-	log.Printf("[NFO] STDOUT: %q", stdout.String())
-	log.Printf("[NFO] STDERR: %q", stderr.String())
+
+	for i, line := range strings.Split(stderr.String(), "\n") {
+		log.Printf("[NFO] STDERR:%d: %q", i, line)
+	}
+	for i, line := range strings.Split(stdboth.String(), "\n") {
+		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
+	}
 
 	if fi, err = os.Stat(envFile); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 	if fi.ModTime() == originalMTime {
-		err = errors.New("make sure to run code that uses `exec` in a (subshell): script did not run to completion")
+		err = errors.New("make sure to run code that uses `exec` in a (subshell)")
+		err = fmt.Errorf("script did not run to completion: %v", err)
 		log.Println("[ERR]", err)
 		return
 	}
@@ -211,7 +231,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 }
 
 func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err error) {
-	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE, 0640)
+	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -226,7 +246,7 @@ func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err erro
 	exe := exec.CommandContext(ctx, s.shell(), "--", "/dev/stdin")
 	exe.Stdin = &script
 	exe.Stdout = envFile
-	log.Printf("[DBG] within %s $ %s", timeoutShort, script.Bytes())
+	log.Printf("[DBG] executing script within %s:\n%s", timeoutShort, script.Bytes())
 
 	if err = exe.Run(); err != nil {
 		log.Println("[ERR]", err)

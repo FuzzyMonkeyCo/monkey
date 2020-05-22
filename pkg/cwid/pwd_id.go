@@ -16,13 +16,9 @@ const pwdIDDigits = 20
 
 var pwdID string
 
-func EnvFile() string {
-	return pwdID + ".env"
-}
-
-func LogFile() string {
-	return pwdID + ".log"
-}
+func EnvFile() string    { return pwdID + ".env" }
+func LogFile() string    { return pwdID + ".log" }
+func ScriptFile() string { return pwdID + ".script" }
 
 func MakePwdID(name string, offset uint64) (err error) {
 	cwd, err := os.Getwd()
