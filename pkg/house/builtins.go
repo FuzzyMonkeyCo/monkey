@@ -27,13 +27,15 @@ func (rt *Runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.
 		return nil, err
 	}
 	envStr := env.GoString()
-	// FIXME: actually maybe read env from Exec shell? These shells should inherit user env anyway?
-	read, ok := os.LookupEnv(envStr)
-	if !ok {
-		return def, nil
+	if read, ok := os.LookupEnv(envStr); ok {
+		rt.envRead[envStr] = read
+		log.Printf("[NFO] read env %q: %q", envStr, read)
+		return starlark.String(read), nil
 	}
-	rt.envRead[envStr] = read
-	return starlark.String(read), nil
+	defStr := def.GoString()
+	rt.envRead[envStr] = defStr
+	log.Printf("[NFO] read (unset) env %q: %q", envStr, defStr)
+	return def, nil
 }
 
 type triggerActionAfterProbe struct {

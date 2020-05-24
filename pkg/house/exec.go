@@ -42,6 +42,7 @@ func (rt *Runtime) JustExecStart() error {
 	}
 
 	resetter := mdl.GetResetter()
+	resetter.Env(rt.envRead)
 	return resetter.ExecStart(context.Background(), true)
 }
 
@@ -54,6 +55,7 @@ func (rt *Runtime) JustExecReset() error {
 	}
 
 	resetter := mdl.GetResetter()
+	resetter.Env(rt.envRead)
 	return resetter.ExecReset(context.Background(), true)
 }
 
@@ -66,5 +68,6 @@ func (rt *Runtime) JustExecStop() error {
 	}
 
 	resetter := mdl.GetResetter()
+	resetter.Env(rt.envRead)
 	return resetter.ExecStop(context.Background(), true)
 }

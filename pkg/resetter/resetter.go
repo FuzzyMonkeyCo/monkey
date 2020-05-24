@@ -12,6 +12,8 @@ import (
 type Interface interface {
 	ToProto() *fm.Clt_Fuzz_Resetter
 
+	Env(read map[string]string)
+
 	ExecStart(context.Context, bool) error
 	ExecReset(context.Context, bool) error
 	ExecStop(context.Context, bool) error
