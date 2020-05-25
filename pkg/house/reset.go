@@ -14,6 +14,8 @@ import (
 )
 
 func (rt *Runtime) reset(ctx context.Context) (err error) {
+	rt.progress.Printf("Resetting system under test...\n")
+
 	select {
 	case <-time.After(txTimeout):
 		err = errTXTimeout

@@ -27,7 +27,10 @@ var _ resetter.Interface = (*Shell)(nil)
 // Shell implements resetter.Interface
 type Shell struct {
 	fm.Clt_Fuzz_Resetter_Shell
+
 	isNotFirstRun bool
+
+	setReadonlyEnvs func(Y io.Writer)
 }
 
 // ToProto TODO
@@ -36,6 +39,15 @@ func (s *Shell) ToProto() *fm.Clt_Fuzz_Resetter {
 		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
 			Shell: &s.Clt_Fuzz_Resetter_Shell,
 		}}
+}
+
+// Env TODO
+func (s *Shell) Env(read map[string]string) {
+	s.setReadonlyEnvs = func(Y io.Writer) {
+		for k, v := range read {
+			fmt.Fprintf(Y, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
+		}
+	}
 }
 
 // ExecStart TODO
@@ -132,6 +144,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 			log.Println("[ERR]", err)
 			return
 		}
+
 		if err = s.snapEnv(ctx, envFile); err != nil {
 			return
 		}
@@ -153,6 +166,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 		defer script.Close()
 
 		Y := io.MultiWriter(script, &scriptListing)
+		s.setReadonlyEnvs(Y)
 		fmt.Fprintln(Y, "source", envFile, ">/dev/null 2>&1")
 		fmt.Fprintln(Y, "set -o errexit")
 		fmt.Fprintln(Y, "set -o errtrace")

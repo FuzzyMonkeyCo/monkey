@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/house/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/gogo/protobuf/types"
@@ -441,7 +442,7 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 		m.tcap.httpReq.Header.Add("Authorization", authz)
 	}
 
-	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value("UserAgent").(string))
+	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
 
 	if host := m.Host; host != "" {
 		configured, err := url.ParseRequestURI(host)

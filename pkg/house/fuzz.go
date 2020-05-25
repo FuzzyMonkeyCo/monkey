@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/house/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/ci"
@@ -28,6 +29,7 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	rt.progress.MaxTestsCount(10 * ntensity)
 }
 
+// Fuzz TODO
 func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {
 	ctx = metadata.AppendToOutgoingContext(ctx,
 		"ua", rt.binTitle,
@@ -43,10 +45,12 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	for _, mdl = range rt.models {
 		break
 	}
+	resetter := mdl.GetResetter()
+	resetter.Env(rt.envRead)
 
 	rt.newProgress(ctx, ntensity)
 	// Pass user agent down to caller
-	ctx = context.WithValue(ctx, "UserAgent", rt.binTitle)
+	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
 	select {
@@ -60,7 +64,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 				Model:     mdl.ToProto(),
 				ModelKind: fm.Clt_Fuzz_OpenAPIv3,
 				Ntensity:  ntensity,
-				Resetter:  mdl.GetResetter().ToProto(),
+				Resetter:  resetter.ToProto(),
 				// FIXME: seeding
 				Seed:  []byte{42, 42, 42},
 				Tags:  rt.tags,
