@@ -19,7 +19,12 @@ import (
 )
 
 func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
-	if rt.logLevel != 0 {
+	envSetAndNonEmpty := func(key string) bool {
+		val, ok := os.LookupEnv(key)
+		return ok && len(val) != 0
+	}
+
+	if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
 		rt.progress = &ci.Progresser{}
 	} else {
 		rt.progress = &cli.Progresser{}

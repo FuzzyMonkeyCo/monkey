@@ -86,6 +86,9 @@ func (s *Shell) Terminate(ctx context.Context, only bool) error {
 	}
 	// TODO: maybe run s.Stop
 	if err := os.Remove(cwid.EnvFile()); err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
 		log.Println("[ERR]", err)
 		return err
 	}
