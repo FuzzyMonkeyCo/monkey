@@ -26,6 +26,9 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 
 	if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
 		rt.progress = &ci.Progresser{}
+		if rt.logLevel == 0 {
+			rt.logLevel = 3 // lowest level: DBG
+		}
 	} else {
 		rt.progress = &cli.Progresser{}
 	}
