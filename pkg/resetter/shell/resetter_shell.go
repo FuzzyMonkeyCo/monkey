@@ -81,16 +81,12 @@ func (s *Shell) ExecStop(ctx context.Context, only bool) error {
 
 // Terminate cleans up after resetter
 func (s *Shell) Terminate(ctx context.Context, only bool) error {
-	if only {
-		return nil
-	}
 	// TODO: maybe run s.Stop
 	if err := os.Remove(cwid.EnvFile()); err != nil {
-		if os.IsNotExist(err) {
-			return nil
+		if !os.IsNotExist(err) {
+			log.Println("[ERR]", err)
+			return err
 		}
-		log.Println("[ERR]", err)
-		return err
 	}
 	return nil
 }
