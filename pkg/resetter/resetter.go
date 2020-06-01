@@ -43,6 +43,8 @@ func (re *Error) Reason() []string {
 
 // Error returns the error string
 func (re *Error) Error() string {
-	return fmt.Sprintf("script failed during Reset:\n%s",
-		strings.Join(re.bt, "\n"))
+	return fmt.Sprintf(
+		"\nscript failed during Reset:\n%s",
+		strings.Join(re.bt, "\n"),
+	)
 }

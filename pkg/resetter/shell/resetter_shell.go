@@ -184,11 +184,11 @@ func (s *Shell) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cm
 
 	// NOTE: if piping script to Bash and the script calls exec,
 	// even in a subshell, bash will stop execution.
-	var stdboth, errbuf bytes.Buffer
+	var stdboth bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
 	exe.Stdin = nil
 	exe.Stdout = io.MultiWriter(&stdboth, stdout)
-	exe.Stderr = io.MultiWriter(&stdboth, stderr, &errbuf)
+	exe.Stderr = io.MultiWriter(&stdboth, stderr)
 	log.Printf("[DBG] executing script within %s:\n%s", timeoutLong, scriptListing.Bytes())
 
 	ch := make(chan error)
@@ -215,15 +215,12 @@ func (s *Shell) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cm
 	}
 	log.Printf("[NFO] exec'd in %s", time.Since(start))
 	if err != nil {
-		reason := errbuf.String() + "\n" + err.Error()
+		reason := stdboth.String() + "\n" + err.Error()
 		err = resetter.NewError(strings.Split(reason, "\n"))
 		return
 	}
 
-	for i, line := range strings.Split(errbuf.String(), "\n") {
-		log.Printf("[NFO] STDERR:%d: %q", i, line)
-	}
-	for i, line := range strings.Split(stdboth.String(), "\n") {
+	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
 	}
 
