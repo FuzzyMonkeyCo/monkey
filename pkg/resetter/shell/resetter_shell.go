@@ -51,12 +51,12 @@ func (s *Shell) Env(read map[string]string) {
 }
 
 // ExecStart TODO
-func (s *Shell) ExecStart(ctx context.Context, only bool) error {
-	return s.exec(ctx, s.Start)
+func (s *Shell) ExecStart(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
+	return s.exec(ctx, stdout, stderr, s.Start)
 }
 
 // ExecReset TODO
-func (s *Shell) ExecReset(ctx context.Context, only bool) error {
+func (s *Shell) ExecReset(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
 	if only {
 		// Makes $ monkey exec reset run as if in between tests
 		s.isNotFirstRun = true
@@ -71,12 +71,12 @@ func (s *Shell) ExecReset(ctx context.Context, only bool) error {
 		s.isNotFirstRun = true
 	}
 
-	return s.exec(ctx, cmds)
+	return s.exec(ctx, stdout, stderr, cmds)
 }
 
 // ExecStop TODO
-func (s *Shell) ExecStop(ctx context.Context, only bool) error {
-	return s.exec(ctx, s.Stop)
+func (s *Shell) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
+	return s.exec(ctx, stdout, stderr, s.Stop)
 }
 
 // Terminate cleans up after resetter
@@ -127,7 +127,7 @@ func (s *Shell) commands() (cmds string, err error) {
 	}
 }
 
-func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
+func (s *Shell) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cmds string) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
 		return
@@ -184,11 +184,11 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 
 	// NOTE: if piping script to Bash and the script calls exec,
 	// even in a subshell, bash will stop execution.
-	var stderr, stdout, stdboth bytes.Buffer
+	var stdboth, errbuf bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
 	exe.Stdin = nil
-	exe.Stdout = io.MultiWriter(&stdboth, &stdout) //FIXME: plug Progresser here
-	exe.Stderr = io.MultiWriter(&stdboth, &stderr) //FIXME: plug Progresser here
+	exe.Stdout = io.MultiWriter(&stdboth, stdout)
+	exe.Stderr = io.MultiWriter(&stdboth, stderr, &errbuf)
 	log.Printf("[DBG] executing script within %s:\n%s", timeoutLong, scriptListing.Bytes())
 
 	ch := make(chan error)
@@ -215,13 +215,12 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	}
 	log.Printf("[NFO] exec'd in %s", time.Since(start))
 	if err != nil {
-		// TODO: mux stderr+stdout and fwd to server to track progress
-		reason := stderr.String() + "\n" + err.Error()
+		reason := errbuf.String() + "\n" + err.Error()
 		err = resetter.NewError(strings.Split(reason, "\n"))
 		return
 	}
 
-	for i, line := range strings.Split(stderr.String(), "\n") {
+	for i, line := range strings.Split(errbuf.String(), "\n") {
 		log.Printf("[NFO] STDERR:%d: %q", i, line)
 	}
 	for i, line := range strings.Split(stdboth.String(), "\n") {

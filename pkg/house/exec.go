@@ -3,6 +3,7 @@ package house
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/house/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -43,10 +44,10 @@ func (rt *Runtime) JustExecStart() error {
 
 	resetter := mdl.GetResetter()
 	resetter.Env(rt.envRead)
-	return resetter.ExecStart(context.Background(), true)
+	return resetter.ExecStart(context.Background(), os.Stdout, os.Stderr, true)
 }
 
-// JustExecReset only executes SUT 'reset'
+// JustExecReset only executes SUT 'reset' which may be 'stop' followed by 'start'
 func (rt *Runtime) JustExecReset() error {
 	// FIXME: require a model name
 	var mdl modeler.Interface
@@ -56,7 +57,7 @@ func (rt *Runtime) JustExecReset() error {
 
 	resetter := mdl.GetResetter()
 	resetter.Env(rt.envRead)
-	return resetter.ExecReset(context.Background(), true)
+	return resetter.ExecReset(context.Background(), os.Stdout, os.Stderr, true)
 }
 
 // JustExecStop only executes SUT 'stop'
@@ -69,5 +70,5 @@ func (rt *Runtime) JustExecStop() error {
 
 	resetter := mdl.GetResetter()
 	resetter.Env(rt.envRead)
-	return resetter.ExecStop(context.Background(), true)
+	return resetter.ExecStop(context.Background(), os.Stdout, os.Stderr, true)
 }

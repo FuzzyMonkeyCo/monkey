@@ -3,6 +3,7 @@ package resetter
 import (
 	"context"
 	"fmt"
+	"io"
 	"strings"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -14,32 +15,33 @@ type Interface interface {
 
 	Env(read map[string]string)
 
-	ExecStart(context.Context, bool) error
-	ExecReset(context.Context, bool) error
-	ExecStop(context.Context, bool) error
+	ExecStart(context.Context, io.Writer, io.Writer, bool) error
+	ExecReset(context.Context, io.Writer, io.Writer, bool) error
+	ExecStop(context.Context, io.Writer, io.Writer, bool) error
 
 	Terminate(context.Context, bool) error
 }
 
 var _ error = (*Error)(nil)
 
-// Error TODO
+// Error describes a resetter error
 type Error struct {
 	bt []string
 }
 
-// NewError TODO
+// NewError returns a new empty resetter.Error
 func NewError(bt []string) *Error {
 	return &Error{
 		bt: bt,
 	}
 }
 
+// Reason describes the error on multiple lines
 func (re *Error) Reason() []string {
 	return re.bt
 }
 
-// Error TODO
+// Error returns the error string
 func (re *Error) Error() string {
 	return fmt.Sprintf("script failed during Reset:\n%s",
 		strings.Join(re.bt, "\n"))
