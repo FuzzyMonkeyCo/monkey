@@ -1,4 +1,4 @@
-package modeler_openapiv3
+package openapiv3
 
 import (
 	"fmt"
