@@ -14,9 +14,9 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/house"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	"github.com/hashicorp/logutils"
 )
@@ -91,7 +91,7 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
-	rt, err := house.NewMonkey(binTitle, args.Tags, args.Verbosity)
+	mrt, err := rt.NewMonkey(binTitle, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -117,7 +117,7 @@ func actualMain() int {
 	}()
 
 	// Always lint
-	if err := rt.Lint(ctx, args.ShowSpec); err != nil {
+	if err := mrt.Lint(ctx, args.ShowSpec); err != nil {
 		as.ColorERR.Println(err)
 		return code.FailedLint
 	}
@@ -132,13 +132,13 @@ func actualMain() int {
 		var fn func() error
 		switch {
 		case args.Start:
-			fn = rt.JustExecStart
+			fn = mrt.JustExecStart
 		case args.Reset:
-			fn = rt.JustExecReset
+			fn = mrt.JustExecReset
 		case args.Stop:
-			fn = rt.JustExecStop
+			fn = mrt.JustExecStop
 		case args.Repl:
-			fn = rt.JustExecREPL
+			fn = mrt.JustExecREPL
 		}
 		if err := fn(); err != nil {
 			as.ColorERR.Println(err)
@@ -150,7 +150,7 @@ func actualMain() int {
 	if args.Schema {
 		ref := args.ValidateAgainst
 		if ref == "" {
-			rt.WriteAbsoluteReferences(os.Stdout)
+			mrt.WriteAbsoluteReferences(os.Stdout)
 			return code.OK
 		}
 
@@ -160,12 +160,12 @@ func actualMain() int {
 			return code.FailedSchema
 		}
 
-		if err := rt.ValidateAgainstSchema(ref, data); err != nil {
+		if err := mrt.ValidateAgainstSchema(ref, data); err != nil {
 			switch err {
 			case modeler.ErrUnparsablePayload:
 			case modeler.ErrNoSuchSchema:
 				as.ColorERR.Printf("No such $ref '%s'\n", ref)
-				rt.WriteAbsoluteReferences(os.Stdout)
+				mrt.WriteAbsoluteReferences(os.Stdout)
 			default:
 				as.ColorERR.Println(err)
 			}
@@ -196,14 +196,14 @@ func actualMain() int {
 		return code.Failed
 	}
 
-	as.ColorNFO.Printf("%d named schemas\n", rt.InputsCount())
-	if err = rt.FilterEndpoints(os.Args); err != nil {
+	as.ColorNFO.Printf("%d named schemas\n", mrt.InputsCount())
+	if err = mrt.FilterEndpoints(os.Args); err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = rt.Fuzz(ctx, args.N, apiKey)
+	err = mrt.Fuzz(ctx, args.N, apiKey)
 	log.Println("[ERR]", err)
 	if ctx.Err() == context.Canceled {
 		as.ColorERR.Println("Testing interrupted.")
@@ -213,9 +213,9 @@ func actualMain() int {
 	case *resetter.Error:
 		as.ColorERR.Println(err)
 		return code.FailedExec
-	case *house.TestingCampaingSuccess:
+	case *rt.TestingCampaingSuccess:
 		return code.OK
-	case *house.TestingCampaingFailure:
+	case *rt.TestingCampaingFailure:
 		return code.FailedFuzz
 	}
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
