@@ -4,15 +4,37 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
 )
 
 const txTimeout = 10 * time.Second
 
 var errTXTimeout = fmt.Errorf("gRPC snd/rcv after %s", txTimeout)
+
+func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
+	envSetAndNonEmpty := func(key string) bool {
+		val, ok := os.LookupEnv(key)
+		return ok && len(val) != 0
+	}
+
+	if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
+		rt.progress = &ci.Progresser{}
+		if rt.logLevel == 0 {
+			rt.logLevel = 3 // lowest level: DBG
+		}
+	} else {
+		rt.progress = &cli.Progresser{}
+	}
+	rt.testingCampaingStart = time.Now()
+	rt.progress.WithContext(ctx)
+	rt.progress.MaxTestsCount(10 * ntensity)
+}
 
 func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
@@ -48,25 +70,29 @@ func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	}
 }
 
-type testingCampaingOutcomer interface {
+// TestingCampaingOutcomer describes a testing campaing's results
+type TestingCampaingOutcomer interface {
 	error
 	isTestingCampaingOutcomer()
 }
 
-var _ testingCampaingOutcomer = (*TestingCampaingSuccess)(nil)
-var _ testingCampaingOutcomer = (*TestingCampaingFailure)(nil)
+var _ TestingCampaingOutcomer = (*TestingCampaingSuccess)(nil)
+var _ TestingCampaingOutcomer = (*TestingCampaingFailure)(nil)
 
+// TestingCampaingSuccess indicates no bug was found during fuzzing.
 type TestingCampaingSuccess struct{}
+
+// TestingCampaingFailure indicates a bug was found during fuzzing.
 type TestingCampaingFailure struct{}
 
-func (_ *TestingCampaingSuccess) Error() string { return "Found no bug" }
-func (_ *TestingCampaingFailure) Error() string { return "Found a bug" }
+func (tc *TestingCampaingSuccess) Error() string { return "Found no bug" }
+func (tc *TestingCampaingFailure) Error() string { return "Found a bug" }
 
-func (_ *TestingCampaingSuccess) isTestingCampaingOutcomer() {}
-func (_ *TestingCampaingFailure) isTestingCampaingOutcomer() {}
+func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer() {}
+func (tc *TestingCampaingFailure) isTestingCampaingOutcomer() {}
 
 // campaignSummary concludes the testing campaing and reports to the user.
-func (rt *Runtime) campaignSummary() testingCampaingOutcomer {
+func (rt *Runtime) campaignSummary() TestingCampaingOutcomer {
 	l := rt.lastFuzzProgress
 	fmt.Println()
 	fmt.Println()

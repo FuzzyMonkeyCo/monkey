@@ -11,31 +11,10 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/house/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/ci"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/ui/cli"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
-
-func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
-	envSetAndNonEmpty := func(key string) bool {
-		val, ok := os.LookupEnv(key)
-		return ok && len(val) != 0
-	}
-
-	if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
-		rt.progress = &ci.Progresser{}
-		if rt.logLevel == 0 {
-			rt.logLevel = 3 // lowest level: DBG
-		}
-	} else {
-		rt.progress = &cli.Progresser{}
-	}
-	rt.testingCampaingStart = time.Now()
-	rt.progress.WithContext(ctx)
-	rt.progress.MaxTestsCount(10 * ntensity)
-}
 
 // Fuzz TODO
 func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {

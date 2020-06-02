@@ -11,14 +11,20 @@ import (
 
 // Interface describes ways to reset the system under test to a known initial state
 type Interface interface {
+	// ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
 	ToProto() *fm.Clt_Fuzz_Resetter
 
+	// Env passes envs read during startup
 	Env(read map[string]string)
 
+	// ExecStart executes the setup phase of the System Under Test
 	ExecStart(context.Context, io.Writer, io.Writer, bool) error
+	// ExecReset resets the System Under Test to a state similar to a post-ExecStart state
 	ExecReset(context.Context, io.Writer, io.Writer, bool) error
+	// ExecStop executes the cleanup phase of the System Under Test
 	ExecStop(context.Context, io.Writer, io.Writer, bool) error
 
+	// Terminate cleans up after a resetter.Interface implementation instance
 	Terminate(context.Context, bool) error
 }
 

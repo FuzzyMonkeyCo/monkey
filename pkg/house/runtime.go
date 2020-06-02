@@ -11,13 +11,14 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/ui"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
 const localCfg = "fuzzymonkey.star"
 
+// Runtime executes commands, resets and checks against the System Under Test
 type Runtime struct {
 	binTitle string
 
@@ -37,7 +38,7 @@ type Runtime struct {
 	client *fm.Ch
 
 	logLevel             uint8
-	progress             ui.Progresser
+	progress             progresser.Interface
 	lastFuzzProgress     *fm.Srv_FuzzProgress
 	testingCampaingStart time.Time
 }
@@ -45,7 +46,7 @@ type Runtime struct {
 // NewMonkey parses and optionally pretty-prints configuration
 func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	if name == "" {
-		err = errors.New("Ook!")
+		err = errors.New("unnamed NewMonkey")
 		log.Println("[ERR]", err)
 		return
 	}

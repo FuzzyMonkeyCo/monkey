@@ -9,7 +9,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	resetter_shell "github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
 	"go.starlark.net/starlark"
 )
 
@@ -102,7 +102,7 @@ func newFromKwargs(modelerName string, r starlark.StringDict) (resetter.Interfac
 		vv starlark.String
 		t  string
 		// TODO: other Resetter.s
-		rsttr = &resetter_shell.Shell{}
+		rsttr = &shell.Resetter{}
 	)
 	t = tExecStart
 	if v, ok = r[t]; ok {
