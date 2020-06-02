@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/house/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
