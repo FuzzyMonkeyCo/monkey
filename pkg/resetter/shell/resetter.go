@@ -1,4 +1,4 @@
-package resetter_shell
+package shell
 
 import (
 	"bytes"
@@ -22,10 +22,10 @@ const (
 	timeoutLong  = 2 * time.Minute
 )
 
-var _ resetter.Interface = (*Shell)(nil)
+var _ resetter.Interface = (*Resetter)(nil)
 
-// Shell implements resetter.Interface
-type Shell struct {
+// Resetter implements resetter.Interface
+type Resetter struct {
 	fm.Clt_Fuzz_Resetter_Shell
 
 	isNotFirstRun bool
@@ -33,16 +33,16 @@ type Shell struct {
 	setReadonlyEnvs func(Y io.Writer)
 }
 
-// ToProto TODO
-func (s *Shell) ToProto() *fm.Clt_Fuzz_Resetter {
+// ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
+func (s *Resetter) ToProto() *fm.Clt_Fuzz_Resetter {
 	return &fm.Clt_Fuzz_Resetter{
 		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
 			Shell: &s.Clt_Fuzz_Resetter_Shell,
 		}}
 }
 
-// Env TODO
-func (s *Shell) Env(read map[string]string) {
+// Env passes envs read during startup
+func (s *Resetter) Env(read map[string]string) {
 	s.setReadonlyEnvs = func(Y io.Writer) {
 		for k, v := range read {
 			fmt.Fprintf(Y, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
@@ -50,13 +50,13 @@ func (s *Shell) Env(read map[string]string) {
 	}
 }
 
-// ExecStart TODO
-func (s *Shell) ExecStart(ctx context.Context, only bool) error {
-	return s.exec(ctx, s.Start)
+// ExecStart executes the setup phase of the System Under Test
+func (s *Resetter) ExecStart(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
+	return s.exec(ctx, stdout, stderr, s.Start)
 }
 
-// ExecReset TODO
-func (s *Shell) ExecReset(ctx context.Context, only bool) error {
+// ExecReset resets the System Under Test to a state similar to a post-ExecStart state
+func (s *Resetter) ExecReset(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
 	if only {
 		// Makes $ monkey exec reset run as if in between tests
 		s.isNotFirstRun = true
@@ -71,31 +71,27 @@ func (s *Shell) ExecReset(ctx context.Context, only bool) error {
 		s.isNotFirstRun = true
 	}
 
-	return s.exec(ctx, cmds)
+	return s.exec(ctx, stdout, stderr, cmds)
 }
 
-// ExecStop TODO
-func (s *Shell) ExecStop(ctx context.Context, only bool) error {
-	return s.exec(ctx, s.Stop)
+// ExecStop executes the cleanup phase of the System Under Test
+func (s *Resetter) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool) error {
+	return s.exec(ctx, stdout, stderr, s.Stop)
 }
 
-// Terminate cleans up after resetter
-func (s *Shell) Terminate(ctx context.Context, only bool) error {
-	if only {
-		return nil
-	}
+// Terminate cleans up after a resetter.Interface implementation instance
+func (s *Resetter) Terminate(ctx context.Context, only bool) error {
 	// TODO: maybe run s.Stop
 	if err := os.Remove(cwid.EnvFile()); err != nil {
-		if os.IsNotExist(err) {
-			return nil
+		if !os.IsNotExist(err) {
+			log.Println("[ERR]", err)
+			return err
 		}
-		log.Println("[ERR]", err)
-		return err
 	}
 	return nil
 }
 
-func (s *Shell) commands() (cmds string, err error) {
+func (s *Resetter) commands() (cmds string, err error) {
 	switch {
 	case len(s.Start) == 0 && len(s.Rst) != 0 && len(s.Stop) == 0:
 		log.Println("[NFO] running Shell.Rst")
@@ -131,7 +127,7 @@ func (s *Shell) commands() (cmds string, err error) {
 	}
 }
 
-func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
+func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cmds string) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
 		return
@@ -188,11 +184,11 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 
 	// NOTE: if piping script to Bash and the script calls exec,
 	// even in a subshell, bash will stop execution.
-	var stderr, stdout, stdboth bytes.Buffer
+	var stdboth bytes.Buffer
 	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
 	exe.Stdin = nil
-	exe.Stdout = io.MultiWriter(&stdboth, &stdout) //FIXME: plug Progresser here
-	exe.Stderr = io.MultiWriter(&stdboth, &stderr) //FIXME: plug Progresser here
+	exe.Stdout = io.MultiWriter(&stdboth, stdout)
+	exe.Stderr = io.MultiWriter(&stdboth, stderr)
 	log.Printf("[DBG] executing script within %s:\n%s", timeoutLong, scriptListing.Bytes())
 
 	ch := make(chan error)
@@ -219,16 +215,12 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	}
 	log.Printf("[NFO] exec'd in %s", time.Since(start))
 	if err != nil {
-		// TODO: mux stderr+stdout and fwd to server to track progress
-		reason := stderr.String() + "\n" + err.Error()
+		reason := stdboth.String() + "\n" + err.Error()
 		err = resetter.NewError(strings.Split(reason, "\n"))
 		return
 	}
 
-	for i, line := range strings.Split(stderr.String(), "\n") {
-		log.Printf("[NFO] STDERR:%d: %q", i, line)
-	}
-	for i, line := range strings.Split(stdboth.String(), "\n") {
+	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
 	}
 
@@ -247,7 +239,7 @@ func (s *Shell) exec(ctx context.Context, cmds string) (err error) {
 	return
 }
 
-func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err error) {
+func (s *Resetter) snapEnv(ctx context.Context, envSerializedPath string) (err error) {
 	envFile, err := os.OpenFile(envSerializedPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		log.Println("[ERR]", err)
@@ -274,6 +266,6 @@ func (s *Shell) snapEnv(ctx context.Context, envSerializedPath string) (err erro
 	return
 }
 
-func (s *Shell) shell() string {
+func (s *Resetter) shell() string {
 	return "/bin/bash"
 }

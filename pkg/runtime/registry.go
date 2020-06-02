@@ -1,4 +1,4 @@
-package house
+package runtime
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 	"unicode"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	modeler_openapiv3 "github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
 var registeredModelers = map[string]modeler.Interface{
-	"OpenAPIv3": (*modeler_openapiv3.T)(nil),
+	"OpenAPIv3": (*openapiv3.T)(nil),
 }
 
 func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {

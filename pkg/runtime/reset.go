@@ -1,4 +1,4 @@
-package house
+package runtime
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	resetter_shell "github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
 	"go.starlark.net/starlark"
 )
 
@@ -35,8 +35,12 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 		rsttr = mdl.GetResetter()
 		break
 	}
+
+	stdout := newProgressWriter(rt.progress.Printf)
+	stderr := newProgressWriter(rt.progress.Errorf)
+
 	start := time.Now()
-	err = rsttr.ExecReset(ctx, false)
+	err = rsttr.ExecReset(ctx, stdout, stderr, false)
 	elapsed := time.Since(start).Nanoseconds()
 	if err != nil {
 		log.Println("[ERR] ExecReset:", err)
@@ -45,8 +49,8 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 	if err != nil {
 		var reason []string
 		if resetErr, ok := err.(*resetter.Error); ok {
+			rt.progress.Errorf("Error resetting state!\n")
 			reason = resetErr.Reason()
-			rt.progress.Errorf("Error resetting state:\n%s\n", reason)
 		} else {
 			reason = strings.Split(err.Error(), "\n")
 		}
@@ -98,7 +102,7 @@ func newFromKwargs(modelerName string, r starlark.StringDict) (resetter.Interfac
 		vv starlark.String
 		t  string
 		// TODO: other Resetter.s
-		rsttr = &resetter_shell.Shell{}
+		rsttr = &shell.Resetter{}
 	)
 	t = tExecStart
 	if v, ok = r[t]; ok {
