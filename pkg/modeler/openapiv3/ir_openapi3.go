@@ -63,7 +63,8 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 	}
 	sort.Strings(paths)
 
-	for j, path := range paths {
+	i := 0
+	for _, path := range paths {
 		docOps := docPaths[path].Operations()
 		methods := make([]string, 0, len(docOps))
 		for docMethod := range docOps {
@@ -71,15 +72,25 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 		}
 		sort.Strings(methods)
 
-		for l, docMethod := range methods {
+		for _, docMethod := range methods {
+			i++
 			log.Println("[DBG] through", docMethod, path)
 			docOp := docOps[docMethod]
-			inputs := make([]*fm.ParamJSON, 0, 1+len(docOp.Parameters))
-			vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
-			vald.inputsFromOA3(&inputs, docOp.Parameters)
+			var inputs []*fm.ParamJSON
+			inputsCount := len(docOp.Parameters)
+			if docOp.RequestBody != nil {
+				inputsCount++
+			}
+			if inputsCount > 0 {
+				inputs = make([]*fm.ParamJSON, 0, inputsCount)
+				vald.inputsFromOA3(&inputs, docOp.Parameters)
+				if docOp.RequestBody != nil {
+					vald.inputBodyFromOA3(&inputs, docOp.RequestBody)
+				}
+			}
 			outputs := vald.outputsFromOA3(docOp.Responses)
 			method := methodFromOA3(docMethod)
-			vald.Spec.Endpoints[eid(1+j+l)] = &fm.Endpoint{
+			vald.Spec.Endpoints[eid(i)] = &fm.Endpoint{
 				Endpoint: &fm.Endpoint_Json{
 					Json: &fm.EndpointJSON{
 						Method:       method,
@@ -94,22 +105,20 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 }
 
 func (vald *validator) inputBodyFromOA3(inputs *[]*fm.ParamJSON, docReqBody *openapi3.RequestBodyRef) {
-	if docReqBody != nil {
-		//FIXME: handle .Ref
-		docBody := docReqBody.Value
-		for mime, ct := range docBody.Content {
-			if mime == mimeJSON {
-				docSchema := ct.Schema
-				schema := vald.schemaOrRefFromOA3(docSchema)
-				param := &fm.ParamJSON{
-					IsRequired: docBody.Required,
-					SID:        vald.ensureMapped(docSchema.Ref, schema),
-					Name:       "",
-					Kind:       fm.ParamJSON_body,
-				}
-				*inputs = append(*inputs, param)
-				return
+	//FIXME: handle .Ref
+	docBody := docReqBody.Value
+	for mime, ct := range docBody.Content {
+		if mime == mimeJSON {
+			docSchema := ct.Schema
+			schema := vald.schemaOrRefFromOA3(docSchema)
+			param := &fm.ParamJSON{
+				IsRequired: docBody.Required,
+				SID:        vald.ensureMapped(docSchema.Ref, schema),
+				Name:       "",
+				Kind:       fm.ParamJSON_body,
 			}
+			*inputs = append(*inputs, param)
+			return
 		}
 	}
 }
