@@ -31,6 +31,49 @@ func printableASCII(s string) error {
 	return nil
 }
 
+func slValueIsProtoable(value starlark.Value) (err error) {
+	switch v := value.(type) {
+	case starlark.NoneType:
+		return
+	case starlark.Bool:
+		return
+	case starlark.Int:
+		return
+	case starlark.Float:
+		return
+	case starlark.String:
+		err = printableASCII(v.GoString())
+		return
+	case *starlark.List:
+		for i := 0; i < v.Len(); i++ {
+			if err = slValueIsProtoable(v.Index(i)); err != nil {
+				return
+			}
+		}
+		return
+	case starlark.Tuple:
+		for i := 0; i < v.Len(); i++ {
+			if err = slValueIsProtoable(v.Index(i)); err != nil {
+				return
+			}
+		}
+		return
+	case *starlark.Dict:
+		for _, kv := range v.Items() {
+			if err = slValuePrintableASCII(kv.Index(0)); err != nil {
+				return
+			}
+			if err = slValueIsProtoable(kv.Index(1)); err != nil {
+				return
+			}
+		}
+		return
+	default:
+		err = fmt.Errorf("unexpected %T: %s", value, value.String())
+		return
+	}
+}
+
 func slValueFromProto(value *types.Value) (starlark.Value, error) {
 	switch value.GetKind().(type) {
 	case *types.Value_NullValue:
@@ -152,7 +195,6 @@ func slValueCopy(src starlark.Value) (dst starlark.Value, err error) {
 		dst = vs
 		return
 	default:
-		// TODO: case *starlark.Set:
 		err = fmt.Errorf("unexpected %T: %+v", src, src)
 		return
 	}

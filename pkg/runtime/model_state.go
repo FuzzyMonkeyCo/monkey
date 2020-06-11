@@ -46,6 +46,9 @@ func (s *modelState) SetKey(k, v starlark.Value) error {
 	if err := slValuePrintableASCII(k); err != nil {
 		return err
 	}
+	if err := slValueIsProtoable(v); err != nil {
+		return err
+	}
 	log.Printf("[NFO] SetKey(%.50v, %.150v)", k, v)
 	return s.d.SetKey(k, v)
 }
