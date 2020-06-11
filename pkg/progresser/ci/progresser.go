@@ -46,10 +46,10 @@ func (p *Progresser) TestCallsCount(v uint32) {}
 func (p *Progresser) CallChecksCount(v uint32) {}
 
 // Printf formats informational data
-func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format, s...) }
+func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format+"\n", s...) }
 
 // Errorf formats error messages
-func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format, s...) }
+func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format+"\n", s...) }
 
 // ChecksPassed may be called many times during testing
 func (p *Progresser) ChecksPassed() {
@@ -61,8 +61,9 @@ func (p *Progresser) CheckPassed(name, msg string) {
 	as.ColorOK.Printf("PASSED ")
 	as.ColorNFO.Printf("%s", name)
 	if msg != "" {
-		fmt.Printf(" (%s)\n", msg)
+		fmt.Printf(" (%s)", msg)
 	}
+	fmt.Println()
 }
 
 // CheckSkipped may be called many times during testing
@@ -70,8 +71,9 @@ func (p *Progresser) CheckSkipped(name, msg string) {
 	as.ColorWRN.Printf("SKIPPED ")
 	as.ColorNFO.Printf("%s", name)
 	if msg != "" {
-		fmt.Printf(" (%s)\n", msg)
+		fmt.Printf(" (%s)", msg)
 	}
+	fmt.Println()
 }
 
 // CheckFailed may be called many times during testing

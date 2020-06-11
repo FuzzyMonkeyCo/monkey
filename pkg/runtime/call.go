@@ -249,8 +249,8 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 						default:
 							v.Status = fm.Clt_CallVerifProgress_failure
 							err = fmt.Errorf(
-								"expected action %q (of %s) to return a ModelState, got: %T %v",
-								trggr.act.Name(), v.Name, newModelState, newModelState,
+								"expected action %q (of %s) to return a ModelState, got: %s",
+								trggr.act.Name(), v.Name, newModelState.Type(),
 							)
 							v.Reason = strings.Split(err.Error(), "\n")
 							log.Println("[NFO]", err)
@@ -264,11 +264,11 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 					}
 				} else {
 					v.Status = fm.Clt_CallVerifProgress_skipped
-					rt.progress.CheckSkipped(v.Name, "predicate doesn't hold")
+					rt.progress.CheckSkipped(v.Name, "") // predicate does not hold
 				}
 			} else {
 				v.Status = fm.Clt_CallVerifProgress_failure
-				err = fmt.Errorf("expected predicate to return a Bool, got: %v", shouldBeBool)
+				err = fmt.Errorf("expected predicate to return a Bool, got: %s", shouldBeBool.Type())
 				v.Reason = strings.Split(err.Error(), "\n")
 				log.Println("[NFO]", err)
 				rt.progress.CheckFailed(v.Name, v.Reason)
