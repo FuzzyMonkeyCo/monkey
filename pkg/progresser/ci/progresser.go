@@ -61,8 +61,9 @@ func (p *Progresser) CheckPassed(name, msg string) {
 	as.ColorOK.Printf("PASSED ")
 	as.ColorNFO.Printf("%s", name)
 	if msg != "" {
-		fmt.Printf(" (%s)\n", msg)
+		fmt.Printf(" (%s)", msg)
 	}
+	fmt.Println()
 }
 
 // CheckSkipped may be called many times during testing
@@ -70,8 +71,9 @@ func (p *Progresser) CheckSkipped(name, msg string) {
 	as.ColorWRN.Printf("SKIPPED ")
 	as.ColorNFO.Printf("%s", name)
 	if msg != "" {
-		fmt.Printf(" (%s)\n", msg)
+		fmt.Printf(" (%s)", msg)
 	}
+	fmt.Println()
 }
 
 // CheckFailed may be called many times during testing
