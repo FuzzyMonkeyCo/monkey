@@ -120,7 +120,14 @@ func slValueCopy(src starlark.Value) (dst starlark.Value, err error) {
 			if err = slValuePrintableASCII(k); err != nil {
 				return
 			}
-			if err = vs.SetKey(k, v); err != nil {
+			var kk, vv starlark.Value
+			if kk, err = slValueCopy(k); err != nil {
+				return
+			}
+			if vv, err = slValueCopy(v); err != nil {
+				return
+			}
+			if err = vs.SetKey(kk, vv); err != nil {
 				return
 			}
 		}
@@ -130,7 +137,15 @@ func slValueCopy(src starlark.Value) (dst starlark.Value, err error) {
 		vs := newModelState(v.Len())
 		for _, kv := range v.Items() {
 			k, v := kv.Index(0), kv.Index(1)
-			if err = vs.SetKey(k, v); err != nil {
+			var kk, vv starlark.Value
+			if kk, err = slValueCopy(k); err != nil {
+				return
+			}
+			if vv, err = slValueCopy(v); err != nil {
+				return
+			}
+			// Key is checked by custom SetKey
+			if err = vs.SetKey(kk, vv); err != nil {
 				return
 			}
 		}
