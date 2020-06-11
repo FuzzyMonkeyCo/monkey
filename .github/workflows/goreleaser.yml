@@ -13,7 +13,7 @@ jobs:
     - name: Unshallow (for CHANGELOG)
       run: git fetch --prune --unshallow
 
-    - uses: actions/setup-go@v1
+    - uses: actions/setup-go@v2
       with:
         go-version: 1.x
 
