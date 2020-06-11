@@ -264,7 +264,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 					}
 				} else {
 					v.Status = fm.Clt_CallVerifProgress_skipped
-					rt.progress.CheckSkipped(v.Name, "predicate doesn't hold")
+					rt.progress.CheckSkipped(v.Name, "") // predicate does not hold
 				}
 			} else {
 				v.Status = fm.Clt_CallVerifProgress_failure

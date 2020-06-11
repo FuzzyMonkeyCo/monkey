@@ -46,10 +46,10 @@ func (p *Progresser) TestCallsCount(v uint32) {}
 func (p *Progresser) CallChecksCount(v uint32) {}
 
 // Printf formats informational data
-func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format, s...) }
+func (p *Progresser) Printf(format string, s ...interface{}) { fmt.Printf(format+"\n", s...) }
 
 // Errorf formats error messages
-func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format, s...) }
+func (p *Progresser) Errorf(format string, s ...interface{}) { as.ColorERR.Printf(format+"\n", s...) }
 
 // ChecksPassed may be called many times during testing
 func (p *Progresser) ChecksPassed() {

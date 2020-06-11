@@ -141,6 +141,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		}
 	}
 
+	log.Println("[NFO] all finished up")
 	if err == nil || err == modeler.ErrCheckFailed {
 		err = rt.campaignSummary()
 	}
