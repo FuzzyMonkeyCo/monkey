@@ -201,7 +201,11 @@ func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 }
 
 func (c *tCapHTTP) showRequest() {
-	c.showf("%s", c.req)
+	// c.showf("%s", c.req)
+	for _, line := range bytes.Split(c.req, []byte{'\r', '\n'}) {
+		c.showf("> %s", line)
+		break
+	}
 }
 
 func (c *tCapHTTP) showResponse() {
@@ -209,7 +213,11 @@ func (c *tCapHTTP) showResponse() {
 		c.showf("HTTP error: %s\n", err.Error())
 		return
 	}
-	c.showf("%s", c.rep)
+	// c.showf("%s", c.rep)
+	for _, line := range bytes.Split(c.rep, []byte{'\r', '\n'}) {
+		c.showf("< %s", line)
+		break
+	}
 }
 
 func (c *tCapHTTP) Request() *types.Struct {

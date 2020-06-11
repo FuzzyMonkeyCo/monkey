@@ -16,7 +16,7 @@ import (
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
-		rt.progress.Printf(format, s)
+		rt.progress.Printf(format, s...)
 	}
 
 	var mdl modeler.Interface
