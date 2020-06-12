@@ -48,6 +48,11 @@ def actionAfterPosts(State, response):
     for post in response["json"]:
         # Set some state
         State["posts"][post["id"]] = post
+        # set InternalState[ [".json","|",".id"] ] :: type of resolved value
+        # use any path of response[] accessed
+        ## maximize weight of calls that trigger access to such paths (successfully?)
+        ## reuse values from paths in params of next generated calls
+        ## forget state (gradually?) (after >1k calls?) to release some memory
     print("State has {} items".format(len(State["posts"])))
     return State
 

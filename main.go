@@ -203,10 +203,8 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	if err = mrt.Fuzz(ctx, args.N, apiKey); err != nil {
-		log.Println("[ERR]", err)
-	}
-	switch ctxErr := ctx.Err(); ctxErr {
+	err = mrt.Fuzz(ctx, args.N, apiKey)
+	switch err {
 	case nil:
 	case context.Canceled:
 		as.ColorERR.Println("Testing interrupted.")
@@ -214,6 +212,8 @@ func actualMain() int {
 	case context.DeadlineExceeded:
 		as.ColorERR.Printf("Testing interrupted after %s.\n", args.BudgetTime)
 		return code.OK
+	default:
+		log.Println("[ERR]", err)
 	}
 	switch err.(type) {
 	case *resetter.Error:
