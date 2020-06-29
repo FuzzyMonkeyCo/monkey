@@ -47,8 +47,8 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 
 	for _, name := range names {
 		absRef := base + name
-		log.Printf("[DBG] pre-seeding ref '%s'", absRef)
 		refSID := vald.newSID()
+		log.Printf("[DBG] pre-seeding ref #%d %q", refSID, absRef)
 		vald.Spec.Schemas.Json[refSID] = &fm.RefOrSchemaJSON{
 			PtrOrSchema: &fm.RefOrSchemaJSON_Ptr{
 				Ptr: &fm.SchemaPtr{Ref: absRef, SID: 0}}}

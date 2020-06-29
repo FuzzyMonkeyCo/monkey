@@ -74,7 +74,7 @@ func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths
 
 		for _, docMethod := range methods {
 			i++
-			log.Println("[DBG] through", docMethod, path)
+			log.Printf("[DBG] through #%d %s %s", i, docMethod, path)
 			docOp := docOps[docMethod]
 			var inputs []*fm.ParamJSON
 			inputsCount := len(docOp.Parameters)
