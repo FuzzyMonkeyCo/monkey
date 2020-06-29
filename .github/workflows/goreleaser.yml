@@ -70,8 +70,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: goreleaser
     steps:
-    - run: echo $PATH
-    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
+    - run: echo "$PATH"
+    - run: 'while read -d: -r path; do ls -lhd "$path" || true; done <<<"$PATH"'
     - run: '! which monkey'
     - run: '! monkey help'
     - run: curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/share/rust/.cargo/bin sh -ex
@@ -83,8 +83,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: goreleaser
     steps:
-    - run: echo $PATH
-    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
+    - run: echo "$PATH"
+    - run: 'while read -d: -r path; do ls -lhd "$path" || true; done <<<"$PATH"'
     - run: '! which monkey'
     - run: '! monkey help'
     - run: curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh -ex
@@ -96,9 +96,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: goreleaser
     steps:
-    - run: echo $PATH
+    - run: echo "$PATH"
       shell: bash
-    - run: 'while read -d: -r path; do ls -lhd $path || echo $path; done <<<"$PATH"'
+    - run: 'while read -d: -r path; do ls -lhd "$path" || true; done <<<"$PATH"'
       shell: bash
     - run: '! which monkey'
       shell: bash
