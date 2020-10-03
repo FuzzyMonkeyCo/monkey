@@ -12,7 +12,7 @@ import (
 	"go.starlark.net/starlark"
 )
 
-func init() {
+func initExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
 	resolve.AllowFloat = true          // floating point

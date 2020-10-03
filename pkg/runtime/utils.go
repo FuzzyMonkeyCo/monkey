@@ -42,7 +42,6 @@ func slValueIsProtoable(value starlark.Value) (err error) {
 	case starlark.Float:
 		return
 	case starlark.String:
-		err = printableASCII(v.GoString())
 		return
 	case *starlark.List:
 		for i := 0; i < v.Len(); i++ {
@@ -59,6 +58,16 @@ func slValueIsProtoable(value starlark.Value) (err error) {
 		}
 		return
 	case *starlark.Dict:
+		for _, kv := range v.Items() {
+			if err = slValuePrintableASCII(kv.Index(0)); err != nil {
+				return
+			}
+			if err = slValueIsProtoable(kv.Index(1)); err != nil {
+				return
+			}
+		}
+		return
+	case *modelState:
 		for _, kv := range v.Items() {
 			if err = slValuePrintableASCII(kv.Index(0)); err != nil {
 				return
@@ -96,7 +105,6 @@ func slValueFromProto(value *types.Value) (starlark.Value, error) {
 		}
 		return starlark.NewList(vals), nil
 	case *types.Value_StructValue:
-		// TODO: ensure keys are strings
 		values := value.GetStructValue().GetFields()
 		vals := starlark.NewDict(len(values))
 		for key, v := range values {
