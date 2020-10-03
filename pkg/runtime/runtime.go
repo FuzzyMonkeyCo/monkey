@@ -18,6 +18,10 @@ import (
 
 const localCfg = "fuzzymonkey.star"
 
+func init() {
+	initExec()
+}
+
 // Runtime executes commands, resets and checks against the System Under Test
 type Runtime struct {
 	binTitle string
