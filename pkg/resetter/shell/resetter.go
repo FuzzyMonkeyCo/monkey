@@ -92,13 +92,18 @@ func (s *Resetter) Terminate(ctx context.Context, only bool) error {
 }
 
 func (s *Resetter) commands() (cmds string, err error) {
+	var (
+		hasStart = strings.TrimSpace(s.Start) != ""
+		hasReset = strings.TrimSpace(s.Rst) != ""
+		hasStop  = strings.TrimSpace(s.Stop) != ""
+	)
 	switch {
-	case len(s.Start) == 0 && len(s.Rst) != 0 && len(s.Stop) == 0:
+	case !hasStart && hasReset && !hasStop:
 		log.Println("[NFO] running Shell.Rst")
 		cmds = s.Rst
 		return
 
-	case len(s.Start) != 0 && len(s.Rst) != 0 && len(s.Stop) != 0:
+	case hasStart && hasReset && hasStop:
 		if s.isNotFirstRun {
 			log.Println("[NFO] running Shell.Rst")
 			cmds = s.Rst
@@ -109,7 +114,7 @@ func (s *Resetter) commands() (cmds string, err error) {
 		cmds = s.Start + "\n" + s.Rst
 		return
 
-	case len(s.Start) != 0 && len(s.Rst) == 0 && len(s.Stop) != 0:
+	case hasStart && !hasReset && hasStop:
 		if s.isNotFirstRun {
 			log.Println("[NFO] running Shell.Stop then Shell.Start")
 			cmds = s.Stop + "\n" + s.Start
