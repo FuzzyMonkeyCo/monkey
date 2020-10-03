@@ -69,7 +69,7 @@ Or simply install the [latest release from here](https://github.com/FuzzyMonkeyC
 
 ### Configuration
 
-`monkey` uses Starlark as its configuration language: a Python-like non Turing-complete language developped at Google for the Bazel build system.
+`monkey` uses Starlark as its configuration language: a simple Python-like language developped at Google for the Bazel build system.
 From [https://github.com/bazelbuild/starlark](https://github.com/bazelbuild/starlark):
 > Starlark (formerly known as Skylark) is a language intended for use as a configuration language. It was designed for the Bazel build system, but may be useful for other projects as well. [...]
 >
