@@ -93,12 +93,10 @@ func TestStarlarkValueClone(t *testing.T) {
 		},
 		"delete a value of a statedict within a statedict": {
 			value: func() starlark.Value {
-				someDict := newModelState(2)
-				// someDict := newModelState(2, nil)
+				someDict := newModelState(2, nil)
 				err := someDict.SetKey(starlark.String("key"), starlark.String("value"))
 				require.NoError(t, err)
-				someOtherDict := newModelState(3)
-				// someOtherDict := newModelState(3, nil)
+				someOtherDict := newModelState(3, nil)
 				err = someOtherDict.SetKey(starlark.String("a"), starlark.Bool(true))
 				require.NoError(t, err)
 				err = someOtherDict.SetKey(starlark.String("b"), starlark.MakeInt(42))
@@ -107,11 +105,11 @@ func TestStarlarkValueClone(t *testing.T) {
 				require.NoError(t, err)
 				err = someDict.SetKey(starlark.String("k"), someOtherDict)
 				require.NoError(t, err)
-				// t.Logf("Root statedict has nil parent")
-				// require.Nil(t, someDict.parent)
-				// t.Logf("Child statedict has root as parent")
-				// require.NotNil(t, someOtherDict.parent)
-				// require.True(t, someOtherDict.parent == someDict)
+				t.Logf("Root statedict has nil parent")
+				require.Nil(t, someDict.parent)
+				t.Logf("Child statedict has root as parent")
+				require.NotNil(t, someOtherDict.parent)
+				require.True(t, someOtherDict.parent == someDict)
 				return someDict
 			}(),
 			edit: func(v starlark.Value) {

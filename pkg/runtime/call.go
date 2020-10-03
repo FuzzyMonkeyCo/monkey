@@ -184,7 +184,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 	var response starlark.Value
 	//FIXME: replace response copies by calls to this
 	if response, err = slValueFromProto(&types.Value{
-		Kind: &types.Value_StructValue{StructValue: callResponse}}); err != nil {
+		Kind: &types.Value_StructValue{StructValue: callResponse}}, statedictCallResponse); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -235,6 +235,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 						return
 					}
 					args2 := starlark.Tuple{modelState2, response2}
+					datapaths.current = nil
 
 					var newModelState starlark.Value
 					if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err == nil {

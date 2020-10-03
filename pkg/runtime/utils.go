@@ -83,7 +83,7 @@ func slValueIsProtoable(value starlark.Value) (err error) {
 	}
 }
 
-func slValueFromProto(value *types.Value) (starlark.Value, error) {
+func slValueFromProto(value *types.Value, parent *modelState) (starlark.Value, error) {
 	switch value.GetKind().(type) {
 	case *types.Value_NullValue:
 		return starlark.None, nil
@@ -97,7 +97,7 @@ func slValueFromProto(value *types.Value) (starlark.Value, error) {
 		values := value.GetListValue().GetValues()
 		vals := make([]starlark.Value, 0, len(values))
 		for _, v := range values {
-			val, err := slValueFromProto(v)
+			val, err := slValueFromProto(v, parent)
 			if err != nil {
 				return nil, err
 			}
@@ -106,12 +106,12 @@ func slValueFromProto(value *types.Value) (starlark.Value, error) {
 		return starlark.NewList(vals), nil
 	case *types.Value_StructValue:
 		values := value.GetStructValue().GetFields()
-		vals := starlark.NewDict(len(values))
+		vals := newModelState(len(values), parent)
 		for key, v := range values {
 			if err := printableASCII(key); err != nil {
 				return nil, errors.Wrap(err, "illegal string key")
 			}
-			val, err := slValueFromProto(v)
+			val, err := slValueFromProto(v, vals)
 			if err != nil {
 				return nil, err
 			}
@@ -185,7 +185,7 @@ func slValueCopy(src starlark.Value) (dst starlark.Value, err error) {
 		dst = vs
 		return
 	case *modelState:
-		vs := newModelState(v.Len())
+		vs := newModelState(v.Len(), v.parent) //FIXME? v.parent
 		for _, kv := range v.Items() {
 			k, v := kv.Index(0), kv.Index(1)
 			var kk, vv starlark.Value

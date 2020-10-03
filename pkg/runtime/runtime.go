@@ -160,7 +160,7 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 			return
 		}
 		delete(rt.globals, tState)
-		rt.modelState = newModelState(d.Len())
+		rt.modelState = newModelState(d.Len(), statedictModel)
 		for _, kd := range d.Items() {
 			k, v := kd.Index(0), kd.Index(1)
 			// Ensure State keys are all String.s
@@ -191,7 +191,7 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 			}
 		}
 	} else {
-		rt.modelState = newModelState(0)
+		rt.modelState = newModelState(0, statedictModel)
 	}
 
 	for key := range rt.globals {

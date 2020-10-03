@@ -22,7 +22,11 @@ func initExec() {
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
 
+	// Define AssertThat
 	starlarktruth.NewModule(starlark.Universe)
+
+	// Replace dict with a JSON-friendly one
+	redefineDict(starlark.Universe)
 }
 
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
