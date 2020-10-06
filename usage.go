@@ -24,7 +24,7 @@ type params struct {
 	LogOffset                      uint64        `mapstructure:"--previous"`
 	ValidateAgainst                string        `mapstructure:"--validate-against"`
 	EnvVars                        []string      `mapstructure:"VAR"`
-	BudgetTime                     time.Duration `mapstructure:"--time-budget"`
+	OverallBudgetTime              time.Duration `mapstructure:"--time-budget-overall"`
 }
 
 func usage() (args *params, ret int) {
@@ -35,7 +35,7 @@ Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] login [--user=USER]
   ` + B + ` [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
-                     [--time-budget=DURATION]
+                     [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -49,21 +49,21 @@ Usage:
   ` + B + ` help    | --help    | -h
 
 Options:
-  -v, -vv, -vvv                  Debug verbosity level
-  version                        Show the version string
-  update                         Ensures ` + B + ` is the latest version
-  --intensity=N                  The higher the more complex the tests [default: 10]
-  --time-budget=DURATION         Stop testing after DURATION (e.g. '30s' or '5h')
-  --seed=SEED                    Use specific parameters for the Random Number Generator
-  --shrink=ID                    Which failed test to minimize
-  --tag=KV                       Labels that can help classification (format: key=value)
-  --only=REGEX                   Only test matching calls
-  --except=REGEX                 Do not test these calls
-  --calls-with-input=SCHEMA      Test calls which can take schema PTR as input
-  --calls-without-output=SCHEMA  Test calls which never output schema PTR
-  --user=USER                    Authenticate on fuzzymonkey.co as USER
-  --validate-against=REF         Schema $ref to validate STDIN against
-  --with-magic                   Auto fill in schemas from random API calls
+  -v, -vv, -vvv                   Debug verbosity level
+  version                         Show the version string
+  update                          Ensures ` + B + ` is the latest version
+  --intensity=N                   The higher the more complex the tests [default: 10]
+  --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
+  --seed=SEED                     Use specific parameters for the Random Number Generator
+  --shrink=ID                     Which failed test to minimize
+  --tag=KV                        Labels that can help classification (format: key=value)
+  --only=REGEX                    Only test matching calls
+  --except=REGEX                  Do not test these calls
+  --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
+  --calls-without-output=SCHEMA   Test calls which never output schema PTR
+  --user=USER                     Authenticate on fuzzymonkey.co as USER
+  --validate-against=REF          Schema $ref to validate STDIN against
+  --with-magic                    Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
