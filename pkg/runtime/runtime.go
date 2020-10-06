@@ -67,7 +67,7 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
-	log.Printf("[NFO] %d registered modeler(s):", len(registeredModelers))
+	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
 		log.Printf("[DBG] registered modeler: %q", modelName)
 		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {

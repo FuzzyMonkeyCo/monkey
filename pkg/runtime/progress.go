@@ -44,6 +44,8 @@ func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	case srv = <-rt.client.RcvMsg():
 	case <-time.After(txTimeout):
 		err = errTXTimeout
+	case <-ctx.Done():
+		err = ctx.Err()
 	}
 	if err != nil {
 		log.Println("[ERR]", err)

@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
@@ -42,6 +43,7 @@ func main() {
 }
 
 func actualMain() int {
+	start := time.Now()
 	args, ret := usage()
 	if args == nil {
 		return ret
@@ -76,6 +78,7 @@ func actualMain() int {
 	}
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
+	defer func() { log.Printf("[ERR] (not an error) ran for %s", time.Since(start)) }()
 
 	if args.Init || args.Login {
 		// FIXME: implement init & login
@@ -99,7 +102,7 @@ func actualMain() int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if timeout := args.BudgetTime; timeout != 0 {
+	if timeout := args.OverallBudgetTime; timeout != 0 {
 		ctx, cancel = context.WithTimeout(ctx, timeout)
 	}
 	defer cancel()
@@ -210,7 +213,7 @@ func actualMain() int {
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
-		as.ColorERR.Printf("Testing interrupted after %s.\n", args.BudgetTime)
+		as.ColorERR.Printf("Testing interrupted after %s.\n", args.OverallBudgetTime)
 		return code.OK
 	default:
 		log.Println("[ERR]", err)
