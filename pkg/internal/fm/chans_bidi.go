@@ -2,6 +2,7 @@ package fm
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
@@ -110,6 +111,10 @@ func NewCh(ctx context.Context) (*Ch, error) {
 				log.Printf("[DBG] sending %T...", r.GetMsg())
 				err := ch.clt.Send(r)
 				log.Printf("[DBG] sent! (err: %v)", err)
+				if err == io.EOF {
+					// This is usually the reason & helps provide a better message
+					err = context.DeadlineExceeded
+				}
 				ch.sndErr <- err
 			}
 		}
