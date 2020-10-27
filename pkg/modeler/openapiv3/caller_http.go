@@ -33,11 +33,16 @@ var (
 )
 
 type tCapHTTP struct {
-	showf      func(string, ...interface{})
-	req, rep   []byte
-	doErr      error
-	matchedSID sid
-	checks     []namedLambda
+	showf func(string, ...interface{})
+	rep   []byte
+	doErr error
+
+	endpointJSON    *fm.EndpointJSON
+	matchedOutputID uint32
+	matchedSID      sid
+	matchedHTTPCode bool
+
+	checks []namedLambda
 
 	httpReq  *http.Request
 	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
@@ -78,10 +83,12 @@ type tCapHTTP struct {
 }
 
 func (c *tCapHTTP) ToProto() *fm.Clt_CallResponseRaw {
-	return &fm.Clt_CallResponseRaw{Output: &fm.Clt_CallResponseRaw_Output{
-		Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
-			HttpResponse: c.repProto,
-		}}}
+	return &fm.Clt_CallResponseRaw{
+		OutputId: c.matchedOutputID,
+		Output: &fm.Clt_CallResponseRaw_Output{
+			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
+				HttpResponse: c.repProto,
+			}}}
 }
 
 type namedLambda struct {
@@ -100,7 +107,8 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 
 func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
-		showf: showf,
+		showf:        showf,
+		endpointJSON: m.vald.Spec.Endpoints[msg.GetEId()].GetJson(),
 	}
 	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
 		return nil, err
@@ -110,7 +118,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string
 		{"connection to server", m.checkConn},
 		{"code < 500", m.checkNot5XX},
 		//FIXME: when decoupling modeler/caller move these to modeler
-		{"HTTP code", m.checkHTTPCode(msg.GetEId())},
+		{"HTTP code", m.checkHTTPCode},
 		//TODO: check media type matches spec here (Content-Type: application/json)
 		{"valid JSON response", m.checkValidJSONResponse},
 		{"response validates schema", m.checkValidatesJSONSchema},
@@ -137,23 +145,14 @@ func (m *oa3) checkNot5XX() (s, skipped string, f []string) {
 	return
 }
 
-func (m *oa3) checkHTTPCode(eID uint32) modeler.CheckerFunc {
-	return func() (s, skipped string, f []string) {
-		endpoint := m.vald.Spec.Endpoints[eID].GetJson()
-		code := m.tcap.repProto.StatusCode
-		var ok bool
-		if m.tcap.matchedSID, ok = endpoint.Outputs[code]; !ok {
-			xxx := fromStatusCode(code)
-			if m.tcap.matchedSID, ok = endpoint.Outputs[xxx]; !ok {
-				if m.tcap.matchedSID, ok = endpoint.Outputs[0]; !ok {
-					f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
-					return
-				}
-			}
-		}
+func (m *oa3) checkHTTPCode() (s, skipped string, f []string) {
+	if m.tcap.matchedHTTPCode {
 		s = "HTTP code checked"
-		return
+	} else {
+		code := m.tcap.repProto.StatusCode
+		f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
 	}
+	return
 }
 
 func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
@@ -365,6 +364,22 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 			c.repJSONErr = json.Unmarshal(c.repProto.Body, &c.repJSONRaw)
 		}
 	}
+
+	func() {
+		var ok bool
+		outputID := c.repProto.StatusCode
+		if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+			outputID = fromStatusCode(outputID)
+			if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+				outputID = 0
+				if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+					return
+				}
+			}
+		}
+		c.matchedOutputID = outputID
+		c.matchedHTTPCode = true
+	}()
 
 	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
 		return
