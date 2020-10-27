@@ -18,15 +18,6 @@ const (
 	oa3ComponentsSchemas = "#/components/schemas/"
 )
 
-var xxx2uint32 = map[string]uint32{
-	"default": 0,
-	"1XX":     1,
-	"2XX":     2,
-	"3XX":     3,
-	"4XX":     4,
-	"5XX":     5,
-}
-
 func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
@@ -400,6 +391,17 @@ func pathToOA3(partials []*fm.PathPartial) (s string) {
 	}
 	return
 }
+
+var xxx2uint32 = map[string]uint32{
+	"default": 0,
+	"1XX":     1,
+	"2XX":     2,
+	"3XX":     3,
+	"4XX":     4,
+	"5XX":     5,
+}
+
+func fromStatusCode(code uint32) uint32 { return code / 100 }
 
 func makeXXXFromOA3(code string) uint32 {
 	if i, ok := xxx2uint32[code]; ok {

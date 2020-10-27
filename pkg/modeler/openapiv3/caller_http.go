@@ -143,17 +143,7 @@ func (m *oa3) checkHTTPCode(eID uint32) modeler.CheckerFunc {
 		code := m.tcap.repProto.StatusCode
 		var ok bool
 		if m.tcap.matchedSID, ok = endpoint.Outputs[code]; !ok {
-			var xxx uint32
-			switch {
-			case code < 200:
-				xxx = 1
-			case code < 300:
-				xxx = 2
-			case code < 400:
-				xxx = 3
-			case code < 500:
-				xxx = 4
-			}
+			xxx := fromStatusCode(code)
 			if m.tcap.matchedSID, ok = endpoint.Outputs[xxx]; !ok {
 				if m.tcap.matchedSID, ok = endpoint.Outputs[0]; !ok {
 					f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
