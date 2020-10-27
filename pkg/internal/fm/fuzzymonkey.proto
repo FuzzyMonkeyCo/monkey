@@ -132,6 +132,7 @@ message Clt {
       }
     }
     Output output = 1;
+    uint32 outputId = 2;
   }
 
   message CallVerifProgress {

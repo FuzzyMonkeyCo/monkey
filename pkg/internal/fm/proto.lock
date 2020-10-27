@@ -514,6 +514,11 @@
                     "id": 1,
                     "name": "output",
                     "type": "Output"
+                  },
+                  {
+                    "id": 2,
+                    "name": "outputId",
+                    "type": "uint32"
                   }
                 ],
                 "messages": [
