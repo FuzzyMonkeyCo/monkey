@@ -190,9 +190,8 @@ func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 	return
 }
 
-func (c *tCapHTTP) showRequest() {
-	// c.showf("%s", c.req)
-	for _, line := range bytes.Split(c.req, []byte{'\r', '\n'}) {
+func (c *tCapHTTP) showRequest(req []byte) {
+	for _, line := range bytes.Split(req, []byte{'\r', '\n'}) {
 		c.showf("> %s", line)
 		break
 	}
@@ -203,7 +202,6 @@ func (c *tCapHTTP) showResponse() {
 		c.showf("HTTP error: %s\n", err.Error())
 		return
 	}
-	// c.showf("%s", c.rep)
 	for _, line := range bytes.Split(c.rep, []byte{'\r', '\n'}) {
 		c.showf("< %s", line)
 		break
@@ -334,7 +332,7 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 		c.rep = []byte(e.Error())
 		return
 	}
-	c.repProto.StatusCode = uint32(r.StatusCode) // TODO: check bounds
+	c.repProto.StatusCode = uint32(r.StatusCode)
 	c.repProto.Reason = r.Status
 
 	headers := fromRepHeader(r.Header)
@@ -376,9 +374,7 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	return
 }
 
-func (c *tCapHTTP) isRepBodyEmpty() bool {
-	return c.repProto.Body == nil || len(c.repProto.Body) == 0
-}
+func (c *tCapHTTP) isRepBodyEmpty() bool { return len(c.repProto.Body) == 0 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
 	if err = c.request(req); err != nil {
@@ -464,12 +460,13 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 	//   https://github.com/moul/http2curl
 	// FIXME: info output in `curl` style with timings
 	var err error
-	if c.req, err = httputil.DumpRequestOut(c.httpReq, false); err != nil {
+	var req []byte
+	if req, err = httputil.DumpRequestOut(c.httpReq, false); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 	// TODO: move httputil.DumpRequestOut to Request() method
-	c.showRequest()
+	c.showRequest(req)
 
 	var r *http.Response
 	if r, c.doErr = (&http.Client{Transport: c}).Do(c.httpReq); c.doErr == nil {
