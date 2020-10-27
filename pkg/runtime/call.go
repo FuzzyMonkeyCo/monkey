@@ -132,7 +132,12 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err e
 
 		success, skipped, failure := lambda()
 		switch {
-		case (success != "" && skipped != "") || (success != "" && len(failure) != 0) || (skipped != "" && len(failure) != 0) || (success == "" && skipped == "" && len(failure) == 0):
+		case false,
+			success != "" && skipped != "",
+			success != "" && len(failure) != 0,
+			skipped != "" && len(failure) != 0,
+			success == "" && skipped == "" && len(failure) == 0,
+			false:
 			v.Status = fm.Clt_CallVerifProgress_failure
 			v.Reason = []string{"check result unclear"}
 			log.Println("[ERR]", v.Reason[0])
