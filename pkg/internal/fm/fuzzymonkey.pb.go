@@ -51,7 +51,7 @@ func (x Clt_Fuzz_ModelKind) String() string {
 	return proto.EnumName(Clt_Fuzz_ModelKind_name, int32(x))
 }
 func (Clt_Fuzz_ModelKind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0, 0}
 }
 
 type Clt_ResetProgress_Status int32
@@ -80,7 +80,7 @@ func (x Clt_ResetProgress_Status) String() string {
 	return proto.EnumName(Clt_ResetProgress_Status_name, int32(x))
 }
 func (Clt_ResetProgress_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 2, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 2, 0}
 }
 
 type Clt_CallVerifProgress_Status int32
@@ -115,7 +115,7 @@ func (x Clt_CallVerifProgress_Status) String() string {
 	return proto.EnumName(Clt_CallVerifProgress_Status_name, int32(x))
 }
 func (Clt_CallVerifProgress_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 5, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 5, 0}
 }
 
 type EndpointJSON_Method int32
@@ -162,7 +162,7 @@ func (x EndpointJSON_Method) String() string {
 	return proto.EnumName(EndpointJSON_Method_name, int32(x))
 }
 func (EndpointJSON_Method) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{7, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{7, 0}
 }
 
 type ParamJSON_Kind int32
@@ -197,7 +197,7 @@ func (x ParamJSON_Kind) String() string {
 	return proto.EnumName(ParamJSON_Kind_name, int32(x))
 }
 func (ParamJSON_Kind) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{8, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{8, 0}
 }
 
 type Schema_JSON_Type int32
@@ -241,7 +241,7 @@ func (x Schema_JSON_Type) String() string {
 	return proto.EnumName(Schema_JSON_Type_name, int32(x))
 }
 func (Schema_JSON_Type) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{10, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{10, 0, 0}
 }
 
 // type: string
@@ -318,7 +318,7 @@ func (x Schema_JSON_Format) String() string {
 	return proto.EnumName(Schema_JSON_Format_name, int32(x))
 }
 func (Schema_JSON_Format) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{10, 0, 1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{10, 0, 1}
 }
 
 type Clt struct {
@@ -339,7 +339,7 @@ func (m *Clt) Reset()         { *m = Clt{} }
 func (m *Clt) String() string { return proto.CompactTextString(m) }
 func (*Clt) ProtoMessage()    {}
 func (*Clt) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0}
 }
 func (m *Clt) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -619,7 +619,7 @@ func (m *Clt_Fuzz) Reset()         { *m = Clt_Fuzz{} }
 func (m *Clt_Fuzz) String() string { return proto.CompactTextString(m) }
 func (*Clt_Fuzz) ProtoMessage()    {}
 func (*Clt_Fuzz) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0}
 }
 func (m *Clt_Fuzz) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -724,7 +724,7 @@ func (m *Clt_Fuzz_Resetter) Reset()         { *m = Clt_Fuzz_Resetter{} }
 func (m *Clt_Fuzz_Resetter) String() string { return proto.CompactTextString(m) }
 func (*Clt_Fuzz_Resetter) ProtoMessage()    {}
 func (*Clt_Fuzz_Resetter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0, 0}
 }
 func (m *Clt_Fuzz_Resetter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -848,7 +848,7 @@ func (m *Clt_Fuzz_Resetter_Shell) Reset()         { *m = Clt_Fuzz_Resetter_Shell
 func (m *Clt_Fuzz_Resetter_Shell) String() string { return proto.CompactTextString(m) }
 func (*Clt_Fuzz_Resetter_Shell) ProtoMessage()    {}
 func (*Clt_Fuzz_Resetter_Shell) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0, 0, 0}
 }
 func (m *Clt_Fuzz_Resetter_Shell) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -911,7 +911,7 @@ func (m *Clt_Fuzz_Model) Reset()         { *m = Clt_Fuzz_Model{} }
 func (m *Clt_Fuzz_Model) String() string { return proto.CompactTextString(m) }
 func (*Clt_Fuzz_Model) ProtoMessage()    {}
 func (*Clt_Fuzz_Model) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0, 1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0, 1}
 }
 func (m *Clt_Fuzz_Model) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1040,7 +1040,7 @@ func (m *Clt_Fuzz_Model_OpenAPIv3) Reset()         { *m = Clt_Fuzz_Model_OpenAPI
 func (m *Clt_Fuzz_Model_OpenAPIv3) String() string { return proto.CompactTextString(m) }
 func (*Clt_Fuzz_Model_OpenAPIv3) ProtoMessage()    {}
 func (*Clt_Fuzz_Model_OpenAPIv3) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 0, 1, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 0, 1, 0}
 }
 func (m *Clt_Fuzz_Model_OpenAPIv3) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1107,7 +1107,7 @@ func (m *Clt_Metrics) Reset()         { *m = Clt_Metrics{} }
 func (m *Clt_Metrics) String() string { return proto.CompactTextString(m) }
 func (*Clt_Metrics) ProtoMessage()    {}
 func (*Clt_Metrics) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 1}
 }
 func (m *Clt_Metrics) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1149,7 +1149,7 @@ func (m *Clt_ResetProgress) Reset()         { *m = Clt_ResetProgress{} }
 func (m *Clt_ResetProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_ResetProgress) ProtoMessage()    {}
 func (*Clt_ResetProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 2}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 2}
 }
 func (m *Clt_ResetProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1210,7 +1210,7 @@ func (m *Clt_CallRequestRaw) Reset()         { *m = Clt_CallRequestRaw{} }
 func (m *Clt_CallRequestRaw) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallRequestRaw) ProtoMessage()    {}
 func (*Clt_CallRequestRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 3}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 3}
 }
 func (m *Clt_CallRequestRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1259,7 +1259,7 @@ func (m *Clt_CallRequestRaw_Input) Reset()         { *m = Clt_CallRequestRaw_Inp
 func (m *Clt_CallRequestRaw_Input) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallRequestRaw_Input) ProtoMessage()    {}
 func (*Clt_CallRequestRaw_Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 3, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 3, 0}
 }
 func (m *Clt_CallRequestRaw_Input) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1384,7 +1384,7 @@ func (m *Clt_CallRequestRaw_Input_HttpRequest) Reset()         { *m = Clt_CallRe
 func (m *Clt_CallRequestRaw_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallRequestRaw_Input_HttpRequest) ProtoMessage()    {}
 func (*Clt_CallRequestRaw_Input_HttpRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 3, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 3, 0, 0}
 }
 func (m *Clt_CallRequestRaw_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1456,7 +1456,7 @@ func (m *Clt_CallRequestRaw_Input_HttpRequest_HeaderValues) String() string {
 }
 func (*Clt_CallRequestRaw_Input_HttpRequest_HeaderValues) ProtoMessage() {}
 func (*Clt_CallRequestRaw_Input_HttpRequest_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 3, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 3, 0, 0, 0}
 }
 func (m *Clt_CallRequestRaw_Input_HttpRequest_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1504,7 +1504,7 @@ func (m *Clt_CallResponseRaw) Reset()         { *m = Clt_CallResponseRaw{} }
 func (m *Clt_CallResponseRaw) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallResponseRaw) ProtoMessage()    {}
 func (*Clt_CallResponseRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 4}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 4}
 }
 func (m *Clt_CallResponseRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1560,7 +1560,7 @@ func (m *Clt_CallResponseRaw_Output) Reset()         { *m = Clt_CallResponseRaw_
 func (m *Clt_CallResponseRaw_Output) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallResponseRaw_Output) ProtoMessage()    {}
 func (*Clt_CallResponseRaw_Output) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 4, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 4, 0}
 }
 func (m *Clt_CallResponseRaw_Output) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1689,7 +1689,7 @@ func (m *Clt_CallResponseRaw_Output_HttpResponse) Reset() {
 func (m *Clt_CallResponseRaw_Output_HttpResponse) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallResponseRaw_Output_HttpResponse) ProtoMessage()    {}
 func (*Clt_CallResponseRaw_Output_HttpResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 4, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 4, 0, 0}
 }
 func (m *Clt_CallResponseRaw_Output_HttpResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1775,7 +1775,7 @@ func (m *Clt_CallResponseRaw_Output_HttpResponse_HeaderValues) String() string {
 }
 func (*Clt_CallResponseRaw_Output_HttpResponse_HeaderValues) ProtoMessage() {}
 func (*Clt_CallResponseRaw_Output_HttpResponse_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 4, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 4, 0, 0, 0}
 }
 func (m *Clt_CallResponseRaw_Output_HttpResponse_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1826,7 +1826,7 @@ func (m *Clt_CallVerifProgress) Reset()         { *m = Clt_CallVerifProgress{} }
 func (m *Clt_CallVerifProgress) String() string { return proto.CompactTextString(m) }
 func (*Clt_CallVerifProgress) ProtoMessage()    {}
 func (*Clt_CallVerifProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{0, 5}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{0, 5}
 }
 func (m *Clt_CallVerifProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1905,7 +1905,7 @@ func (m *Srv) Reset()         { *m = Srv{} }
 func (m *Srv) String() string { return proto.CompactTextString(m) }
 func (*Srv) ProtoMessage()    {}
 func (*Srv) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1}
 }
 func (m *Srv) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2088,7 +2088,7 @@ func (m *Srv_Call) Reset()         { *m = Srv_Call{} }
 func (m *Srv_Call) String() string { return proto.CompactTextString(m) }
 func (*Srv_Call) ProtoMessage()    {}
 func (*Srv_Call) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 0}
 }
 func (m *Srv_Call) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2144,7 +2144,7 @@ func (m *Srv_Call_Input) Reset()         { *m = Srv_Call_Input{} }
 func (m *Srv_Call_Input) String() string { return proto.CompactTextString(m) }
 func (*Srv_Call_Input) ProtoMessage()    {}
 func (*Srv_Call_Input) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 0, 0}
 }
 func (m *Srv_Call_Input) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2269,7 +2269,7 @@ func (m *Srv_Call_Input_HttpRequest) Reset()         { *m = Srv_Call_Input_HttpR
 func (m *Srv_Call_Input_HttpRequest) String() string { return proto.CompactTextString(m) }
 func (*Srv_Call_Input_HttpRequest) ProtoMessage()    {}
 func (*Srv_Call_Input_HttpRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 0, 0, 0}
 }
 func (m *Srv_Call_Input_HttpRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2339,7 +2339,7 @@ func (m *Srv_Call_Input_HttpRequest_HeaderValues) Reset() {
 func (m *Srv_Call_Input_HttpRequest_HeaderValues) String() string { return proto.CompactTextString(m) }
 func (*Srv_Call_Input_HttpRequest_HeaderValues) ProtoMessage()    {}
 func (*Srv_Call_Input_HttpRequest_HeaderValues) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 0, 0, 0, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 0, 0, 0, 0}
 }
 func (m *Srv_Call_Input_HttpRequest_HeaderValues) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2385,7 +2385,7 @@ func (m *Srv_Reset) Reset()         { *m = Srv_Reset{} }
 func (m *Srv_Reset) String() string { return proto.CompactTextString(m) }
 func (*Srv_Reset) ProtoMessage()    {}
 func (*Srv_Reset) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 1}
 }
 func (m *Srv_Reset) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2437,7 +2437,7 @@ func (m *Srv_FuzzProgress) Reset()         { *m = Srv_FuzzProgress{} }
 func (m *Srv_FuzzProgress) String() string { return proto.CompactTextString(m) }
 func (*Srv_FuzzProgress) ProtoMessage()    {}
 func (*Srv_FuzzProgress) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{1, 2}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{1, 2}
 }
 func (m *Srv_FuzzProgress) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2572,7 +2572,7 @@ func (m *SpecIR) Reset()         { *m = SpecIR{} }
 func (m *SpecIR) String() string { return proto.CompactTextString(m) }
 func (*SpecIR) ProtoMessage()    {}
 func (*SpecIR) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{2}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{2}
 }
 func (m *SpecIR) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2628,7 +2628,7 @@ func (m *Schemas) Reset()         { *m = Schemas{} }
 func (m *Schemas) String() string { return proto.CompactTextString(m) }
 func (*Schemas) ProtoMessage()    {}
 func (*Schemas) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{3}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{3}
 }
 func (m *Schemas) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2678,7 +2678,7 @@ func (m *RefOrSchemaJSON) Reset()         { *m = RefOrSchemaJSON{} }
 func (m *RefOrSchemaJSON) String() string { return proto.CompactTextString(m) }
 func (*RefOrSchemaJSON) ProtoMessage()    {}
 func (*RefOrSchemaJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{4}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{4}
 }
 func (m *RefOrSchemaJSON) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2833,7 +2833,7 @@ func (m *SchemaPtr) Reset()         { *m = SchemaPtr{} }
 func (m *SchemaPtr) String() string { return proto.CompactTextString(m) }
 func (*SchemaPtr) ProtoMessage()    {}
 func (*SchemaPtr) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{5}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{5}
 }
 func (m *SchemaPtr) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -2889,7 +2889,7 @@ func (m *Endpoint) Reset()         { *m = Endpoint{} }
 func (m *Endpoint) String() string { return proto.CompactTextString(m) }
 func (*Endpoint) ProtoMessage()    {}
 func (*Endpoint) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{6}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{6}
 }
 func (m *Endpoint) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3016,7 +3016,7 @@ func (m *EndpointJSON) Reset()         { *m = EndpointJSON{} }
 func (m *EndpointJSON) String() string { return proto.CompactTextString(m) }
 func (*EndpointJSON) ProtoMessage()    {}
 func (*EndpointJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{7}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{7}
 }
 func (m *EndpointJSON) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3088,7 +3088,7 @@ func (m *ParamJSON) Reset()         { *m = ParamJSON{} }
 func (m *ParamJSON) String() string { return proto.CompactTextString(m) }
 func (*ParamJSON) ProtoMessage()    {}
 func (*ParamJSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{8}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{8}
 }
 func (m *ParamJSON) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3159,7 +3159,7 @@ func (m *PathPartial) Reset()         { *m = PathPartial{} }
 func (m *PathPartial) String() string { return proto.CompactTextString(m) }
 func (*PathPartial) ProtoMessage()    {}
 func (*PathPartial) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{9}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{9}
 }
 func (m *PathPartial) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3302,7 +3302,7 @@ func (m *Schema) Reset()         { *m = Schema{} }
 func (m *Schema) String() string { return proto.CompactTextString(m) }
 func (*Schema) ProtoMessage()    {}
 func (*Schema) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{10}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{10}
 }
 func (m *Schema) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3374,7 +3374,7 @@ func (m *Schema_JSON) Reset()         { *m = Schema_JSON{} }
 func (m *Schema_JSON) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON) ProtoMessage()    {}
 func (*Schema_JSON) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{10, 0}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{10, 0}
 }
 func (m *Schema_JSON) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -3628,7 +3628,7 @@ func (m *Schema_JSON_AdditionalProperties) Reset()         { *m = Schema_JSON_Ad
 func (m *Schema_JSON_AdditionalProperties) String() string { return proto.CompactTextString(m) }
 func (*Schema_JSON_AdditionalProperties) ProtoMessage()    {}
 func (*Schema_JSON_AdditionalProperties) Descriptor() ([]byte, []int) {
-	return fileDescriptor_fuzzymonkey_d820032d9dc3ffcb, []int{10, 0, 1}
+	return fileDescriptor_fuzzymonkey_40b1aa848f0acaa8, []int{10, 0, 1}
 }
 func (m *Schema_JSON_AdditionalProperties) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -15161,10 +15161,10 @@ var (
 )
 
 func init() {
-	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_d820032d9dc3ffcb)
+	proto.RegisterFile("pkg/internal/fm/fuzzymonkey.proto", fileDescriptor_fuzzymonkey_40b1aa848f0acaa8)
 }
 
-var fileDescriptor_fuzzymonkey_d820032d9dc3ffcb = []byte{
+var fileDescriptor_fuzzymonkey_40b1aa848f0acaa8 = []byte{
 	// 2848 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x59, 0xcd, 0x73, 0x1b, 0xc7,
 	0xb1, 0x07, 0x88, 0xef, 0x26, 0x40, 0xae, 0x46, 0xa4, 0x04, 0xad, 0x65, 0x5a, 0x86, 0xbf, 0x64,
