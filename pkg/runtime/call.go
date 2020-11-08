@@ -227,6 +227,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 
 		var shouldBeBool starlark.Value
 		//FIXME: forbid modelState mutation from pred
+		//FIXME: stack state mutations and apply after all checks, fail on conflict
 		if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err == nil {
 			if triggered, ok := shouldBeBool.(starlark.Bool); ok {
 				if triggered {
