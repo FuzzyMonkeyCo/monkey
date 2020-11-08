@@ -42,11 +42,9 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 	start := time.Now()
 	err = rsttr.ExecReset(ctx, stdout, stderr, false)
 	elapsed := time.Since(start).Nanoseconds()
-	if err != nil {
-		log.Println("[ERR] ExecReset:", err)
-	}
 
 	if err != nil {
+		log.Println("[ERR] ExecReset:", err)
 		var reason []string
 		if resetErr, ok := err.(*resetter.Error); ok {
 			rt.progress.Errorf("Error resetting state!\n")
@@ -86,7 +84,10 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
+		return
 	}
+
+	// FIXME: reset modelstate to initial state
 	return
 }
 

@@ -102,7 +102,6 @@ message Clt {
         }
         map<string, HeaderValues> headers = 3;
         bytes body = 4;
-        // same as Srv's but with timings..
       }
       oneof input {
         HttpRequest http_request = 1;
@@ -110,9 +109,6 @@ message Clt {
     }
     Input input = 1;
   }
-
-  // add http timings similar to
-  // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
 
   message CallResponseRaw {
     message Output {
@@ -126,12 +122,15 @@ message Clt {
         map<string, HeaderValues> headers = 4;
         bytes body = 5;
         int64 elapsed_ns = 6;  // TODO: finer timings (name lookup, connection, ...)
+                               // add http timings similar to
+                               // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
       }
       oneof output {
         HttpResponse http_response = 1;
       }
     }
     Output output = 1;
+    uint32 outputId = 2;
   }
 
   message CallVerifProgress {

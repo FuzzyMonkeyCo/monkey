@@ -132,7 +132,12 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err e
 
 		success, skipped, failure := lambda()
 		switch {
-		case (success != "" && skipped != "") || (success != "" && len(failure) != 0) || (skipped != "" && len(failure) != 0) || (success == "" && skipped == "" && len(failure) == 0):
+		case false,
+			success != "" && skipped != "",
+			success != "" && len(failure) != 0,
+			skipped != "" && len(failure) != 0,
+			success == "" && skipped == "" && len(failure) == 0,
+			false:
 			v.Status = fm.Clt_CallVerifProgress_failure
 			v.Reason = []string{"check result unclear"}
 			log.Println("[ERR]", v.Reason[0])
@@ -222,6 +227,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 
 		var shouldBeBool starlark.Value
 		//FIXME: forbid modelState mutation from pred
+		//FIXME: stack state mutations and apply after all checks, fail on conflict
 		if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err == nil {
 			if triggered, ok := shouldBeBool.(starlark.Bool); ok {
 				if triggered {
