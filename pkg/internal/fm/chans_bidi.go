@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/encoding/gzip"
 )
 
 // grpcHost is a var so its value may be set with -ldflags' -X
@@ -34,6 +35,9 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 	options := []grpc.DialOption{
 		grpc.WithBlock(),
 		grpc.WithTimeout(4 * time.Second), // Only for dialing
+		grpc.WithDefaultCallOptions(
+			grpc.UseCompressor(gzip.Name),
+		),
 	}
 	if !strings.HasSuffix(grpcHost, ":443") {
 		options = append(options, grpc.WithInsecure())
