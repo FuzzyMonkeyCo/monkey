@@ -362,10 +362,9 @@ message Schema {
     uint64 min_properties = 22;           // default: 0
     uint64 max_properties = 23;
     bool has_max_properties = 24;
-    /// FIXME true is equivalent to {}, false is equivalent to {"not": {}}
     message AdditionalProperties {
       oneof add_props {
-        bool always_succeed = 1;
+        bool always_succeed = 1; //TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
         uint32 SID = 2;
       }
     }
