@@ -70,10 +70,6 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
 		log.Printf("[DBG] registered modeler: %q", modelName)
-		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {
-			err = fmt.Errorf("unexpected model kind: %q", modelName)
-			return
-		}
 		builtin := rt.modelMaker(modelName, mdl.NewFromKwargs)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}

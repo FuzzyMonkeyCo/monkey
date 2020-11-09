@@ -46,16 +46,14 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	case err = <-rt.client.Snd(&fm.Clt{
 		Msg: &fm.Clt_Fuzz_{
 			Fuzz: &fm.Clt_Fuzz{
-				EIDs:      rt.eIds,
-				EnvRead:   rt.envRead,
-				Model:     mdl.ToProto(),
-				ModelKind: fm.Clt_Fuzz_OpenAPIv3,
-				Ntensity:  ntensity,
-				Resetter:  resetter.ToProto(),
-				// FIXME: seeding
-				Seed:  []byte{42, 42, 42},
-				Tags:  rt.tags,
-				Usage: os.Args,
+				EIDs:     rt.eIds,
+				EnvRead:  rt.envRead,
+				Model:    mdl.ToProto(),
+				Ntensity: ntensity,
+				Resetter: resetter.ToProto(),
+				Seed:     []byte{42, 42, 42}, //FIXME
+				Tags:     rt.tags,
+				Usage:    os.Args,
 			}}}):
 	}
 	if err != nil {

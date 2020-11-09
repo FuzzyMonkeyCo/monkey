@@ -5,18 +5,6 @@
       "def": {
         "enums": [
           {
-            "name": "Fuzz.ModelKind",
-            "enum_fields": [
-              {
-                "name": "UNKNOWN"
-              },
-              {
-                "name": "OpenAPIv3",
-                "integer": 1
-              }
-            ]
-          },
-          {
             "name": "ResetProgress.Status",
             "enum_fields": [
               {
@@ -295,32 +283,27 @@
                   },
                   {
                     "id": 2,
-                    "name": "model_kind",
-                    "type": "ModelKind"
-                  },
-                  {
-                    "id": 3,
                     "name": "model",
                     "type": "Model"
                   },
                   {
-                    "id": 4,
+                    "id": 3,
                     "name": "usage",
                     "type": "string",
                     "is_repeated": true
                   },
                   {
-                    "id": 5,
+                    "id": 4,
                     "name": "seed",
                     "type": "bytes"
                   },
                   {
-                    "id": 6,
+                    "id": 5,
                     "name": "ntensity",
                     "type": "uint32"
                   },
                   {
-                    "id": 7,
+                    "id": 6,
                     "name": "EIDs",
                     "type": "uint32",
                     "is_repeated": true
@@ -330,7 +313,7 @@
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 8,
+                      "id": 7,
                       "name": "tags",
                       "type": "string"
                     }
@@ -338,7 +321,7 @@
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 9,
+                      "id": 8,
                       "name": "env_read",
                       "type": "string"
                     }
