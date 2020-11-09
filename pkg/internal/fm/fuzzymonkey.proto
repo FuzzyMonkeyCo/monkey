@@ -12,6 +12,7 @@ option (gogoproto.marshaler_all) = true;
 option (gogoproto.unmarshaler_all) = true;
 option (gogoproto.equal_all) = true;
 
+
 service FuzzyMonkey {
   rpc Do(stream Clt) returns (stream Srv) {}
 }
