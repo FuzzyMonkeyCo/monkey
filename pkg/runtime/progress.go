@@ -36,8 +36,8 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	rt.progress.MaxTestsCount(10 * ntensity)
 }
 
-func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
-	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
+func (rt *Runtime) recvFuzzingProgress(ctx context.Context) (err error) {
+	log.Println("[DBG] receiving fm.Srv_FuzzingProgress_...")
 	var srv *fm.Srv
 	select {
 	case err = <-rt.client.RcvErr():
@@ -53,16 +53,16 @@ func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
 	}
 
 	switch srv.GetMsg().(type) {
-	case *fm.Srv_FuzzProgress_:
+	case *fm.Srv_FuzzingProgress_:
 		log.Println("[NFO] handling srvprogress")
-		stts := srv.GetFuzzProgress()
+		stts := srv.GetFuzzingProgress()
 		log.Println("[DBG] srvprogress:", stts)
 		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
 		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
 		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
 		rt.progress.TestCallsCount(stts.GetTestCallsCount())
 		rt.progress.CallChecksCount(stts.GetCallChecksCount())
-		rt.lastFuzzProgress = stts
+		rt.lastFuzzingProgress = stts
 		log.Println("[NFO] done handling srvprogress")
 		return
 	default:
@@ -95,7 +95,7 @@ func (tc *TestingCampaingFailure) isTestingCampaingOutcomer() {}
 
 // campaignSummary concludes the testing campaing and reports to the user.
 func (rt *Runtime) campaignSummary() TestingCampaingOutcomer {
-	l := rt.lastFuzzProgress
+	l := rt.lastFuzzingProgress
 	fmt.Println()
 	fmt.Println()
 	as.ColorWRN.Println(

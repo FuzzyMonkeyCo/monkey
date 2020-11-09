@@ -43,7 +43,7 @@ type Runtime struct {
 
 	logLevel             uint8
 	progress             progresser.Interface
-	lastFuzzProgress     *fm.Srv_FuzzProgress
+	lastFuzzingProgress  *fm.Srv_FuzzingProgress
 	testingCampaingStart time.Time
 }
 

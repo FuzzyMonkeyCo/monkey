@@ -114,7 +114,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 				break
 			}
 		}
-		if err2 := rt.recvFuzzProgress(ctx); err2 != nil {
+		if err2 := rt.recvFuzzingProgress(ctx); err2 != nil {
 			log.Println("[ERR]", err2)
 			if err == nil {
 				err = err2

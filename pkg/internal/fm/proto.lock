@@ -615,13 +615,13 @@
               },
               {
                 "id": 2,
-                "name": "fuzz_progress",
-                "type": "FuzzProgress"
+                "name": "reset",
+                "type": "Reset"
               },
               {
                 "id": 3,
-                "name": "reset",
-                "type": "Reset"
+                "name": "fuzzing_progress",
+                "type": "FuzzingProgress"
               }
             ],
             "messages": [
@@ -701,7 +701,7 @@
                 "name": "Reset"
               },
               {
-                "name": "FuzzProgress",
+                "name": "FuzzingProgress",
                 "fields": [
                   {
                     "id": 1,

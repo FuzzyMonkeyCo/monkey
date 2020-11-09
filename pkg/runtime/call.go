@@ -45,7 +45,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	if err = rt.recvFuzzProgress(ctx); err != nil {
+	if err = rt.recvFuzzingProgress(ctx); err != nil {
 		return
 	}
 
@@ -172,7 +172,7 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (err e
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = rt.recvFuzzProgress(ctx); err != nil {
+		if err = rt.recvFuzzingProgress(ctx); err != nil {
 			return
 		}
 
@@ -298,7 +298,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = rt.recvFuzzProgress(ctx); err != nil {
+		if err = rt.recvFuzzingProgress(ctx); err != nil {
 			return
 		}
 

@@ -165,7 +165,7 @@ message Srv {
     // bool as_final_step = 1;
   }
 
-  message FuzzProgress {
+  message FuzzingProgress {
     bool failure = 1;
     bool success = 2;
     bool last_call_failure = 3;
@@ -184,10 +184,10 @@ message Srv {
   oneof msg {
     // Try call to SUT
     Call call = 1;
-    // Testing progress & end
-    FuzzProgress fuzz_progress = 2;
     // Reset SUT state
-    Reset reset = 3;
+    Reset reset = 2;
+    // Testing progress & end
+    FuzzingProgress fuzzing_progress = 3;
   }
 }
 
