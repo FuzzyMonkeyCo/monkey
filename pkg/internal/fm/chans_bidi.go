@@ -4,16 +4,17 @@ import (
 	"context"
 	"io"
 	"log"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 )
 
+// grpcHost is a var so its value may be set with -ldflags' -X
 var grpcHost = "do.dev.fuzzymonkey.co:7077"
 
-const grpcDialTimeout = 4 * time.Second
-
-type Ch struct {
+// ChBiDi wraps a Clt<->Srv bidirectional gRPC channel
+type ChBiDi struct {
 	clt   FuzzyMonkey_DoClient
 	Close func()
 
@@ -26,119 +27,106 @@ type Ch struct {
 	ctx context.Context
 }
 
-// don't close a channel from the receiver side
-// don't close a channel if the channel has multiple concurrent senders
-
-func NewCh(ctx context.Context) (*Ch, error) {
+// NewChBiDi dials server & returns a usable ChBiDi
+func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 	log.Println("[NFO] dialing", grpcHost)
-	conn, err := grpc.DialContext(ctx, grpcHost,
+
+	options := []grpc.DialOption{
 		grpc.WithBlock(),
-		grpc.WithTimeout(grpcDialTimeout),
-		grpc.WithInsecure(),
-	)
+		grpc.WithTimeout(4 * time.Second), // Only for dialing
+	}
+	if !strings.HasSuffix(grpcHost, ":443") {
+		options = append(options, grpc.WithInsecure())
+	}
+	conn, err := grpc.DialContext(ctx, grpcHost, options...)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return nil, err
 	}
 
-	ch := &Ch{}
-	if ch.clt, err = NewFuzzyMonkeyClient(conn).Do(ctx); err != nil {
+	cbd := &ChBiDi{}
+	if cbd.clt, err = NewFuzzyMonkeyClient(conn).Do(ctx); err != nil {
 		log.Println("[ERR]", err)
 		return nil, err
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
 
-	//https://godoc.org/google.golang.org/grpc#ClientStream
-	// It is safe to have a goroutine calling SendMsg and another goroutine
-	// calling RecvMsg on the same stream at the same time, but it is not
-	// safe to call RecvMsg on the same stream in different goroutines.
-	ch.rcvMsg = make(chan *Srv)
-	ch.rcvErr = make(chan error)
+	cbd.rcvMsg = make(chan *Srv)
+	cbd.rcvErr = make(chan error)
 	go func() {
 		defer log.Println("[NFO] terminated rcv-er of Srv")
-		// defer close(ch.rcvSrv)
-		// defer close(ch.rcvErr)
-		// defer cancel()
 		for {
 			select {
 			case <-ctx.Done():
 				err := ctx.Err()
 				log.Println("[ERR]", err)
-				ch.rcvErr <- err
+				cbd.rcvErr <- err
 				return
 			default:
-				msg, err := ch.clt.Recv()
+				msg, err := cbd.clt.Recv()
 				if err != nil {
 					log.Printf("[DBG] received err: %v", err)
-					ch.rcvErr <- err
+					cbd.rcvErr <- err
 					return
 				}
 				log.Printf("[DBG] received %T", msg.GetMsg())
-				ch.rcvMsg <- msg
+				cbd.rcvMsg <- msg
 			}
 		}
 	}()
 
-	// It is safe to have a goroutine calling SendMsg and another goroutine
-	// calling RecvMsg on the same stream at the same time, but it is not safe
-	// to call SendMsg on the same stream in different goroutines. It is also
-	// not safe to call CloseSend concurrently with SendMsg.
-	ch.sndMsg = make(chan *Clt)
-	ch.sndErr = make(chan error)
+	cbd.sndMsg = make(chan *Clt)
+	cbd.sndErr = make(chan error)
 	go func() {
 		defer log.Println("[NFO] terminated snd-er of Clt")
-		// defer close(ch.sndMsg)
-		// defer close(ch.sndErr)
-		// defer func() {
-		// 	if err := ch.clt.CloseSend(); err != nil {
-		// 		log.Println("[ERR]", err)
-		// 	}
-		// }()
-		// defer cancel()
 		for {
 			select {
 			case <-ctx.Done():
 				err := ctx.Err()
 				log.Println("[ERR]", err)
-				ch.sndErr <- err
+				cbd.sndErr <- err
 				return
-			case r, ok := <-ch.sndMsg:
+			case r, ok := <-cbd.sndMsg:
 				if !ok {
 					log.Println("[DBG] sndMsg is closed!")
 					return
 				}
 				log.Printf("[DBG] sending %T...", r.GetMsg())
-				err := ch.clt.Send(r)
+				err := cbd.clt.Send(r)
 				log.Printf("[DBG] sent! (err: %v)", err)
 				if err == io.EOF {
 					// This is usually the reason & helps provide a better message
 					err = context.DeadlineExceeded
 				}
-				ch.sndErr <- err
+				cbd.sndErr <- err
 			}
 		}
 	}()
 
-	ch.Close = func() {
-		log.Println("[NFO] ch.Close()-ing...")
+	cbd.Close = func() {
+		log.Println("[NFO] Close()-ing ChBiDi...")
 		cancel()
 		if err := conn.Close(); err != nil {
 			log.Println("[ERR]", err)
 		}
 	}
-	ch.ctx = ctx
-	return ch, nil
+	cbd.ctx = ctx
+	return cbd, nil
 }
 
-func (ch *Ch) RcvMsg() <-chan *Srv  { return ch.rcvMsg }
-func (ch *Ch) RcvErr() <-chan error { return ch.rcvErr }
+// RcvMsg returns a Srv message channel
+func (cbd *ChBiDi) RcvMsg() <-chan *Srv { return cbd.rcvMsg }
 
-func (ch *Ch) Snd(msg *Clt) <-chan error {
-	if err := ch.ctx.Err(); err != nil {
+// RcvErr returns an error channel
+func (cbd *ChBiDi) RcvErr() <-chan error { return cbd.rcvErr }
+
+// Snd sends a Clt message, returning an error channel
+func (cbd *ChBiDi) Snd(msg *Clt) <-chan error {
+	if err := cbd.ctx.Err(); err != nil {
 		log.Printf("[NFO] error before sending: %v", err)
 	} else {
-		ch.sndMsg <- msg
+		cbd.sndMsg <- msg
 	}
-	return ch.sndErr
+	return cbd.sndErr
 }

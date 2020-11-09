@@ -39,7 +39,7 @@ type Runtime struct {
 
 	tags map[string]string
 
-	client *fm.Ch
+	client *fm.ChBiDi
 
 	logLevel             uint8
 	progress             progresser.Interface

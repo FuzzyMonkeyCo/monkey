@@ -23,7 +23,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		"apiKey", apiKey,
 	)
 
-	if rt.client, err = fm.NewCh(ctx); err != nil {
+	if rt.client, err = fm.NewChBiDi(ctx); err != nil {
 		return
 	}
 	defer rt.client.Close()
