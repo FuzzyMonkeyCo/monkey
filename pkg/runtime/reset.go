@@ -14,6 +14,16 @@ import (
 )
 
 func (rt *Runtime) reset(ctx context.Context) (err error) {
+	// Re-initialize model state
+	{
+		var state starlark.Value
+		if state, err = slValueCopy(rt.modelState); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		rt.modelState = state.(*modelState)
+	}
+
 	rt.progress.Printf("Resetting system under test...\n")
 
 	select {
@@ -84,10 +94,7 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
 	}
-
-	// FIXME: reset modelstate to initial state
 	return
 }
 
