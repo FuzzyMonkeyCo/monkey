@@ -14,7 +14,6 @@ import (
 )
 
 func (rt *Runtime) reset(ctx context.Context) (err error) {
-	// Re-initialize model state
 	{
 		var state starlark.Value
 		if state, err = slValueCopy(rt.modelState); err != nil {
@@ -22,6 +21,7 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 			return
 		}
 		rt.modelState = state.(*modelState)
+		log.Println("[NFO] re-initialized model state")
 	}
 
 	rt.progress.Printf("Resetting system under test...\n")
