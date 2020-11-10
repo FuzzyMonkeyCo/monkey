@@ -97,6 +97,12 @@ func (rt *Runtime) campaignSummary() TestingCampaingOutcomer {
 		return &TestingCampaingSuccess{}
 	}
 
+	if l.GetTestCallsCount() == 0 {
+		as.ColorERR.Printf("Something went wrong while resetting the system to a neutral state.")
+		as.ColorNFO.Println("No bugs found... yet.")
+		return &TestingCampaingFailure{}
+	}
+
 	as.ColorERR.Printf("A bug reproducible in %d HTTP %s was detected after %d",
 		l.GetTestCallsCount(), plural("request", l.GetTestCallsCount()), l.GetTotalTestsCount())
 	var m uint32 // FIXME: handle shrinking report
