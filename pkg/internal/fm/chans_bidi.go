@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -11,7 +12,13 @@ import (
 	"google.golang.org/grpc/encoding/gzip"
 )
 
-// grpcHost is a var so its value may be set with -ldflags' -X
+const (
+	dialTimeout = 4 * time.Second
+	rcvTimeout  = 10 * time.Second
+	sndTimeout  = 10 * time.Second
+)
+
+// grpcHost is not const so its value can be set with -ldflags
 var grpcHost = "do.dev.fuzzymonkey.co:7077"
 
 // ChBiDi wraps a Clt<->Srv bidirectional gRPC channel
@@ -24,8 +31,6 @@ type ChBiDi struct {
 
 	sndErr chan error
 	sndMsg chan *Clt
-
-	ctx context.Context
 }
 
 // NewChBiDi dials server & returns a usable ChBiDi
@@ -34,7 +39,7 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 
 	options := []grpc.DialOption{
 		grpc.WithBlock(),
-		grpc.WithTimeout(4 * time.Second), // Only for dialing
+		grpc.WithTimeout(dialTimeout),
 		grpc.WithDefaultCallOptions(
 			grpc.UseCompressor(gzip.Name),
 		),
@@ -115,22 +120,37 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 			log.Println("[ERR]", err)
 		}
 	}
-	cbd.ctx = ctx
+
 	return cbd, nil
 }
 
-// RcvMsg returns a Srv message channel
-func (cbd *ChBiDi) RcvMsg() <-chan *Srv { return cbd.rcvMsg }
-
-// RcvErr returns an error channel
-func (cbd *ChBiDi) RcvErr() <-chan error { return cbd.rcvErr }
-
-// Snd sends a Clt message, returning an error channel
-func (cbd *ChBiDi) Snd(msg *Clt) <-chan error {
-	if err := cbd.ctx.Err(); err != nil {
-		log.Printf("[NFO] error before sending: %v", err)
-	} else {
-		cbd.sndMsg <- msg
+// Receive returns a Srv message and an error
+func (cbd *ChBiDi) Receive(ctx context.Context) (msg *Srv, err error) {
+	select {
+	case <-ctx.Done():
+		err = ctx.Err()
+		return
+	default:
 	}
-	return cbd.sndErr
+	select {
+	case err = <-cbd.rcvErr:
+	case msg = <-cbd.rcvMsg:
+	case <-time.After(rcvTimeout):
+		err = os.ErrDeadlineExceeded
+	}
+	return
+}
+
+// Send sends a Clt message, returning an error
+func (cbd *ChBiDi) Send(ctx context.Context, msg *Clt) (err error) {
+	if err = ctx.Err(); err != nil {
+		return
+	}
+	cbd.sndMsg <- msg
+	select {
+	case <-time.After(sndTimeout):
+		err = os.ErrDeadlineExceeded
+	case err = <-cbd.sndErr:
+	}
+	return
 }

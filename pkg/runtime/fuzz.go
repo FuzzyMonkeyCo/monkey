@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -16,7 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Fuzz TODO
+// Fuzz runs calls, resets and live reporting
 func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {
 	ctx = metadata.AppendToOutgoingContext(ctx,
 		"ua", rt.binTitle,
@@ -40,51 +39,29 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
-	select {
-	case <-time.After(txTimeout):
-		err = errTXTimeout
-	case err = <-rt.client.Snd(&fm.Clt{
-		Msg: &fm.Clt_Fuzz_{
-			Fuzz: &fm.Clt_Fuzz{
-				EIDs:     rt.eIds,
-				EnvRead:  rt.envRead,
-				Model:    mdl.ToProto(),
-				Ntensity: ntensity,
-				Resetter: resetter.ToProto(),
-				Seed:     []byte{42, 42, 42}, //FIXME
-				Tags:     rt.tags,
-				Usage:    os.Args,
-			}}}):
-	}
-	if err != nil {
+	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
+		EIDs:     rt.eIds,
+		EnvRead:  rt.envRead,
+		Model:    mdl.ToProto(),
+		Ntensity: ntensity,
+		Resetter: resetter.ToProto(),
+		Seed:     []byte{42, 42, 42}, //FIXME
+		Tags:     rt.tags,
+		Usage:    os.Args,
+	}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
 
 	for {
-		select {
-		case <-ctx.Done():
-			err = ctx.Err()
-			log.Println("[ERR]", err)
-		default:
-		}
-		if err != nil {
-			break
-		}
-
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
-		select {
-		case err = <-rt.client.RcvErr():
-		case srv = <-rt.client.RcvMsg():
-		case <-time.After(txTimeout):
-			err = errTXTimeout
-		}
-		if err != nil {
+		if srv, err = rt.client.Receive(ctx); err != nil {
+			log.Println("[ERR]", err)
 			if err == io.EOF {
+				// Remote hang up: we're probably finished here
 				err = nil
 			}
-			log.Println("[ERR]", err)
 			break
 		}
 

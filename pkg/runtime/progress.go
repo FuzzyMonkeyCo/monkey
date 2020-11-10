@@ -13,10 +13,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
 )
 
-const txTimeout = 10 * time.Second
-
-var errTXTimeout = fmt.Errorf("gRPC snd/rcv after %s", txTimeout)
-
 func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	envSetAndNonEmpty := func(key string) bool {
 		val, ok := os.LookupEnv(key)
@@ -33,21 +29,13 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	}
 	rt.testingCampaingStart = time.Now()
 	rt.progress.WithContext(ctx)
-	rt.progress.MaxTestsCount(10 * ntensity)
+	rt.progress.MaxTestsCount(10 * ntensity) // FIXME: learn magic number from Srv
 }
 
 func (rt *Runtime) recvFuzzingProgress(ctx context.Context) (err error) {
 	log.Println("[DBG] receiving fm.Srv_FuzzingProgress_...")
 	var srv *fm.Srv
-	select {
-	case err = <-rt.client.RcvErr():
-	case srv = <-rt.client.RcvMsg():
-	case <-time.After(txTimeout):
-		err = errTXTimeout
-	case <-ctx.Done():
-		err = ctx.Err()
-	}
-	if err != nil {
+	if srv, err = rt.client.Receive(ctx); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
