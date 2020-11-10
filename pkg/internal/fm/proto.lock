@@ -666,7 +666,7 @@
                           {
                             "id": 4,
                             "name": "body",
-                            "type": "bytes"
+                            "type": "google.protobuf.Value"
                           }
                         ],
                         "maps": [

@@ -17,6 +17,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/types"
 )
 
@@ -430,13 +431,16 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 
 func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
+
+	var buf *bytes.Buffer
 	if body := input.GetBody(); body != nil {
-		b := bytes.NewReader(body)
-		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
-	} else {
-		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
+		buf = &bytes.Buffer{}
+		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
 	}
-	if err != nil {
+	if m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}

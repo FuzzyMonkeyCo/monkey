@@ -152,7 +152,7 @@ message Srv {
           repeated string values = 1;
         }
         map<string, HeaderValues> headers = 3;
-        bytes body = 4;
+        google.protobuf.Value body = 4;
       }
       oneof input {
         HttpRequest http_request = 1;
