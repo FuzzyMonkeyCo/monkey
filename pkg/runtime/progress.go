@@ -98,7 +98,7 @@ func (rt *Runtime) campaignSummary() TestingCampaingOutcomer {
 	}
 
 	if l.GetTestCallsCount() == 0 {
-		as.ColorERR.Printf("Something went wrong while resetting the system to a neutral state.")
+		as.ColorERR.Println("Something went wrong while resetting the system to a neutral state.")
 		as.ColorNFO.Println("No bugs found... yet.")
 		return &TestingCampaingFailure{}
 	}
