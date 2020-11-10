@@ -432,15 +432,17 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
 
-	var buf *bytes.Buffer
 	if body := input.GetBody(); body != nil {
-		buf = &bytes.Buffer{}
+		buf := &bytes.Buffer{}
 		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
+		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
+	} else {
+		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}
-	if m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf); err != nil {
+	if err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
