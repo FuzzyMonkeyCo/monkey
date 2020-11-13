@@ -610,96 +610,31 @@
             "fields": [
               {
                 "id": 1,
+                "name": "fuzzing_progress",
+                "type": "FuzzingProgress"
+              },
+              {
+                "id": 2,
+                "name": "fuzz_rep",
+                "type": "FuzzRep"
+              },
+              {
+                "id": 3,
                 "name": "call",
                 "type": "Call"
               },
               {
-                "id": 2,
+                "id": 4,
                 "name": "reset",
                 "type": "Reset"
               },
               {
-                "id": 3,
-                "name": "fuzzing_progress",
-                "type": "FuzzingProgress"
+                "id": 5,
+                "name": "fuzzing_result",
+                "type": "FuzzingResult"
               }
             ],
             "messages": [
-              {
-                "name": "Call",
-                "fields": [
-                  {
-                    "id": 1,
-                    "name": "input",
-                    "type": "Input"
-                  },
-                  {
-                    "id": 2,
-                    "name": "eId",
-                    "type": "uint32"
-                  }
-                ],
-                "messages": [
-                  {
-                    "name": "Input",
-                    "fields": [
-                      {
-                        "id": 1,
-                        "name": "http_request",
-                        "type": "HttpRequest"
-                      }
-                    ],
-                    "messages": [
-                      {
-                        "name": "HttpRequest",
-                        "fields": [
-                          {
-                            "id": 1,
-                            "name": "method",
-                            "type": "string"
-                          },
-                          {
-                            "id": 2,
-                            "name": "url",
-                            "type": "string"
-                          },
-                          {
-                            "id": 4,
-                            "name": "body",
-                            "type": "google.protobuf.Value"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 3,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "name": "Reset"
-              },
               {
                 "name": "FuzzingProgress",
                 "fields": [
@@ -767,6 +702,102 @@
                     "id": 13,
                     "name": "shrink_amount",
                     "type": "uint32"
+                  }
+                ]
+              },
+              {
+                "name": "FuzzRep",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "max_tests_count",
+                    "type": "uint32"
+                  }
+                ]
+              },
+              {
+                "name": "Call",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "input",
+                    "type": "Input"
+                  },
+                  {
+                    "id": 2,
+                    "name": "EID",
+                    "type": "uint32"
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "Input",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "http_request",
+                        "type": "HttpRequest"
+                      }
+                    ],
+                    "messages": [
+                      {
+                        "name": "HttpRequest",
+                        "fields": [
+                          {
+                            "id": 1,
+                            "name": "method",
+                            "type": "string"
+                          },
+                          {
+                            "id": 2,
+                            "name": "url",
+                            "type": "string"
+                          },
+                          {
+                            "id": 4,
+                            "name": "body",
+                            "type": "google.protobuf.Value"
+                          }
+                        ],
+                        "maps": [
+                          {
+                            "key_type": "string",
+                            "field": {
+                              "id": 3,
+                              "name": "headers",
+                              "type": "HeaderValues"
+                            }
+                          }
+                        ],
+                        "messages": [
+                          {
+                            "name": "HeaderValues",
+                            "fields": [
+                              {
+                                "id": 1,
+                                "name": "values",
+                                "type": "string",
+                                "is_repeated": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Reset"
+              },
+              {
+                "name": "FuzzingResult",
+                "fields": [
+                  {
+                    "id": 1,
+                    "name": "EIDs",
+                    "type": "uint32",
+                    "is_repeated": true
                   }
                 ]
               }

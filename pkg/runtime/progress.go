@@ -13,7 +13,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
 )
 
-func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
+func (rt *Runtime) newProgress(ctx context.Context, max uint32) {
 	envSetAndNonEmpty := func(key string) bool {
 		val, ok := os.LookupEnv(key)
 		return ok && len(val) != 0
@@ -29,35 +29,34 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	}
 	rt.testingCampaingStart = time.Now()
 	rt.progress.WithContext(ctx)
-	rt.progress.MaxTestsCount(10 * ntensity) // FIXME: learn magic number from Srv
+	rt.progress.MaxTestsCount(max)
 }
 
 func (rt *Runtime) recvFuzzingProgress(ctx context.Context) (err error) {
-	log.Println("[DBG] receiving fm.Srv_FuzzingProgress_...")
+	log.Println("[DBG] receiving fm.Srv_FuzzingProgress...")
 	var srv *fm.Srv
 	if srv, err = rt.client.Receive(ctx); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-
-	switch srv.GetMsg().(type) {
-	case *fm.Srv_FuzzingProgress_:
-		log.Println("[NFO] handling srvprogress")
-		stts := srv.GetFuzzingProgress()
-		log.Println("[DBG] srvprogress:", stts)
-		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
-		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
-		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
-		rt.progress.TestCallsCount(stts.GetTestCallsCount())
-		rt.progress.CallChecksCount(stts.GetCallChecksCount())
-		rt.lastFuzzingProgress = stts
-		log.Println("[NFO] done handling srvprogress")
-		return
-	default:
-		err = fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
+	fp := srv.GetFuzzingProgress()
+	if fp == nil {
+		err = fmt.Errorf("empty Srv_FuzzingProgress: %+v", srv)
 		log.Println("[ERR]", err)
 		return
 	}
+	rt.fuzzingProgress(fp)
+	return
+}
+
+func (rt *Runtime) fuzzingProgress(fp *fm.Srv_FuzzingProgress) {
+	log.Println("[DBG] srvprogress:", fp)
+	rt.progress.TotalTestsCount(fp.GetTotalTestsCount())
+	rt.progress.TotalCallsCount(fp.GetTotalCallsCount())
+	rt.progress.TotalChecksCount(fp.GetTotalChecksCount())
+	rt.progress.TestCallsCount(fp.GetTestCallsCount())
+	rt.progress.CallChecksCount(fp.GetCallChecksCount())
+	rt.lastFuzzingProgress = fp
 }
 
 // TestingCampaingOutcomer describes a testing campaing's results

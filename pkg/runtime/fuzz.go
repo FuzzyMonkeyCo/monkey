@@ -34,7 +34,6 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	resetter := mdl.GetResetter()
 	resetter.Env(rt.envRead)
 
-	rt.newProgress(ctx, ntensity)
 	// Pass user agent down to caller
 	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 
@@ -65,38 +64,40 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			break
 		}
 
+		if rt.progress == nil {
+			rt.newProgress(ctx, srv.GetFuzzRep().GetMaxTestsCount())
+		}
+
+		if fp := srv.GetFuzzingProgress(); fp != nil {
+			rt.fuzzingProgress(fp)
+		}
+
 		switch srv.GetMsg().(type) {
+		case nil:
 		case *fm.Srv_Call_:
 			log.Println("[NFO] handling fm.Srv_Call_")
 			cll := srv.GetCall()
 			if err = rt.call(ctx, cll); err != nil {
 				break
 			}
-			log.Println("[NFO] done handling fm.Srv_Call_")
+			log.Println("[NFO] handled fm.Srv_Call_")
 		case *fm.Srv_Reset_:
 			log.Println("[NFO] handling fm.Srv_Reset_")
 			if err = rt.reset(ctx); err != nil {
 				break
 			}
-			log.Println("[NFO] done handling fm.Srv_Reset_")
+			log.Println("[NFO] handled fm.Srv_Reset_")
+		case *fm.Srv_FuzzingResult_: // FIXME
 		default:
 			err = fmt.Errorf("unhandled srv msg %T: %+v", srv.GetMsg(), srv)
 			log.Println("[ERR]", err)
 			break
 		}
-
 		if err != nil {
 			if e, ok := status.FromError(err); ok && e.Code() == codes.Canceled {
 				log.Println("[NFO] got canceled...")
 				break
 			}
-		}
-		if err2 := rt.recvFuzzingProgress(ctx); err2 != nil {
-			log.Println("[ERR]", err2)
-			if err == nil {
-				err = err2
-			}
-			break
 		}
 	}
 

@@ -143,6 +143,27 @@ message Clt {
 }
 
 message Srv {
+  message FuzzingProgress {
+    bool failure = 1;
+    bool success = 2;
+    bool last_call_failure = 3;
+    bool last_call_success = 4;
+    bool last_check_failure = 5;
+    bool last_check_success = 6;
+    bool shrinking = 7;
+    uint32 total_tests_count = 8;
+    uint32 total_calls_count = 9;
+    uint32 total_checks_count = 10;
+    uint32 test_calls_count = 11;
+    uint32 call_checks_count = 12;
+    uint32 shrink_amount = 13;
+  }
+  FuzzingProgress fuzzing_progress = 1; // Testing progress & end
+
+  message FuzzRep {
+    uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
+  }
+
   message Call {
     message Input {
       message HttpRequest {
@@ -159,36 +180,24 @@ message Srv {
       }
     }
     Input input = 1;
-    uint32 eId = 2;
+    uint32 EID = 2;
   }
 
-  message Reset {
-    // bool as_final_step = 1;
-  }
+  message Reset {}
 
-  message FuzzingProgress {
-    bool failure = 1;
-    bool success = 2;
-    bool last_call_failure = 3;
-    bool last_call_success = 4;
-    bool last_check_failure = 5;
-    bool last_check_success = 6;
-    bool shrinking = 7;
-    uint32 total_tests_count = 8;
-    uint32 total_calls_count = 9;
-    uint32 total_checks_count = 10;
-    uint32 test_calls_count = 11;
-    uint32 call_checks_count = 12;
-    uint32 shrink_amount = 13;
+  message FuzzingResult {
+    repeated uint32 EIDs = 1; // Sequence of calls known to have produced a failure
   }
 
   oneof msg {
+    // Response to initial message
+    FuzzRep fuzz_rep = 2;
     // Try call to SUT
-    Call call = 1;
+    Call call = 3;
     // Reset SUT state
-    Reset reset = 2;
-    // Testing progress & end
-    FuzzingProgress fuzzing_progress = 3;
+    Reset reset = 4;
+    // Result of testing campaign
+    FuzzingResult fuzzing_result = 5;
   }
 }
 

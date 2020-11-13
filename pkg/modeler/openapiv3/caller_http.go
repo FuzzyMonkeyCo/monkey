@@ -109,7 +109,7 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
 		showf:        showf,
-		endpointJSON: m.vald.Spec.Endpoints[msg.GetEId()].GetJson(),
+		endpointJSON: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
 	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
 		return nil, err
