@@ -307,13 +307,18 @@
                     "name": "EIDs",
                     "type": "uint32",
                     "is_repeated": true
+                  },
+                  {
+                    "id": 7,
+                    "name": "shrink",
+                    "type": "bool"
                   }
                 ],
                 "maps": [
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 7,
+                      "id": 8,
                       "name": "tags",
                       "type": "string"
                     }
@@ -321,7 +326,7 @@
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 8,
+                      "id": 9,
                       "name": "env_read",
                       "type": "string"
                     }

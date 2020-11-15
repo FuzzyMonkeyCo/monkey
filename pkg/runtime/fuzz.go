@@ -40,6 +40,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	log.Printf("[DBG] sending initial msg")
 	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
 		EIDs:     rt.eIds,
+		Shrink:   rt.shrinking,
 		EnvRead:  rt.envRead,
 		Model:    mdl.ToProto(),
 		Ntensity: ntensity,
@@ -52,6 +53,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		return
 	}
 
+	var toShrink []uint32
 	for {
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
@@ -70,29 +72,29 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 		if fp := srv.GetFuzzingProgress(); fp != nil {
 			rt.fuzzingProgress(fp)
+			srv.FuzzingProgress = nil
 		}
 
-		switch srv.GetMsg().(type) {
+		msg := srv.GetMsg()
+		log.Printf("[NFO] handling %T", msg)
+		switch msg := msg.(type) {
 		case nil:
 		case *fm.Srv_Call_:
-			log.Println("[NFO] handling fm.Srv_Call_")
-			cll := srv.GetCall()
-			if err = rt.call(ctx, cll); err != nil {
+			if err = rt.call(ctx, msg.Call); err != nil {
 				break
 			}
-			log.Println("[NFO] handled fm.Srv_Call_")
 		case *fm.Srv_Reset_:
-			log.Println("[NFO] handling fm.Srv_Reset_")
 			if err = rt.reset(ctx); err != nil {
 				break
 			}
-			log.Println("[NFO] handled fm.Srv_Reset_")
-		case *fm.Srv_FuzzingResult_: // FIXME
+		case *fm.Srv_FuzzingResult_:
+			toShrink = msg.FuzzingResult.GetEIDs()
 		default:
-			err = fmt.Errorf("unhandled srv msg %T: %+v", srv.GetMsg(), srv)
+			err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
 			log.Println("[ERR]", err)
 			break
 		}
+		log.Printf("[NFO] handled %T", msg)
 		if err != nil {
 			if e, ok := status.FromError(err); ok && e.Code() == codes.Canceled {
 				log.Println("[NFO] got canceled...")
@@ -101,7 +103,6 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		}
 	}
 
-	log.Println("[DBG] server dialog ended, cleaning up...")
 	log.Println("[NFO] terminating resetter")
 	if err2 := mdl.GetResetter().Terminate(ctx, false); err2 != nil {
 		log.Println("[ERR]", err2)
@@ -116,10 +117,34 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			err = err2
 		}
 	}
+	rt.progress = nil
 
-	log.Println("[NFO] all finished up")
+	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary()
+		err = rt.campaignSummary(rt.eIds, toShrink)
+		if _, ok := err.(*TestingCampaingShrinkable); ok {
+			log.Println("[NFO] about to shrink that bug")
+			if !rt.shrinking {
+				rt.unshrunk = uint32(len(toShrink))
+			}
+			rt.shrinking = true
+			rt.eIds = uniqueEIDs(toShrink)
+			err = rt.Fuzz(ctx, ntensity, apiKey)
+			return
+		}
 	}
+	log.Println("[NFO] all finished up")
 	return
+}
+
+func uniqueEIDs(EIDs []uint32) []uint32 {
+	set := make(map[uint32]struct{}, len(EIDs))
+	for _, EID := range EIDs {
+		set[EID] = struct{}{}
+	}
+	unique := make([]uint32, 0, len(set))
+	for EID := range set {
+		unique = append(unique, EID)
+	}
+	return unique
 }
