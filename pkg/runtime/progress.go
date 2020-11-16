@@ -13,11 +13,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
 )
 
-const txTimeout = 10 * time.Second
-
-var errTXTimeout = fmt.Errorf("gRPC snd/rcv after %s", txTimeout)
-
-func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
+func (rt *Runtime) newProgress(ctx context.Context, max uint32) {
 	envSetAndNonEmpty := func(key string) bool {
 		val, ok := os.LookupEnv(key)
 		return ok && len(val) != 0
@@ -33,43 +29,34 @@ func (rt *Runtime) newProgress(ctx context.Context, ntensity uint32) {
 	}
 	rt.testingCampaingStart = time.Now()
 	rt.progress.WithContext(ctx)
-	rt.progress.MaxTestsCount(10 * ntensity)
+	rt.progress.MaxTestsCount(max)
 }
 
-func (rt *Runtime) recvFuzzProgress(ctx context.Context) (err error) {
-	log.Println("[DBG] receiving fm.Srv_FuzzProgress_...")
+func (rt *Runtime) recvFuzzingProgress(ctx context.Context) (err error) {
+	log.Println("[DBG] receiving fm.Srv_FuzzingProgress...")
 	var srv *fm.Srv
-	select {
-	case err = <-rt.client.RcvErr():
-	case srv = <-rt.client.RcvMsg():
-	case <-time.After(txTimeout):
-		err = errTXTimeout
-	case <-ctx.Done():
-		err = ctx.Err()
-	}
-	if err != nil {
+	if srv, err = rt.client.Receive(ctx); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
+	fp := srv.GetFuzzingProgress()
+	if fp == nil {
+		err = fmt.Errorf("empty Srv_FuzzingProgress: %+v", srv)
+		log.Println("[ERR]", err)
+		return
+	}
+	rt.fuzzingProgress(fp)
+	return
+}
 
-	switch srv.GetMsg().(type) {
-	case *fm.Srv_FuzzProgress_:
-		log.Println("[NFO] handling srvprogress")
-		stts := srv.GetFuzzProgress()
-		log.Println("[DBG] srvprogress:", stts)
-		rt.progress.TotalTestsCount(stts.GetTotalTestsCount())
-		rt.progress.TotalCallsCount(stts.GetTotalCallsCount())
-		rt.progress.TotalChecksCount(stts.GetTotalChecksCount())
-		rt.progress.TestCallsCount(stts.GetTestCallsCount())
-		rt.progress.CallChecksCount(stts.GetCallChecksCount())
-		rt.lastFuzzProgress = stts
-		log.Println("[NFO] done handling srvprogress")
-		return
-	default:
-		err = fmt.Errorf("unexpected srv msg %T: %+v", srv.GetMsg(), srv)
-		log.Println("[ERR]", err)
-		return
-	}
+func (rt *Runtime) fuzzingProgress(fp *fm.Srv_FuzzingProgress) {
+	log.Println("[DBG] srvprogress:", fp)
+	rt.progress.TotalTestsCount(fp.GetTotalTestsCount())
+	rt.progress.TotalCallsCount(fp.GetTotalCallsCount())
+	rt.progress.TotalChecksCount(fp.GetTotalChecksCount())
+	rt.progress.TestCallsCount(fp.GetTestCallsCount())
+	rt.progress.CallChecksCount(fp.GetCallChecksCount())
+	rt.lastFuzzingProgress = fp
 }
 
 // TestingCampaingOutcomer describes a testing campaing's results
@@ -80,6 +67,7 @@ type TestingCampaingOutcomer interface {
 
 var _ TestingCampaingOutcomer = (*TestingCampaingSuccess)(nil)
 var _ TestingCampaingOutcomer = (*TestingCampaingFailure)(nil)
+var _ TestingCampaingOutcomer = (*TestingCampaingShrinkable)(nil)
 
 // TestingCampaingSuccess indicates no bug was found during fuzzing.
 type TestingCampaingSuccess struct{}
@@ -87,43 +75,58 @@ type TestingCampaingSuccess struct{}
 // TestingCampaingFailure indicates a bug was found during fuzzing.
 type TestingCampaingFailure struct{}
 
-func (tc *TestingCampaingSuccess) Error() string { return "Found no bug" }
-func (tc *TestingCampaingFailure) Error() string { return "Found a bug" }
+// TestingCampaingShrinkable indicates a bug-producing test can be shrunk.
+type TestingCampaingShrinkable struct{}
 
-func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer() {}
-func (tc *TestingCampaingFailure) isTestingCampaingOutcomer() {}
+func (tc *TestingCampaingSuccess) Error() string    { return "Found no bug" }
+func (tc *TestingCampaingFailure) Error() string    { return "Found a bug" }
+func (tc *TestingCampaingShrinkable) Error() string { return "Found a bug" }
+
+func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer()    {}
+func (tc *TestingCampaingFailure) isTestingCampaingOutcomer()    {}
+func (tc *TestingCampaingShrinkable) isTestingCampaingOutcomer() {}
 
 // campaignSummary concludes the testing campaing and reports to the user.
-func (rt *Runtime) campaignSummary() TestingCampaingOutcomer {
-	l := rt.lastFuzzProgress
-	fmt.Println()
-	fmt.Println()
-	as.ColorWRN.Println(
-		"Ran", l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
-		"totalling", l.GetTotalCallsCount(), plural("request", l.GetTotalCallsCount()),
-		"and", l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-		"in", time.Since(rt.testingCampaingStart))
+func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutcomer {
+	l := rt.lastFuzzingProgress
+	log.Printf("[NFO] ran %d tests: %d requests: %d checks",
+		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
+	as.ColorWRN.Printf("\n\nRan %d %s tottaling %d %s and %d %s in %s.\n",
+		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
+		l.GetTotalCallsCount(), plural("request", l.GetTotalCallsCount()),
+		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
+		time.Since(rt.testingCampaingStart),
+	)
 
 	if l.GetSuccess() {
-		as.ColorNFO.Println("No bugs found... yet.")
+		as.ColorNFO.Println("No bugs found yet.")
 		return &TestingCampaingSuccess{}
 	}
 
-	as.ColorERR.Printf("A bug reproducible in %d HTTP %s was detected after %d",
-		l.GetTestCallsCount(), plural("request", l.GetTestCallsCount()), l.GetTotalTestsCount())
-	var m uint32 // FIXME: handle shrinking report
-	switch {
-	case l.GetTotalTestsCount() == 1:
-		as.ColorERR.Printf(" %s.\n", plural("test", l.GetTotalTestsCount()))
-	case m == 0:
-		as.ColorERR.Printf(" %s and not yet shrunk.\n", plural("test", l.GetTotalTestsCount()))
-		//TODO: suggest shrinking invocation
-		// A task that tries to minimize a testcase to its smallest possible size, such that it still triggers the same underlying bug on the target program.
-	case m == 1:
-		as.ColorERR.Printf(" %s then shrunk once.\n", plural("test", l.GetTotalTestsCount()))
-	default:
-		as.ColorERR.Printf(" %s then shrunk %d %s.\n", plural("test", l.GetTotalTestsCount()), m, plural("time", m))
+	if l.GetTestCallsCount() == 0 {
+		as.ColorERR.Println("Something went wrong while resetting the system to a neutral state.")
+		as.ColorNFO.Println("No bugs found yet.")
+		return &TestingCampaingFailure{}
 	}
+
+	log.Printf("[NFO] found a bug in %d calls: %+v (shrinking? %v)",
+		l.GetTestCallsCount(), in, rt.shrinking)
+	as.ColorERR.Printf("A bug was detected after %d %s (in %d %s).\n",
+		l.GetTestCallsCount(), plural("request", l.GetTestCallsCount()),
+		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
+	)
+
+	if len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
+		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
+			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
+		return &TestingCampaingShrinkable{}
+	}
+
+	if rt.shrinking {
+		as.ColorNFO.Printf("Previously, it took %d %s to trigger one.\n",
+			rt.unshrunk, plural("call", rt.unshrunk))
+	}
+
 	return &TestingCampaingFailure{}
 }
 
@@ -132,4 +135,16 @@ func plural(s string, n uint32) string {
 		return s
 	}
 	return s + "s"
+}
+
+func equalEIDs(a, b []uint32) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, x := range a {
+		if x != b[i] {
+			return false
+		}
+	}
+	return true
 }

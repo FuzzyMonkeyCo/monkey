@@ -14,18 +14,24 @@ import (
 )
 
 func (rt *Runtime) reset(ctx context.Context) (err error) {
-	rt.progress.Printf("Resetting system under test...\n")
-
-	select {
-	case <-time.After(txTimeout):
-		err = errTXTimeout
-	case err = <-rt.client.Snd(&fm.Clt{
-		Msg: &fm.Clt_ResetProgress_{
-			ResetProgress: &fm.Clt_ResetProgress{
-				Status: fm.Clt_ResetProgress_started,
-			}}}):
+	{
+		var state starlark.Value
+		if state, err = slValueCopy(rt.modelState); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		rt.modelState = state.(*modelState)
+		log.Println("[NFO] re-initialized model state")
 	}
-	if err != nil {
+
+	rt.progress.Printf("Resetting system under test...\n")
+	msger := func(msg *fm.Clt_ResetProgress) *fm.Clt {
+		return &fm.Clt{Msg: &fm.Clt_ResetProgress_{ResetProgress: msg}}
+	}
+
+	if err = rt.client.Send(ctx, msger(&fm.Clt_ResetProgress{
+		Status: fm.Clt_ResetProgress_started,
+	})); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -53,41 +59,26 @@ func (rt *Runtime) reset(ctx context.Context) (err error) {
 			reason = strings.Split(err.Error(), "\n")
 		}
 
-		var err2 error
-		select {
-		case <-time.After(txTimeout):
-			err2 = errTXTimeout
-		case err2 = <-rt.client.Snd(&fm.Clt{
-			Msg: &fm.Clt_ResetProgress_{
-				ResetProgress: &fm.Clt_ResetProgress{
-					Status:    fm.Clt_ResetProgress_failed,
-					ElapsedNs: elapsed,
-					Reason:    reason,
-				}}}):
-		}
-		if err2 != nil {
+		if err2 := rt.client.Send(ctx, msger(&fm.Clt_ResetProgress{
+			Status:    fm.Clt_ResetProgress_failed,
+			ElapsedNs: elapsed,
+			Reason:    reason,
+		})); err2 != nil {
 			log.Println("[ERR]", err2)
-			// nothing to continue on
+			return
 		}
+		// nothing to continue on
 		return
 	}
 
-	select {
-	case <-time.After(txTimeout):
-		err = errTXTimeout
-	case err = <-rt.client.Snd(&fm.Clt{
-		Msg: &fm.Clt_ResetProgress_{
-			ResetProgress: &fm.Clt_ResetProgress{
-				Status:    fm.Clt_ResetProgress_ended,
-				ElapsedNs: elapsed,
-			}}}):
-	}
-	if err != nil {
+	if err = rt.client.Send(ctx, msger(&fm.Clt_ResetProgress{
+		Status:    fm.Clt_ResetProgress_ended,
+		ElapsedNs: elapsed,
+	})); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-
-	// FIXME: reset modelstate to initial state
+	// done
 	return
 }
 

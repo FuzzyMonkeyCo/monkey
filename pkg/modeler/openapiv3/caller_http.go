@@ -17,6 +17,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
+	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/types"
 )
 
@@ -108,7 +109,7 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
 	m.tcap = &tCapHTTP{
 		showf:        showf,
-		endpointJSON: m.vald.Spec.Endpoints[msg.GetEId()].GetJson(),
+		endpointJSON: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
 	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
 		return nil, err
@@ -430,9 +431,14 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 
 func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
+
 	if body := input.GetBody(); body != nil {
-		b := bytes.NewReader(body)
-		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), b)
+		buf := &bytes.Buffer{}
+		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
 	} else {
 		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}

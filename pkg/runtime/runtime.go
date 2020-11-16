@@ -35,15 +35,17 @@ type Runtime struct {
 
 	models map[string]modeler.Interface
 
-	eIds []uint32
+	eIds      []uint32
+	shrinking bool
+	unshrunk  uint32
 
 	tags map[string]string
 
-	client *fm.Ch
+	client *fm.ChBiDi
 
 	logLevel             uint8
 	progress             progresser.Interface
-	lastFuzzProgress     *fm.Srv_FuzzProgress
+	lastFuzzingProgress  *fm.Srv_FuzzingProgress
 	testingCampaingStart time.Time
 }
 
@@ -70,10 +72,6 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
 		log.Printf("[DBG] registered modeler: %q", modelName)
-		if _, ok := fm.Clt_Fuzz_ModelKind_value[modelName]; !ok {
-			err = fmt.Errorf("unexpected model kind: %q", modelName)
-			return
-		}
 		builtin := rt.modelMaker(modelName, mdl.NewFromKwargs)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}

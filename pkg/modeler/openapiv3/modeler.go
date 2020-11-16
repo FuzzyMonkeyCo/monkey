@@ -13,7 +13,7 @@ import (
 
 var _ modeler.Interface = (*oa3)(nil)
 
-type T = oa3
+type T = oa3 // TODO: remove, move modelers registry to own package
 
 type oa3 struct {
 	fm.Clt_Fuzz_Model_OpenAPIv3
@@ -39,7 +39,7 @@ func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 func (m *oa3) FromProto(p *fm.Clt_Fuzz_Model) error {
 	if mm := p.GetOpenapiv3(); mm != nil {
 		m.Clt_Fuzz_Model_OpenAPIv3 = *mm
-		m.vald = &validator{Spec: mm.Spec} // TODO? merge vald with oa3
+		m.vald = &validator{Spec: mm.Spec}
 		return nil
 	}
 	return fmt.Errorf("unexpected model type: %T", p.GetModel())

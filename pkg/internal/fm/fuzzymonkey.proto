@@ -6,33 +6,15 @@ option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
 import "google/protobuf/struct.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-// See: https://github.com/gogo/protobuf/blob/master/extensions.md
-// Enable custom Size method (Required by Marshal and Unmarshal)
+// cf. https://github.com/gogo/protobuf/blob/master/extensions.md
 option (gogoproto.sizer_all) = true;
-// Enable custom Marshal method
 option (gogoproto.marshaler_all) = true;
-// stable_marshaler
-// Enable custom Unmarshal method
 option (gogoproto.unmarshaler_all) = true;
-// option (gogoproto.gostring_all) = true;
-// option (gogoproto.goproto_stringer_all) = false;
-// option (gogoproto.stringer_all) =  true;
-
-// Generate func (this *ProtoMessage) Equal(that interface{}) bool
 option (gogoproto.equal_all) = true;
-// Don't generate XXX_unrecognized
-// option (gogoproto.goproto_unrecognized_all) = true;
-// jsontag, moretags:
-// https://groups.google.com/forum/#!topic/gogoprotobuf/xmFnqAS6MIc
 
-// FIXME
-// option (gogoproto.goproto_testgen_all) = true;
-// option (gogoproto.goproto_benchgen_all) = true;
-// https://godoc.org/github.com/gogo/protobuf/plugin/populate
 
 service FuzzyMonkey {
-  rpc Do(stream Clt) returns (stream Srv) {
-  }
+  rpc Do(stream Clt) returns (stream Srv) {}
 }
 
 message Clt {
@@ -48,31 +30,27 @@ message Clt {
       }
     }
     Resetter resetter = 1;
-    enum ModelKind {
-      UNKNOWN = 0;
-      OpenAPIv3 = 1;
-    }
-    ModelKind model_kind = 2;
     message Model {
       message OpenAPIv3 {
-        // File is a path within current directory pointing to a YAML spec
+        // File path within current directory pointing to a YAML/JSON spec
         string file = 1;
         // Host superseeds the spec's base URL
         string host = 2;
-        // HeaderAuthorization if non-empty is added to requests as bearer
-        // token
+        // HeaderAuthorization is added as bearer token if non-empty
         string header_authorization = 3;
+        // Spec is the spec pointed at by File
         SpecIR spec = 4;
       }
       oneof model {
         OpenAPIv3 openapiv3 = 1;
       }
     }
-    Model model = 3;
-    repeated string usage = 4;
-    bytes seed = 5;
-    uint32 ntensity = 6;
-    repeated uint32 EIDs = 7;
+    Model model = 2;
+    repeated string usage = 3;
+    bytes seed = 4;
+    uint32 ntensity = 5;
+    repeated uint32 EIDs = 6;
+    bool shrink = 7;
     map<string, string> tags = 8;
     map<string, string> env_read = 9;
   }
@@ -166,30 +144,7 @@ message Clt {
 }
 
 message Srv {
-  message Call {
-    message Input {
-      message HttpRequest {
-        string method = 1;
-        string url = 2;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 3;
-        bytes body = 4;
-      }
-      oneof input {
-        HttpRequest http_request = 1;
-      }
-    }
-    Input input = 1;
-    uint32 eId = 2;
-  }
-
-  message Reset {
-    // bool as_final_step = 1;
-  }
-
-  message FuzzProgress {
+  message FuzzingProgress {
     bool failure = 1;
     bool success = 2;
     bool last_call_failure = 3;
@@ -204,14 +159,46 @@ message Srv {
     uint32 call_checks_count = 12;
     uint32 shrink_amount = 13;
   }
+  FuzzingProgress fuzzing_progress = 1; // Testing progress & end
+
+  message FuzzRep {
+    uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
+  }
+
+  message Call {
+    message Input {
+      message HttpRequest {
+        string method = 1;
+        string url = 2;
+        message HeaderValues {
+          repeated string values = 1;
+        }
+        map<string, HeaderValues> headers = 3;
+        google.protobuf.Value body = 4;
+      }
+      oneof input {
+        HttpRequest http_request = 1;
+      }
+    }
+    Input input = 1;
+    uint32 EID = 2;
+  }
+
+  message Reset {}
+
+  message FuzzingResult {
+    repeated uint32 EIDs = 1; // Sequence of calls known to have produced a failure
+  }
 
   oneof msg {
+    // Response to initial message
+    FuzzRep fuzz_rep = 2;
     // Try call to SUT
-    Call call = 1;
-    // Testing progress & end
-    FuzzProgress fuzz_progress = 2;
+    Call call = 3;
     // Reset SUT state
-    Reset reset = 3;
+    Reset reset = 4;
+    // Result of testing campaign
+    FuzzingResult fuzzing_result = 5;
   }
 }
 
@@ -385,10 +372,9 @@ message Schema {
     uint64 min_properties = 22;           // default: 0
     uint64 max_properties = 23;
     bool has_max_properties = 24;
-    /// FIXME true is equivalent to {}, false is equivalent to {"not": {}}
     message AdditionalProperties {
       oneof add_props {
-        bool always_succeed = 1;
+        bool always_succeed = 1; //TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
         uint32 SID = 2;
       }
     }

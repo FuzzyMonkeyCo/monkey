@@ -185,6 +185,8 @@ func actualMain() int {
 		return code.Failed
 	}
 	if args.Shrink != "" {
+		// mrt.shrinking = true
+		// mrt.unshrunk = len(toShrink)
 		msg := "--shrink=ID isn't implemented yet."
 		log.Println("[ERR]", msg)
 		as.ColorERR.Println(msg)
