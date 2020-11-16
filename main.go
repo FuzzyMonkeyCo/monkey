@@ -94,6 +94,14 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
+	if args.Fmt {
+		if !rt.Format(args.FmtW) {
+			as.ColorERR.Println(err)
+			return code.FailedFmt
+		}
+		return code.OK
+	}
+
 	mrt, err := rt.NewMonkey(binTitle, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)

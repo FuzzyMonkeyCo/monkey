@@ -11,10 +11,11 @@ import (
 )
 
 type params struct {
-	Fuzz, Lint, Schema             bool
+	Fuzz, Lint, Fmt, Schema        bool
 	Init, Env, Login, Logs         bool
 	Update, Version                bool
 	Exec, Start, Reset, Stop, Repl bool
+	FmtW                           bool          `mapstructure:"-w"`
 	ShowSpec                       bool          `mapstructure:"--show-spec"`
 	Seed                           string        `mapstructure:"--seed"`
 	Shrink                         string        `mapstructure:"--shrink"`
@@ -40,6 +41,7 @@ Usage:
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   ` + B + ` [-vvv] lint [--show-spec]
+  ` + B + ` [-vvv] fmt [-w]
   ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] env [VAR ...]

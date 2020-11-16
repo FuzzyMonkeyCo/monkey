@@ -3,6 +3,7 @@ module github.com/FuzzyMonkeyCo/monkey
 go 1.14
 
 require (
+	github.com/bazelbuild/buildtools v0.0.0-20201102150426-f0f162f0456b
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.9.0

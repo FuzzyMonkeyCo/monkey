@@ -18,6 +18,7 @@ Usage:
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   monkey [-vvv] lint [--show-spec]
+  monkey [-vvv] fmt [-w]
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] env [VAR ...]
