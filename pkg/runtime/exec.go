@@ -15,7 +15,6 @@ import (
 func initExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
-	resolve.AllowFloat = true          // floating point
 	resolve.AllowSet = false           // sets (no proto representation yet)
 	resolve.AllowGlobalReassign = true // reassignment to top-level names
 	//> Starlark programs cannot be Turing complete

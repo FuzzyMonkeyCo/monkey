@@ -2,7 +2,6 @@ package openapiv3
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,12 +11,10 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/googleapis/gnostic/compiler"
 	openapi_v3 "github.com/googleapis/gnostic/openapiv3"
-	"gopkg.in/yaml.v2"
 )
 
-// Lint TODO
+// Lint goes through OpenAPIv3 specs and unsures they're valid
 func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
 	if blob, err = ioutil.ReadFile(m.File); err != nil {
@@ -59,29 +56,8 @@ func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 }
 
 func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
-	info, err := compiler.ReadInfoFromBytes(docPath, blob)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	log.Println("[NFO] unpacking info")
-	infoMap, ok := compiler.UnpackMap(info)
-	if !ok {
-		err = errors.New("format:unknown")
-		log.Println("[ERR]", err)
-		return
-	}
-	log.Println("[NFO] verifying format is supported")
-	openapi, ok := compiler.MapValueForKey(infoMap, "openapi").(string)
-	if !ok || !strings.HasPrefix(openapi, "3.0") {
-		err = errors.New("format:unsupported")
-		log.Println("[ERR]", err)
-		as.ColorERR.Printf("Format of '%s' is not supported", docPath)
-		return
-	}
-
 	log.Println("[NFO] parsing whole spec")
-	doc, err := openapi_v3.NewDocument(info, compiler.NewContext("$root", nil))
+	doc, err := openapi_v3.ParseDocument(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
 		as.ColorWRN.Println("Validation errors:")
@@ -105,22 +81,11 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 		return
 	}
 
-	log.Println("[NFO] preparing spec")
-	rawInfo, ok := doc.ToRawInfo().(yaml.MapSlice)
-	if !ok {
-		rawInfo = nil
-	}
-	if rawInfo == nil {
-		err = errors.New("empty gnostic doc")
-		log.Println("[ERR]", err)
-		return
-	}
-
 	if showSpec {
 		log.Println("[NFO] serialyzing spec to YAML")
 		as.ColorNFO.Println("Spec:")
 		var pretty []byte
-		if pretty, err = yaml.Marshal(rawInfo); err != nil {
+		if pretty, err = doc.YAMLValue(""); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
