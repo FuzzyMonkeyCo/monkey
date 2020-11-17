@@ -123,9 +123,6 @@ func TestFalsyThings(t *testing.T) {
 	m := make(map[string]error, 4*len(values))
 	for _, v := range values {
 		vv := v
-		if v == `0.0` {
-			vv = `0`
-		}
 		if v == `set()` {
 			vv = `set([])`
 		}
