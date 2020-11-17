@@ -1,10 +1,9 @@
 module github.com/FuzzyMonkeyCo/monkey
 
-go 1.14
+go 1.15
 
 require (
 	github.com/bazelbuild/buildtools v0.0.0-20201102150426-f0f162f0456b
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.10.0
 	github.com/getkin/kin-openapi v0.30.0
@@ -22,10 +21,8 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20201113214410-e292e66a28cd
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
-	golang.org/x/sys v0.0.0-20201113233024-12cec1faf1ba // indirect
+	golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48 // indirect
 	golang.org/x/text v0.3.4 // indirect
-	google.golang.org/genproto v0.0.0-20201116144945-7adebfbe6a3f // indirect
+	google.golang.org/genproto v0.0.0-20201116205149-79184cff4dfe // indirect
 	google.golang.org/grpc v1.33.2
-	gopkg.in/yaml.v2 v2.3.0
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776
 )
