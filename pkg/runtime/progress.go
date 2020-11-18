@@ -89,11 +89,11 @@ func (tc *TestingCampaingShrinkable) isTestingCampaingOutcomer() {}
 // campaignSummary concludes the testing campaing and reports to the user.
 func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutcomer {
 	l := rt.lastFuzzingProgress
-	log.Printf("[NFO] ran %d tests: %d requests: %d checks",
+	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
-	as.ColorWRN.Printf("\n\nRan %d %s tottaling %d %s and %d %s in %s.\n",
+	as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n",
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
-		l.GetTotalCallsCount(), plural("request", l.GetTotalCallsCount()),
+		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
 		time.Since(rt.testingCampaingStart),
 	)
@@ -111,9 +111,8 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutco
 
 	log.Printf("[NFO] found a bug in %d calls: %+v (shrinking? %v)",
 		l.GetTestCallsCount(), in, rt.shrinking)
-	as.ColorERR.Printf("A bug was detected after %d %s (in %d %s).\n",
-		l.GetTestCallsCount(), plural("request", l.GetTestCallsCount()),
-		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
+	as.ColorERR.Printf("A bug was detected after %d %s.\n",
+		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
 	)
 
 	if len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
@@ -123,7 +122,7 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutco
 	}
 
 	if rt.shrinking {
-		as.ColorNFO.Printf("Previously, it took %d %s to trigger one.\n",
+		as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
 			rt.unshrunk, plural("call", rt.unshrunk))
 	}
 
