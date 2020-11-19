@@ -2,10 +2,10 @@ package runtime
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 
 	"github.com/bazelbuild/buildtools/build"
-	"github.com/bazelbuild/buildtools/convertast"
 	"go.starlark.net/syntax"
 )
 
@@ -16,9 +16,18 @@ func Format(W bool) bool {
 		log.Println("[ERR]", err)
 		return false
 	}
-	newAst := convertast.ConvFile(ast)
+	newAst := ConvFile(ast)
+	str := build.FormatString(newAst)
+
 	if !W {
-		fmt.Print(build.FormatString(newAst))
+		fmt.Print(str)
+		return true
 	}
+
+	if err := ioutil.WriteFile(localCfg, []byte(str), 0644); err != nil {
+		log.Println("[ERR]", err)
+		return false
+	}
+
 	return true
 }
