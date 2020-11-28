@@ -16,7 +16,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	"github.com/hashicorp/logutils"
@@ -229,13 +228,13 @@ func actualMain() int {
 		log.Println("[ERR]", err)
 	}
 	switch err.(type) {
-	case *resetter.Error:
-		as.ColorERR.Println(err)
-		return code.FailedExec
 	case *rt.TestingCampaingSuccess:
 		return code.OK
 	case *rt.TestingCampaingFailure:
 		return code.FailedFuzz
+	case *rt.TestingCampaingFailureDueToResetterError:
+		as.ColorERR.Println(err)
+		return code.FailedExec
 	}
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	return retryOrReport()
