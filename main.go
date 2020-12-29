@@ -94,8 +94,16 @@ func actualMain() int {
 	}
 
 	if args.Fmt {
-		if !rt.Format(args.FmtW) {
-			as.ColorERR.Println(err)
+		if err := rt.Format(args.FmtW); err != nil {
+			if e, ok := err.(rt.FmtError); ok {
+				for i := 0; i < len(e); i += 3 {
+					as.ColorNFO.Printf("%s ", e[i])
+					as.ColorOK.Printf("%s ", e[i+1])
+					as.ColorERR.Printf("%s\n", e[i+2])
+				}
+			} else {
+				as.ColorERR.Println(err)
+			}
 			return code.FailedFmt
 		}
 		return code.OK
