@@ -35,9 +35,10 @@ type Runtime struct {
 
 	models map[string]modeler.Interface
 
-	eIds      []uint32
-	shrinking bool
-	unshrunk  uint32
+	eIds           []uint32
+	shrinking      bool
+	shrinkingTimes *uint32
+	unshrunk       uint32
 
 	tags map[string]string
 

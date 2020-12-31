@@ -89,6 +89,10 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			}
 		case *fm.Srv_FuzzingResult_:
 			toShrink = msg.FuzzingResult.GetEIDs()
+			if rt.shrinkingTimes == nil {
+				value := msg.FuzzingResult.GetMaxShrinks()
+				rt.shrinkingTimes = &value
+			}
 		default:
 			err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
 			log.Println("[ERR]", err)
@@ -121,7 +125,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary(rt.eIds, toShrink)
+		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes)
 		if _, ok := err.(*TestingCampaingShrinkable); ok {
 			log.Println("[NFO] about to shrink that bug")
 			if !rt.shrinking {
@@ -129,7 +133,9 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			}
 			rt.shrinking = true
 			rt.eIds = uniqueEIDs(toShrink)
+			*rt.shrinkingTimes--
 			err = rt.Fuzz(ctx, ntensity, apiKey)
+			log.Println("[ERR] rt.Fuzz with shrinking:", err)
 			return
 		}
 	}

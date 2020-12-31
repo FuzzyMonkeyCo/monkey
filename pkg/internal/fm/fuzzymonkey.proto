@@ -187,7 +187,9 @@ message Srv {
   message Reset {}
 
   message FuzzingResult {
-    repeated uint32 EIDs = 1; // Sequence of calls known to have produced a failure
+    bytes seed = 1;
+    repeated uint32 EIDs = 2; // Sequence of calls known to have produced a failure
+    uint32 max_shrinks = 3; // Number of attempts at shrinking
   }
 
   oneof msg {

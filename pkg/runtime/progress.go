@@ -84,10 +84,12 @@ type TestingCampaingFailureDueToResetterError struct{}
 
 const foundABug = "Found a bug"
 
-func (tc *TestingCampaingSuccess) Error() string                   { return "Found no bug" }
-func (tc *TestingCampaingFailure) Error() string                   { return foundABug }
-func (tc *TestingCampaingShrinkable) Error() string                { return foundABug }
-func (tc *TestingCampaingFailureDueToResetterError) Error() string { return foundABug }
+func (tc *TestingCampaingSuccess) Error() string    { return "Found no bug" }
+func (tc *TestingCampaingFailure) Error() string    { return foundABug }
+func (tc *TestingCampaingShrinkable) Error() string { return foundABug }
+func (tc *TestingCampaingFailureDueToResetterError) Error() string {
+	return "Something went wrong while resetting the system to a neutral state."
+}
 
 func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer()                   {}
 func (tc *TestingCampaingFailure) isTestingCampaingOutcomer()                   {}
@@ -95,7 +97,7 @@ func (tc *TestingCampaingShrinkable) isTestingCampaingOutcomer()                
 func (tc *TestingCampaingFailureDueToResetterError) isTestingCampaingOutcomer() {}
 
 // campaignSummary concludes the testing campaing and reports to the user.
-func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutcomer {
+func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32) TestingCampaingOutcomer {
 	l := rt.lastFuzzingProgress
 	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
@@ -112,8 +114,6 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutco
 	}
 
 	if l.GetTestCallsCount() == 0 {
-		as.ColorERR.Println("Something went wrong while resetting the system to a neutral state.")
-		as.ColorNFO.Println("No bugs found yet.")
 		return &TestingCampaingFailureDueToResetterError{}
 	}
 
@@ -123,7 +123,8 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutco
 		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
 	)
 
-	if len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
+	attemptsLeft := shrinkAttempts == nil || (shrinkAttempts != nil && *shrinkAttempts != 0)
+	if attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
 		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
 			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
 		return &TestingCampaingShrinkable{}

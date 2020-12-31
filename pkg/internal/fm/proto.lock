@@ -800,9 +800,19 @@
                 "fields": [
                   {
                     "id": 1,
+                    "name": "seed",
+                    "type": "bytes"
+                  },
+                  {
+                    "id": 2,
                     "name": "EIDs",
                     "type": "uint32",
                     "is_repeated": true
+                  },
+                  {
+                    "id": 3,
+                    "name": "max_shrinks",
+                    "type": "uint32"
                   }
                 ]
               }
