@@ -50,6 +50,7 @@ jobs:
         ./monkey -h | grep $SHORT_COMMIT
         ./monkey help | grep monkey
         ./monkey version
+        ./monkey fmt
         [[ $(./monkey version | wc -l) = 1 ]]
         ./monkey version | grep $CURRENT_TAG
         ./monkey --version | grep $SHORT_COMMIT
