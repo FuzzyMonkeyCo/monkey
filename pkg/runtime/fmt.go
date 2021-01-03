@@ -86,11 +86,11 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 				}
 			case "name-conventions":
 				msg = strings.ReplaceAll(msg,
-					", UPPER_SNAKE_CASE (for constants), or UpperCamelCase ending with 'Info' (for providers).",
-					" or UPPER_SNAKE_CASE (for constants).",
+					"be lower_snake_case (for variables), UPPER_SNAKE_CASE (for constants), or UpperCamelCase ending with 'Info' (for providers).",
+					"be lower_snake_case.",
 				)
 			}
-			if msg == `Variable name "State" should be lower_snake_case (for variables) or UPPER_SNAKE_CASE (for constants).` {
+			if msg == `Variable name "State" should be lower_snake_case.` {
 				// Skip warning about our special modelState variable name convention
 				continue
 			}
