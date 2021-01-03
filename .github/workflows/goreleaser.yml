@@ -33,7 +33,7 @@ jobs:
       run: |
         CURRENT_TAG=M.m.p
         if [[ "$GITHUB_REF" =~ ^refs/tags/ ]]; then CURRENT_TAG=${GITHUB_REF#refs/tags/}; fi
-        echo "::set-env name=CURRENT_TAG::$CURRENT_TAG"
+        echo CURRENT_TAG="$CURRENT_TAG" >>$GITHUB_ENV
 
     - name: Build
       uses: goreleaser/goreleaser-action@v1
