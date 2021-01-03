@@ -80,7 +80,9 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 			case "module-docstring":
 				continue
 			case "function-docstring-args":
-				if strings.HasPrefix(msg, `Arguments "State", "response" are not documented.`) {
+				if strings.HasPrefix(msg, `Arguments "State", "response" are not documented.`) ||
+					strings.HasPrefix(msg, `Arguments "_State", "response" are not documented.`) ||
+					strings.HasPrefix(msg, `Arguments "_State", "_response" are not documented.`) {
 					// Skip warning about our special State & response positional arguments
 					continue
 				}
@@ -94,6 +96,7 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 				// Skip warning about our special modelState variable name convention
 				continue
 			}
+			msg = strings.ReplaceAll(msg, "Buildifier", "`fmt`")
 			if !f.Formatted {
 				msg += " # reformat"
 			}
