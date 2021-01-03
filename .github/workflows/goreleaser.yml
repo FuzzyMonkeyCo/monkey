@@ -17,15 +17,22 @@ jobs:
       with:
         go-version: 1.x
 
-    - run: sudo apt-get install -y silversearcher-ag  # For goolint.sh
-    - name: Verify
+    - name: Lint
       run: |
-        [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
+        sudo apt-get install -y silversearcher-ag  # For goolint.sh
         ag --version
+        [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
         make lint
+    - name: Vet
+      run: |
         go vet ./...
+    - name: Mod
+      run: |
         go mod tidy
         go mod verify
+        git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+    - name: Test
+      run: |
         make test.ci
         git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
 
@@ -43,7 +50,7 @@ jobs:
         version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
         args: release --rm-dist --snapshot --skip-publish
 
-    - name: Test
+    - name: Test CLI
       run: |
         tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
         SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
