@@ -2,20 +2,20 @@
 
 print("$THIS_ENVIRONMENT_VARIABLE is", Env("THIS_ENVIRONMENT_VARIABLE", "not set"))
 
-HOST, spec = "https://jsonplaceholder.typicode.com/", None
-MODE = Env("TESTING_WHAT")
-if MODE == "":
+host, spec = "https://jsonplaceholder.typicode.com/", None
+mode = Env("TESTING_WHAT")
+if mode == "":
     spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
-elif MODE == "other-thing":
+elif mode == "other-thing":
     pass
 else:
-    fail("Unhandled testing mode '{}'".format(MODE))
+    fail("Unhandled testing mode '{}'".format(mode))
 print("Now testing {}.".format(spec))
 
 OpenAPIv3(
     name = "my_model",
     file = spec,
-    host = HOST,
+    host = host,
     # header_authorization = 'Bearer ' + ...,
     ExecReset = """
     printf 'Resetting state...
