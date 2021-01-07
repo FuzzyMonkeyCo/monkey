@@ -193,12 +193,6 @@ func actualMain() int {
 		return code.OK
 	}
 
-	if args.Seed != "" {
-		msg := "--seed=SEED isn't implemented yet."
-		log.Println("[ERR]", msg)
-		as.ColorERR.Println(msg)
-		return code.Failed
-	}
 	if args.Shrink != "" {
 		// mrt.shrinking = true
 		// mrt.unshrunk = len(toShrink)
@@ -223,7 +217,7 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, apiKey)
+	err = mrt.Fuzz(ctx, args.N, []byte(args.Seed), apiKey)
 	switch {
 	case err == nil:
 	case err == context.Canceled:

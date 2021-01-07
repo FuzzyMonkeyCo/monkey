@@ -717,6 +717,11 @@
                     "id": 1,
                     "name": "max_tests_count",
                     "type": "uint32"
+                  },
+                  {
+                    "id": 2,
+                    "name": "seed",
+                    "type": "bytes"
                   }
                 ]
               },
