@@ -27,7 +27,7 @@ func (rt *Runtime) newProgress(ctx context.Context, max uint32) {
 	} else {
 		rt.progress = &cli.Progresser{}
 	}
-	rt.testingCampaingStart = time.Now()
+	rt.testingCampaignStart = time.Now()
 	rt.progress.WithContext(ctx)
 	rt.progress.MaxTestsCount(max)
 }
@@ -59,45 +59,45 @@ func (rt *Runtime) fuzzingProgress(fp *fm.Srv_FuzzingProgress) {
 	rt.lastFuzzingProgress = fp
 }
 
-// TestingCampaingOutcomer describes a testing campaing's results
-type TestingCampaingOutcomer interface {
+// TestingCampaignOutcomer describes a testing campaign's results
+type TestingCampaignOutcomer interface {
 	error
-	isTestingCampaingOutcomer()
+	isTestingCampaignOutcomer()
 }
 
-var _ TestingCampaingOutcomer = (*TestingCampaingSuccess)(nil)
-var _ TestingCampaingOutcomer = (*TestingCampaingFailure)(nil)
-var _ TestingCampaingOutcomer = (*TestingCampaingShrinkable)(nil)
-var _ TestingCampaingOutcomer = (*TestingCampaingFailureDueToResetterError)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignSuccess)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignFailure)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignShrinkable)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignFailureDueToResetterError)(nil)
 
-// TestingCampaingSuccess indicates no bug was found during fuzzing.
-type TestingCampaingSuccess struct{}
+// TestingCampaignSuccess indicates no bug was found during fuzzing.
+type TestingCampaignSuccess struct{}
 
-// TestingCampaingFailure indicates a bug was found during fuzzing.
-type TestingCampaingFailure struct{}
+// TestingCampaignFailure indicates a bug was found during fuzzing.
+type TestingCampaignFailure struct{}
 
-// TestingCampaingShrinkable indicates a bug-producing test can be shrunk.
-type TestingCampaingShrinkable struct{}
+// TestingCampaignShrinkable indicates a bug-producing test can be shrunk.
+type TestingCampaignShrinkable struct{}
 
-// TestingCampaingFailureDueToResetterError indicates a bug was found during reset.
-type TestingCampaingFailureDueToResetterError struct{}
+// TestingCampaignFailureDueToResetterError indicates a bug was found during reset.
+type TestingCampaignFailureDueToResetterError struct{}
 
 const foundABug = "Found a bug"
 
-func (tc *TestingCampaingSuccess) Error() string    { return "Found no bug" }
-func (tc *TestingCampaingFailure) Error() string    { return foundABug }
-func (tc *TestingCampaingShrinkable) Error() string { return foundABug }
-func (tc *TestingCampaingFailureDueToResetterError) Error() string {
+func (tc *TestingCampaignSuccess) Error() string    { return "Found no bug" }
+func (tc *TestingCampaignFailure) Error() string    { return foundABug }
+func (tc *TestingCampaignShrinkable) Error() string { return foundABug }
+func (tc *TestingCampaignFailureDueToResetterError) Error() string {
 	return "Something went wrong while resetting the system to a neutral state."
 }
 
-func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer()                   {}
-func (tc *TestingCampaingFailure) isTestingCampaingOutcomer()                   {}
-func (tc *TestingCampaingShrinkable) isTestingCampaingOutcomer()                {}
-func (tc *TestingCampaingFailureDueToResetterError) isTestingCampaingOutcomer() {}
+func (tc *TestingCampaignSuccess) isTestingCampaignOutcomer()                   {}
+func (tc *TestingCampaignFailure) isTestingCampaignOutcomer()                   {}
+func (tc *TestingCampaignShrinkable) isTestingCampaignOutcomer()                {}
+func (tc *TestingCampaignFailureDueToResetterError) isTestingCampaignOutcomer() {}
 
-// campaignSummary concludes the testing campaing and reports to the user.
-func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32) TestingCampaingOutcomer {
+// campaignSummary concludes the testing campaign and reports to the user.
+func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32) TestingCampaignOutcomer {
 	l := rt.lastFuzzingProgress
 	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
@@ -105,16 +105,16 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
 		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-		time.Since(rt.testingCampaingStart),
+		time.Since(rt.testingCampaignStart),
 	)
 
 	if l.GetSuccess() {
 		as.ColorNFO.Println("No bugs found yet.")
-		return &TestingCampaingSuccess{}
+		return &TestingCampaignSuccess{}
 	}
 
 	if l.GetTestCallsCount() == 0 {
-		return &TestingCampaingFailureDueToResetterError{}
+		return &TestingCampaignFailureDueToResetterError{}
 	}
 
 	log.Printf("[NFO] found a bug in %d calls: %+v (shrinking? %v)",
@@ -127,7 +127,7 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 	if attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
 		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
 			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
-		return &TestingCampaingShrinkable{}
+		return &TestingCampaignShrinkable{}
 	}
 
 	if rt.shrinking {
@@ -135,7 +135,7 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 			rt.unshrunk, plural("call", rt.unshrunk))
 	}
 
-	return &TestingCampaingFailure{}
+	return &TestingCampaignFailure{}
 }
 
 func plural(s string, n uint32) string {

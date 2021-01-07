@@ -47,7 +47,7 @@ type Runtime struct {
 	logLevel             uint8
 	progress             progresser.Interface
 	lastFuzzingProgress  *fm.Srv_FuzzingProgress
-	testingCampaingStart time.Time
+	testingCampaignStart time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration

@@ -126,7 +126,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
 		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes)
-		if _, ok := err.(*TestingCampaingShrinkable); ok {
+		if _, ok := err.(*TestingCampaignShrinkable); ok {
 			log.Println("[NFO] about to shrink that bug")
 			if !rt.shrinking {
 				rt.unshrunk = uint32(len(toShrink))

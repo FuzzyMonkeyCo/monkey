@@ -236,11 +236,11 @@ func actualMain() int {
 		log.Println("[ERR]", err)
 	}
 	switch err.(type) {
-	case *rt.TestingCampaingSuccess:
+	case *rt.TestingCampaignSuccess:
 		return code.OK
-	case *rt.TestingCampaingFailure:
+	case *rt.TestingCampaignFailure:
 		return code.FailedFuzz
-	case *rt.TestingCampaingFailureDueToResetterError:
+	case *rt.TestingCampaignFailureDueToResetterError:
 		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
