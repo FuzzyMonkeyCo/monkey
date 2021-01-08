@@ -20,6 +20,7 @@ func (rt *Runtime) Fuzz(
 	ctx context.Context,
 	ntensity uint32,
 	seed []byte,
+	noShrinking bool,
 	apiKey string,
 ) (err error) {
 	ctx = metadata.AppendToOutgoingContext(ctx,
@@ -138,7 +139,7 @@ func (rt *Runtime) Fuzz(
 	if err == nil || err == modeler.ErrCheckFailed {
 		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes, seed)
 		log.Println("[ERR] campaignSummary", err)
-		if _, ok := err.(*TestingCampaignShrinkable); ok {
+		if _, ok := err.(*TestingCampaignShrinkable); ok && !noShrinking {
 			log.Println("[NFO] about to shrink that bug")
 			if !rt.shrinking {
 				rt.unshrunk = uint32(len(toShrink))
@@ -146,7 +147,7 @@ func (rt *Runtime) Fuzz(
 			rt.shrinking = true
 			rt.eIds = uniqueEIDs(toShrink)
 			*rt.shrinkingTimes--
-			err = rt.Fuzz(ctx, ntensity, nextSeed, apiKey)
+			err = rt.Fuzz(ctx, ntensity, nextSeed, noShrinking, apiKey)
 			log.Println("[ERR] rt.Fuzz with shrinking:", err)
 			return
 		}
