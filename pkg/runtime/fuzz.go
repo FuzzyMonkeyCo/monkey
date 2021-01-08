@@ -137,7 +137,7 @@ func (rt *Runtime) Fuzz(
 
 	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes, seed)
+		err = rt.campaignSummary(rt.eIds, toShrink, noShrinking, rt.shrinkingTimes, seed)
 		log.Println("[ERR] campaignSummary", err)
 		if _, ok := err.(*TestingCampaignShrinkable); ok && !noShrinking {
 			log.Println("[NFO] about to shrink that bug")

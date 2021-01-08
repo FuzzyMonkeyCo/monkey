@@ -97,7 +97,12 @@ func (tc *TestingCampaignShrinkable) isTestingCampaignOutcomer()                
 func (tc *TestingCampaignFailureDueToResetterError) isTestingCampaignOutcomer() {}
 
 // campaignSummary concludes the testing campaign and reports to the user.
-func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32, seed []byte) TestingCampaignOutcomer {
+func (rt *Runtime) campaignSummary(
+	in, shrinkable []uint32,
+	noShrinking bool,
+	shrinkAttempts *uint32,
+	seed []byte,
+) TestingCampaignOutcomer {
 	l := rt.lastFuzzingProgress
 	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
@@ -124,7 +129,7 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 	)
 
 	attemptsLeft := shrinkAttempts == nil || (shrinkAttempts != nil && *shrinkAttempts != 0)
-	if attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
+	if !noShrinking && attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
 		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
 			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
 		return &TestingCampaignShrinkable{}
@@ -138,7 +143,7 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 				rt.unshrunk, plural("call", rt.unshrunk))
 		}
 	}
-	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed=%s", seed)
+	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed=%s\n", seed)
 
 	return &TestingCampaignFailure{}
 }
