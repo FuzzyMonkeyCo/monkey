@@ -97,7 +97,7 @@ func (tc *TestingCampaignShrinkable) isTestingCampaignOutcomer()                
 func (tc *TestingCampaignFailureDueToResetterError) isTestingCampaignOutcomer() {}
 
 // campaignSummary concludes the testing campaign and reports to the user.
-func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32) TestingCampaignOutcomer {
+func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint32, seed []byte) TestingCampaignOutcomer {
 	l := rt.lastFuzzingProgress
 	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
@@ -131,9 +131,14 @@ func (rt *Runtime) campaignSummary(in, shrinkable []uint32, shrinkAttempts *uint
 	}
 
 	if rt.shrinking {
-		as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
-			rt.unshrunk, plural("call", rt.unshrunk))
+		if l.GetTestCallsCount() == rt.unshrunk {
+			as.ColorNFO.Println("Shrinking done.")
+		} else {
+			as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
+				rt.unshrunk, plural("call", rt.unshrunk))
+		}
 	}
+	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed=%s", seed)
 
 	return &TestingCampaignFailure{}
 }

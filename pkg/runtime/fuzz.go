@@ -75,7 +75,8 @@ func (rt *Runtime) Fuzz(
 		if rt.progress == nil {
 			fuzzRep := srv.GetFuzzRep()
 			rt.newProgress(ctx, fuzzRep.GetMaxTestsCount())
-			rt.progress.Printf("Using seed %s", fuzzRep.GetSeed())
+			seed = fuzzRep.GetSeed()
+			rt.progress.Printf("  --seed=%s", seed)
 			continue
 		}
 
@@ -135,7 +136,7 @@ func (rt *Runtime) Fuzz(
 
 	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes)
+		err = rt.campaignSummary(rt.eIds, toShrink, rt.shrinkingTimes, seed)
 		log.Println("[ERR] campaignSummary", err)
 		if _, ok := err.(*TestingCampaignShrinkable); ok {
 			log.Println("[NFO] about to shrink that bug")
