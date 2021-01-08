@@ -7,17 +7,19 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  M.m.p   feedb065        go1.15.2        linux   amd64
+monkey  M.m.p   feedb065        go1.15.6        linux   amd64
 
 Usage:
   monkey [-vvv] init [--with-magic]
   monkey [-vvv] login [--user=USER]
-  monkey [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
+  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
+                     [--no-shrinking] [--shrink=ID]
                      [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   monkey [-vvv] lint [--show-spec]
+  monkey [-vvv] fmt [-w]
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] env [VAR ...]

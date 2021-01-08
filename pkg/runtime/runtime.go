@@ -35,9 +35,10 @@ type Runtime struct {
 
 	models map[string]modeler.Interface
 
-	eIds      []uint32
-	shrinking bool
-	unshrunk  uint32
+	eIds           []uint32
+	shrinking      bool
+	shrinkingTimes *uint32
+	unshrunk       uint32
 
 	tags map[string]string
 
@@ -46,7 +47,7 @@ type Runtime struct {
 	logLevel             uint8
 	progress             progresser.Interface
 	lastFuzzingProgress  *fm.Srv_FuzzingProgress
-	testingCampaingStart time.Time
+	testingCampaignStart time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
@@ -122,7 +123,10 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 }
 
 func (rt *Runtime) loadCfg(localCfg string) (err error) {
-	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
+	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
+	for k, v := range rt.globals {
+		log.Printf("[DBG] starlark global %q: %+v", k, v)
+	}
 	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, nil, rt.globals); err != nil {
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
@@ -134,20 +138,29 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 		return
 	}
 
-	log.Printf("[DBG] %d defined models: %v", len(rt.models), rt.models)
+	log.Printf("[DBG] models defined: %d", len(rt.models))
+	for k, v := range rt.models {
+		log.Printf("[DBG] defined model %q: %+v", k, v)
+	}
 	if len(rt.models) == 0 {
 		err = errors.New("no models registered")
 		log.Println("[ERR]", err)
 		return
 	}
 
-	log.Printf("[NFO] froze %d envs: %+v", len(rt.envRead), rt.envRead)
+	log.Printf("[NFO] frozen envs: %d", len(rt.envRead))
+	for k, v := range rt.envRead {
+		log.Printf("[NFO] env frozen %q: %+v", k, v)
+	}
 	log.Printf("[NFO] readying %d triggers", len(rt.triggers))
 
 	for t := range rt.builtins() {
 		delete(rt.globals, t)
 	}
-	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
+	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
+	for k, v := range rt.globals {
+		log.Printf("[DBG] starlark global %q: %+v", k, v)
+	}
 
 	const tState = "State"
 	if state, ok := rt.globals[tState]; ok {
@@ -207,6 +220,9 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 			break
 		}
 	}
-	log.Printf("[DBG] %d starlark globals: %+v", len(rt.globals), rt.globals)
+	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
+	for k, v := range rt.globals {
+		log.Printf("[DBG] starlark global %q: %+v", k, v)
+	}
 	return
 }

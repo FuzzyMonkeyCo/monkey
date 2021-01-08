@@ -53,22 +53,21 @@ def actionAfterPosts(State, response):
 
 def ensureIdMatchesURL(State, response):
     # TODO: easy access to generated parameters. For instance:
-    # postId = response["request"]["parameters"]["path"]["{id}"] (note decoded int)
-    postId = int(response["request"]["url"].split("/")[-1])
-
+    # post_id = response["request"]["parameters"]["path"]["{id}"] (note decoded int)
+    post_id = int(response["request"]["url"].split("/")[-1])
     post = response["json"]
 
-    # Implied: postId in State['posts'] and post == State['posts'][postId]
+    # Implied: post_id in State['posts'] and post == State['posts'][post_id]
     # Ensure an API contract:
-    AssertThat(post["id"]).isEqualTo(postId)
+    AssertThat(post["id"]).isEqualTo(post_id)
 
 def actionAfterGetExistingPost(State, response):
-    postId = int(response["request"]["url"].split("/")[-1])
+    post_id = int(response["request"]["url"].split("/")[-1])
     post = response["json"]
 
     # Verify that retrieved post matches local model
-    AssertThat(State["posts"]).contains(postId)
-    AssertThat(post).isEqualTo(State["posts"][postId])
+    AssertThat(State["posts"]).contains(post_id)
+    AssertThat(post).isEqualTo(State["posts"][post_id])
 
 TriggerActionAfterProbe(
     name = "Collect things",
@@ -113,9 +112,9 @@ TriggerActionAfterProbe(
 
 ## MISC
 
-### Sharing 1-2: ensure argument mutation doesn't corrupt model state
-
 def sharing_1_2(State, response):
+    """Sharing 1-2: ensure argument mutation doesn't corrupt model state
+    """
     if "sharing" in State and State["sharing"] == 42:
         fail("State['sharing'] must not already be set")
     State["sharing"] = 42

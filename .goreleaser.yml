@@ -4,33 +4,37 @@ builds:
   - GRPCHOST=api.fuzzymonkey.co:7077
   goos:
   - darwin
-  # TODO: - freebsd
+  # TODO: - freebsd openbsd netbsd dragonfly
   - linux
   - windows
   goarch:
   - 386
   - amd64
-  # TODO: - arm
-  # TODO: - arm64
-  # goarm:
-  # TODO: - 7
+  # TODO: - arm arm64
+  # TODO: goarm: [6, 7]
   ignore: []
-  ldflags:
-  - '-X main.binSHA={{.ShortCommit}}'
-  - '-X main.binVersion={{.Env.CURRENT_TAG}}'
-  - '-X github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm.grpcHost={{.Env.GRPCHOST}}'
-  - '-extldflags "-static"'
-  - '-s -w'
+  ldflags: >
+    -s
+    -w
+    -extldflags "-static"
+    -X main.binSHA={{.ShortCommit}}
+    -X main.binVersion={{.Env.CURRENT_TAG}}
+    -X github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm.grpcHost={{.Env.GRPCHOST}}
 
 archives:
 - replacements:
-    # $(uname -s) and $(uname -m)
+    # https://en.wikipedia.org/wiki/Uname
+    # uname -m compatible.
     386: i386
     amd64: x86_64
+    # uname -s compatible.
     # arm64: aarch64
     darwin: Darwin
+    dragonfly: DragonFly
     freebsd: FreeBSD
     linux: Linux
+    netbsd: NetBSD
+    openbsd: OpenBSD
     windows: Windows
   format_overrides:
   - goos: windows

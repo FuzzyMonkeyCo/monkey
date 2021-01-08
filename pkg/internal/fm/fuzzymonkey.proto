@@ -163,6 +163,7 @@ message Srv {
 
   message FuzzRep {
     uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
+    bytes seed = 2; // Seed in use for the campaign
   }
 
   message Call {
@@ -187,7 +188,9 @@ message Srv {
   message Reset {}
 
   message FuzzingResult {
-    repeated uint32 EIDs = 1; // Sequence of calls known to have produced a failure
+    bytes seed = 1; // Seed suggested for next run
+    repeated uint32 EIDs = 2; // Sequence of calls known to have produced a failure
+    uint32 max_shrinks = 3; // Number of attempts at shrinking
   }
 
   oneof msg {

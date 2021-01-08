@@ -16,7 +16,13 @@ import (
 )
 
 // Fuzz runs calls, resets and live reporting
-func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (err error) {
+func (rt *Runtime) Fuzz(
+	ctx context.Context,
+	ntensity uint32,
+	seed []byte,
+	noShrinking bool,
+	apiKey string,
+) (err error) {
 	ctx = metadata.AppendToOutgoingContext(ctx,
 		"ua", rt.binTitle,
 		"apiKey", apiKey,
@@ -45,7 +51,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		Model:    mdl.ToProto(),
 		Ntensity: ntensity,
 		Resetter: resetter.ToProto(),
-		Seed:     []byte{42, 42, 42}, //FIXME
+		Seed:     seed,
 		Tags:     rt.tags,
 		Usage:    os.Args,
 	}}}); err != nil {
@@ -54,6 +60,7 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 	}
 
 	var toShrink []uint32
+	var nextSeed []byte
 	for {
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
@@ -67,7 +74,11 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 		}
 
 		if rt.progress == nil {
-			rt.newProgress(ctx, srv.GetFuzzRep().GetMaxTestsCount())
+			fuzzRep := srv.GetFuzzRep()
+			rt.newProgress(ctx, fuzzRep.GetMaxTestsCount())
+			seed = fuzzRep.GetSeed()
+			rt.progress.Printf("  --seed=%s", seed)
+			continue
 		}
 
 		if fp := srv.GetFuzzingProgress(); fp != nil {
@@ -89,6 +100,11 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 			}
 		case *fm.Srv_FuzzingResult_:
 			toShrink = msg.FuzzingResult.GetEIDs()
+			nextSeed = msg.FuzzingResult.GetSeed()
+			if rt.shrinkingTimes == nil {
+				value := msg.FuzzingResult.GetMaxShrinks()
+				rt.shrinkingTimes = &value
+			}
 		default:
 			err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
 			log.Println("[ERR]", err)
@@ -121,15 +137,18 @@ func (rt *Runtime) Fuzz(ctx context.Context, ntensity uint32, apiKey string) (er
 
 	log.Println("[NFO] summing up test campaign")
 	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary(rt.eIds, toShrink)
-		if _, ok := err.(*TestingCampaingShrinkable); ok {
+		err = rt.campaignSummary(rt.eIds, toShrink, noShrinking, rt.shrinkingTimes, seed)
+		log.Println("[ERR] campaignSummary", err)
+		if _, ok := err.(*TestingCampaignShrinkable); ok && !noShrinking {
 			log.Println("[NFO] about to shrink that bug")
 			if !rt.shrinking {
 				rt.unshrunk = uint32(len(toShrink))
 			}
 			rt.shrinking = true
 			rt.eIds = uniqueEIDs(toShrink)
-			err = rt.Fuzz(ctx, ntensity, apiKey)
+			*rt.shrinkingTimes--
+			err = rt.Fuzz(ctx, ntensity, nextSeed, noShrinking, apiKey)
+			log.Println("[ERR] rt.Fuzz with shrinking:", err)
 			return
 		}
 	}

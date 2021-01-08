@@ -123,9 +123,6 @@ func TestFalsyThings(t *testing.T) {
 	m := make(map[string]error, 4*len(values))
 	for _, v := range values {
 		vv := v
-		if v == `0.0` {
-			vv = `0`
-		}
 		if v == `set()` {
 			vv = `set([])`
 		}
@@ -191,12 +188,10 @@ func TestIsEqualTo(t *testing.T) {
 	})
 }
 
-func TestIsEqualToFailsButFormattedRepresentationsAreEqual(t *testing.T) {
+func TestIsEqualToFailsOnFloatsAsWellAsWithFormattedRepresentations(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(0.3).isEqualTo(0.1+0.2)`: fail("0.3", "is equal to <0.3>",
-			" However, their str() representations are equal."),
-		`AssertThat(0.1+0.2).isEqualTo(0.3)`: fail("0.3", "is equal to <0.3>",
-			" However, their str() representations are equal."),
+		`AssertThat(0.3).isEqualTo(0.1+0.2)`: fail("0.3", "is equal to <0.30000000000000004>"),
+		`AssertThat(0.1+0.2).isEqualTo(0.3)`: fail("0.30000000000000004", "is equal to <0.3>"),
 	})
 }
 

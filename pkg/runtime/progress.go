@@ -27,7 +27,7 @@ func (rt *Runtime) newProgress(ctx context.Context, max uint32) {
 	} else {
 		rt.progress = &cli.Progresser{}
 	}
-	rt.testingCampaingStart = time.Now()
+	rt.testingCampaignStart = time.Now()
 	rt.progress.WithContext(ctx)
 	rt.progress.MaxTestsCount(max)
 }
@@ -59,75 +59,93 @@ func (rt *Runtime) fuzzingProgress(fp *fm.Srv_FuzzingProgress) {
 	rt.lastFuzzingProgress = fp
 }
 
-// TestingCampaingOutcomer describes a testing campaing's results
-type TestingCampaingOutcomer interface {
+// TestingCampaignOutcomer describes a testing campaign's results
+type TestingCampaignOutcomer interface {
 	error
-	isTestingCampaingOutcomer()
+	isTestingCampaignOutcomer()
 }
 
-var _ TestingCampaingOutcomer = (*TestingCampaingSuccess)(nil)
-var _ TestingCampaingOutcomer = (*TestingCampaingFailure)(nil)
-var _ TestingCampaingOutcomer = (*TestingCampaingShrinkable)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignSuccess)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignFailure)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignShrinkable)(nil)
+var _ TestingCampaignOutcomer = (*TestingCampaignFailureDueToResetterError)(nil)
 
-// TestingCampaingSuccess indicates no bug was found during fuzzing.
-type TestingCampaingSuccess struct{}
+// TestingCampaignSuccess indicates no bug was found during fuzzing.
+type TestingCampaignSuccess struct{}
 
-// TestingCampaingFailure indicates a bug was found during fuzzing.
-type TestingCampaingFailure struct{}
+// TestingCampaignFailure indicates a bug was found during fuzzing.
+type TestingCampaignFailure struct{}
 
-// TestingCampaingShrinkable indicates a bug-producing test can be shrunk.
-type TestingCampaingShrinkable struct{}
+// TestingCampaignShrinkable indicates a bug-producing test can be shrunk.
+type TestingCampaignShrinkable struct{}
 
-func (tc *TestingCampaingSuccess) Error() string    { return "Found no bug" }
-func (tc *TestingCampaingFailure) Error() string    { return "Found a bug" }
-func (tc *TestingCampaingShrinkable) Error() string { return "Found a bug" }
+// TestingCampaignFailureDueToResetterError indicates a bug was found during reset.
+type TestingCampaignFailureDueToResetterError struct{}
 
-func (tc *TestingCampaingSuccess) isTestingCampaingOutcomer()    {}
-func (tc *TestingCampaingFailure) isTestingCampaingOutcomer()    {}
-func (tc *TestingCampaingShrinkable) isTestingCampaingOutcomer() {}
+const foundABug = "Found a bug"
 
-// campaignSummary concludes the testing campaing and reports to the user.
-func (rt *Runtime) campaignSummary(in, shrinkable []uint32) TestingCampaingOutcomer {
+func (tc *TestingCampaignSuccess) Error() string    { return "Found no bug" }
+func (tc *TestingCampaignFailure) Error() string    { return foundABug }
+func (tc *TestingCampaignShrinkable) Error() string { return foundABug }
+func (tc *TestingCampaignFailureDueToResetterError) Error() string {
+	return "Something went wrong while resetting the system to a neutral state."
+}
+
+func (tc *TestingCampaignSuccess) isTestingCampaignOutcomer()                   {}
+func (tc *TestingCampaignFailure) isTestingCampaignOutcomer()                   {}
+func (tc *TestingCampaignShrinkable) isTestingCampaignOutcomer()                {}
+func (tc *TestingCampaignFailureDueToResetterError) isTestingCampaignOutcomer() {}
+
+// campaignSummary concludes the testing campaign and reports to the user.
+func (rt *Runtime) campaignSummary(
+	in, shrinkable []uint32,
+	noShrinking bool,
+	shrinkAttempts *uint32,
+	seed []byte,
+) TestingCampaignOutcomer {
 	l := rt.lastFuzzingProgress
-	log.Printf("[NFO] ran %d tests: %d requests: %d checks",
+	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
-	as.ColorWRN.Printf("\n\nRan %d %s tottaling %d %s and %d %s in %s.\n",
+	as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n",
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
-		l.GetTotalCallsCount(), plural("request", l.GetTotalCallsCount()),
+		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-		time.Since(rt.testingCampaingStart),
+		time.Since(rt.testingCampaignStart),
 	)
 
 	if l.GetSuccess() {
 		as.ColorNFO.Println("No bugs found yet.")
-		return &TestingCampaingSuccess{}
+		return &TestingCampaignSuccess{}
 	}
 
 	if l.GetTestCallsCount() == 0 {
-		as.ColorERR.Println("Something went wrong while resetting the system to a neutral state.")
-		as.ColorNFO.Println("No bugs found yet.")
-		return &TestingCampaingFailure{}
+		return &TestingCampaignFailureDueToResetterError{}
 	}
 
 	log.Printf("[NFO] found a bug in %d calls: %+v (shrinking? %v)",
 		l.GetTestCallsCount(), in, rt.shrinking)
-	as.ColorERR.Printf("A bug was detected after %d %s (in %d %s).\n",
-		l.GetTestCallsCount(), plural("request", l.GetTestCallsCount()),
-		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
+	as.ColorERR.Printf("A bug was detected after %d %s.\n",
+		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
 	)
 
-	if len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
+	attemptsLeft := shrinkAttempts == nil || (shrinkAttempts != nil && *shrinkAttempts != 0)
+	if !noShrinking && attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
 		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
 			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
-		return &TestingCampaingShrinkable{}
+		return &TestingCampaignShrinkable{}
 	}
 
 	if rt.shrinking {
-		as.ColorNFO.Printf("Previously, it took %d %s to trigger one.\n",
-			rt.unshrunk, plural("call", rt.unshrunk))
+		if l.GetTestCallsCount() == rt.unshrunk {
+			as.ColorNFO.Println("Shrinking done.")
+		} else {
+			as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
+				rt.unshrunk, plural("call", rt.unshrunk))
+		}
 	}
+	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed=%s\n", seed)
 
-	return &TestingCampaingFailure{}
+	return &TestingCampaignFailure{}
 }
 
 func plural(s string, n uint32) string {

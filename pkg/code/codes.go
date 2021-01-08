@@ -7,6 +7,8 @@ const (
 	FailedLint = 2
 	// `binName` executable could not be upgraded
 	FailedUpdate = 3
+	// fmt failed
+	FailedFmt = 4
 	// Fuzzing found a bug!
 	FailedFuzz = 6
 	// A user command (start, reset, stop) failed

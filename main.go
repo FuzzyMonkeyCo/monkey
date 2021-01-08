@@ -16,7 +16,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	"github.com/hashicorp/logutils"
@@ -92,6 +91,22 @@ func actualMain() int {
 
 	if args.Env {
 		return doEnv(args.EnvVars)
+	}
+
+	if args.Fmt {
+		if err := rt.Format(args.FmtW); err != nil {
+			if e, ok := err.(rt.FmtError); ok {
+				for i := 0; i < len(e); i += 3 {
+					as.ColorNFO.Printf("%s ", e[i])
+					as.ColorOK.Printf("%s ", e[i+1])
+					as.ColorERR.Printf("%s\n", e[i+2])
+				}
+			} else {
+				as.ColorERR.Println(err)
+			}
+			return code.FailedFmt
+		}
+		return code.OK
 	}
 
 	mrt, err := rt.NewMonkey(binTitle, args.Tags, args.Verbosity)
@@ -178,12 +193,6 @@ func actualMain() int {
 		return code.OK
 	}
 
-	if args.Seed != "" {
-		msg := "--seed=SEED isn't implemented yet."
-		log.Println("[ERR]", msg)
-		as.ColorERR.Println(msg)
-		return code.Failed
-	}
 	if args.Shrink != "" {
 		// mrt.shrinking = true
 		// mrt.unshrunk = len(toShrink)
@@ -208,7 +217,7 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, apiKey)
+	err = mrt.Fuzz(ctx, args.N, []byte(args.Seed), args.NoShrinking, apiKey)
 	switch {
 	case err == nil:
 	case err == context.Canceled:
@@ -221,13 +230,13 @@ func actualMain() int {
 		log.Println("[ERR]", err)
 	}
 	switch err.(type) {
-	case *resetter.Error:
+	case *rt.TestingCampaignSuccess:
+		return code.OK
+	case *rt.TestingCampaignFailure:
+		return code.FailedFuzz
+	case *rt.TestingCampaignFailureDueToResetterError:
 		as.ColorERR.Println(err)
 		return code.FailedExec
-	case *rt.TestingCampaingSuccess:
-		return code.OK
-	case *rt.TestingCampaingFailure:
-		return code.FailedFuzz
 	}
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	return retryOrReport()

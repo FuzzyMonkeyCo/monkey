@@ -11,10 +11,12 @@ import (
 )
 
 type params struct {
-	Fuzz, Lint, Schema             bool
+	Fuzz, Lint, Fmt, Schema        bool
 	Init, Env, Login, Logs         bool
 	Update, Version                bool
 	Exec, Start, Reset, Stop, Repl bool
+	FmtW                           bool          `mapstructure:"-w"`
+	NoShrinking                    bool          `mapstructure:"--no-shrinking"`
 	ShowSpec                       bool          `mapstructure:"--show-spec"`
 	Seed                           string        `mapstructure:"--seed"`
 	Shrink                         string        `mapstructure:"--shrink"`
@@ -34,12 +36,14 @@ func usage() (args *params, ret int) {
 Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] login [--user=USER]
-  ` + B + ` [-vvv] fuzz [--intensity=N] [--shrink=ID] [--seed=SEED] [--tag=KV]...
+  ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
+                     [--no-shrinking] [--shrink=ID]
                      [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
   ` + B + ` [-vvv] lint [--show-spec]
+  ` + B + ` [-vvv] fmt [-w]
   ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] env [VAR ...]
