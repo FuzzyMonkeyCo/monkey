@@ -77,7 +77,7 @@ func (rt *Runtime) Fuzz(
 			fuzzRep := srv.GetFuzzRep()
 			rt.newProgress(ctx, fuzzRep.GetMaxTestsCount())
 			seed = fuzzRep.GetSeed()
-			rt.progress.Printf("  --seed=%s", seed)
+			rt.progress.Printf("  --seed='%s'", seed)
 			continue
 		}
 

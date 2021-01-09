@@ -143,7 +143,7 @@ func (rt *Runtime) campaignSummary(
 				rt.unshrunk, plural("call", rt.unshrunk))
 		}
 	}
-	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed=%s\n", seed)
+	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed='%s'\n", seed)
 
 	return &TestingCampaignFailure{}
 }
