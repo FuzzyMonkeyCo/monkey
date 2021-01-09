@@ -37,7 +37,7 @@ Usage:
   ` + B + ` [-vvv] init [--with-magic]
   ` + B + ` [-vvv] login [--user=USER]
   ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
-                     [--no-shrinking] [--shrink=ID]
+                     [--no-shrinking]` + /* TODO:` [--shrink=ID]`*/ `
                      [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
@@ -59,8 +59,8 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-  --shrink=ID                     Which failed test to minimize
-  --tag=KV                        Labels that can help classification (format: key=value)
+` + /*`  --shrink=ID                     Which failed test to minimize
+		`*/`  --tag=KV                        Labels that can help classification (format: key=value)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
