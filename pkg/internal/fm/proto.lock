@@ -312,6 +312,11 @@
                     "id": 7,
                     "name": "shrink",
                     "type": "bool"
+                  },
+                  {
+                    "id": 10,
+                    "name": "UUID",
+                    "type": "string"
                   }
                 ],
                 "maps": [

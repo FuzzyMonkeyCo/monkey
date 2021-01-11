@@ -37,7 +37,7 @@ func (p *Progresser) MaxTestsCount(v uint32) {
 		bar.WithDimensions(int(v), 37),
 		bar.WithDisplay("", "█", "█", " ", "|"),
 		// bar.WithFormat(":state :percent :bar :rate ops/s :eta"),
-		bar.WithFormat(":state :bar :rate ops/s :eta"),
+		bar.WithFormat(":state :bar :rate calls/s :eta"),
 	)
 
 	p.ticker = time.NewTicker(tickEvery)

@@ -45,13 +45,14 @@ type Runtime struct {
 	client *fm.ChBiDi
 
 	logLevel             uint8
+	ptype                string
 	progress             progresser.Interface
 	lastFuzzingProgress  *fm.Srv_FuzzingProgress
 	testingCampaignStart time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
+func NewMonkey(name, ptype string, tags []string, vvv uint8) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("unnamed NewMonkey")
 		log.Println("[ERR]", err)
@@ -66,6 +67,7 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 
 	rt = &Runtime{
 		binTitle: name,
+		ptype:    ptype,
 		logLevel: vvv,
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),

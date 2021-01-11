@@ -79,12 +79,6 @@ func actualMain() int {
 	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
 	defer func() { log.Printf("[ERR] (not an error) ran for %s", time.Since(start)) }()
 
-	if args.Init || args.Login {
-		// FIXME: implement init & login
-		as.ColorERR.Println("Action not implemented yet")
-		return code.Failed
-	}
-
 	if args.Update {
 		return doUpdate()
 	}
@@ -109,7 +103,7 @@ func actualMain() int {
 		return code.OK
 	}
 
-	mrt, err := rt.NewMonkey(binTitle, args.Tags, args.Verbosity)
+	mrt, err := rt.NewMonkey(binTitle, args.Progress, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -193,15 +187,6 @@ func actualMain() int {
 		return code.OK
 	}
 
-	if args.Shrink != "" {
-		// mrt.shrinking = true
-		// mrt.unshrunk = len(toShrink)
-		msg := "--shrink=ID isn't implemented yet."
-		log.Println("[ERR]", msg)
-		as.ColorERR.Println(msg)
-		return code.Failed
-	}
-
 	apiKey := os.Getenv(envAPIKey)
 	if apiKey == "" {
 		err := fmt.Errorf("$%s is unset", envAPIKey)
@@ -258,14 +243,18 @@ func doLogs(offset uint64) int {
 	}
 
 	fn := cwid.LogFile()
-	os.Stderr.WriteString(fn + "\n")
 	f, err := os.Open(fn)
 	if err != nil {
+		if os.IsNotExist(err) {
+			as.ColorERR.Println("No logs for current project. Please change working directory.")
+			return code.Failed
+		}
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
 	defer f.Close()
 
+	os.Stderr.WriteString(fn + "\n")
 	if _, err := io.Copy(os.Stdout, f); err != nil {
 		as.ColorERR.Println(err)
 		return retryOrReport()

@@ -53,6 +53,7 @@ message Clt {
     bool shrink = 7;
     map<string, string> tags = 8;
     map<string, string> env_read = 9;
+    string UUID = 10;
   }
 
   message Metrics {

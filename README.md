@@ -10,11 +10,9 @@
 monkey  M.m.p   feedb065        go1.15.6        linux   amd64
 
 Usage:
-  monkey [-vvv] init [--with-magic]
-  monkey [-vvv] login [--user=USER]
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
                      [--no-shrinking]
-                     [--time-budget-overall=DURATION]
+                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -36,11 +34,11 @@ Options:
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --tag=KV                        Labels that can help classification (format: key=value)
+  --progress=PROGRESS             auto, cli, ci, dots (defaults: auto)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
-  --user=USER                     Authenticate on fuzzymonkey.co as USER
   --validate-against=REF          Schema $ref to validate STDIN against
   --with-magic                    Auto fill in schemas from random API calls
 

@@ -11,34 +11,34 @@ import (
 )
 
 type params struct {
-	Fuzz, Lint, Fmt, Schema        bool
-	Init, Env, Login, Logs         bool
-	Update, Version                bool
-	Exec, Start, Reset, Stop, Repl bool
-	FmtW                           bool          `mapstructure:"-w"`
-	NoShrinking                    bool          `mapstructure:"--no-shrinking"`
-	ShowSpec                       bool          `mapstructure:"--show-spec"`
-	Seed                           string        `mapstructure:"--seed"`
-	Shrink                         string        `mapstructure:"--shrink"`
-	Tags                           []string      `mapstructure:"--tag"`
-	N                              uint32        `mapstructure:"--intensity"`
-	Verbosity                      uint8         `mapstructure:"-v"`
-	LogOffset                      uint64        `mapstructure:"--previous"`
-	ValidateAgainst                string        `mapstructure:"--validate-against"`
-	EnvVars                        []string      `mapstructure:"VAR"`
-	OverallBudgetTime              time.Duration `mapstructure:"--time-budget-overall"`
+	Env, Fmt, Fuzz, Lint, Logs, Schema bool
+	Update, Version                    bool
+	Exec, Start, Reset, Stop, Repl     bool
+	FmtW                               bool          `mapstructure:"-w"`
+	NoShrinking                        bool          `mapstructure:"--no-shrinking"`
+	ShowSpec                           bool          `mapstructure:"--show-spec"`
+	Seed                               []byte        `mapstructure:"--seed"`
+	Tags                               []string      `mapstructure:"--tag"`
+	N                                  uint32        `mapstructure:"--intensity"`
+	Verbosity                          uint8         `mapstructure:"-v"`
+	LogOffset                          uint64        `mapstructure:"--previous"`
+	ValidateAgainst                    string        `mapstructure:"--validate-against"`
+	Progress                           string        `mapstructure:"--progress"`
+	EnvVars                            []string      `mapstructure:"VAR"`
+	OverallBudgetTime                  time.Duration `mapstructure:"--time-budget-overall"`
 }
 
 func usage() (args *params, ret int) {
 	B := as.ColorNFO.Sprintf(binName)
+	// TODO: B [-vvv] init [--with-magic]
+	// TODO: B [-vvv] login [--user=USER] Authenticate on fuzzymonkey.co as USER
+	// TODO:          fuzz [--shrink=ID] Which failed test to minimize
 	usage := binTitle + `
 
 Usage:
-  ` + B + ` [-vvv] init [--with-magic]
-  ` + B + ` [-vvv] login [--user=USER]
   ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
-                     [--no-shrinking]` + /* TODO:` [--shrink=ID]`*/ `
-                     [--time-budget-overall=DURATION]
+                     [--no-shrinking]
+                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -59,13 +59,12 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-` + /*`  --shrink=ID                     Which failed test to minimize
-		`*/`  --tag=KV                        Labels that can help classification (format: key=value)
+  --tag=KV                        Labels that can help classification (format: key=value)
+  --progress=PROGRESS             auto, cli, ci, dots (defaults: auto)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
-  --user=USER                     Authenticate on fuzzymonkey.co as USER
   --validate-against=REF          Schema $ref to validate STDIN against
   --with-magic                    Auto fill in schemas from random API calls
 

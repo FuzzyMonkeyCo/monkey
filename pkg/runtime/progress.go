@@ -11,25 +11,42 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/dots"
 )
 
-func (rt *Runtime) newProgress(ctx context.Context, max uint32) {
+func (rt *Runtime) newProgress(ctx context.Context, max uint32) (err error) {
 	envSetAndNonEmpty := func(key string) bool {
 		val, ok := os.LookupEnv(key)
-		return ok && len(val) != 0
+		return ok && val != ""
 	}
 
-	if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
+	if rt.ptype == "" || rt.ptype == "auto" {
+		if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
+			rt.ptype = "ci"
+		} else {
+			rt.ptype = "cli"
+		}
+	}
+
+	switch rt.ptype {
+	case "cli":
+		rt.progress = &cli.Progresser{}
+	case "ci":
 		rt.progress = &ci.Progresser{}
 		if rt.logLevel == 0 {
 			rt.logLevel = 3 // lowest level: DBG
 		}
-	} else {
-		rt.progress = &cli.Progresser{}
+	case "dots":
+		rt.progress = &dots.Progresser{}
+	default:
+		err = fmt.Errorf("unexpected progresser %q", rt.ptype)
+		log.Println("[ERR]", err)
+		return
 	}
 	rt.testingCampaignStart = time.Now()
 	rt.progress.WithContext(ctx)
 	rt.progress.MaxTestsCount(max)
+	return
 }
 
 func (rt *Runtime) recvFuzzingProgress(ctx context.Context) (err error) {

@@ -10,6 +10,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
+	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -54,6 +55,7 @@ func (rt *Runtime) Fuzz(
 		Seed:     seed,
 		Tags:     rt.tags,
 		Usage:    os.Args,
+		UUID:     uuid.New().String(),
 	}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -75,7 +77,9 @@ func (rt *Runtime) Fuzz(
 
 		if rt.progress == nil {
 			fuzzRep := srv.GetFuzzRep()
-			rt.newProgress(ctx, fuzzRep.GetMaxTestsCount())
+			if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
+				return
+			}
 			seed = fuzzRep.GetSeed()
 			rt.progress.Printf("  --seed='%s'", seed)
 			continue
