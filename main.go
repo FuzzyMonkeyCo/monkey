@@ -202,17 +202,17 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, []byte(args.Seed), args.NoShrinking, apiKey)
+	err = mrt.Fuzz(ctx, args.N, args.Seed, args.NoShrinking, apiKey)
 	switch {
-	case err == nil:
+	// case err == nil: unreachable
 	case err == context.Canceled:
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
-		as.ColorERR.Printf("Testing interrupted after %s.\n", args.OverallBudgetTime)
+		as.ColorERR.Printf("Testing interrupted after --time-budget-overall=%s.\n", args.OverallBudgetTime)
 		return code.OK
 	default:
-		log.Println("[ERR]", err)
+		log.Println("[ERR]", err) // catchall
 	}
 	switch err.(type) {
 	case *rt.TestingCampaignSuccess:

@@ -176,23 +176,24 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			}
 			argz = []starlark.Value(args)
 		case 0:
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 0); err != nil {
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs); err != nil {
 				return nil, err
 			}
 		case 1:
 			var arg1 starlark.Value
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1); err != nil {
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs, &arg1); err != nil {
 				return nil, err
 			}
-			argz = append(argz, arg1)
+			argz = []starlark.Value{arg1}
 		case 2:
 			var arg1, arg2 starlark.Value
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &arg1, &arg2); err != nil {
+			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs, &arg1, &arg2); err != nil {
 				return nil, err
 			}
-			argz = append(argz, []starlark.Value{arg1, arg2}...)
+			argz = []starlark.Value{arg1, arg2}
 		default:
-			panic("unreachable")
+			err := fmt.Errorf("unexpected #args for AssertThat.%q(): %d", name, nArgs)
+			return nil, err
 		}
 
 		ret, err := method(t, argz...)

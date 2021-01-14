@@ -99,11 +99,9 @@ type TestingCampaignShrinkable struct{}
 // TestingCampaignFailureDueToResetterError indicates a bug was found during reset.
 type TestingCampaignFailureDueToResetterError struct{}
 
-const foundABug = "Found a bug"
-
 func (tc *TestingCampaignSuccess) Error() string    { return "Found no bug" }
-func (tc *TestingCampaignFailure) Error() string    { return foundABug }
-func (tc *TestingCampaignShrinkable) Error() string { return foundABug }
+func (tc *TestingCampaignFailure) Error() string    { return "Found a bug" }
+func (tc *TestingCampaignShrinkable) Error() string { return "Found a shrinkable bug" }
 func (tc *TestingCampaignFailureDueToResetterError) Error() string {
 	return "Something went wrong while resetting the system to a neutral state."
 }
@@ -115,9 +113,8 @@ func (tc *TestingCampaignFailureDueToResetterError) isTestingCampaignOutcomer() 
 
 // campaignSummary concludes the testing campaign and reports to the user.
 func (rt *Runtime) campaignSummary(
-	in, shrinkable []uint32,
+	shrinkable []uint32,
 	noShrinking bool,
-	shrinkAttempts *uint32,
 	seed []byte,
 ) TestingCampaignOutcomer {
 	l := rt.lastFuzzingProgress
@@ -140,27 +137,26 @@ func (rt *Runtime) campaignSummary(
 	}
 
 	log.Printf("[NFO] found a bug in %d calls: %+v (shrinking? %v)",
-		l.GetTestCallsCount(), in, rt.shrinking)
+		l.GetTestCallsCount(), rt.eIds, rt.shrinking)
 	as.ColorERR.Printf("A bug was detected after %d %s.\n",
 		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
 	)
 
-	attemptsLeft := shrinkAttempts == nil || (shrinkAttempts != nil && *shrinkAttempts != 0)
-	if !noShrinking && attemptsLeft && len(shrinkable) != 0 && !equalEIDs(in, shrinkable) {
-		as.ColorNFO.Printf("Trying to reproduce this bug in less than %d %s...\n",
+	if !noShrinking && rt.shrinkingTimes != nil && *rt.shrinkingTimes != 0 && len(shrinkable) != 0 {
+		as.ColorNFO.Printf("Trying to reproduce this bug in fewer than %d %s...\n",
 			l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()))
 		return &TestingCampaignShrinkable{}
 	}
 
 	if rt.shrinking {
-		if l.GetTestCallsCount() == rt.unshrunk {
-			as.ColorNFO.Println("Shrinking done.")
-		} else {
-			as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
-				rt.unshrunk, plural("call", rt.unshrunk))
-		}
+		// if l.GetTestCallsCount() == rt.unshrunk {
+		// 	as.ColorNFO.Println("Shrinking done.")
+		// } else {
+		as.ColorNFO.Printf("Before shrinking, it took %d %s to produce a bug.\n",
+			rt.unshrunk, plural("call", rt.unshrunk))
+		// }
 	}
-	as.ColorWRN.Printf("You can try to reproduce this test failure using this flag:\n  --seed='%s'\n", seed)
+	as.ColorWRN.Printf("You can try to reproduce this test failure with this flag:\n  --seed='%s'\n", seed)
 
 	return &TestingCampaignFailure{}
 }
@@ -172,14 +168,14 @@ func plural(s string, n uint32) string {
 	return s + "s"
 }
 
-func equalEIDs(a, b []uint32) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, x := range a {
-		if x != b[i] {
-			return false
-		}
-	}
-	return true
-}
+// func equalEIDs(a, b []uint32) bool {
+// 	if len(a) != len(b) {
+// 		return false
+// 	}
+// 	for i, x := range a {
+// 		if x != b[i] {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }

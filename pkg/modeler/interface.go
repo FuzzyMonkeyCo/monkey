@@ -37,10 +37,14 @@ type Interface interface {
 	ValidateAgainstSchema(string, []byte) error
 	Validate(uint32, *types.Value) []string
 
-	NewCaller(context.Context, *fm.Srv_Call, func(string, ...interface{})) (Caller, error)
+	// NewCaller is called before making each call
+	NewCaller(context.Context, *fm.Srv_Call, ShowFunc) Caller
 
 	// Check(...) ...
 }
+
+// ShowFunc can be used to display informational messages to the tester
+type ShowFunc func(string, ...interface{})
 
 // Func TODO
 type Func func(starlark.StringDict) (Interface, *Error)

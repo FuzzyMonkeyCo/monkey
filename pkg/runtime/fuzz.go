@@ -75,89 +75,96 @@ func (rt *Runtime) Fuzz(
 			break
 		}
 
-		if rt.progress == nil {
-			fuzzRep := srv.GetFuzzRep()
-			if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
+		func() {
+			if rt.progress == nil {
+				fuzzRep := srv.GetFuzzRep()
+				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
+					return
+				}
+				seed = fuzzRep.GetSeed()
+				rt.progress.Printf("  --seed='%s'", seed)
 				return
 			}
-			seed = fuzzRep.GetSeed()
-			rt.progress.Printf("  --seed='%s'", seed)
-			continue
-		}
 
-		if fp := srv.GetFuzzingProgress(); fp != nil {
-			rt.fuzzingProgress(fp)
-			srv.FuzzingProgress = nil
-		}
+			if fp := srv.GetFuzzingProgress(); fp != nil {
+				rt.fuzzingProgress(fp)
+				srv.FuzzingProgress = nil
+			}
 
-		msg := srv.GetMsg()
-		log.Printf("[NFO] handling %T", msg)
-		switch msg := msg.(type) {
-		case nil:
-		case *fm.Srv_Call_:
-			if err = rt.call(ctx, msg.Call); err != nil {
-				break
+			msg := srv.GetMsg()
+			log.Printf("[NFO] handling %T", msg)
+			// Logical errors must not stop communication,
+			// only transport errors should.
+			switch msg := msg.(type) {
+			// case nil: unreachable
+			case *fm.Srv_Call_:
+				if err = rt.call(ctx, msg.Call); err != nil {
+					return
+				}
+			case *fm.Srv_Reset_:
+				if err = rt.reset(ctx); err != nil {
+					return
+				}
+			case *fm.Srv_FuzzingResult_:
+				toShrink = msg.FuzzingResult.GetEIDs()
+				nextSeed = msg.FuzzingResult.GetSeed()
+				if rt.shrinkingTimes == nil {
+					value := msg.FuzzingResult.GetMaxShrinks()
+					rt.shrinkingTimes = &value
+				}
+				return
+			default: // unreachable
+				err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
+				log.Println("[ERR]", err)
+				return
 			}
-		case *fm.Srv_Reset_:
-			if err = rt.reset(ctx); err != nil {
-				break
-			}
-		case *fm.Srv_FuzzingResult_:
-			toShrink = msg.FuzzingResult.GetEIDs()
-			nextSeed = msg.FuzzingResult.GetSeed()
-			if rt.shrinkingTimes == nil {
-				value := msg.FuzzingResult.GetMaxShrinks()
-				rt.shrinkingTimes = &value
-			}
-		default:
-			err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
-			log.Println("[ERR]", err)
+			log.Printf("[NFO] handled %T", msg)
+		}()
+		if e, ok := status.FromError(err); ok && e.Code() == codes.Canceled {
+			log.Println("[NFO] remote canceled campaign")
 			break
-		}
-		log.Printf("[NFO] handled %T", msg)
-		if err != nil {
-			if e, ok := status.FromError(err); ok && e.Code() == codes.Canceled {
-				log.Println("[NFO] got canceled...")
-				break
-			}
 		}
 	}
 
 	log.Println("[NFO] terminating resetter")
-	if err2 := mdl.GetResetter().Terminate(ctx, false); err2 != nil {
-		log.Println("[ERR]", err2)
+	if errR := mdl.GetResetter().Terminate(ctx, false); errR != nil {
+		log.Println("[ERR]", errR)
 		if err == nil {
-			err = err2
+			err = errR
 		}
 	}
 	log.Println("[NFO] terminating progresser")
-	if err2 := rt.progress.Terminate(); err2 != nil {
-		log.Println("[ERR]", err2)
+	if errP := rt.progress.Terminate(); errP != nil {
+		log.Println("[ERR]", errP)
 		if err == nil {
-			err = err2
+			err = errP
 		}
 	}
+
 	rt.progress = nil
 
 	log.Println("[NFO] summing up test campaign")
-	if err == nil || err == modeler.ErrCheckFailed {
-		err = rt.campaignSummary(rt.eIds, toShrink, noShrinking, rt.shrinkingTimes, seed)
-		log.Println("[ERR] campaignSummary", err)
-		if _, ok := err.(*TestingCampaignShrinkable); ok && !noShrinking {
-			log.Println("[NFO] about to shrink that bug")
-			if !rt.shrinking {
-				rt.unshrunk = uint32(len(toShrink))
-			}
-			rt.shrinking = true
-			rt.eIds = uniqueEIDs(toShrink)
-			*rt.shrinkingTimes--
-			err = rt.Fuzz(ctx, ntensity, nextSeed, noShrinking, apiKey)
-			log.Println("[ERR] rt.Fuzz with shrinking:", err)
-			return
-		}
+	errS := rt.campaignSummary(toShrink, noShrinking, seed)
+	log.Println("[ERR] campaignSummary", errS)
+
+	if err != nil {
+		// Cannot continue after transport or any termination error
+		return
 	}
+
+	if _, ok := errS.(*TestingCampaignShrinkable); ok && !noShrinking {
+		log.Println("[NFO] about to shrink that bug")
+		if !rt.shrinking {
+			rt.unshrunk = uint32(len(toShrink))
+		}
+		rt.shrinking = true
+		rt.eIds = uniqueEIDs(toShrink)
+		*rt.shrinkingTimes--
+		return rt.Fuzz(ctx, ntensity, nextSeed, noShrinking, apiKey)
+	}
+
 	log.Println("[NFO] all finished up")
-	return
+	return errS
 }
 
 func uniqueEIDs(EIDs []uint32) []uint32 {

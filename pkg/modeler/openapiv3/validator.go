@@ -68,7 +68,9 @@ func (vald *validator) seed(base string, schemas schemasJSON) (err error) {
 
 		sid := vald.ensureMapped("", schema)
 		if sid == 0 {
-			panic(absRef)
+			err = fmt.Errorf("unexpectedly empty SID of schema %q", absRef)
+			log.Println("[ERR]", err)
+			return
 		}
 		refSID := vald.Refs[absRef]
 		vald.Refs[absRef] = sid

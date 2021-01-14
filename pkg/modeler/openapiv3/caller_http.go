@@ -34,9 +34,10 @@ var (
 )
 
 type tCapHTTP struct {
-	showf func(string, ...interface{})
-	rep   []byte
-	doErr error
+	showf       modeler.ShowFunc
+	beforeDoErr error
+	doErr       error
+	rep         []byte
 
 	endpointJSON    *fm.EndpointJSON
 	matchedOutputID uint32
@@ -106,16 +107,18 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
+func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
 	m.tcap = &tCapHTTP{
 		showf:        showf,
 		endpointJSON: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
-	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
-		return nil, err
-	}
 
+	// Some things have to be computed before Do() gets called:
+	err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg)
+
+	m.tcap.beforeDoErr = err
 	m.tcap.checks = []namedLambda{
+		{"creation of HTTP request", m.checkCreateHTTPReq},
 		{"connection to server", m.checkConn},
 		{"code < 500", m.checkNot5XX},
 		//FIXME: when decoupling modeler/caller move these to modeler
@@ -124,7 +127,17 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string
 		{"valid JSON response", m.checkValidJSONResponse},
 		{"response validates schema", m.checkValidatesJSONSchema},
 	}
-	return m.tcap, nil
+	return m.tcap
+}
+
+func (m *oa3) checkCreateHTTPReq() (s, skipped string, f []string) {
+	if err := m.tcap.beforeDoErr; err != nil {
+		f = append(f, "could not create HTTP request")
+		f = append(f, err.Error())
+		return
+	}
+	s = "request created"
+	return
 }
 
 func (m *oa3) checkConn() (s, skipped string, f []string) {
@@ -246,7 +259,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
 			"request": {Kind: &types.Value_StructValue{StructValue: c.Request()}},
-			// FIXME? "error"
+			// FIXME? "error": enumFromGo(c.repProto.Error),
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),
 			// "content" as bytes?
@@ -279,6 +292,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 	return s
 }
 
+// Records the request as actually performed: from http.Request.
 func (c *tCapHTTP) request(r *http.Request) (err error) {
 	c.reqProto = &fm.Clt_CallRequestRaw_Input_HttpRequest{
 		Method: r.Method,
@@ -460,10 +474,10 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
 
 	if host := m.Host; host != "" {
-		configured, err := url.ParseRequestURI(host)
-		if err != nil {
+		var configured *url.URL
+		if configured, err = url.ParseRequestURI(host); err != nil {
 			log.Println("[ERR]", err)
-			return err
+			return
 		}
 
 		// NOTE: forces Request.Write to use URL.Host
@@ -476,6 +490,14 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 }
 
 func (c *tCapHTTP) Do(ctx context.Context) {
+	if c.beforeDoErr != nil {
+		// An error happened during NewCaller. Report is delayed until
+		// the call to checkCreateHTTPReq.
+		// No need to set c.repProto.Error as checks will stop before calls
+		// to c.Request() or c.Response().
+		return
+	}
+
 	// TODO: output `curl` requests when showing counterexample
 	//   https://github.com/sethgrid/gencurl
 	//   https://github.com/moul/http2curl

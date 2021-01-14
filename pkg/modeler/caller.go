@@ -2,13 +2,12 @@ package modeler
 
 import (
 	"context"
-	"errors"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/gogo/protobuf/types"
 )
 
-var ErrCheckFailed = errors.New("call check failed")
+// var ErrCheckFailed = errors.New("call check failed")
 
 // CheckerFunc returns whether validation succeeded, was skipped or failed.
 type CheckerFunc func() (string, string, []string)
