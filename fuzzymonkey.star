@@ -26,7 +26,7 @@ OpenAPIv3(
 ## Ensure some general property
 
 # def generallyRootOfXSquaredIsX(State, response):
-#     x = response["json"]['id']
+#     x = response["body"]['id']
 #     if sqrt(x*x) != x:
 #         fail("sqrt({}) != {}".format(x*x, x))
 
@@ -45,7 +45,7 @@ State = {
 
 def actionAfterPosts(State, response):
     # When entering actions, response has already been validated and decoded.
-    for post in response["json"]:
+    for post in response["body"]:
         # Set some state
         State["posts"][post["id"]] = post
     print("State has {} items".format(len(State["posts"])))
@@ -55,7 +55,7 @@ def ensureIdMatchesURL(State, response):
     # TODO: easy access to generated parameters. For instance:
     # post_id = response["request"]["parameters"]["path"]["{id}"] (note decoded int)
     post_id = int(response["request"]["url"].split("/")[-1])
-    post = response["json"]
+    post = response["body"]
 
     # Implied: post_id in State['posts'] and post == State['posts'][post_id]
     # Ensure an API contract:
@@ -63,7 +63,7 @@ def ensureIdMatchesURL(State, response):
 
 def actionAfterGetExistingPost(State, response):
     post_id = int(response["request"]["url"].split("/")[-1])
-    post = response["json"]
+    post = response["body"]
 
     # Verify that retrieved post matches local model
     AssertThat(State["posts"]).contains(post_id)
@@ -93,7 +93,7 @@ for action in [ensureIdMatchesURL, actionAfterGetExistingPost]:
             response["request"]["method"] == "GET",
             response["request"]["url"].find("/posts/") != -1,
             response["status_code"] in range(200, 299),
-            "id" in response["json"] and response["json"]["id"] in State["posts"],
+            "id" in response["body"] and response["body"]["id"] in State["posts"],
         ]),
         # match = None,
         action = action,

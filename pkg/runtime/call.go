@@ -45,6 +45,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	}
 
 	callResponse := cllr.Response()
+	if callResponse == nil {
+		// A proper request could not be created so Response() could not be built
+		return nil
+	}
 	// Actionable response data parsed...
 	if errT := rt.client.Send(ctx, cvp(&fm.Clt_CallVerifProgress{
 		Status:   fm.Clt_CallVerifProgress_data,
@@ -59,12 +63,17 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 			rt.progress.Printf("%s", msg)
 		}
 		printfunc, rt.thread.Print = rt.thread.Print, printfunc
-		// TODO: user-defined eBPF triggers
-		if errT := rt.userChecks(ctx, callResponse); errT != nil {
+		var passed bool
+		var errT error
+		if passed, errT = rt.userChecks(ctx, callResponse); errT != nil {
 			return errT
 		}
 		rt.thread.Print = printfunc
 		log.Printf("[DBG] closeness >>> %+v", rt.thread.Local("closeness"))
+		if !passed {
+			// Return as early as the first check fails
+			return nil
+		}
 	}
 
 	// Through all checks
@@ -112,18 +121,16 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) error 
 			return errT
 		}
 
-		// if v.Status == fm.Clt_CallVerifProgress_failure {
-		// 	err = modeler.ErrCheckFailed
-		// 	log.Println("[ERR]", err)
-		// 	return
-		// }
+		if v.Status == fm.Clt_CallVerifProgress_failure {
+			return nil
+		}
 	}
 }
 
 func (rt *Runtime) runCallerCheck(
 	v *fm.Clt_CallVerifProgress,
 	lambda modeler.CheckerFunc,
-) (err error) {
+) {
 	success, skipped, failure := lambda()
 	hasSuccess := success != ""
 	hasSkipped := skipped != ""
@@ -166,7 +173,7 @@ func (rt *Runtime) runCallerCheck(
 	}
 }
 
-func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) error {
+func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
 
 	cloneResponse := func() (starlark.Value, error) {
@@ -183,7 +190,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) e
 		v.Status = fm.Clt_CallVerifProgress_start
 		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return false, errT
 		}
 
 		errL := rt.runUserCheck(v, trggr, cloneResponse)
@@ -210,19 +217,17 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) e
 
 		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return false, errT
 		}
 		if errT := rt.recvFuzzingProgress(ctx); errT != nil {
-			return errT
+			return false, errT
 		}
 
-		// if v.Status == fm.Clt_CallVerifProgress_failure {
-		// 	err = modeler.ErrCheckFailed
-		// 	log.Println("[ERR]", err)
-		// 	return
-		// }
+		if v.Status == fm.Clt_CallVerifProgress_failure {
+			return false, nil
+		}
 	}
-	return nil
+	return true, nil
 }
 
 func (rt *Runtime) runUserCheck(
@@ -245,76 +250,56 @@ func (rt *Runtime) runUserCheck(
 	args1 := starlark.Tuple{modelState1, response1}
 
 	var shouldBeBool starlark.Value
-	if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err == nil {
-		if triggered, ok := shouldBeBool.(starlark.Bool); ok {
-			if triggered {
-				var modelState2, response2 starlark.Value
-				if modelState2, err = slValueCopy(rt.modelState); err != nil {
-					log.Println("[ERR]", err)
-					return
-				}
-				if response2, err = cloneResponse(); err != nil {
-					log.Println("[ERR]", err)
-					return
-				}
-				args2 := starlark.Tuple{modelState2, response2}
-
-				var newModelState starlark.Value
-				if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err == nil {
-					switch newModelState := newModelState.(type) {
-					case starlark.NoneType:
-						v.Status = fm.Clt_CallVerifProgress_success
-						return
-					case *modelState:
-						v.Status = fm.Clt_CallVerifProgress_success
-						rt.modelState = newModelState
-						return
-					default:
-						// v.Status = fm.Clt_CallVerifProgress_failure
-						err = fmt.Errorf(
-							"expected action %q (of %s) to return a ModelState, got: %s",
-							trggr.act.Name(), v.Name, newModelState.Type(),
-						)
-						// v.Reason = strings.Split(err.Error(), "\n")
-						log.Println("[NFO]", err)
-						// rt.progress.CheckFailed(v.Name, v.Reason)
-						return
-					}
-				} else {
-					// v.Status = fm.Clt_CallVerifProgress_failure
-					///////////////////////////////////// maybeEvalError(v, err)
-					log.Println("[NFO]", err)
-					// rt.progress.CheckFailed(v.Name, v.Reason)
-					return
-				}
-			} else {
-				v.Status = fm.Clt_CallVerifProgress_skipped
-				// rt.progress.CheckSkipped(v.Name, "") // predicate does not hold
-				return
-			}
-		} else {
-			// v.Status = fm.Clt_CallVerifProgress_failure
-			err = fmt.Errorf("expected predicate to return a Bool, got: %s", shouldBeBool.Type())
-			// v.Reason = strings.Split(err.Error(), "\n")
-			log.Println("[NFO]", err)
-			// rt.progress.CheckFailed(v.Name, v.Reason)
-			return
-		}
-	} else {
-		// v.Status = fm.Clt_CallVerifProgress_failure
-		// maybeEvalError(v, err)
+	if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err != nil {
 		log.Println("[NFO]", err)
-		// rt.progress.CheckFailed(v.Name, v.Reason)
+		return
+	}
+
+	didTrigger, ok := shouldBeBool.(starlark.Bool)
+	if !ok {
+		err = fmt.Errorf("expected predicate to return a Bool, got: %s", shouldBeBool.Type())
+		log.Println("[NFO]", err)
+		return
+	}
+	if !didTrigger {
+		// Predicate did not trigger
+		v.Status = fm.Clt_CallVerifProgress_skipped
+		return
+	}
+
+	var modelState2, response2 starlark.Value
+	if modelState2, err = slValueCopy(rt.modelState); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	if response2, err = cloneResponse(); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+	args2 := starlark.Tuple{modelState2, response2}
+
+	var newModelState starlark.Value
+	if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err != nil {
+		// Check failed or an error happened
+		log.Println("[NFO]", err)
+		return
+	}
+	switch newModelState := newModelState.(type) {
+	case starlark.NoneType:
+		// Check passed without returning new State
+		v.Status = fm.Clt_CallVerifProgress_success
+		return
+	case *modelState:
+		// Check passed and returned new State
+		v.Status = fm.Clt_CallVerifProgress_success
+		rt.modelState = newModelState
+		return
+	default:
+		err = fmt.Errorf(
+			"expected action %q (of %s) to return a ModelState, got: %s",
+			trggr.act.Name(), v.Name, newModelState.Type(),
+		)
+		log.Println("[NFO]", err)
 		return
 	}
 }
-
-// func maybeEvalError(v *fm.Clt_CallVerifProgress, err error) {
-// 	var reason string
-// 	if e, ok := err.(*starlark.EvalError); ok {
-// 		reason = e.Backtrace()
-// 	} else {
-// 		reason = err.Error()
-// 	}
-// 	v.Reason = strings.Split(reason, "\n")
-// }

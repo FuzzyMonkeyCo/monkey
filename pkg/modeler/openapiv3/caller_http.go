@@ -39,7 +39,7 @@ type tCapHTTP struct {
 	doErr       error
 	rep         []byte
 
-	endpointJSON    *fm.EndpointJSON
+	endpoint        *fm.EndpointJSON
 	matchedOutputID uint32
 	matchedSID      sid
 	matchedHTTPCode bool
@@ -50,9 +50,9 @@ type tCapHTTP struct {
 	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
 	repProto *fm.Clt_CallResponseRaw_Output_HttpResponse
 
-	reqJSON, repJSON *types.Value
-	repJSONRaw       interface{}
-	repJSONErr       error
+	reqValue, repValue *types.Value
+	repJSONRaw         interface{}
+	repJSONErr         error
 
 	// TODO: pick from these
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
@@ -109,8 +109,8 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 
 func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
 	m.tcap = &tCapHTTP{
-		showf:        showf,
-		endpointJSON: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
+		showf:    showf,
+		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
 
 	// Some things have to be computed before Do() gets called:
@@ -180,7 +180,7 @@ func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
 		return
 	}
 
-	m.tcap.repJSON = enumFromGo(m.tcap.repJSONRaw)
+	m.tcap.repValue = enumFromGo(m.tcap.repJSONRaw)
 	m.tcap.repJSONRaw = nil
 	s = "response is valid JSON"
 	return
@@ -195,7 +195,7 @@ func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 		skipped = "response body is empty"
 		return
 	}
-	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repJSON); len(errs) != 0 {
+	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repValue); len(errs) != 0 {
 		f = errs
 		return
 	}
@@ -222,6 +222,9 @@ func (c *tCapHTTP) showResponse() {
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
+	if c.beforeDoErr != nil {
+		return nil
+	}
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
 			"method": enumFromGo(c.reqProto.Method),
@@ -244,7 +247,7 @@ func (c *tCapHTTP) Request() *types.Struct {
 		StructValue: &types.Struct{Fields: headers}}}
 
 	if c.reqProto.Body != nil {
-		s.Fields["json"] = c.reqJSON
+		s.Fields["body"] = c.reqValue
 	}
 	// TODO? Response *Response
 	// Response is the redirect response which caused this request
@@ -256,9 +259,13 @@ func (c *tCapHTTP) Request() *types.Struct {
 // Request/Response somewhat follow python's `requests` API
 
 func (c *tCapHTTP) Response() *types.Struct {
+	request := c.Request()
+	if request == nil {
+		return nil
+	}
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"request": {Kind: &types.Value_StructValue{StructValue: c.Request()}},
+			"request": {Kind: &types.Value_StructValue{StructValue: request}},
 			// FIXME? "error": enumFromGo(c.repProto.Error),
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),
@@ -282,7 +289,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 		StructValue: &types.Struct{Fields: headers}}}
 
 	if !c.isRepBodyEmpty() {
-		s.Fields["json"] = c.repJSON
+		s.Fields["body"] = c.repValue
 	}
 	// TODO? TLS *tls.ConnectionState
 	// TLS contains information about the TLS connection on which the
@@ -333,7 +340,7 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 		if e := json.Unmarshal(c.reqProto.Body, &jsn); e != nil {
 			log.Println("[NFO] request wasn't proper JSON:", e)
 		} else {
-			c.reqJSON = enumFromGo(jsn)
+			c.reqValue = enumFromGo(jsn)
 		}
 	}
 
@@ -383,11 +390,11 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	func() {
 		var ok bool
 		outputID := c.repProto.StatusCode
-		if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+		if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 			outputID = fromStatusCode(outputID)
-			if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+			if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 				outputID = 0
-				if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+				if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 					return
 				}
 			}
@@ -493,8 +500,8 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 	if c.beforeDoErr != nil {
 		// An error happened during NewCaller. Report is delayed until
 		// the call to checkCreateHTTPReq.
-		// No need to set c.repProto.Error as checks will stop before calls
-		// to c.Request() or c.Response().
+		// c.repProto.Error cannot be set as the rest of the Request()/Response()
+		// protos would be empty. Instead we have them return nil.
 		return
 	}
 
