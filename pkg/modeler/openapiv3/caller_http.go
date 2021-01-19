@@ -321,7 +321,6 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: []string{r.Host},
 			}
-		default:
 		}
 	}
 	c.reqProto.Headers = headers
@@ -367,7 +366,6 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: r.TransferEncoding,
 			}
-		default:
 		}
 	}
 	c.repProto.Headers = headers

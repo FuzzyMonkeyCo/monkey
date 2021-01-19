@@ -309,21 +309,17 @@
                     "is_repeated": true
                   },
                   {
-                    "id": 7,
-                    "name": "shrink",
-                    "type": "bool"
-                  },
-                  {
-                    "id": 10,
-                    "name": "UUID",
-                    "type": "string"
+                    "id": 9,
+                    "name": "UUIDs",
+                    "type": "string",
+                    "is_repeated": true
                   }
                 ],
                 "maps": [
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 8,
+                      "id": 7,
                       "name": "tags",
                       "type": "string"
                     }
@@ -331,7 +327,7 @@
                   {
                     "key_type": "string",
                     "field": {
-                      "id": 9,
+                      "id": 8,
                       "name": "env_read",
                       "type": "string"
                     }
@@ -660,56 +656,51 @@
                   },
                   {
                     "id": 3,
-                    "name": "last_call_failure",
-                    "type": "bool"
-                  },
-                  {
-                    "id": 4,
                     "name": "last_call_success",
                     "type": "bool"
                   },
                   {
-                    "id": 5,
+                    "id": 4,
                     "name": "last_check_failure",
                     "type": "bool"
                   },
                   {
-                    "id": 6,
+                    "id": 5,
                     "name": "last_check_success",
                     "type": "bool"
                   },
                   {
-                    "id": 7,
+                    "id": 6,
                     "name": "shrinking",
                     "type": "bool"
                   },
                   {
-                    "id": 8,
+                    "id": 7,
                     "name": "total_tests_count",
                     "type": "uint32"
                   },
                   {
-                    "id": 9,
+                    "id": 8,
                     "name": "total_calls_count",
                     "type": "uint32"
                   },
                   {
-                    "id": 10,
+                    "id": 9,
                     "name": "total_checks_count",
                     "type": "uint32"
                   },
                   {
-                    "id": 11,
+                    "id": 10,
                     "name": "test_calls_count",
                     "type": "uint32"
                   },
                   {
-                    "id": 12,
+                    "id": 11,
                     "name": "call_checks_count",
                     "type": "uint32"
                   },
                   {
-                    "id": 13,
+                    "id": 12,
                     "name": "shrink_amount",
                     "type": "uint32"
                   }
@@ -727,6 +718,11 @@
                     "id": 2,
                     "name": "seed",
                     "type": "bytes"
+                  },
+                  {
+                    "id": 3,
+                    "name": "is_shrinking",
+                    "type": "bool"
                   }
                 ]
               },
@@ -810,19 +806,29 @@
                 "fields": [
                   {
                     "id": 1,
-                    "name": "seed",
+                    "name": "seed_used",
                     "type": "bytes"
                   },
                   {
                     "id": 2,
-                    "name": "EIDs",
-                    "type": "uint32",
-                    "is_repeated": true
+                    "name": "was_shrinking",
+                    "type": "bool"
                   },
                   {
                     "id": 3,
-                    "name": "max_shrinks",
-                    "type": "uint32"
+                    "name": "next_seed",
+                    "type": "bytes"
+                  },
+                  {
+                    "id": 4,
+                    "name": "will_now_shrink",
+                    "type": "bool"
+                  },
+                  {
+                    "id": 5,
+                    "name": "responses",
+                    "type": "google.protobuf.Struct",
+                    "is_repeated": true
                   }
                 ]
               }

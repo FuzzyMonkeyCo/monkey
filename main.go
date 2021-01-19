@@ -202,7 +202,7 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, args.Seed, args.NoShrinking, apiKey)
+	err = mrt.Fuzz(ctx, args.N, args.Seed, apiKey)
 	switch {
 	// case err == nil: unreachable
 	case err == context.Canceled:

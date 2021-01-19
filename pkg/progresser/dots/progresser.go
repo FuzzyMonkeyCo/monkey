@@ -33,7 +33,10 @@ func (p *Progresser) WithContext(ctx context.Context) {}
 func (p *Progresser) MaxTestsCount(v uint32) {}
 
 // Terminate cleans up after a progresser.Interface implementation instance
-func (p *Progresser) Terminate() error { return nil }
+func (p *Progresser) Terminate() error {
+	fmt.Printf("]")
+	return nil
+}
 
 // TotalTestsCount may be called many times during testing
 func (p *Progresser) TotalTestsCount(v uint32) { dot(v, &p.totalTestsCount, "[", "][") }
@@ -64,10 +67,10 @@ func (p *Progresser) Errorf(format string, s ...interface{}) {}
 func (p *Progresser) ChecksPassed() {}
 
 // CheckPassed may be called many times during testing
-func (p *Progresser) CheckPassed(name, msg string) { as.ColorOK.Printf("-") }
+func (p *Progresser) CheckPassed(name, msg string) { fmt.Printf("|") }
 
 // CheckSkipped may be called many times during testing
-func (p *Progresser) CheckSkipped(name, msg string) { fmt.Printf("-") }
+func (p *Progresser) CheckSkipped(name, msg string) {}
 
 // CheckFailed may be called many times during testing
-func (p *Progresser) CheckFailed(name string, ss []string) { as.ColorERR.Println("!") }
+func (p *Progresser) CheckFailed(name string, ss []string) { as.ColorERR.Println("x") }

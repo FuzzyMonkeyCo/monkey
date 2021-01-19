@@ -80,8 +80,8 @@ func (s *Resetter) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Wri
 }
 
 // Terminate cleans up after a resetter.Interface implementation instance
-func (s *Resetter) Terminate(ctx context.Context, only bool) error {
-	// TODO: maybe run s.Stop
+func (s *Resetter) Terminate(ctx context.Context) error {
+	// FIXME: maybe run s.Stop
 	if err := os.Remove(cwid.EnvFile()); err != nil {
 		if !os.IsNotExist(err) {
 			log.Println("[ERR]", err)
