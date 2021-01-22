@@ -15,6 +15,9 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+// PastSeedMagic is a magic string to search through logs
+const PastSeedMagic = "kFPoyHOKs6XrK2F7jPMGc51f@k&&@9T6LE!zn&uy"
+
 // Fuzz runs calls, resets and live reporting
 func (rt *Runtime) Fuzz(
 	ctx context.Context,
@@ -73,7 +76,9 @@ func (rt *Runtime) Fuzz(
 				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
 					return
 				}
-				rt.progress.Printf("  --seed='%s'", fuzzRep.GetSeed())
+				seed := fuzzRep.GetSeed()
+				log.Printf("[ERR] (not an error) %s=%s (seed)", PastSeedMagic, seed)
+				rt.progress.Printf("  --seed='%s'", seed)
 				return
 			}
 
@@ -118,14 +123,17 @@ func (rt *Runtime) Fuzz(
 			err = errR
 		}
 	}
-	log.Println("[NFO] terminating progresser")
-	if errP := rt.progress.Terminate(); errP != nil {
-		log.Println("[ERR]", errP)
-		if err == nil {
-			err = errP
+	if rt.progress != nil {
+		// It is possible to receive an error as the first response
+		log.Println("[NFO] terminating progresser")
+		if errP := rt.progress.Terminate(); errP != nil {
+			log.Println("[ERR]", errP)
+			if err == nil {
+				err = errP
+			}
 		}
+		rt.progress = nil
 	}
-	rt.progress = nil
 
 	if l := rt.lastFuzzingProgress; true {
 		log.Printf("[NFO] ran %d tests: %d calls: %d checks",

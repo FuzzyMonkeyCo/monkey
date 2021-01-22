@@ -12,7 +12,7 @@ var _ progresser.Interface = (*Progresser)(nil)
 
 // Progresser implements progresser.Interface
 type Progresser struct {
-	totalTestsCount, totalCallsCount, totalChecksCount uint32
+	totalTestsCount, totalCallsCount uint32
 }
 
 func dot(n uint32, o *uint32, f, c string) {
@@ -34,12 +34,12 @@ func (p *Progresser) MaxTestsCount(v uint32) {}
 
 // Terminate cleans up after a progresser.Interface implementation instance
 func (p *Progresser) Terminate() error {
-	fmt.Printf("]")
+	fmt.Printf(">")
 	return nil
 }
 
 // TotalTestsCount may be called many times during testing
-func (p *Progresser) TotalTestsCount(v uint32) { dot(v, &p.totalTestsCount, "[", "] [") }
+func (p *Progresser) TotalTestsCount(v uint32) { dot(v, &p.totalTestsCount, "<", "> <") }
 
 // TotalCallsCount may be called many times during testing
 func (p *Progresser) TotalCallsCount(v uint32) { dot(v, &p.totalCallsCount, ".", ".") }

@@ -12,6 +12,7 @@ import (
 
 type params struct {
 	Env, Fmt, Fuzz, Lint, Logs, Schema bool
+	Pastseed                           bool
 	Update, Version                    bool
 	Exec, Start, Reset, Stop, Repl     bool
 	FmtW                               bool          `mapstructure:"-w"`
@@ -48,6 +49,7 @@ Usage:
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] env [VAR ...]
   ` + B + ` logs [--previous=N]
+  ` + B + ` pastseed
   ` + B + ` [-vvv] update
   ` + B + ` version | --version
   ` + B + ` help    | --help    | -h
@@ -72,7 +74,7 @@ Try:
      export FUZZYMONKEY_API_KEY=42
   ` + B + ` update
   ` + B + ` exec reset
-  ` + B + ` fuzz --only /pets --calls-without-input=NewPet
+  ` + B + ` fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
 	// https://github.com/docopt/docopt.go/issues/59

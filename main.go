@@ -61,6 +61,10 @@ func actualMain() int {
 		return doLogs(offset)
 	}
 
+	if args.Pastseed {
+		return doPastseed()
+	}
+
 	if err := cwid.MakePwdID(binName, 0); err != nil {
 		return retryOrReport()
 	}
@@ -204,7 +208,6 @@ func actualMain() int {
 	as.ColorNFO.Printf("\n Running tests...\n\n")
 	err = mrt.Fuzz(ctx, args.N, args.Seed, apiKey)
 	switch {
-	// case err == nil: unreachable
 	case err == context.Canceled:
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
@@ -212,7 +215,7 @@ func actualMain() int {
 		as.ColorERR.Printf("Testing interrupted after --time-budget-overall=%s.\n", args.OverallBudgetTime)
 		return code.OK
 	default:
-		log.Println("[ERR]", err) // catchall
+		log.Println("[ERR]", err)
 	}
 	switch err.(type) {
 	case *rt.TestingCampaignSuccess:
@@ -223,6 +226,7 @@ func actualMain() int {
 		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
+	as.ColorERR.Println(err)
 	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	return retryOrReport()
 }
