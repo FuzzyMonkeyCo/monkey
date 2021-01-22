@@ -163,7 +163,6 @@ message Srv {
   message FuzzRep {
     uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
     bytes seed = 2; // Seed in use for the campaign
-    bool is_shrinking = 3;
   }
 
   message Call {

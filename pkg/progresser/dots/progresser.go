@@ -39,7 +39,7 @@ func (p *Progresser) Terminate() error {
 }
 
 // TotalTestsCount may be called many times during testing
-func (p *Progresser) TotalTestsCount(v uint32) { dot(v, &p.totalTestsCount, "[", "][") }
+func (p *Progresser) TotalTestsCount(v uint32) { dot(v, &p.totalTestsCount, "[", "] [") }
 
 // TotalCallsCount may be called many times during testing
 func (p *Progresser) TotalCallsCount(v uint32) { dot(v, &p.totalCallsCount, ".", ".") }
@@ -55,7 +55,8 @@ func (p *Progresser) CallChecksCount(v uint32) {}
 
 // Printf formats informational data
 func (p *Progresser) Printf(format string, s ...interface{}) {
-	if format == "  --seed='%s'" {
+	switch format {
+	case "  --seed='%s'":
 		fmt.Printf("\nseed: '%s'\n", s...)
 	}
 }

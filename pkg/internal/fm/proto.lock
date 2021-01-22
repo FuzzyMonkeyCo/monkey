@@ -718,11 +718,6 @@
                     "id": 2,
                     "name": "seed",
                     "type": "bytes"
-                  },
-                  {
-                    "id": 3,
-                    "name": "is_shrinking",
-                    "type": "bool"
                   }
                 ]
               },
