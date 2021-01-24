@@ -718,6 +718,11 @@
                     "id": 2,
                     "name": "seed",
                     "type": "bytes"
+                  },
+                  {
+                    "id": 3,
+                    "name": "token",
+                    "type": "string"
                   }
                 ]
               },
@@ -821,6 +826,11 @@
                   },
                   {
                     "id": 5,
+                    "name": "suggested_seed",
+                    "type": "bytes"
+                  },
+                  {
+                    "id": 6,
                     "name": "responses",
                     "type": "google.protobuf.Struct",
                     "is_repeated": true

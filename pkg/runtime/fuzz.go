@@ -25,11 +25,12 @@ func (rt *Runtime) Fuzz(
 	seed []byte,
 	apiKey string,
 ) (err error) {
-	ctx = metadata.AppendToOutgoingContext(ctx,
-		"ua", rt.binTitle,
-		"apiKey", apiKey,
-	)
-
+	if apiKey != "" {
+		ctx = metadata.AppendToOutgoingContext(ctx,
+			"ua", rt.binTitle,
+			"apiKey", apiKey,
+		)
+	}
 	if rt.client, err = fm.NewChBiDi(ctx); err != nil {
 		return
 	}
@@ -62,6 +63,7 @@ func (rt *Runtime) Fuzz(
 	}
 
 	var result *fm.Srv_FuzzingResult
+	suggestedSeed := seed
 	for {
 		log.Printf("[DBG] receiving msg...")
 		var srv *fm.Srv
@@ -76,9 +78,13 @@ func (rt *Runtime) Fuzz(
 				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
 					return
 				}
-				seed := fuzzRep.GetSeed()
-				log.Printf("[ERR] (not an error) %s=%s (seed)", PastSeedMagic, seed)
-				rt.progress.Printf("  --seed='%s'", seed)
+				if tkn := fuzzRep.GetToken(); tkn != "" {
+					ctx = metadata.AppendToOutgoingContext(ctx, "token", fuzzRep.GetToken())
+				}
+				// Keep in this order (suggested last) for pastseed
+				log.Printf("[ERR] (not an error) %s=%s (seed)", PastSeedMagic, fuzzRep.GetSeed())
+				log.Printf("[ERR] (not an error) %s=%s (suggested)", PastSeedMagic, suggestedSeed)
+				rt.progress.Printf("  --seed=%s", fuzzRep.GetSeed())
 				return
 			}
 
@@ -104,6 +110,8 @@ func (rt *Runtime) Fuzz(
 				}
 			case *fm.Srv_FuzzingResult_:
 				result = msg.FuzzingResult
+				suggestedSeed = result.GetSuggestedSeed()
+				log.Printf("[ERR] (not an error) %s=%s (suggested)", PastSeedMagic, suggestedSeed)
 				return
 			default: // unreachable
 				err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)
@@ -170,7 +178,7 @@ func (rt *Runtime) Fuzz(
 
 	if newSeed := result.GetNextSeed(); len(newSeed) != 0 {
 		log.Println("[NFO] continuing with new seed")
-		return rt.Fuzz(ctx, ntensity, newSeed, apiKey)
+		return rt.Fuzz(ctx, ntensity, newSeed, "")
 	}
 
 	l := rt.lastFuzzingProgress
@@ -190,8 +198,8 @@ func (rt *Runtime) Fuzz(
 		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
 	)
 
-	as.ColorWRN.Printf("You can try to reproduce the test failure with this flag:\n")
-	as.ColorWRN.Printf("  --seed='%s'\n", result.GetSeedUsed())
+	as.ColorWRN.Printf("You should be able to reproduce this test failure with this flag\n")
+	as.ColorWRN.Printf("  --seed=%s\n", suggestedSeed)
 
 	return &TestingCampaignFailure{}
 }

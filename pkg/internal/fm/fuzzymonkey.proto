@@ -163,6 +163,7 @@ message Srv {
   message FuzzRep {
     uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
     bytes seed = 2; // Seed in use for the campaign
+    string token = 3;
   }
 
   message Call {
@@ -191,7 +192,8 @@ message Srv {
     bool was_shrinking = 2;
     bytes next_seed = 3; // Seed suggested for next run
     bool will_now_shrink = 4;
-    repeated google.protobuf.Struct responses = 5; // Calls sequence producing bug
+    bytes suggested_seed = 5;
+    repeated google.protobuf.Struct responses = 6; // Calls sequence producing bug //FIXME CallResponseRaw.Output
   }
 
   oneof msg {

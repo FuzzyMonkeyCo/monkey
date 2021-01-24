@@ -29,18 +29,12 @@ type Runtime struct {
 	thread     *starlark.Thread
 	globals    starlark.StringDict
 	modelState *modelState
-	// EnvRead holds all the envs looked up on initial run
-	envRead  map[string]string
-	triggers []triggerActionAfterProbe
+	envRead    map[string]string // holds all the envs looked up on initial run
+	triggers   []triggerActionAfterProbe
+	eIds       []uint32
+	tags       map[string]string
 
 	models map[string]modeler.Interface
-
-	eIds           []uint32
-	shrinking      bool
-	shrinkingTimes *uint32
-	unshrunk       uint32
-
-	tags map[string]string
 
 	client *fm.ChBiDi
 

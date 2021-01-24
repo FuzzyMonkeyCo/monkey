@@ -56,7 +56,7 @@ func (p *Progresser) CallChecksCount(v uint32) {}
 // Printf formats informational data
 func (p *Progresser) Printf(format string, s ...interface{}) {
 	switch format {
-	case "  --seed='%s'":
+	case "  --seed=%s":
 		fmt.Printf("\nseed: '%s'\n", s...)
 	}
 }
@@ -74,4 +74,11 @@ func (p *Progresser) CheckPassed(name, msg string) { fmt.Printf("|") }
 func (p *Progresser) CheckSkipped(name, msg string) {}
 
 // CheckFailed may be called many times during testing
-func (p *Progresser) CheckFailed(name string, ss []string) { as.ColorERR.Println("x") }
+func (p *Progresser) CheckFailed(name string, ss []string) {
+	as.ColorERR.Println("x")
+	as.ColorNFO.Println(name)
+	for _, s := range ss {
+		as.ColorERR.Println(s)
+	}
+	as.ColorERR.Println()
+}

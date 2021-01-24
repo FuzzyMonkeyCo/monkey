@@ -36,7 +36,7 @@ func doPastseed() int {
 			s := bufio.NewScanner(f)
 			for s.Scan() {
 				matches := rePastseed.FindStringSubmatch(s.Text())
-				if len(matches) != 0 {
+				if len(matches) != 0 && matches[1] != "" {
 					seed = matches[1]
 				}
 			}
