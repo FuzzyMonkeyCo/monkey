@@ -79,6 +79,9 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 			switch w.Category {
 			case "module-docstring":
 				continue
+			case "function-docstring-return":
+				//fuzzymonkey.star:117: (function-docstring-return) Return value of "add_new_item" is not documented.
+				continue
 			case "function-docstring-args":
 				if strings.HasPrefix(msg, `Arguments "State", "response" are not documented.`) ||
 					strings.HasPrefix(msg, `Arguments "_State", "response" are not documented.`) ||
@@ -97,9 +100,9 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 				continue
 			}
 			msg = strings.ReplaceAll(msg, "Buildifier", "`fmt`")
-			if !f.Formatted {
-				msg += " # reformat"
-			}
+			// if !f.Formatted {
+			// 	msg += " # reformat"
+			// }
 
 			catFmt := "(%s)"
 			if !w.Actionable {

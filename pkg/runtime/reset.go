@@ -73,9 +73,8 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	}
 
 	{
-		//FIXME: this doesn't reset to initial modelState does it?
 		var state starlark.Value
-		if state, err = slValueCopy(rt.modelState); err != nil {
+		if state, err = slValueCopy(rt.modelState0); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
