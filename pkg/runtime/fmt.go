@@ -72,8 +72,15 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 		return
 	}
 
-	var fmtErr []string
+	var fmtErrs []string
 	for _, f := range diagnostics.Files {
+		if !f.Formatted {
+			fmtErrs = append(fmtErrs,
+				fmt.Sprintf("%s:1:", f.Filename),
+				"(fmt)",
+				"use fmt with flag -w to reformat this file",
+			)
+		}
 		for _, w := range f.Warnings {
 			msg := w.Message
 			switch w.Category {
@@ -100,16 +107,13 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 				continue
 			}
 			msg = strings.ReplaceAll(msg, "Buildifier", "`fmt`")
-			// if !f.Formatted {
-			// 	msg += " # reformat"
-			// }
 
 			catFmt := "(%s)"
 			if !w.Actionable {
 				catFmt = "[%s]"
 			}
 
-			fmtErr = append(fmtErr,
+			fmtErrs = append(fmtErrs,
 				fmt.Sprintf("%s:%d:", f.Filename, w.Start.Line),
 				fmt.Sprintf(catFmt, w.Category),
 				msg,
@@ -117,8 +121,8 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 			)
 		}
 	}
-	if len(fmtErr) != 0 {
-		err = FmtError(fmtErr)
+	if len(fmtErrs) != 0 {
+		err = FmtError(fmtErrs)
 	}
 	return
 }
