@@ -62,7 +62,7 @@ func (p *Progresser) Printf(format string, s ...interface{}) {
 }
 
 // Errorf formats error messages
-func (p *Progresser) Errorf(format string, s ...interface{}) {}
+func (p *Progresser) Errorf(format string, s ...interface{}) { fmt.Printf(format, s...) }
 
 // ChecksPassed may be called many times during testing
 func (p *Progresser) ChecksPassed() {}

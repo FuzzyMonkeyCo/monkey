@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/bar"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/cli"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/dots"
 )
 
@@ -23,13 +23,13 @@ func (rt *Runtime) newProgress(ctx context.Context, max uint32) (err error) {
 		if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
 			rt.ptype = "ci"
 		} else {
-			rt.ptype = "cli"
+			rt.ptype = "bar"
 		}
 	}
 
 	switch rt.ptype {
-	case "cli":
-		rt.progress = &cli.Progresser{}
+	case "bar":
+		rt.progress = &bar.Progresser{}
 	case "ci":
 		rt.progress = &ci.Progresser{}
 		if rt.logLevel == 0 {

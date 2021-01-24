@@ -61,7 +61,7 @@ Options:
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --tag=KV                        Labels that can help classification (format: key=value)
-  --progress=PROGRESS             auto, cli, ci, dots (defaults: auto)
+  --progress=PROGRESS             auto, bar, ci, dots (defaults: auto)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
