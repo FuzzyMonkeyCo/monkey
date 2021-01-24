@@ -96,9 +96,9 @@ func (p *Progresser) CheckSkipped(name, msg string) {}
 // CheckFailed may be called many times during testing
 func (p *Progresser) CheckFailed(name string, ss []string) {
 	as.ColorERR.Println("x")
-	as.ColorNFO.Println(name)
+	as.ColorNFO.Printf("Check failed: ")
+	fmt.Println(name)
 	for _, s := range ss {
 		as.ColorERR.Println(s)
 	}
-	as.ColorERR.Println()
 }

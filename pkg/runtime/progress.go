@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -13,21 +12,11 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/dots"
 )
 
-func (rt *Runtime) newProgress(ctx context.Context, max uint32) (err error) {
-	envSetAndNonEmpty := func(key string) bool {
-		val, ok := os.LookupEnv(key)
-		return ok && val != ""
+func (rt *Runtime) newProgress(ctx context.Context, max uint32, ptype string) (err error) {
+	if ptype == "" {
+		ptype = "dots"
 	}
-
-	if rt.ptype == "" || rt.ptype == "auto" {
-		if rt.logLevel != 0 || envSetAndNonEmpty("CI") {
-			rt.ptype = "ci"
-		} else {
-			rt.ptype = "bar"
-		}
-	}
-
-	switch rt.ptype {
+	switch ptype {
 	case "bar":
 		rt.progress = &bar.Progresser{}
 	case "ci":
@@ -38,7 +27,7 @@ func (rt *Runtime) newProgress(ctx context.Context, max uint32) (err error) {
 	case "dots":
 		rt.progress = &dots.Progresser{}
 	default:
-		err = fmt.Errorf("unexpected progresser %q", rt.ptype)
+		err = fmt.Errorf("unexpected progresser %q", ptype)
 		log.Println("[ERR]", err)
 		return
 	}

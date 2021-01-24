@@ -107,7 +107,7 @@ func actualMain() int {
 		return code.OK
 	}
 
-	mrt, err := rt.NewMonkey(binTitle, args.Progress, args.Tags, args.Verbosity)
+	mrt, err := rt.NewMonkey(binTitle, args.Tags, args.Verbosity)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -206,7 +206,7 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, args.Seed, apiKey)
+	err = mrt.Fuzz(ctx, args.N, args.Seed, args.Progress, apiKey)
 	defer func() {
 		as.ColorNFO.Println()
 		as.ColorNFO.Println("Cleaning up...")

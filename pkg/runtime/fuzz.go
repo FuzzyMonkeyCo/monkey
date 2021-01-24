@@ -24,7 +24,7 @@ func (rt *Runtime) Fuzz(
 	ctx context.Context,
 	ntensity uint32,
 	seed []byte,
-	apiKey string,
+	ptype, apiKey string,
 ) (err error) {
 	if apiKey != "" {
 		ctx = metadata.AppendToOutgoingContext(ctx,
@@ -76,7 +76,7 @@ func (rt *Runtime) Fuzz(
 		func() {
 			if rt.progress == nil {
 				fuzzRep := srv.GetFuzzRep()
-				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount()); err != nil {
+				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount(), ptype); err != nil {
 					return
 				}
 				if tkn := fuzzRep.GetToken(); tkn != "" {
@@ -141,7 +141,7 @@ func (rt *Runtime) Fuzz(
 	if l := rt.lastFuzzingProgress; true {
 		log.Printf("[NFO] ran %d tests: %d calls: %d checks",
 			l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
-		as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n",
+		as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n\n",
 			l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
 			l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 			l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
@@ -155,25 +155,25 @@ func (rt *Runtime) Fuzz(
 	}
 
 	resps := result.GetResponses()
-	result.Responses = nil
-	as.ColorOK.Printf(">>> %+v\n", result)
 	if len(resps) != 0 {
 		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(resps))
-		for i, resp := range resps {
-			as.ColorOK.Printf(">>> resp[%d] = %v %s %q\n", i,
+		for _, resp := range resps {
+			as.ColorOK.Printf("%v %s \t%s\n",
 				resp.Fields["status_code"].GetNumberValue(),
 				resp.Fields["request"].GetStructValue().Fields["method"].GetStringValue(),
 				resp.Fields["request"].GetStructValue().Fields["url"].GetStringValue())
 		}
+		as.ColorNFO.Println()
 	}
 
 	if result.GetWillNowShrink() {
+		as.ColorNFO.Println()
 		as.ColorNFO.Println("Shrinking...")
 	}
 
 	if newSeed := result.GetNextSeed(); len(newSeed) != 0 {
 		log.Println("[NFO] continuing with new seed")
-		return rt.Fuzz(ctx, ntensity, newSeed, "")
+		return rt.Fuzz(ctx, ntensity, newSeed, ptype, "")
 	}
 
 	l := rt.lastFuzzingProgress
@@ -189,13 +189,8 @@ func (rt *Runtime) Fuzz(
 
 	log.Printf("[NFO] found a bug in %d calls (while shrinking? %v)",
 		l.GetTestCallsCount(), result.GetWasShrinking())
-	as.ColorERR.Printf("A bug was detected after %d %s.\n",
-		l.GetTestCallsCount(), plural("call", l.GetTestCallsCount()),
-	)
-
 	as.ColorWRN.Printf("You should be able to reproduce this test failure with this flag\n")
 	as.ColorWRN.Printf("  --seed=%s\n", suggestedSeed)
-
 	return &TestingCampaignFailure{}
 }
 
