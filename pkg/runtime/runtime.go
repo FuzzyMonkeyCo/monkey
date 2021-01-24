@@ -31,12 +31,12 @@ type Runtime struct {
 	modelState *modelState
 	envRead    map[string]string // holds all the envs looked up on initial run
 	triggers   []triggerActionAfterProbe
-	eIds       []uint32
-	tags       map[string]string
+	models     map[string]modeler.Interface
 
-	models map[string]modeler.Interface
-
-	client *fm.ChBiDi
+	client    *fm.ChBiDi
+	eIds      []uint32
+	tags      map[string]string
+	cleanedup bool
 
 	logLevel             uint8
 	ptype                string

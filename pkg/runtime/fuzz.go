@@ -10,6 +10,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
@@ -40,8 +41,8 @@ func (rt *Runtime) Fuzz(
 	for _, mdl = range rt.models {
 		break
 	}
-	resetter := mdl.GetResetter()
-	resetter.Env(rt.envRead)
+	rsttr := mdl.GetResetter()
+	rsttr.Env(rt.envRead)
 
 	// Pass user agent down to caller
 	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
@@ -52,7 +53,7 @@ func (rt *Runtime) Fuzz(
 		EnvRead:  rt.envRead,
 		Model:    mdl.ToProto(),
 		Ntensity: ntensity,
-		Resetter: resetter.ToProto(),
+		Resetter: rsttr.ToProto(),
 		Seed:     seed,
 		Tags:     rt.tags,
 		Usage:    os.Args,
@@ -124,15 +125,9 @@ func (rt *Runtime) Fuzz(
 		}
 	}
 
-	log.Println("[NFO] terminating resetter")
-	if errR := mdl.GetResetter().Terminate(ctx); errR != nil {
-		log.Println("[ERR]", errR)
-		if err == nil {
-			err = errR
-		}
-	}
 	if rt.progress != nil {
 		// It is possible to receive an error as the first response
+		// in which case rt.progress would be nil.
 		log.Println("[NFO] terminating progresser")
 		if errP := rt.progress.Terminate(); errP != nil {
 			log.Println("[ERR]", errP)
@@ -202,4 +197,25 @@ func (rt *Runtime) Fuzz(
 	as.ColorWRN.Printf("  --seed=%s\n", suggestedSeed)
 
 	return &TestingCampaignFailure{}
+}
+
+// Cleanup ensures notably that resetters are terminated
+func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
+	if rt.cleanedup {
+		return
+	}
+
+	log.Println("[NFO] terminating resetter")
+	var rsttr resetter.Interface
+	for _, mdl := range rt.models {
+		rsttr = mdl.GetResetter()
+		break
+	}
+	if errR := rsttr.Terminate(ctx, os.Stdout, os.Stderr); errR != nil && err == nil {
+		err = errR
+		// Keep going
+	}
+
+	rt.cleanedup = true
+	return
 }

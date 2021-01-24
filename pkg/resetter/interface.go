@@ -25,7 +25,7 @@ type Interface interface {
 	ExecStop(context.Context, io.Writer, io.Writer, bool) error
 
 	// Terminate cleans up after a resetter.Interface implementation instance
-	Terminate(context.Context) error
+	Terminate(context.Context, io.Writer, io.Writer) error
 }
 
 var _ error = (*Error)(nil)

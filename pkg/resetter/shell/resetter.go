@@ -80,15 +80,21 @@ func (s *Resetter) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Wri
 }
 
 // Terminate cleans up after a resetter.Interface implementation instance
-func (s *Resetter) Terminate(ctx context.Context) error {
-	// FIXME: maybe run s.Stop
-	if err := os.Remove(cwid.EnvFile()); err != nil {
-		if !os.IsNotExist(err) {
+func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Writer) (err error) {
+	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
+		if err = s.ExecStop(ctx, stdout, stderr, true); err != nil {
 			log.Println("[ERR]", err)
-			return err
+			// Keep going
 		}
 	}
-	return nil
+
+	if errR := os.Remove(cwid.EnvFile()); errR != nil && !os.IsNotExist(errR) {
+		log.Println("[ERR]", errR)
+		if err == nil {
+			err = errR
+		}
+	}
+	return
 }
 
 func (s *Resetter) commands() (cmds string, err error) {

@@ -207,6 +207,13 @@ func actualMain() int {
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
 	err = mrt.Fuzz(ctx, args.N, args.Seed, apiKey)
+	defer func() {
+		as.ColorNFO.Println()
+		as.ColorNFO.Println("Cleaning up...")
+		if errC := mrt.Cleanup(context.Background()); errC != nil {
+			as.ColorERR.Println(err)
+		}
+	}()
 	switch {
 	case err == context.Canceled:
 		as.ColorERR.Println("Testing interrupted.")
@@ -227,7 +234,6 @@ func actualMain() int {
 		return code.FailedExec
 	}
 	as.ColorERR.Println(err)
-	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
 	return retryOrReport()
 }
 

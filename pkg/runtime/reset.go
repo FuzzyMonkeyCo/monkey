@@ -73,6 +73,7 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	}
 
 	{
+		//FIXME: this doesn't reset to initial modelState does it?
 		var state starlark.Value
 		if state, err = slValueCopy(rt.modelState); err != nil {
 			log.Println("[ERR]", err)
@@ -84,7 +85,6 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 
 	stdout := newProgressWriter(rt.progress.Printf)
 	stderr := newProgressWriter(rt.progress.Errorf)
-
 	err = rsttr.ExecReset(ctx, stdout, stderr, false)
 	return
 }
