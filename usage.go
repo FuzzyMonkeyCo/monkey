@@ -16,7 +16,6 @@ type params struct {
 	Update, Version                    bool
 	Exec, Start, Reset, Stop, Repl     bool
 	FmtW                               bool          `mapstructure:"-w"`
-	NoShrinking                        bool          `mapstructure:"--no-shrinking"`
 	ShowSpec                           bool          `mapstructure:"--show-spec"`
 	Seed                               []byte        `mapstructure:"--seed"`
 	Tags                               []string      `mapstructure:"--tag"`

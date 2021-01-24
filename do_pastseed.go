@@ -13,9 +13,10 @@ import (
 
 var rePastseed = regexp.MustCompile(rt.PastSeedMagic + `=([^\s]+)`)
 
+// Looks in the logs for the youngest seed that triggered a bug
+// Only ever prints best seed on a newline character
+// so it can be used as --seed=$(monkey pastseed)
 func doPastseed() int {
-	// Looks in the logs for the youngest seed that triggered a bug
-	// Prints nothing on error so it can be used as --seed=$(monkey pastseed)
 	for offset := uint64(1); true; offset++ {
 		var seed string
 		ret := -1

@@ -215,7 +215,7 @@ func actualMain() int {
 		}
 	}()
 	switch {
-	case err == context.Canceled:
+	case strings.Contains(err.Error(), context.Canceled.Error()):
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
@@ -256,7 +256,7 @@ func doLogs(offset uint64) int {
 	f, err := os.Open(fn)
 	if err != nil {
 		if os.IsNotExist(err) {
-			as.ColorERR.Println("No logs for current project. Please change working directory.")
+			as.ColorERR.Println("No logs for current project. Please change your working directory.")
 			return code.Failed
 		}
 		as.ColorERR.Println(err)

@@ -3,16 +3,18 @@ package runtime
 import (
 	"bytes"
 	"io"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
 var _ io.Writer = (*progressWriter)(nil)
 
 // progressWriter redirects buffer lines through to a Progresser
 type progressWriter struct {
-	printf func(string, ...interface{})
+	printf modeler.ShowFunc
 }
 
-func newProgressWriter(cb func(string, ...interface{})) *progressWriter {
+func newProgressWriter(cb modeler.ShowFunc) *progressWriter {
 	return &progressWriter{printf: cb}
 }
 

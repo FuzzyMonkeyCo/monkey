@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  M.m.p   feedb065        go1.15.6        linux   amd64
+monkey  M.m.p feedb065  go1.15.6  linux amd64
 
 Usage:
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
@@ -22,6 +22,7 @@ Usage:
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] env [VAR ...]
   monkey logs [--previous=N]
+  monkey pastseed
   monkey [-vvv] update
   monkey version | --version
   monkey help    | --help    | -h
@@ -46,7 +47,7 @@ Try:
      export FUZZYMONKEY_API_KEY=42
   monkey update
   monkey exec reset
-  monkey fuzz --only /pets --calls-without-input=NewPet
+  monkey fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 

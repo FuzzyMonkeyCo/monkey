@@ -45,10 +45,6 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	}
 
 	callResponse := cllr.Response()
-	if callResponse == nil {
-		// A proper request could not be created so Response() could not be built
-		return nil
-	}
 	// Actionable response data parsed...
 	if errT := rt.client.Send(ctx, cvp(&fm.Clt_CallVerifProgress{
 		Status:   fm.Clt_CallVerifProgress_data,
