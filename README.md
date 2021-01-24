@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  M.m.p feedb065  go1.15.6  linux amd64
+monkey	M.m.p	feedb065	go1.15.6	linux	amd64
 
 Usage:
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
@@ -21,11 +21,11 @@ Usage:
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] env [VAR ...]
-  monkey logs [--previous=N]
-  monkey pastseed
+  monkey        logs [--previous=N]
+  monkey        pastseed
   monkey [-vvv] update
-  monkey version | --version
-  monkey help    | --help    | -h
+  monkey        version | --version
+  monkey        help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                   Debug verbosity level
@@ -41,7 +41,6 @@ Options:
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
   --validate-against=REF          Schema $ref to validate STDIN against
-  --with-magic                    Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42

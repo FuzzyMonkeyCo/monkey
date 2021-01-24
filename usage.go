@@ -30,7 +30,7 @@ type params struct {
 
 func usage() (args *params, ret int) {
 	B := as.ColorNFO.Sprintf(binName)
-	// TODO: B [-vvv] init [--with-magic]
+	// TODO: B [-vvv] init [--with-magic] Auto fill-in schemas from random API calls
 	// TODO: B [-vvv] login [--user=USER] Authenticate on fuzzymonkey.co as USER
 	// TODO:          fuzz [--shrink=ID] Which failed test to minimize
 	usage := binTitle + `
@@ -47,11 +47,11 @@ Usage:
   ` + B + ` [-vvv] schema [--validate-against=REF]
   ` + B + ` [-vvv] exec (repl | start | reset | stop)
   ` + B + ` [-vvv] env [VAR ...]
-  ` + B + ` logs [--previous=N]
-  ` + B + ` pastseed
+  ` + B + `        logs [--previous=N]
+  ` + B + `        pastseed
   ` + B + ` [-vvv] update
-  ` + B + ` version | --version
-  ` + B + ` help    | --help    | -h
+  ` + B + `        version | --version
+  ` + B + `        help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                   Debug verbosity level
@@ -67,7 +67,6 @@ Options:
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
   --validate-against=REF          Schema $ref to validate STDIN against
-  --with-magic                    Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42

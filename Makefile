@@ -1,4 +1,4 @@
-.PHONY: all update debug lint x test ape
+.PHONY: all update debug lint test ape
 
 EXE = monkey
 
@@ -9,8 +9,10 @@ RUN ?= docker run --rm --user $$(id -u):$$(id -g)
 PROTOC = $(RUN) -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
+all: SHELL := /bin/bash
 all: pkg/internal/fm/fuzzymonkey.pb.go lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
+	git status --porcelain -- README.md | grep -Eqv '^ ' && cat <(head -n9 README.md) <(./$(EXE) -h) <(tail -n +51 README.md) >_ && mv _ README.md
 
 update: SHELL := /bin/bash
 update:
