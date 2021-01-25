@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestCov(t *testing.T) {
@@ -25,7 +27,6 @@ func TestCov(t *testing.T) {
 
 	fmt.Println("EXIT", code)
 	data := []byte(strconv.Itoa(code))
-	if err := ioutil.WriteFile(pathErrCode, data, 0644); err != nil {
-		panic(err)
-	}
+	err := ioutil.WriteFile(pathErrCode, data, 0644)
+	require.NoError(t, err)
 }

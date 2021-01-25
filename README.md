@@ -7,14 +7,12 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey  M.m.p   feedb065        go1.15.6        linux   amd64
+monkey	M.m.p	feedb065	go1.15.6	linux	amd64
 
 Usage:
-  monkey [-vvv] init [--with-magic]
-  monkey [-vvv] login [--user=USER]
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
-                     [--no-shrinking] [--shrink=ID]
-                     [--time-budget-overall=DURATION]
+                     [--no-shrinking]
+                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -23,10 +21,11 @@ Usage:
   monkey [-vvv] schema [--validate-against=REF]
   monkey [-vvv] exec (repl | start | reset | stop)
   monkey [-vvv] env [VAR ...]
-  monkey logs [--previous=N]
+  monkey        logs [--previous=N]
+  monkey        pastseed
   monkey [-vvv] update
-  monkey version | --version
-  monkey help    | --help    | -h
+  monkey        version | --version
+  monkey        help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                   Debug verbosity level
@@ -35,21 +34,19 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-  --shrink=ID                     Which failed test to minimize
   --tag=KV                        Labels that can help classification (format: key=value)
+  --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
-  --user=USER                     Authenticate on fuzzymonkey.co as USER
   --validate-against=REF          Schema $ref to validate STDIN against
-  --with-magic                    Auto fill in schemas from random API calls
 
 Try:
      export FUZZYMONKEY_API_KEY=42
   monkey update
   monkey exec reset
-  monkey fuzz --only /pets --calls-without-input=NewPet
+  monkey fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 

@@ -50,9 +50,9 @@ message Clt {
     bytes seed = 4;
     uint32 ntensity = 5;
     repeated uint32 EIDs = 6;
-    bool shrink = 7;
-    map<string, string> tags = 8;
-    map<string, string> env_read = 9;
+    map<string, string> tags = 7;
+    map<string, string> env_read = 8;
+    repeated string UUIDs = 9;
   }
 
   message Metrics {
@@ -147,23 +147,21 @@ message Srv {
   message FuzzingProgress {
     bool failure = 1;
     bool success = 2;
-    bool last_call_failure = 3;
-    bool last_call_success = 4;
-    bool last_check_failure = 5;
-    bool last_check_success = 6;
-    bool shrinking = 7;
-    uint32 total_tests_count = 8;
-    uint32 total_calls_count = 9;
-    uint32 total_checks_count = 10;
-    uint32 test_calls_count = 11;
-    uint32 call_checks_count = 12;
-    uint32 shrink_amount = 13;
+    bool last_call_success = 3;
+    bool last_check_failure = 4;
+    bool last_check_success = 5;
+    uint32 total_tests_count = 6;
+    uint32 total_calls_count = 7;
+    uint32 total_checks_count = 8;
+    uint32 test_calls_count = 9;
+    uint32 call_checks_count = 10;
   }
-  FuzzingProgress fuzzing_progress = 1; // Testing progress & end
+  FuzzingProgress fuzzing_progress = 1; // Campaign progress
 
   message FuzzRep {
     uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
     bytes seed = 2; // Seed in use for the campaign
+    string token = 3;
   }
 
   message Call {
@@ -188,9 +186,16 @@ message Srv {
   message Reset {}
 
   message FuzzingResult {
-    bytes seed = 1; // Seed suggested for next run
-    repeated uint32 EIDs = 2; // Sequence of calls known to have produced a failure
-    uint32 max_shrinks = 3; // Number of attempts at shrinking
+    bytes seed_used = 1; // Seed used on campaign
+    bool was_shrinking = 2;
+    bytes next_seed = 3; // Seed suggested for next run
+    bool will_now_shrink = 4;
+    bytes suggested_seed = 5;
+    message CounterexampleItem {
+      Clt.CallRequestRaw.Input call_request = 1;
+      Clt.CallResponseRaw.Output call_response = 2;
+    }
+    repeated CounterexampleItem counterexample = 6;
   }
 
   oneof msg {

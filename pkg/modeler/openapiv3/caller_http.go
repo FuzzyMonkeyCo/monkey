@@ -34,11 +34,12 @@ var (
 )
 
 type tCapHTTP struct {
-	showf func(string, ...interface{})
-	rep   []byte
-	doErr error
+	showf       modeler.ShowFunc
+	beforeDoErr error
+	doErr       error
+	rep         []byte
 
-	endpointJSON    *fm.EndpointJSON
+	endpoint        *fm.EndpointJSON
 	matchedOutputID uint32
 	matchedSID      sid
 	matchedHTTPCode bool
@@ -49,9 +50,9 @@ type tCapHTTP struct {
 	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
 	repProto *fm.Clt_CallResponseRaw_Output_HttpResponse
 
-	reqJSON, repJSON *types.Value
-	repJSONRaw       interface{}
-	repJSONErr       error
+	reqValue, repValue *types.Value
+	repJSONRaw         interface{}
+	repJSONErr         error
 
 	// TODO: pick from these
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
@@ -83,13 +84,19 @@ type tCapHTTP struct {
 	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
 }
 
-func (c *tCapHTTP) ToProto() *fm.Clt_CallResponseRaw {
-	return &fm.Clt_CallResponseRaw{
+func (c *tCapHTTP) ToProto() (i *fm.Clt_CallRequestRaw, o *fm.Clt_CallResponseRaw) {
+	i = &fm.Clt_CallRequestRaw{
+		Input: &fm.Clt_CallRequestRaw_Input{
+			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+				HttpRequest: c.reqProto,
+			}}}
+	o = &fm.Clt_CallResponseRaw{
 		OutputId: c.matchedOutputID,
 		Output: &fm.Clt_CallResponseRaw_Output{
 			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
 				HttpResponse: c.repProto,
 			}}}
+	return
 }
 
 type namedLambda struct {
@@ -106,16 +113,18 @@ func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 	return nameAndLambda.name, nameAndLambda.lambda
 }
 
-func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string, ...interface{})) (modeler.Caller, error) {
+func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
 	m.tcap = &tCapHTTP{
-		showf:        showf,
-		endpointJSON: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
-	}
-	if err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg); err != nil {
-		return nil, err
+		showf:    showf,
+		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
 
+	// Some things have to be computed before Do() gets called:
+	err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg)
+
+	m.tcap.beforeDoErr = err
 	m.tcap.checks = []namedLambda{
+		{"creation of HTTP request", m.checkCreateHTTPReq},
 		{"connection to server", m.checkConn},
 		{"code < 500", m.checkNot5XX},
 		//FIXME: when decoupling modeler/caller move these to modeler
@@ -124,7 +133,17 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf func(string
 		{"valid JSON response", m.checkValidJSONResponse},
 		{"response validates schema", m.checkValidatesJSONSchema},
 	}
-	return m.tcap, nil
+	return m.tcap
+}
+
+func (m *oa3) checkCreateHTTPReq() (s, skipped string, f []string) {
+	if err := m.tcap.beforeDoErr; err != nil {
+		f = append(f, "could not create HTTP request")
+		f = append(f, err.Error())
+		return
+	}
+	s = "request created"
+	return
 }
 
 func (m *oa3) checkConn() (s, skipped string, f []string) {
@@ -167,7 +186,7 @@ func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
 		return
 	}
 
-	m.tcap.repJSON = enumFromGo(m.tcap.repJSONRaw)
+	m.tcap.repValue = enumFromGo(m.tcap.repJSONRaw)
 	m.tcap.repJSONRaw = nil
 	s = "response is valid JSON"
 	return
@@ -182,7 +201,7 @@ func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 		skipped = "response body is empty"
 		return
 	}
-	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repJSON); len(errs) != 0 {
+	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repValue); len(errs) != 0 {
 		f = errs
 		return
 	}
@@ -209,6 +228,9 @@ func (c *tCapHTTP) showResponse() {
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
+	if c.beforeDoErr != nil {
+		return nil
+	}
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
 			"method": enumFromGo(c.reqProto.Method),
@@ -231,7 +253,7 @@ func (c *tCapHTTP) Request() *types.Struct {
 		StructValue: &types.Struct{Fields: headers}}}
 
 	if c.reqProto.Body != nil {
-		s.Fields["json"] = c.reqJSON
+		s.Fields["body"] = c.reqValue
 	}
 	// TODO? Response *Response
 	// Response is the redirect response which caused this request
@@ -243,10 +265,14 @@ func (c *tCapHTTP) Request() *types.Struct {
 // Request/Response somewhat follow python's `requests` API
 
 func (c *tCapHTTP) Response() *types.Struct {
+	request := c.Request()
+	if request == nil {
+		return nil
+	}
 	s := &types.Struct{
 		Fields: map[string]*types.Value{
-			"request": {Kind: &types.Value_StructValue{StructValue: c.Request()}},
-			// FIXME? "error"
+			"request": {Kind: &types.Value_StructValue{StructValue: request}},
+			// FIXME? "error": enumFromGo(c.repProto.Error),
 			"status_code": enumFromGo(c.repProto.StatusCode),
 			"reason":      enumFromGo(c.repProto.Reason),
 			// "content" as bytes?
@@ -269,7 +295,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 		StructValue: &types.Struct{Fields: headers}}}
 
 	if !c.isRepBodyEmpty() {
-		s.Fields["json"] = c.repJSON
+		s.Fields["body"] = c.repValue
 	}
 	// TODO? TLS *tls.ConnectionState
 	// TLS contains information about the TLS connection on which the
@@ -279,6 +305,7 @@ func (c *tCapHTTP) Response() *types.Struct {
 	return s
 }
 
+// Records the request as actually performed: from http.Request.
 func (c *tCapHTTP) request(r *http.Request) (err error) {
 	c.reqProto = &fm.Clt_CallRequestRaw_Input_HttpRequest{
 		Method: r.Method,
@@ -300,7 +327,6 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 				Values: []string{r.Host},
 			}
-		default:
 		}
 	}
 	c.reqProto.Headers = headers
@@ -319,7 +345,7 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 		if e := json.Unmarshal(c.reqProto.Body, &jsn); e != nil {
 			log.Println("[NFO] request wasn't proper JSON:", e)
 		} else {
-			c.reqJSON = enumFromGo(jsn)
+			c.reqValue = enumFromGo(jsn)
 		}
 	}
 
@@ -346,7 +372,6 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
 				Values: r.TransferEncoding,
 			}
-		default:
 		}
 	}
 	c.repProto.Headers = headers
@@ -369,11 +394,11 @@ func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
 	func() {
 		var ok bool
 		outputID := c.repProto.StatusCode
-		if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+		if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 			outputID = fromStatusCode(outputID)
-			if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+			if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 				outputID = 0
-				if c.matchedSID, ok = c.endpointJSON.Outputs[outputID]; !ok {
+				if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
 					return
 				}
 			}
@@ -460,10 +485,10 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
 
 	if host := m.Host; host != "" {
-		configured, err := url.ParseRequestURI(host)
-		if err != nil {
+		var configured *url.URL
+		if configured, err = url.ParseRequestURI(host); err != nil {
 			log.Println("[ERR]", err)
-			return err
+			return
 		}
 
 		// NOTE: forces Request.Write to use URL.Host
@@ -476,6 +501,14 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 }
 
 func (c *tCapHTTP) Do(ctx context.Context) {
+	if c.beforeDoErr != nil {
+		// An error happened during NewCaller. Report is delayed until
+		// the call to checkCreateHTTPReq.
+		// c.repProto.Error cannot be set as the rest of the Request()/Response()
+		// protos would be empty. Instead we have them return nil.
+		return
+	}
+
 	// TODO: output `curl` requests when showing counterexample
 	//   https://github.com/sethgrid/gencurl
 	//   https://github.com/moul/http2curl

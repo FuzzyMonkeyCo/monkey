@@ -1,6 +1,6 @@
-package cli
+package bar
 
-var cliStates = [...]string{"🙈", "🙉", "🙊", "🐵"}
+var states = [...]string{"🙈", "🙉", "🙊", "🐵"}
 
 const (
 	prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅

@@ -26,23 +26,18 @@ func init() {
 type Runtime struct {
 	binTitle string
 
-	thread     *starlark.Thread
-	globals    starlark.StringDict
-	modelState *modelState
-	// EnvRead holds all the envs looked up on initial run
-	envRead  map[string]string
-	triggers []triggerActionAfterProbe
+	thread      *starlark.Thread
+	globals     starlark.StringDict
+	modelState  *modelState
+	modelState0 *modelState
+	envRead     map[string]string // holds all the envs looked up on initial run
+	triggers    []triggerActionAfterProbe
+	models      map[string]modeler.Interface
 
-	models map[string]modeler.Interface
-
-	eIds           []uint32
-	shrinking      bool
-	shrinkingTimes *uint32
-	unshrunk       uint32
-
-	tags map[string]string
-
-	client *fm.ChBiDi
+	client    *fm.ChBiDi
+	eIds      []uint32
+	tags      map[string]string
+	cleanedup bool
 
 	logLevel             uint8
 	progress             progresser.Interface
@@ -163,7 +158,10 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 	}
 
 	const tState = "State"
-	if state, ok := rt.globals[tState]; ok {
+	if state, ok := rt.globals[tState]; !ok {
+		rt.modelState = newModelState(0)
+		rt.modelState0 = newModelState(0)
+	} else {
 		d, ok := state.(*starlark.Dict)
 		if !ok {
 			err = fmt.Errorf("monkey State must be a dict, got: %s", state.Type())
@@ -185,7 +183,7 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 			case starlark.NoneType, starlark.Bool:
 			case starlark.Int, starlark.Float:
 			case starlark.String:
-			case *starlark.List, *starlark.Dict, *starlark.Set:
+			case *starlark.List, *starlark.Dict:
 			default:
 				err = fmt.Errorf("all initial State values must be litterals: State[%s] is %s", k.String(), v.Type())
 				log.Println("[ERR]", err)
@@ -201,9 +199,14 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 				return
 			}
 		}
-	} else {
-		rt.modelState = newModelState(0)
+		var state0 starlark.Value
+		if state0, err = slValueCopy(rt.modelState); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		rt.modelState0 = state0.(*modelState)
 	}
+	rt.modelState0.Freeze()
 
 	for key := range rt.globals {
 		if err = printableASCII(key); err != nil {

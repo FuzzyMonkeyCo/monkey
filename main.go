@@ -61,6 +61,10 @@ func actualMain() int {
 		return doLogs(offset)
 	}
 
+	if args.Pastseed {
+		return doPastseed()
+	}
+
 	if err := cwid.MakePwdID(binName, 0); err != nil {
 		return retryOrReport()
 	}
@@ -78,12 +82,6 @@ func actualMain() int {
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
 	defer func() { log.Printf("[ERR] (not an error) ran for %s", time.Since(start)) }()
-
-	if args.Init || args.Login {
-		// FIXME: implement init & login
-		as.ColorERR.Println("Action not implemented yet")
-		return code.Failed
-	}
 
 	if args.Update {
 		return doUpdate()
@@ -193,15 +191,6 @@ func actualMain() int {
 		return code.OK
 	}
 
-	if args.Shrink != "" {
-		// mrt.shrinking = true
-		// mrt.unshrunk = len(toShrink)
-		msg := "--shrink=ID isn't implemented yet."
-		log.Println("[ERR]", msg)
-		as.ColorERR.Println(msg)
-		return code.Failed
-	}
-
 	apiKey := os.Getenv(envAPIKey)
 	if apiKey == "" {
 		err := fmt.Errorf("$%s is unset", envAPIKey)
@@ -217,14 +206,20 @@ func actualMain() int {
 	}
 
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, []byte(args.Seed), args.NoShrinking, apiKey)
+	err = mrt.Fuzz(ctx, args.N, args.Seed, args.Progress, apiKey)
+	defer func() {
+		as.ColorNFO.Println()
+		as.ColorNFO.Println("Cleaning up...")
+		if errC := mrt.Cleanup(context.Background()); errC != nil {
+			as.ColorERR.Println(err)
+		}
+	}()
 	switch {
-	case err == nil:
-	case err == context.Canceled:
+	case strings.Contains(err.Error(), context.Canceled.Error()):
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
-		as.ColorERR.Printf("Testing interrupted after %s.\n", args.OverallBudgetTime)
+		as.ColorERR.Printf("Testing interrupted after --time-budget-overall=%s.\n", args.OverallBudgetTime)
 		return code.OK
 	default:
 		log.Println("[ERR]", err)
@@ -238,7 +233,7 @@ func actualMain() int {
 		as.ColorERR.Println(err)
 		return code.FailedExec
 	}
-	defer as.ColorWRN.Println("You might want to run $", binName, "exec stop")
+	as.ColorERR.Println(err)
 	return retryOrReport()
 }
 
@@ -258,14 +253,18 @@ func doLogs(offset uint64) int {
 	}
 
 	fn := cwid.LogFile()
-	os.Stderr.WriteString(fn + "\n")
 	f, err := os.Open(fn)
 	if err != nil {
+		if os.IsNotExist(err) {
+			as.ColorERR.Println("No logs for current project. Please change your working directory.")
+			return code.Failed
+		}
 		as.ColorERR.Println(err)
 		return code.Failed
 	}
 	defer f.Close()
 
+	os.Stderr.WriteString(fn + "\n")
 	if _, err := io.Copy(os.Stdout, f); err != nil {
 		as.ColorERR.Println(err)
 		return retryOrReport()

@@ -1,4 +1,4 @@
-package cli
+package bar
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
-	"github.com/superhawk610/bar"
+	pbar "github.com/superhawk610/bar"
 	// See also: https://github.com/reconquest/barely
 )
 
@@ -20,7 +20,7 @@ type Progresser struct {
 	maxTestsCount                                      uint32
 	totalTestsCount, totalCallsCount, totalChecksCount uint32
 	testCallsCount, callChecksCount                    uint32
-	bar                                                *bar.Bar
+	bar                                                *pbar.Bar
 	ticker                                             *time.Ticker
 	ticks, stateIdx                                    int
 }
@@ -32,12 +32,12 @@ func (p *Progresser) WithContext(ctx context.Context) { p.ctx = ctx }
 func (p *Progresser) MaxTestsCount(v uint32) {
 	p.maxTestsCount = v
 
-	p.bar = bar.NewWithOpts(
-		// bar.WithDebug(),
-		bar.WithDimensions(int(v), 37),
-		bar.WithDisplay("", "█", "█", " ", "|"),
-		// bar.WithFormat(":state :percent :bar :rate ops/s :eta"),
-		bar.WithFormat(":state :bar :rate ops/s :eta"),
+	p.bar = pbar.NewWithOpts(
+		// pbar.WithDebug(),
+		pbar.WithDimensions(int(v), 37),
+		pbar.WithDisplay("", "█", "█", " ", "|"),
+		// pbar.WithFormat(":state :percent :bar :rate ops/s :eta"),
+		pbar.WithFormat(":state :bar :rate calls/s :eta"),
 	)
 
 	p.ticker = time.NewTicker(tickEvery)
@@ -82,10 +82,10 @@ func (p *Progresser) TestCallsCount(v uint32) { p.testCallsCount = v }
 func (p *Progresser) CallChecksCount(v uint32) { p.callChecksCount = v }
 
 func (p *Progresser) tick(offset int) {
-	state := cliStates[p.stateIdx%len(cliStates)]
+	state := states[p.stateIdx%len(states)]
 	p.stateIdx++
 	p.ticks += offset
-	p.bar.Update(p.ticks, bar.Context{bar.Ctx("state", state)})
+	p.bar.Update(p.ticks, pbar.Context{pbar.Ctx("state", state)})
 }
 
 // Printf formats informational data
