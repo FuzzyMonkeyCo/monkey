@@ -287,7 +287,7 @@ func (rt *Runtime) runUserCheck(
 		log.Println("[NFO]", err)
 		return
 	}
-	switch newModelState := newModelState.(type) {
+	switch newModelState.(type) {
 	case starlark.NoneType:
 		// Check passed without returning new State
 		v.Status = fm.Clt_CallVerifProgress_success
@@ -295,7 +295,12 @@ func (rt *Runtime) runUserCheck(
 	case *modelState:
 		// Check passed and returned new State
 		v.Status = fm.Clt_CallVerifProgress_success
-		rt.modelState = newModelState
+		var newModelStateCopy starlark.Value
+		if newModelStateCopy, err = slValueCopy(newModelState); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		rt.modelState = newModelStateCopy.(*modelState)
 		return
 	default:
 		err = fmt.Errorf(
