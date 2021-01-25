@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -12,6 +13,27 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
 	"go.starlark.net/starlark"
 )
+
+// Cleanup ensures that resetters are terminated
+func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
+	if rt.cleanedup {
+		return
+	}
+
+	log.Println("[NFO] terminating resetter")
+	var rsttr resetter.Interface
+	for _, mdl := range rt.models {
+		rsttr = mdl.GetResetter()
+		break
+	}
+	if errR := rsttr.Terminate(ctx, os.Stdout, os.Stderr); errR != nil && err == nil {
+		err = errR
+		// Keep going
+	}
+
+	rt.cleanedup = true
+	return
+}
 
 func (rt *Runtime) reset(ctx context.Context) error {
 	const showp = "Resetting system under test..."

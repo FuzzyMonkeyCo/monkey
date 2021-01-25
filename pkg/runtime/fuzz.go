@@ -10,7 +10,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
@@ -138,16 +137,16 @@ func (rt *Runtime) Fuzz(
 		rt.progress = nil
 	}
 
-	if l := rt.lastFuzzingProgress; true {
-		log.Printf("[NFO] ran %d tests: %d calls: %d checks",
-			l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
-		as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n\n",
-			l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
-			l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
-			l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-			time.Since(rt.testingCampaignStart),
-		)
-	}
+	l := rt.lastFuzzingProgress
+
+	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
+		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
+	as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n\n",
+		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
+		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
+		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
+		time.Since(rt.testingCampaignStart),
+	)
 
 	if err != nil {
 		// Cannot continue after transport or any termination error
@@ -172,8 +171,6 @@ func (rt *Runtime) Fuzz(
 		return rt.Fuzz(ctx, ntensity, newSeed, ptype, "")
 	}
 
-	l := rt.lastFuzzingProgress
-
 	if l.GetSuccess() {
 		as.ColorNFO.Println("No bugs found yet.")
 		return &TestingCampaignSuccess{}
@@ -188,25 +185,4 @@ func (rt *Runtime) Fuzz(
 	as.ColorWRN.Printf("You should be able to reproduce this test failure with this flag\n")
 	as.ColorWRN.Printf("  --seed=%s\n", suggestedSeed)
 	return &TestingCampaignFailure{}
-}
-
-// Cleanup ensures notably that resetters are terminated
-func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
-	if rt.cleanedup {
-		return
-	}
-
-	log.Println("[NFO] terminating resetter")
-	var rsttr resetter.Interface
-	for _, mdl := range rt.models {
-		rsttr = mdl.GetResetter()
-		break
-	}
-	if errR := rsttr.Terminate(ctx, os.Stdout, os.Stderr); errR != nil && err == nil {
-		err = errR
-		// Keep going
-	}
-
-	rt.cleanedup = true
-	return
 }
