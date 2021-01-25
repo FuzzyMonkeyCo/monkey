@@ -191,7 +191,11 @@ message Srv {
     bytes next_seed = 3; // Seed suggested for next run
     bool will_now_shrink = 4;
     bytes suggested_seed = 5;
-    repeated google.protobuf.Struct responses = 6; // Calls sequence producing bug //FIXME CallResponseRaw.Output
+    message CounterexampleItem {
+      Clt.CallRequestRaw.Input call_request = 1;
+      Clt.CallResponseRaw.Output call_response = 2;
+    }
+    repeated CounterexampleItem counterexample = 6;
   }
 
   oneof msg {

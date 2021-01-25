@@ -154,14 +154,10 @@ func (rt *Runtime) Fuzz(
 		return
 	}
 
-	resps := result.GetResponses()
-	if len(resps) != 0 {
-		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(resps))
-		for _, resp := range resps {
-			as.ColorOK.Printf("%v %s \t%s\n",
-				resp.Fields["status_code"].GetNumberValue(),
-				resp.Fields["request"].GetStructValue().Fields["method"].GetStringValue(),
-				resp.Fields["request"].GetStructValue().Fields["url"].GetStringValue())
+	if counterexample := result.GetCounterexample(); len(counterexample) != 0 {
+		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(counterexample))
+		for _, ceItem := range counterexample {
+			as.ColorOK.Println(ceItem.ShortString())
 		}
 		as.ColorNFO.Println()
 	}

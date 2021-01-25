@@ -12,7 +12,7 @@ type CheckerFunc func() (string, string, []string)
 
 // Caller performs a request and awaits a response.
 type Caller interface {
-	ToProto() *fm.Clt_CallResponseRaw
+	ToProto() (*fm.Clt_CallRequestRaw, *fm.Clt_CallResponseRaw)
 
 	Do(context.Context)
 

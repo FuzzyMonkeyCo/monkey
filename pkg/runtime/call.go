@@ -24,11 +24,18 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	}
 	cllr := mdl.NewCaller(ctx, msg, showf)
 
-	log.Printf("[NFO] call input: %.999v", msg.GetInput())
+	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
 	cllr.Do(ctx)
-	output := cllr.ToProto()
+	input, output := cllr.ToProto()
+	log.Printf("[NFO] call input: %.999v", input)
 	log.Printf("[NFO] call output: %.999v", output)
 
+	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
+		CallRequestRaw: input,
+	}}); errT != nil {
+		log.Println("[ERR]", errT)
+		return errT
+	}
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallResponseRaw_{
 		CallResponseRaw: output,
 	}}); errT != nil {

@@ -821,9 +821,26 @@
                   },
                   {
                     "id": 6,
-                    "name": "responses",
-                    "type": "google.protobuf.Struct",
+                    "name": "counterexample",
+                    "type": "CounterexampleItem",
                     "is_repeated": true
+                  }
+                ],
+                "messages": [
+                  {
+                    "name": "CounterexampleItem",
+                    "fields": [
+                      {
+                        "id": 1,
+                        "name": "call_request",
+                        "type": "Clt.CallRequestRaw.Input"
+                      },
+                      {
+                        "id": 2,
+                        "name": "call_response",
+                        "type": "Clt.CallResponseRaw.Output"
+                      }
+                    ]
                   }
                 ]
               }

@@ -84,13 +84,19 @@ type tCapHTTP struct {
 	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
 }
 
-func (c *tCapHTTP) ToProto() *fm.Clt_CallResponseRaw {
-	return &fm.Clt_CallResponseRaw{
+func (c *tCapHTTP) ToProto() (i *fm.Clt_CallRequestRaw, o *fm.Clt_CallResponseRaw) {
+	i = &fm.Clt_CallRequestRaw{
+		Input: &fm.Clt_CallRequestRaw_Input{
+			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+				HttpRequest: c.reqProto,
+			}}}
+	o = &fm.Clt_CallResponseRaw{
 		OutputId: c.matchedOutputID,
 		Output: &fm.Clt_CallResponseRaw_Output{
 			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
 				HttpResponse: c.repProto,
 			}}}
+	return
 }
 
 type namedLambda struct {

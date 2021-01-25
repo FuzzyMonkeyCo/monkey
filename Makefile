@@ -11,7 +11,7 @@ PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
 all: SHELL := /bin/bash
 all: pkg/internal/fm/fuzzymonkey.pb.go lint
-	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| rm $(EXE))
+	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
 	[[ 1 -ne $$(git status --porcelain -- README.md | grep -Ec '^.[^ ]') ]] && cat <(head -n9 README.md) <(./$(EXE) -h) <(tail -n +51 README.md) >_ && mv _ README.md
 
 update: SHELL := /bin/bash
