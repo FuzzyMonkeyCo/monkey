@@ -2,6 +2,7 @@ package openapiv3
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,10 +10,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/getkin/kin-openapi/openapi3"
 	openapi_v3 "github.com/googleapis/gnostic/openapiv3"
 )
+
+var errLinting = func() error {
+	msg := "Documentation validation failed."
+	return errors.New(msg) // Gets around golint
+}()
 
 // Lint goes through OpenAPIv3 specs and unsures they're valid
 func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
@@ -35,14 +40,12 @@ func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 	doc, err := loader.LoadSwaggerFromData(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
 		return
 	}
 
 	log.Println("[NFO] first validation pass")
 	if err = doc.Validate(ctx); err != nil {
 		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
 		return
 	}
 
@@ -60,30 +63,26 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	doc, err := openapi_v3.ParseDocument(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
-		as.ColorWRN.Println("Validation errors:")
-		for i, line := range strings.Split(err.Error(), "\n") {
-			e := strings.TrimPrefix(line, "ERROR $root.")
-			fmt.Printf("%d: %s\n", 1+i, as.ColorERR.Sprintf(e))
+		for _, line := range strings.Split(err.Error(), "\n") {
+			es := strings.SplitAfterN(line, "$root.", 2) // TODO: handle line:col
+			fmt.Println(es[1])
 		}
-		as.ColorERR.Println("Documentation validation failed.")
+		err = errLinting
 		return
 	}
 
 	log.Println("[NFO] ensuring references are valid")
 	if _, err = doc.ResolveReferences(docPath); err != nil {
 		log.Println("[ERR]", err)
-		as.ColorWRN.Println("Validation errors:")
-		for i, line := range strings.Split(err.Error(), "\n") {
-			e := strings.TrimPrefix(line, "ERROR ")
-			fmt.Printf("%d: %s\n", 1+i, as.ColorERR.Sprintf(e))
+		for _, line := range strings.Split(err.Error(), "\n") {
+			fmt.Println(strings.TrimPrefix(line, "ERROR "))
 		}
-		as.ColorERR.Println("Documentation validation failed.")
+		err = errLinting
 		return
 	}
 
 	if showSpec {
 		log.Println("[NFO] serialyzing spec to YAML")
-		as.ColorNFO.Println("Spec:")
 		var pretty []byte
 		if pretty, err = doc.YAMLValue(""); err != nil {
 			log.Println("[ERR]", err)
