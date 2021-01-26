@@ -219,7 +219,7 @@ func actualMain() int {
 		as.ColorERR.Println("Testing interrupted.")
 		return code.Failed
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
-		as.ColorERR.Printf("Testing interrupted after --time-budget-overall=%s.\n", args.OverallBudgetTime)
+		as.ColorERR.Printf("Testing interrupted (given: --time-budget-overall=%s).\n", args.OverallBudgetTime)
 		return code.OK
 	default:
 		log.Println("[ERR]", err)
