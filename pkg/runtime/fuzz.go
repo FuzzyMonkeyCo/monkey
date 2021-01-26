@@ -29,7 +29,10 @@ func (rt *Runtime) Fuzz(
 	if zeroTime := (time.Time{}); rt.fuzzingStartedAt == zeroTime {
 		rt.fuzzingStartedAt = start
 	}
+
 	if apiKey != "" {
+		// Pass user agent down to caller
+		ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 		ctx = metadata.AppendToOutgoingContext(ctx,
 			"ua", rt.binTitle,
 			"apiKey", apiKey,
@@ -46,9 +49,6 @@ func (rt *Runtime) Fuzz(
 	}
 	rsttr := mdl.GetResetter()
 	rsttr.Env(rt.envRead)
-
-	// Pass user agent down to caller
-	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
 	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
