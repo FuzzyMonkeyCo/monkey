@@ -115,10 +115,6 @@ func actualMain() int {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	if timeout := args.OverallBudgetTime; timeout != 0 {
-		ctx, cancel = context.WithTimeout(ctx, timeout)
-	}
-	defer cancel()
 	sigC := make(chan os.Signal, 1)
 	signal.Notify(sigC, os.Interrupt)
 	go func() {
@@ -205,11 +201,13 @@ func actualMain() int {
 		return code.Failed
 	}
 
+	if timeout := args.OverallBudgetTime; timeout != 0 {
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer cancel()
 	as.ColorNFO.Printf("\n Running tests...\n\n")
 	err = mrt.Fuzz(ctx, args.N, args.Seed, args.Progress, apiKey)
 	defer func() {
-		as.ColorNFO.Println()
-		as.ColorNFO.Println("Cleaning up...")
 		if errC := mrt.Cleanup(context.Background()); errC != nil {
 			as.ColorERR.Println(err)
 		}

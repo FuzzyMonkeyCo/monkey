@@ -39,10 +39,10 @@ type Runtime struct {
 	tags      map[string]string
 	cleanedup bool
 
-	logLevel             uint8
-	progress             progresser.Interface
-	lastFuzzingProgress  *fm.Srv_FuzzingProgress
-	testingCampaignStart time.Time
+	logLevel            uint8
+	progress            progresser.Interface
+	lastFuzzingProgress *fm.Srv_FuzzingProgress
+	fuzzingStartedAt    time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration

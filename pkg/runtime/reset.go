@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
@@ -16,9 +17,12 @@ import (
 
 // Cleanup ensures that resetters are terminated
 func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
+	as.ColorNFO.Println()
+	as.ColorWRN.Printf("Ran for %s.\n", time.Since(rt.fuzzingStartedAt))
 	if rt.cleanedup {
 		return
 	}
+	as.ColorNFO.Println("Cleaning up...")
 
 	log.Println("[NFO] terminating resetter")
 	var rsttr resetter.Interface

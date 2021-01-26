@@ -25,6 +25,10 @@ func (rt *Runtime) Fuzz(
 	seed []byte,
 	ptype, apiKey string,
 ) (err error) {
+	start := time.Now()
+	if zeroTime := (time.Time{}); rt.fuzzingStartedAt == zeroTime {
+		rt.fuzzingStartedAt = start
+	}
 	if apiKey != "" {
 		ctx = metadata.AppendToOutgoingContext(ctx,
 			"ua", rt.binTitle,
@@ -145,7 +149,7 @@ func (rt *Runtime) Fuzz(
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
 		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-		time.Since(rt.testingCampaignStart),
+		time.Since(start),
 	)
 
 	if err != nil {
