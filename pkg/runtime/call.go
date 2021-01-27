@@ -47,8 +47,13 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	}
 
 	// Just the amount of checks needed to be able to call cllr.Response()
-	if errT := rt.callerChecks(ctx, cllr); errT != nil {
+	passed, errT := rt.callerChecks(ctx, cllr)
+	if errT != nil {
 		return errT
+	}
+	if !passed {
+		// Return as early as the first check fails
+		return nil
 	}
 
 	callResponse := cllr.Response()
@@ -66,8 +71,6 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 			rt.progress.Printf("%s", msg)
 		}
 		printfunc, rt.thread.Print = rt.thread.Print, printfunc
-		var passed bool
-		var errT error
 		if passed, errT = rt.userChecks(ctx, callResponse); errT != nil {
 			return errT
 		}
@@ -98,34 +101,34 @@ func cvp(msg *fm.Clt_CallVerifProgress) *fm.Clt {
 
 // NOTE: callerChecks are applied sequentially in order of definition.
 // Model state can be mutated by each check.
-func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) error {
+func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (bool, error) {
 	for {
 		var lambda modeler.CheckerFunc
 		v := &fm.Clt_CallVerifProgress{}
 		if v.Name, lambda = cllr.NextCallerCheck(); lambda == nil {
 			// No more caller checks to run
-			return nil
+			return true, nil
 		}
 		log.Println("[NFO] checking", v.Name)
 
 		v.Status = fm.Clt_CallVerifProgress_start
 		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return false, errT
 		}
 
 		rt.runCallerCheck(v, lambda)
 
 		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return false, errT
 		}
 		if errT := rt.recvFuzzingProgress(ctx); errT != nil {
-			return errT
+			return false, errT
 		}
 
 		if v.Status == fm.Clt_CallVerifProgress_failure {
-			return nil
+			return false, nil
 		}
 	}
 }
