@@ -34,10 +34,10 @@ var (
 )
 
 type tCapHTTP struct {
-	showf       modeler.ShowFunc
-	beforeDoErr error
-	doErr       error
-	rep         []byte
+	showf               modeler.ShowFunc
+	buildHTTPRequestErr error
+	doErr               error
+	rep                 []byte
 
 	endpoint        *fm.EndpointJSON
 	matchedOutputID uint32
@@ -122,7 +122,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.Sho
 	// Some things have to be computed before Do() gets called:
 	err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg)
 
-	m.tcap.beforeDoErr = err
+	m.tcap.buildHTTPRequestErr = err
 	m.tcap.checks = []namedLambda{
 		{"creation of HTTP request", m.checkCreateHTTPReq},
 		{"connection to server", m.checkConn},
@@ -137,7 +137,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.Sho
 }
 
 func (m *oa3) checkCreateHTTPReq() (s, skipped string, f []string) {
-	if err := m.tcap.beforeDoErr; err != nil {
+	if err := m.tcap.buildHTTPRequestErr; err != nil {
 		f = append(f, "could not create HTTP request")
 		f = append(f, err.Error())
 		return
@@ -228,7 +228,7 @@ func (c *tCapHTTP) showResponse() {
 }
 
 func (c *tCapHTTP) Request() *types.Struct {
-	if c.beforeDoErr != nil {
+	if c.buildHTTPRequestErr != nil {
 		return nil
 	}
 	s := &types.Struct{
@@ -501,7 +501,7 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 }
 
 func (c *tCapHTTP) Do(ctx context.Context) {
-	if c.beforeDoErr != nil {
+	if c.buildHTTPRequestErr != nil {
 		// An error happened during NewCaller. Report is delayed until
 		// the call to checkCreateHTTPReq.
 		// c.repProto.Error cannot be set as the rest of the Request()/Response()
