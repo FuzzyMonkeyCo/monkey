@@ -82,9 +82,13 @@ func printModelState(kvs []starlark.Tuple, printf func(string, ...interface{}) (
 	if valuesAllDict {
 		for _, kv := range kvs {
 			indent()
+			d := kv.Index(1).(*starlark.Dict)
+			if d.Len() == 0 {
+				printf("%s: %s\n", kv.Index(0).String(), d.String())
+				continue
+			}
 			printf("%s:\n", kv.Index(0).String())
-			newKVs := kv.Index(1).(*starlark.Dict)
-			printModelState(newKVs.Items(), printf, depth+1)
+			printModelState(d.Items(), printf, depth+1)
 		}
 		return
 	}
