@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/bar"
@@ -31,7 +30,6 @@ func (rt *Runtime) newProgress(ctx context.Context, max uint32, ptype string) (e
 		log.Println("[ERR]", err)
 		return
 	}
-	rt.testingCampaignStart = time.Now()
 	rt.progress.WithContext(ctx)
 	rt.progress.MaxTestsCount(max)
 	return

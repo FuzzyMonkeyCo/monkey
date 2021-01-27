@@ -62,3 +62,38 @@ func (s *modelState) AttrNames() []string                      { return s.d.Attr
 func (s *modelState) CompareSameType(op syntax.Token, ss starlark.Value, depth int) (bool, error) {
 	return s.d.CompareSameType(op, ss, depth)
 }
+
+func printModelState(kvs []starlark.Tuple, printf func(string, ...interface{}) (int, error), depth uint) {
+	if len(kvs) == 0 {
+		return
+	}
+
+	valuesAllDict := true
+	for _, kv := range kvs {
+		valuesAllDict = valuesAllDict && kv.Index(1).Type() == "dict"
+	}
+
+	indent := func() {
+		for i := uint(0); i < depth; i++ {
+			printf("  ")
+		}
+	}
+
+	if valuesAllDict {
+		for _, kv := range kvs {
+			indent()
+			d := kv.Index(1).(*starlark.Dict)
+			if d.Len() == 0 {
+				printf("%s: %s\n", kv.Index(0).String(), d.String())
+				continue
+			}
+			printf("%s:\n", kv.Index(0).String())
+			printModelState(d.Items(), printf, depth+1)
+		}
+		return
+	}
+	for _, kv := range kvs {
+		indent()
+		printf("%s: %s\n", kv.Index(0).String(), kv.Index(1).String())
+	}
+}

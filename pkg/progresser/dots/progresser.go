@@ -16,8 +16,9 @@ type Progresser struct {
 	dotting                          bool
 }
 
-func dot(n uint32, o *uint32, f, c string) {
+func (p *Progresser) dot(n uint32, o *uint32, f, c string) {
 	if *o != n {
+		p.dotting = true
 		if *o == 0 {
 			fmt.Printf(f)
 		} else {
@@ -41,16 +42,10 @@ func (p *Progresser) Terminate() error {
 }
 
 // TotalTestsCount may be called many times during testing
-func (p *Progresser) TotalTestsCount(v uint32) {
-	p.dotting = true
-	dot(v, &p.totalTestsCount, "<", "> <")
-}
+func (p *Progresser) TotalTestsCount(v uint32) { p.dot(v, &p.totalTestsCount, "<", "> <") }
 
 // TotalCallsCount may be called many times during testing
-func (p *Progresser) TotalCallsCount(v uint32) {
-	p.dotting = true
-	dot(v, &p.totalCallsCount, ".", ".")
-}
+func (p *Progresser) TotalCallsCount(v uint32) { p.dot(v, &p.totalCallsCount, ".", ".") }
 
 // TotalChecksCount may be called many times during testing
 func (p *Progresser) TotalChecksCount(v uint32) {}
@@ -65,7 +60,7 @@ func (p *Progresser) CallChecksCount(v uint32) {}
 func (p *Progresser) Printf(format string, s ...interface{}) {
 	switch format {
 	case "  --seed=%s":
-		fmt.Printf("\nseed: '%s'\n", s...)
+		fmt.Printf("\nseed: %s\n", s...)
 	}
 }
 
@@ -87,7 +82,7 @@ func (p *Progresser) ChecksPassed() {}
 // CheckPassed may be called many times during testing
 func (p *Progresser) CheckPassed(name, msg string) {
 	p.dotting = true
-	fmt.Printf("|")
+	as.ColorOK.Printf("|")
 }
 
 // CheckSkipped may be called many times during testing

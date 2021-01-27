@@ -25,7 +25,14 @@ func (rt *Runtime) Fuzz(
 	seed []byte,
 	ptype, apiKey string,
 ) (err error) {
+	start := time.Now()
+	if zeroTime := (time.Time{}); rt.fuzzingStartedAt == zeroTime {
+		rt.fuzzingStartedAt = start
+	}
+
 	if apiKey != "" {
+		// Pass user agent down to caller
+		ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 		ctx = metadata.AppendToOutgoingContext(ctx,
 			"ua", rt.binTitle,
 			"apiKey", apiKey,
@@ -42,9 +49,6 @@ func (rt *Runtime) Fuzz(
 	}
 	rsttr := mdl.GetResetter()
 	rsttr.Env(rt.envRead)
-
-	// Pass user agent down to caller
-	ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
 
 	log.Printf("[DBG] sending initial msg")
 	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
@@ -145,7 +149,7 @@ func (rt *Runtime) Fuzz(
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
 		l.GetTotalCallsCount(), plural("call", l.GetTotalCallsCount()),
 		l.GetTotalChecksCount(), plural("check", l.GetTotalChecksCount()),
-		time.Since(rt.testingCampaignStart),
+		time.Since(start),
 	)
 
 	if err != nil {
@@ -154,6 +158,15 @@ func (rt *Runtime) Fuzz(
 	}
 
 	if counterexample := result.GetCounterexample(); len(counterexample) != 0 {
+		as.ColorNFO.Printf("Final State")
+		if kvs := rt.modelState.Items(); len(kvs) == 0 {
+			fmt.Printf(" (empty)\n")
+		} else {
+			as.ColorNFO.Println(":")
+			printModelState(kvs, as.ColorOK.Printf, 0)
+		}
+		as.ColorNFO.Println()
+
 		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(counterexample))
 		for _, ceItem := range counterexample {
 			as.ColorOK.Println(ceItem.ShortString())
