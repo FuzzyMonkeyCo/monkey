@@ -84,6 +84,8 @@ type tCapHTTP struct {
 	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
 }
 
+// RequestProto returns call input as used by the client
+// and call output as received by the client.
 func (c *tCapHTTP) ToProto() (i *fm.Clt_CallRequestRaw, o *fm.Clt_CallResponseRaw) {
 	i = &fm.Clt_CallRequestRaw{
 		Input: &fm.Clt_CallRequestRaw_Input{
@@ -104,6 +106,8 @@ type namedLambda struct {
 	lambda modeler.CheckerFunc
 }
 
+// NextCallerCheck returns ("",nil) when out of checks to run.
+// Otherwise it returns named checks inherent to the caller.
 func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
 	if len(c.checks) == 0 {
 		return "", nil
@@ -120,7 +124,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.Sho
 	}
 
 	// Some things have to be computed before Do() gets called:
-	err := m.callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx, msg)
+	err := m.buildHTTPRequest(ctx, msg)
 
 	m.tcap.buildHTTPRequestErr = err
 	m.tcap.checks = []namedLambda{
@@ -227,6 +231,8 @@ func (c *tCapHTTP) showResponse() {
 	}
 }
 
+// Request returns data one can use in their call checks.
+// It returns nil if the actual request could not be created.
 func (c *tCapHTTP) Request() *types.Struct {
 	if c.buildHTTPRequestErr != nil {
 		return nil
@@ -264,6 +270,8 @@ func (c *tCapHTTP) Request() *types.Struct {
 
 // Request/Response somewhat follow python's `requests` API
 
+// Response returns data one can use in their call checks.
+// It includes the req:=Request() and returns nil when req is.
 func (c *tCapHTTP) Response() *types.Struct {
 	request := c.Request()
 	if request == nil {
@@ -454,7 +462,7 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	return
 }
 
-func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Context, msg *fm.Srv_Call) (err error) {
+func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (err error) {
 	input := msg.GetInput().GetHttpRequest()
 
 	if body := input.GetBody(); body != nil {
@@ -500,6 +508,7 @@ func (m *oa3) callinputProtoToHTTPReqAndReqStructWithHostAndUA(ctx context.Conte
 	return
 }
 
+// Do sends the request and waits for the response
 func (c *tCapHTTP) Do(ctx context.Context) {
 	if c.buildHTTPRequestErr != nil {
 		// An error happened during NewCaller. Report is delayed until
