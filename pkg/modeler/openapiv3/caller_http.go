@@ -22,6 +22,7 @@ import (
 )
 
 var (
+	headerAuthorization    = http.CanonicalHeaderKey("Authorization")
 	headerContentLength    = http.CanonicalHeaderKey("Content-Length")
 	headerHost             = http.CanonicalHeaderKey("Host")
 	headerTransferEncoding = http.CanonicalHeaderKey("Transfer-Encoding")
@@ -122,11 +123,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.Sho
 		showf:    showf,
 		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
-
-	// Some things have to be computed before Do() gets called:
-	err := m.buildHTTPRequest(ctx, msg)
-
-	m.tcap.buildHTTPRequestErr = err
+	m.tcap.buildHTTPRequestErr = m.buildHTTPRequest(ctx, msg)
 	m.tcap.checks = []namedLambda{
 		{"creation of HTTP request", m.checkCreateHTTPReq},
 		{"connection to server", m.checkConn},
@@ -487,7 +484,7 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (err error
 	}
 
 	if authz := m.HeaderAuthorization; authz != "" {
-		m.tcap.httpReq.Header.Add("Authorization", authz)
+		m.tcap.httpReq.Header.Add(headerAuthorization, authz)
 	}
 
 	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
@@ -518,10 +515,6 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		return
 	}
 
-	// TODO: output `curl` requests when showing counterexample
-	//   https://github.com/sethgrid/gencurl
-	//   https://github.com/moul/http2curl
-	// FIXME: info output in `curl` style with timings
 	var err error
 	var req []byte
 	if req, err = httputil.DumpRequestOut(c.httpReq, false); err != nil {
