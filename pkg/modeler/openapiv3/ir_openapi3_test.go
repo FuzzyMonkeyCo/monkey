@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
@@ -108,8 +109,8 @@ func toOA3(m *oa3) (doc openapi3.Swagger) {
 }
 
 func validateSomeSchemas(t *testing.T, m *oa3) {
-	require.NotEmpty(t, m.Validate(1, enumFromGo(schemaJSON{})))
-	require.Empty(t, m.Validate(4, enumFromGo(float64(42))))
+	require.NotEmpty(t, m.Validate(1, protovalue.FromGo(schemaJSON{})))
+	require.Empty(t, m.Validate(4, protovalue.FromGo(float64(42))))
 }
 
 func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {

@@ -206,7 +206,7 @@ func (rt *Runtime) Fuzz(
 
 	log.Printf("[NFO] found a bug in %d calls (while shrinking? %v)",
 		l.GetTestCallsCount(), result.GetWasShrinking())
-	as.ColorWRN.Printf("You should be able to reproduce this test failure with this flag\n")
+	as.ColorWRN.Printf("You should be able to reproduce this test failure with this flag:\n")
 	as.ColorWRN.Printf("  --seed=%s\n", suggestedSeed)
 	return &TestingCampaignFailure{}
 }

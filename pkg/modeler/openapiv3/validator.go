@@ -13,6 +13,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
 	"github.com/gogo/protobuf/types"
 	"github.com/xeipuuv/gojsonschema"
 )
@@ -123,7 +124,7 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 		enum := v.([]interface{})
 		schema.Enum = make([]*types.Value, 0, len(enum))
 		for _, vv := range enum {
-			schema.Enum = append(schema.Enum, enumFromGo(vv))
+			schema.Enum = append(schema.Enum, protovalue.FromGo(vv))
 		}
 	}
 
@@ -308,7 +309,7 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	if schemaEnum := schema.GetEnum(); len(schemaEnum) != 0 {
 		enum := make([]interface{}, 0, len(schemaEnum))
 		for _, v := range schemaEnum {
-			enum = append(enum, EnumToGo(v))
+			enum = append(enum, protovalue.ToGo(v))
 		}
 		s["enum"] = enum
 	}
@@ -462,94 +463,6 @@ func formatToGo(format fm.Schema_JSON_Format) string {
 		return "uri-reference"
 	default:
 		return format.String()
-	}
-}
-
-func enumFromGo(value interface{}) *types.Value {
-	if value == nil {
-		return &types.Value{Kind: &types.Value_NullValue{
-			NullValue: types.NullValue_NULL_VALUE}}
-	}
-	switch val := value.(type) {
-	case bool:
-		return &types.Value{Kind: &types.Value_BoolValue{
-			BoolValue: val}}
-	case uint8:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case int8:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case uint16:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case int16:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case uint32:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case int32:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case uint64:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case int64:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case float32:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: float64(val)}}
-	case float64:
-		return &types.Value{Kind: &types.Value_NumberValue{
-			NumberValue: val}}
-	case string:
-		return &types.Value{Kind: &types.Value_StringValue{
-			StringValue: val}}
-	case []interface{}:
-		vs := make([]*types.Value, 0, len(val))
-		for _, v := range val {
-			vs = append(vs, enumFromGo(v))
-		}
-		return &types.Value{Kind: &types.Value_ListValue{ListValue: &types.ListValue{Values: vs}}}
-	case map[string]interface{}:
-		vs := make(map[string]*types.Value, len(val))
-		for n, v := range val {
-			vs[n] = enumFromGo(v)
-		}
-		return &types.Value{Kind: &types.Value_StructValue{StructValue: &types.Struct{Fields: vs}}}
-	default:
-		panic(fmt.Errorf("cannot convert to value type: %T", value))
-	}
-}
-
-func EnumToGo(value *types.Value) interface{} {
-	switch value.GetKind().(type) {
-	case *types.Value_NullValue:
-		return nil
-	case *types.Value_BoolValue:
-		return value.GetBoolValue()
-	case *types.Value_NumberValue:
-		return value.GetNumberValue()
-	case *types.Value_StringValue:
-		return value.GetStringValue()
-	case *types.Value_ListValue:
-		val := value.GetListValue().GetValues()
-		vs := make([]interface{}, 0, len(val))
-		for _, v := range val {
-			vs = append(vs, EnumToGo(v))
-		}
-		return vs
-	case *types.Value_StructValue:
-		val := value.GetStructValue().GetFields()
-		vs := make(map[string]interface{}, len(val))
-		for n, v := range val {
-			vs[n] = EnumToGo(v)
-		}
-		return vs
-	default:
-		panic(fmt.Errorf("cannot convert from type %T: %+v", value, value))
 	}
 }
 
@@ -739,7 +652,7 @@ func (vald *validator) Validate(SID sid, data *types.Value) []string {
 	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)
 
-	toValidate := EnumToGo(data)
+	toValidate := protovalue.ToGo(data)
 	log.Printf("[DBG] SID:%d -> %+.100v against %+.100v", SID, s, toValidate)
 
 	loader := gojsonschema.NewGoLoader(s)

@@ -80,12 +80,14 @@ message Clt {
         }
         map<string, HeaderValues> headers = 3;
         bytes body = 4;
+        google.protobuf.Value body_decoded = 5;
       }
       oneof input {
         HttpRequest http_request = 1;
       }
     }
     Input input = 1;
+    repeated string reason = 2;
   }
 
   message CallResponseRaw {
@@ -99,7 +101,8 @@ message Clt {
         }
         map<string, HeaderValues> headers = 4;
         bytes body = 5;
-        int64 elapsed_ns = 6;  // TODO: finer timings (name lookup, connection, ...)
+        google.protobuf.Value body_decoded = 6;
+        int64 elapsed_ns = 7;  // TODO: finer timings (name lookup, connection, ...)
                                // add http timings similar to
                                // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
       }
@@ -114,17 +117,16 @@ message Clt {
   message CallVerifProgress {
     string name = 1;
     enum Status {
-      done = 0;
-      data = 1;
-      skipped = 2;
-      start = 3;
-      success = 4;
-      failure = 5;
+      NO_STATUS = 0;
+      start = 1;
+      success = 2;
+      skipped = 3;
+      failure = 4;
+      done = 5;
     }
     Status status = 2;
     bool user_property = 3;
     repeated string reason = 4;
-    google.protobuf.Struct response = 5;
   }
 
   oneof msg {

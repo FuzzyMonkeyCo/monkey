@@ -8,6 +8,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
 )
@@ -22,20 +23,28 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	for _, mdl = range rt.models {
 		break
 	}
-	cllr := mdl.NewCaller(ctx, msg, showf)
 
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
-	cllr.Do(ctx)
-	input, output := cllr.ToProto()
-	log.Printf("[NFO] call input: %.999v", input)
-	log.Printf("[NFO] call output: %.999v", output)
+	cllr := mdl.NewCaller(ctx, msg, showf)
 
+	input := cllr.RequestProto()
+	log.Printf("[NFO] call input: %.999v", input)
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
 		CallRequestRaw: input,
 	}}); errT != nil {
 		log.Println("[ERR]", errT)
 		return errT
 	}
+	if len(input.GetReason()) != 0 {
+		// An error happened building the request: cannot continue.
+		return nil
+	}
+	callRequest := input.GetInput().Expose()
+
+	cllr.Do(ctx)
+
+	output := cllr.ResponseProto()
+	log.Printf("[NFO] call output: %.999v", output)
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallResponseRaw_{
 		CallResponseRaw: output,
 	}}); errT != nil {
@@ -56,15 +65,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 		return nil
 	}
 
-	callResponse := cllr.Response()
-	// Actionable response data parsed...
-	if errT := rt.client.Send(ctx, cvp(&fm.Clt_CallVerifProgress{
-		Status:   fm.Clt_CallVerifProgress_data,
-		Response: callResponse,
-	})); errT != nil {
-		log.Println("[ERR]", errT)
-		return errT
-	}
+	callResponse := output.GetOutput().Expose(callRequest)
 
 	{
 		printfunc := func(_ *starlark.Thread, msg string) {
@@ -182,8 +183,8 @@ func (rt *Runtime) runCallerCheck(
 func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.triggers))
 
-	cloneResponse := func() (starlark.Value, error) {
-		return slValueFromProto(&types.Value{
+	cloneResponse := func() starlark.Value {
+		return starlarkvalue.FromProtoValue(&types.Value{
 			Kind: &types.Value_StructValue{StructValue: callResponse}})
 	}
 
@@ -239,21 +240,17 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
 	trggr triggerActionAfterProbe,
-	cloneResponse func() (starlark.Value, error),
+	cloneResponse func() starlark.Value,
 ) (err error) {
 	// On success or skipping set status + return no error,
 	// in all other cases just return error.
 
-	var modelState1, response1 starlark.Value
+	var modelState1 starlark.Value
 	if modelState1, err = slValueCopy(rt.modelState); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	if response1, err = cloneResponse(); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	args1 := starlark.Tuple{modelState1, response1}
+	args1 := starlark.Tuple{modelState1, cloneResponse()}
 
 	var shouldBeBool starlark.Value
 	if shouldBeBool, err = starlark.Call(rt.thread, trggr.pred, args1, nil); err != nil {
@@ -273,16 +270,12 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	var modelState2, response2 starlark.Value
+	var modelState2 starlark.Value
 	if modelState2, err = slValueCopy(rt.modelState); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	if response2, err = cloneResponse(); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	args2 := starlark.Tuple{modelState2, response2}
+	args2 := starlark.Tuple{modelState2, cloneResponse()}
 
 	var newModelState starlark.Value
 	if newModelState, err = starlark.Call(rt.thread, trggr.act, args2, nil); err != nil {

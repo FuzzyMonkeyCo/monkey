@@ -3,7 +3,6 @@ package openapiv3
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -24,6 +24,7 @@ import (
 var (
 	headerAuthorization    = http.CanonicalHeaderKey("Authorization")
 	headerContentLength    = http.CanonicalHeaderKey("Content-Length")
+	headerContentType      = http.CanonicalHeaderKey("Content-Type")
 	headerHost             = http.CanonicalHeaderKey("Host")
 	headerTransferEncoding = http.CanonicalHeaderKey("Transfer-Encoding")
 	headerUserAgent        = http.CanonicalHeaderKey("User-Agent")
@@ -38,7 +39,6 @@ type tCapHTTP struct {
 	showf               modeler.ShowFunc
 	buildHTTPRequestErr error
 	doErr               error
-	rep                 []byte
 
 	endpoint        *fm.EndpointJSON
 	matchedOutputID uint32
@@ -47,13 +47,9 @@ type tCapHTTP struct {
 
 	checks []namedLambda
 
-	httpReq  *http.Request
-	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest
-	repProto *fm.Clt_CallResponseRaw_Output_HttpResponse
-
-	reqValue, repValue *types.Value
-	repJSONRaw         interface{}
-	repJSONErr         error
+	httpReq          *http.Request
+	repProto         *fm.Clt_CallResponseRaw_Output_HttpResponse
+	repBodyDecodeErr error
 
 	// TODO: pick from these
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
@@ -85,259 +81,117 @@ type tCapHTTP struct {
 	// %{url_effective} shows the URL that was fetched last. This is particularly meaningful if you have told curl to follow Location: headers (with -L).
 }
 
-// RequestProto returns call input as used by the client
-// and call output as received by the client.
-func (c *tCapHTTP) ToProto() (i *fm.Clt_CallRequestRaw, o *fm.Clt_CallResponseRaw) {
-	i = &fm.Clt_CallRequestRaw{
-		Input: &fm.Clt_CallRequestRaw_Input{
-			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
-				HttpRequest: c.reqProto,
-			}}}
-	o = &fm.Clt_CallResponseRaw{
-		OutputId: c.matchedOutputID,
-		Output: &fm.Clt_CallResponseRaw_Output{
-			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
-				HttpResponse: c.repProto,
-			}}}
-	return
-}
-
-type namedLambda struct {
-	name   string
-	lambda modeler.CheckerFunc
-}
-
-// NextCallerCheck returns ("",nil) when out of checks to run.
-// Otherwise it returns named checks inherent to the caller.
-func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
-	if len(c.checks) == 0 {
-		return "", nil
-	}
-	var nameAndLambda namedLambda
-	nameAndLambda, c.checks = c.checks[0], c.checks[1:]
-	return nameAndLambda.name, nameAndLambda.lambda
-}
-
+// NewCaller creates a single-use modeler.Caller from a modeler.Interface instance.
 func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
 	m.tcap = &tCapHTTP{
 		showf:    showf,
 		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
-	m.tcap.buildHTTPRequestErr = m.buildHTTPRequest(ctx, msg)
-	m.tcap.checks = []namedLambda{
-		{"creation of HTTP request", m.checkCreateHTTPReq},
-		{"connection to server", m.checkConn},
-		{"code < 500", m.checkNot5XX},
-		//FIXME: when decoupling modeler/caller move these to modeler
-		{"HTTP code", m.checkHTTPCode},
-		//TODO: check media type matches spec here (Content-Type: application/json)
-		{"valid JSON response", m.checkValidJSONResponse},
-		{"response validates schema", m.checkValidatesJSONSchema},
-	}
+	m.tcap.httpReq, m.tcap.buildHTTPRequestErr = m.buildHTTPRequest(ctx, msg)
+	m.tcap.checks = m.callerChecks()
 	return m.tcap
 }
 
-func (m *oa3) checkCreateHTTPReq() (s, skipped string, f []string) {
-	if err := m.tcap.buildHTTPRequestErr; err != nil {
-		f = append(f, "could not create HTTP request")
-		f = append(f, err.Error())
-		return
-	}
-	s = "request created"
-	return
-}
+func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http.Request, err error) {
+	input := msg.GetInput().GetHttpRequest()
+	var r *http.Request
 
-func (m *oa3) checkConn() (s, skipped string, f []string) {
-	if err := m.tcap.doErr; err != nil {
-		f = append(f, "communication with server could not be established")
-		f = append(f, err.Error())
-		return
-	}
-	s = "request sent"
-	return
-}
-
-func (m *oa3) checkNot5XX() (s, skipped string, f []string) {
-	if code := m.tcap.repProto.StatusCode; code >= 500 {
-		f = append(f, fmt.Sprintf("server error: '%d'", code))
-		return
-	}
-	s = "no server error"
-	return
-}
-
-func (m *oa3) checkHTTPCode() (s, skipped string, f []string) {
-	if m.tcap.matchedHTTPCode {
-		s = "HTTP code checked"
+	if body := input.GetBody(); body != nil {
+		buf := &bytes.Buffer{}
+		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
 	} else {
-		code := m.tcap.repProto.StatusCode
-		f = append(f, fmt.Sprintf("unexpected HTTP code '%d'", code))
+		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}
-	return
-}
-
-func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
-	if m.tcap.isRepBodyEmpty() {
-		s = "response body is empty"
+	if err != nil {
+		log.Println("[ERR]", err)
 		return
 	}
 
-	if m.tcap.repJSONErr != nil {
-		f = append(f, m.tcap.repJSONErr.Error())
-		return
-	}
-
-	m.tcap.repValue = enumFromGo(m.tcap.repJSONRaw)
-	m.tcap.repJSONRaw = nil
-	s = "response is valid JSON"
-	return
-}
-
-func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
-	if m.tcap.matchedSID == 0 {
-		skipped = "no JSON Schema specified for response"
-		return
-	}
-	if m.tcap.isRepBodyEmpty() {
-		skipped = "response body is empty"
-		return
-	}
-	if errs := m.vald.Validate(m.tcap.matchedSID, m.tcap.repValue); len(errs) != 0 {
-		f = errs
-		return
-	}
-	s = "response validates JSON Schema"
-	return
-}
-
-func (c *tCapHTTP) showRequest(req []byte) {
-	for _, line := range bytes.Split(req, []byte{'\r', '\n'}) {
-		c.showf("> %s", line)
-		break
-	}
-}
-
-func (c *tCapHTTP) showResponse() {
-	if err := c.doErr; err != nil {
-		c.showf("HTTP error: %s\n", err.Error())
-		return
-	}
-	for _, line := range bytes.Split(c.rep, []byte{'\r', '\n'}) {
-		c.showf("< %s", line)
-		break
-	}
-}
-
-// Request returns data one can use in their call checks.
-// It returns nil if the actual request could not be created.
-func (c *tCapHTTP) Request() *types.Struct {
-	if c.buildHTTPRequestErr != nil {
-		return nil
-	}
-	s := &types.Struct{
-		Fields: map[string]*types.Value{
-			"method": enumFromGo(c.reqProto.Method),
-			"url":    enumFromGo(c.reqProto.Url),
-			// "content" as bytes?
-		},
-	}
-
-	headers := make(map[string]*types.Value, len(c.reqProto.Headers))
-	for key, values0 := range c.reqProto.Headers {
-		values := values0.GetValues()
-		vals := make([]*types.Value, 0, len(values))
-		for _, val := range values {
-			vals = append(vals, enumFromGo(val))
+	for key, values := range input.GetHeaders() {
+		for _, value := range values.GetValues() {
+			r.Header.Add(key, value)
 		}
-		headers[key] = &types.Value{Kind: &types.Value_ListValue{
-			ListValue: &types.ListValue{Values: vals}}}
 	}
-	s.Fields["headers"] = &types.Value{Kind: &types.Value_StructValue{
-		StructValue: &types.Struct{Fields: headers}}}
 
-	if c.reqProto.Body != nil {
-		s.Fields["body"] = c.reqValue
+	if authz := m.HeaderAuthorization; authz != "" {
+		r.Header.Add(headerAuthorization, authz)
 	}
-	// TODO? Response *Response
-	// Response is the redirect response which caused this request
-	// to be created. This field is only populated during client
-	// redirects.
-	return s
+
+	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
+
+	if host := m.Host; host != "" {
+		var configured *url.URL
+		if configured, err = url.ParseRequestURI(host); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+
+		// NOTE: forces Request.Write to use URL.Host
+		r.Host = ""
+		r.URL.Scheme = configured.Scheme
+		r.URL.Host = configured.Host
+	}
+
+	req = r
+	return
 }
 
-// Request/Response somewhat follow python's `requests` API
-
-// Response returns data one can use in their call checks.
-// It includes the req:=Request() and returns nil when req is.
-func (c *tCapHTTP) Response() *types.Struct {
-	request := c.Request()
-	if request == nil {
-		return nil
+// RequestProto returns call input as used by the client
+func (c *tCapHTTP) RequestProto() (i *fm.Clt_CallRequestRaw) {
+	i = &fm.Clt_CallRequestRaw{}
+	if err := c.buildHTTPRequestErr; err != nil {
+		i.Reason = strings.Split(err.Error(), "\n")
+		return
 	}
-	s := &types.Struct{
-		Fields: map[string]*types.Value{
-			"request": {Kind: &types.Value_StructValue{StructValue: request}},
-			// FIXME? "error": enumFromGo(c.repProto.Error),
-			"status_code": enumFromGo(c.repProto.StatusCode),
-			"reason":      enumFromGo(c.repProto.Reason),
-			// "content" as bytes?
-			// "history" :: []Rep (redirects)?
-			"elapsed_ns": enumFromGo(c.repProto.ElapsedNs),
-		},
+	reqProto, err := requestToProto(c.httpReq)
+	if err != nil {
+		i.Reason = strings.Split(err.Error(), "\n")
+		return
 	}
-
-	headers := make(map[string]*types.Value, len(c.repProto.Headers))
-	for key, values0 := range c.repProto.Headers {
-		values := values0.GetValues()
-		vals := make([]*types.Value, 0, len(values))
-		for _, val := range values {
-			vals = append(vals, enumFromGo(val))
-		}
-		headers[key] = &types.Value{Kind: &types.Value_ListValue{
-			ListValue: &types.ListValue{Values: vals}}}
-	}
-	s.Fields["headers"] = &types.Value{Kind: &types.Value_StructValue{
-		StructValue: &types.Struct{Fields: headers}}}
-
-	if !c.isRepBodyEmpty() {
-		s.Fields["body"] = c.repValue
-	}
-	// TODO? TLS *tls.ConnectionState
-	// TLS contains information about the TLS connection on which the
-	// response was received. It is nil for unencrypted responses.
-	// The pointer is shared between responses and should not be
-	// modified.
-	return s
+	i.Input = &fm.Clt_CallRequestRaw_Input{
+		Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+			HttpRequest: reqProto,
+		}}
+	return
 }
 
 // Records the request as actually performed: from http.Request.
-func (c *tCapHTTP) request(r *http.Request) (err error) {
-	c.reqProto = &fm.Clt_CallRequestRaw_Input_HttpRequest{
+func requestToProto(r *http.Request) (
+	reqProto *fm.Clt_CallRequestRaw_Input_HttpRequest,
+	err error,
+) {
+	reqProto = &fm.Clt_CallRequestRaw_Input_HttpRequest{
 		Method: r.Method,
 		Url:    r.URL.String(),
 	}
 
-	headers := fromReqHeader(r.Header)
-	for key := range headers {
+	reqProto.Headers = make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(r.Header))
+	for key, headers := range r.Header {
+		if len(headers) == 0 {
+			continue
+		}
+		var values []string
 		switch key {
 		case headerContentLength:
-			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
-			}
+			values = []string{strconv.FormatInt(r.ContentLength, 10)}
 		case headerTransferEncoding:
-			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: r.TransferEncoding,
-			}
+			values = r.TransferEncoding
 		case headerHost:
-			headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: []string{r.Host},
-			}
+			values = []string{r.Host}
+		default:
+			values = headers
+		}
+		reqProto.Headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
+			Values: values,
 		}
 	}
-	c.reqProto.Headers = headers
 
 	if r.Body != nil {
-		if c.reqProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
+		if reqProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -345,88 +199,51 @@ func (c *tCapHTTP) request(r *http.Request) (err error) {
 			log.Println("[ERR]", err)
 			return
 		}
-		r.Body = ioutil.NopCloser(bytes.NewReader(c.reqProto.Body))
-		var jsn interface{}
-		if e := json.Unmarshal(c.reqProto.Body, &jsn); e != nil {
-			log.Println("[NFO] request wasn't proper JSON:", e)
+		r.Body = ioutil.NopCloser(bytes.NewReader(reqProto.Body))
+
+		var x types.Value
+		if e := jsonpb.UnmarshalString(string(reqProto.Body), &x); e != nil {
+			log.Println("[NFO] request body could not be decoded:", e)
 		} else {
-			c.reqValue = enumFromGo(jsn)
+			reqProto.BodyDecoded = &x
 		}
 	}
 
 	return
 }
 
-func (c *tCapHTTP) response(r *http.Response, e error) (err error) {
-	if e != nil {
-		c.repProto.Error = e.Error()
-		c.rep = []byte(e.Error())
-		return
+// Do sends the request and waits for the response
+func (c *tCapHTTP) Do(ctx context.Context) {
+	br := []byte{'\r', '\n'}
+	req, err := httputil.DumpRequestOut(c.httpReq, false)
+	if err != nil {
+		log.Println("[ERR]", err)
+		req = []byte(err.Error())
 	}
-	c.repProto.StatusCode = uint32(r.StatusCode)
-	c.repProto.Reason = r.Status
-
-	headers := fromRepHeader(r.Header)
-	for key := range headers {
-		switch key {
-		case headerContentLength:
-			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-				Values: []string{strconv.FormatInt(r.ContentLength, 10)},
-			}
-		case headerTransferEncoding:
-			headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-				Values: r.TransferEncoding,
-			}
-		}
+	for _, line := range bytes.Split(req, br) {
+		c.showf("> %s", line)
+		break
 	}
-	c.repProto.Headers = headers
 
-	if r.Body != nil {
-		if c.repProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
+	var rep []byte
+	var r *http.Response
+	if r, c.doErr = (&http.Client{Transport: c}).Do(c.httpReq); c.doErr != nil {
+		rep = []byte(fmt.Sprintf("HTTP error: %s", c.doErr.Error()))
+	} else {
+		r.Body.Close()
+		if rep, err = httputil.DumpResponse(r, false); err != nil {
 			log.Println("[ERR]", err)
-			return
-		}
-		if err = r.Body.Close(); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
-		if !c.isRepBodyEmpty() {
-			c.repJSONErr = json.Unmarshal(c.repProto.Body, &c.repJSONRaw)
+			rep = []byte(err.Error())
 		}
 	}
-
-	func() {
-		var ok bool
-		outputID := c.repProto.StatusCode
-		if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
-			outputID = fromStatusCode(outputID)
-			if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
-				outputID = 0
-				if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
-					return
-				}
-			}
-		}
-		c.matchedOutputID = outputID
-		c.matchedHTTPCode = true
-	}()
-
-	if c.rep, err = httputil.DumpResponse(r, false); err != nil {
-		return
+	for _, line := range bytes.Split(rep, br) {
+		c.showf("< %s", line)
+		break
 	}
-	// TODO: move httputil.DumpResponse to Response() method
-
 	return
 }
-
-func (c *tCapHTTP) isRepBodyEmpty() bool { return len(c.repProto.Body) == 0 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
-	if err = c.request(req); err != nil {
-		return
-	}
-
 	t := &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
 			// TODO: snap the envs that ProxyFromEnvironment reads
@@ -450,115 +267,104 @@ func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) 
 	c.repProto = &fm.Clt_CallResponseRaw_Output_HttpResponse{
 		ElapsedNs: time.Since(start).Nanoseconds(),
 	}
-
-	if e := c.response(rep, err); e != nil {
-		if err == nil {
-			err = e
-		}
-	}
-	return
-}
-
-func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (err error) {
-	input := msg.GetInput().GetHttpRequest()
-
-	if body := input.GetBody(); body != nil {
-		buf := &bytes.Buffer{}
-		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
-	} else {
-		m.tcap.httpReq, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
-	}
 	if err != nil {
-		log.Println("[ERR]", err)
+		c.repProto.Error = err.Error()
 		return
 	}
+	err = c.responseToProto(rep)
+	return
+}
 
-	for key, values := range input.GetHeaders() {
-		for _, value := range values.GetValues() {
-			m.tcap.httpReq.Header.Add(key, value)
+// ResponseProto returns call output as received by the client
+func (c *tCapHTTP) ResponseProto() *fm.Clt_CallResponseRaw {
+	return &fm.Clt_CallResponseRaw{
+		OutputId: c.matchedOutputID,
+		Output: &fm.Clt_CallResponseRaw_Output{
+			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
+				HttpResponse: c.repProto,
+			}}}
+}
+
+func (c *tCapHTTP) responseToProto(r *http.Response) (err error) {
+	c.repProto.StatusCode = uint32(r.StatusCode)
+	c.repProto.Reason = r.Status
+
+	c.repProto.Headers = make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(r.Header))
+	for key, headers := range r.Header {
+		if len(headers) == 0 {
+			continue
+		}
+		var values []string
+		switch key {
+		case headerContentLength:
+			values = []string{strconv.FormatInt(r.ContentLength, 10)}
+		case headerTransferEncoding:
+			values = r.TransferEncoding
+		default:
+			values = headers
+		}
+		c.repProto.Headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
+			Values: values,
 		}
 	}
 
-	if authz := m.HeaderAuthorization; authz != "" {
-		m.tcap.httpReq.Header.Add(headerAuthorization, authz)
-	}
-
-	m.tcap.httpReq.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
-
-	if host := m.Host; host != "" {
-		var configured *url.URL
-		if configured, err = url.ParseRequestURI(host); err != nil {
+	if r.Body != nil {
+		if c.repProto.Body, err = ioutil.ReadAll(r.Body); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
+		if err = r.Body.Close(); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
 
-		// NOTE: forces Request.Write to use URL.Host
-		m.tcap.httpReq.Host = ""
-		m.tcap.httpReq.URL.Scheme = configured.Scheme
-		m.tcap.httpReq.URL.Host = configured.Host
+		var x types.Value
+		if e := jsonpb.UnmarshalString(string(c.repProto.Body), &x); e != nil {
+			log.Println("[NFO] response body could not be decoded:", e)
+			c.repBodyDecodeErr = e
+		} else {
+			c.repProto.BodyDecoded = &x
+		}
 	}
+
+	func() {
+		var ok bool
+		outputID := c.repProto.StatusCode
+		if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
+			outputID = fromStatusCode(outputID)
+			if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
+				outputID = 0
+				if c.matchedSID, ok = c.endpoint.Outputs[outputID]; !ok {
+					return
+				}
+			}
+		}
+		c.matchedOutputID = outputID
+		c.matchedHTTPCode = true
+	}()
+
+	// TODO? redirects with Response *Response
+	// Response is the redirect response which caused this request
+	// to be created. This field is only populated during client
+	// redirects.
+
+	// TODO? TLS *tls.ConnectionState
+	// TLS contains information about the TLS connection on which the
+	// response was received. It is nil for unencrypted responses.
+	// The pointer is shared between responses and should not be
+	// modified.
 
 	return
 }
 
-// Do sends the request and waits for the response
-func (c *tCapHTTP) Do(ctx context.Context) {
-	if c.buildHTTPRequestErr != nil {
-		// An error happened during NewCaller. Report is delayed until
-		// the call to checkCreateHTTPReq.
-		// c.repProto.Error cannot be set as the rest of the Request()/Response()
-		// protos would be empty. Instead we have them return nil.
-		return
+// NextCallerCheck returns ("",nil) when out of checks to run.
+// Otherwise it returns named checks inherent to the caller.
+func (c *tCapHTTP) NextCallerCheck() (string, modeler.CheckerFunc) {
+	if len(c.checks) == 0 {
+		return "", nil
 	}
-
-	var err error
-	var req []byte
-	if req, err = httputil.DumpRequestOut(c.httpReq, false); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	// TODO: move httputil.DumpRequestOut to Request() method
-	c.showRequest(req)
-
-	var r *http.Response
-	if r, c.doErr = (&http.Client{Transport: c}).Do(c.httpReq); c.doErr == nil {
-		r.Body.Close()
-	}
-
-	c.showResponse()
-	return
-}
-
-func fromReqHeader(src http.Header) map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues {
-	if src == nil {
-		return nil
-	}
-	dst := make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(src))
-	for h, hs := range src {
-		if len(hs) != 0 {
-			dst[h] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-				Values: hs,
-			}
-		}
-	}
-	return dst
-}
-
-func fromRepHeader(src http.Header) map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues {
-	if src == nil {
-		return nil
-	}
-	dst := make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(src))
-	for h, hs := range src {
-		if len(hs) != 0 {
-			dst[h] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-				Values: hs,
-			}
-		}
-	}
-	return dst
+	var nameAndLambda namedLambda
+	nameAndLambda, c.checks = c.checks[0], c.checks[1:]
+	return nameAndLambda.name, nameAndLambda.lambda
 }
