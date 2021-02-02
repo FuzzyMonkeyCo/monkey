@@ -24,7 +24,6 @@ import (
 var (
 	headerAuthorization    = http.CanonicalHeaderKey("Authorization")
 	headerContentLength    = http.CanonicalHeaderKey("Content-Length")
-	headerContentType      = http.CanonicalHeaderKey("Content-Type")
 	headerHost             = http.CanonicalHeaderKey("Host")
 	headerTransferEncoding = http.CanonicalHeaderKey("Transfer-Encoding")
 	headerUserAgent        = http.CanonicalHeaderKey("User-Agent")
