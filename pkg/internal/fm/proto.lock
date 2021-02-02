@@ -28,26 +28,26 @@
             "name": "CallVerifProgress.Status",
             "enum_fields": [
               {
-                "name": "done"
-              },
-              {
-                "name": "data",
-                "integer": 1
-              },
-              {
-                "name": "skipped",
-                "integer": 2
+                "name": "NO_STATUS"
               },
               {
                 "name": "start",
-                "integer": 3
+                "integer": 1
               },
               {
                 "name": "success",
-                "integer": 4
+                "integer": 2
+              },
+              {
+                "name": "skipped",
+                "integer": 3
               },
               {
                 "name": "failure",
+                "integer": 4
+              },
+              {
+                "name": "done",
                 "integer": 5
               }
             ]
@@ -436,6 +436,12 @@
                     "id": 1,
                     "name": "input",
                     "type": "Input"
+                  },
+                  {
+                    "id": 2,
+                    "name": "reason",
+                    "type": "string",
+                    "is_repeated": true
                   }
                 ],
                 "messages": [
@@ -466,6 +472,11 @@
                             "id": 4,
                             "name": "body",
                             "type": "bytes"
+                          },
+                          {
+                            "id": 5,
+                            "name": "body_decoded",
+                            "type": "google.protobuf.Value"
                           }
                         ],
                         "maps": [
@@ -546,6 +557,11 @@
                           },
                           {
                             "id": 6,
+                            "name": "body_decoded",
+                            "type": "google.protobuf.Value"
+                          },
+                          {
+                            "id": 7,
                             "name": "elapsed_ns",
                             "type": "int64"
                           }
@@ -601,11 +617,6 @@
                     "name": "reason",
                     "type": "string",
                     "is_repeated": true
-                  },
-                  {
-                    "id": 5,
-                    "name": "response",
-                    "type": "google.protobuf.Struct"
                   }
                 ]
               }

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"unicode"
 
-	"github.com/gogo/protobuf/types"
-	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
@@ -80,48 +78,6 @@ func slValueIsProtoable(value starlark.Value) (err error) {
 	default:
 		err = fmt.Errorf("unexpected %T: %s", value, value.String())
 		return
-	}
-}
-
-func slValueFromProto(value *types.Value) (starlark.Value, error) {
-	switch value.GetKind().(type) {
-	case *types.Value_NullValue:
-		return starlark.None, nil
-	case *types.Value_BoolValue:
-		return starlark.Bool(value.GetBoolValue()), nil
-	case *types.Value_NumberValue:
-		return starlark.Float(value.GetNumberValue()), nil
-	case *types.Value_StringValue:
-		return starlark.String(value.GetStringValue()), nil
-	case *types.Value_ListValue:
-		values := value.GetListValue().GetValues()
-		vals := make([]starlark.Value, 0, len(values))
-		for _, v := range values {
-			val, err := slValueFromProto(v)
-			if err != nil {
-				return nil, err
-			}
-			vals = append(vals, val)
-		}
-		return starlark.NewList(vals), nil
-	case *types.Value_StructValue:
-		values := value.GetStructValue().GetFields()
-		vals := starlark.NewDict(len(values))
-		for key, v := range values {
-			if err := printableASCII(key); err != nil {
-				return nil, errors.Wrap(err, "illegal string key")
-			}
-			val, err := slValueFromProto(v)
-			if err != nil {
-				return nil, err
-			}
-			if err = vals.SetKey(starlark.String(key), val); err != nil {
-				return nil, err
-			}
-		}
-		return vals, nil
-	default:
-		panic(fmt.Errorf("unhandled: %T %+v", value, value))
 	}
 }
 
