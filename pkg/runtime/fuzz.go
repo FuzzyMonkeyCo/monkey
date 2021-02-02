@@ -160,7 +160,7 @@ func (rt *Runtime) Fuzz(
 	if counterexample := result.GetCounterexample(); len(counterexample) != 0 {
 		as.ColorNFO.Printf("Initial State")
 		if kvs := rt.modelState0.Items(); len(kvs) == 0 {
-			fmt.Printf(" (empty)\n")
+			fmt.Println(" (empty)")
 		} else {
 			as.ColorNFO.Println(":")
 			printModelState(kvs, as.ColorOK.Printf, 0)
@@ -177,7 +177,7 @@ func (rt *Runtime) Fuzz(
 
 		as.ColorNFO.Printf("Final State")
 		if kvs := rt.modelState.Items(); len(kvs) == 0 {
-			fmt.Printf(" (empty)\n")
+			fmt.Println(" (empty)")
 		} else {
 			as.ColorNFO.Println(":")
 			printModelState(kvs, as.ColorOK.Printf, 0)
