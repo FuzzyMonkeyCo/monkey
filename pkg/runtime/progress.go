@@ -11,17 +11,22 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/dots"
 )
 
-func (rt *Runtime) newProgress(ctx context.Context, max uint32, ptype string) (err error) {
+func (rt *Runtime) newProgress(ctx context.Context, max uint32, vvv uint8, ptype string) (err error) {
 	if ptype == "" {
-		ptype = "dots"
+		if vvv != 0 {
+			ptype = "ci"
+		} else {
+			ptype = "dots"
+		}
+		log.Printf("[NFO] using --progress=%s", ptype)
 	}
 	switch ptype {
 	case "bar":
 		rt.progress = &bar.Progresser{}
 	case "ci":
 		rt.progress = &ci.Progresser{}
-		if rt.logLevel == 0 {
-			rt.logLevel = 3 // lowest level: DBG
+		if vvv == 0 {
+			vvv = 3 // lowest level: DBG
 		}
 	case "dots":
 		rt.progress = &dots.Progresser{}

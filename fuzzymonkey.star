@@ -18,8 +18,7 @@ OpenAPIv3(
     host = host,
     # header_authorization = 'Bearer ' + ...,
     ExecReset = """
-    printf 'Resetting state...
-'
+    echo Resetting state...
     """,
 )
 
@@ -44,10 +43,15 @@ State = {
 }
 
 def actionAfterPosts(State, response):
+    """Stores posts in State"""
+
     # When entering actions, response has already been validated and decoded.
     for post in response["body"]:
+        # Note: keys in State must be strings
+        post_id = str(int(post["id"]))
+
         # Set some state
-        State["posts"][post["id"]] = post
+        State["posts"][post_id] = post
     print("State has {} items".format(len(State["posts"])))
     return State
 

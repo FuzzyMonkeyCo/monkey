@@ -10,7 +10,7 @@ import (
 func slValuePrintableASCII(k starlark.Value) error {
 	key, ok := k.(starlark.String)
 	if !ok {
-		return fmt.Errorf("expected a string, got: %s", k.Type())
+		return fmt.Errorf("all keys must be strings, have: %s %s", k.Type(), k.String())
 	}
 	return printableASCII(key.GoString())
 }

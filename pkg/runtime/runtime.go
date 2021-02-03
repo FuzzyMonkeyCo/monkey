@@ -39,14 +39,13 @@ type Runtime struct {
 	tags      map[string]string
 	cleanedup bool
 
-	logLevel            uint8
 	progress            progresser.Interface
 	lastFuzzingProgress *fm.Srv_FuzzingProgress
 	fuzzingStartedAt    time.Time
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
+func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("unnamed NewMonkey")
 		log.Println("[ERR]", err)
@@ -61,7 +60,6 @@ func NewMonkey(name string, tags []string, vvv uint8) (rt *Runtime, err error) {
 
 	rt = &Runtime{
 		binTitle: name,
-		logLevel: vvv,
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
