@@ -23,6 +23,7 @@ func (rt *Runtime) Fuzz(
 	ctx context.Context,
 	ntensity uint32,
 	seed []byte,
+	vvv uint8,
 	ptype, apiKey string,
 ) (err error) {
 	start := time.Now()
@@ -79,7 +80,7 @@ func (rt *Runtime) Fuzz(
 		func() {
 			if rt.progress == nil {
 				fuzzRep := srv.GetFuzzRep()
-				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount(), ptype); err != nil {
+				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount(), vvv, ptype); err != nil {
 					return
 				}
 				if tkn := fuzzRep.GetToken(); tkn != "" {
@@ -192,7 +193,7 @@ func (rt *Runtime) Fuzz(
 
 	if newSeed := result.GetNextSeed(); len(newSeed) != 0 {
 		log.Println("[NFO] continuing with new seed")
-		return rt.Fuzz(ctx, ntensity, newSeed, ptype, "")
+		return rt.Fuzz(ctx, ntensity, newSeed, vvv, ptype, "")
 	}
 
 	if l.GetSuccess() {
