@@ -41,7 +41,7 @@ lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./misc/goolint.sh
-	if [[ $$((RANDOM % 10)) -eq 0 ]]; then go vet ./...; fi
+	go vet ./...
 
 debug: all
 	./$(EXE) lint
@@ -57,10 +57,8 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	go vet ./...
 	richgo test -count 10 ./...
 test.ci: all
-	go vet ./...
 	go test -v -race ./...
 
 ape: $(EXE).test
