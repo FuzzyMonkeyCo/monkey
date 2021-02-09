@@ -65,9 +65,8 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 		return nil
 	}
 
-	callResponse := output.GetOutput().Expose(callRequest)
-
 	{
+		callResponse := output.GetOutput().Expose(callRequest)
 		printfunc := func(_ *starlark.Thread, msg string) {
 			rt.progress.Printf("%s", msg)
 		}
