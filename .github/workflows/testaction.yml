@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: fmt
+    - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
       with:
-        command: fmt
+        command: lint
         github_token: ${{ secrets.github_token }}
 
   on_macos:
@@ -22,10 +22,10 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
-    - name: fmt
+    - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
       with:
-        command: fmt
+        command: lint
         github_token: ${{ secrets.github_token }}
 
   on_windows:
@@ -33,8 +33,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v1
-    - name: fmt
+    - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
       with:
-        command: fmt
+        command: lint
         github_token: ${{ secrets.github_token }}
