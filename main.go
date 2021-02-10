@@ -33,7 +33,7 @@ var (
 	binSHA     = "feedb065"
 	binVersion = "M.m.p"
 	binTitle   = strings.Join([]string{binName, binVersion, binSHA,
-		runtime.Version(), runtime.GOOS, runtime.GOARCH}, "\t")
+		runtime.Version(), runtime.GOOS, runtime.GOARCH}, " ")
 )
 
 func main() {
