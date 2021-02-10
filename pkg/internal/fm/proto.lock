@@ -248,26 +248,21 @@
               },
               {
                 "id": 2,
-                "name": "metrics",
-                "type": "Metrics"
-              },
-              {
-                "id": 3,
                 "name": "reset_progress",
                 "type": "ResetProgress"
               },
               {
-                "id": 4,
+                "id": 3,
                 "name": "call_request_raw",
                 "type": "CallRequestRaw"
               },
               {
-                "id": 5,
+                "id": 4,
                 "name": "call_response_raw",
                 "type": "CallResponseRaw"
               },
               {
-                "id": 6,
+                "id": 5,
                 "name": "call_verif_progress",
                 "type": "CallVerifProgress"
               }
@@ -329,6 +324,14 @@
                     "field": {
                       "id": 8,
                       "name": "env_read",
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 10,
+                      "name": "files",
                       "type": "string"
                     }
                   }
@@ -404,9 +407,6 @@
                     ]
                   }
                 ]
-              },
-              {
-                "name": "Metrics"
               },
               {
                 "name": "ResetProgress",

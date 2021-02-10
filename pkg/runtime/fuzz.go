@@ -60,6 +60,7 @@ func (rt *Runtime) Fuzz(
 		Resetter: rsttr.ToProto(),
 		Seed:     seed,
 		Labels:   rt.labels,
+		Files:    rt.files,
 		Usage:    os.Args,
 		UUIDs:    []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
 	}}}); err != nil {

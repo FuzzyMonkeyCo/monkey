@@ -2,8 +2,8 @@ package runtime
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
-	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -33,6 +33,7 @@ type Runtime struct {
 	envRead     map[string]string // holds all the envs looked up on initial run
 	triggers    []triggerActionAfterProbe
 	models      map[string]modeler.Interface
+	files       map[string]string
 
 	client    *fm.ChBiDi
 	eIds      []uint32
@@ -52,7 +53,8 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 		return
 	}
 
-	if _, err = os.Stat(localCfg); os.IsNotExist(err) {
+	var localCfgContents []byte
+	if localCfgContents, err = ioutil.ReadFile(localCfg); err != nil {
 		log.Println("[ERR]", err)
 		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
 		return
@@ -60,6 +62,7 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 
 	rt = &Runtime{
 		binTitle: name,
+		files:    map[string]string{localCfg: string(localCfgContents)},
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 	}
