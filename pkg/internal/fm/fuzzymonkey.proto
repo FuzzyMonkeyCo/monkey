@@ -116,15 +116,15 @@ message Clt {
     string name = 1;
     enum Status {
       NO_STATUS = 0;
-      start = 1;
-      success = 2;
-      skipped = 3;
-      failure = 4;
-      done = 5;
+      success = 1;
+      skipped = 2;
+      failure = 3;
+      done = 4;
     }
     Status status = 2;
     bool user_property = 3;
     repeated string reason = 4;
+    int64 elapsed_ns = 5;
   }
 
   oneof msg {

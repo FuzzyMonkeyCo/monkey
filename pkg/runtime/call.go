@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -71,14 +72,15 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 			rt.progress.Printf("%s", msg)
 		}
 		printfunc, rt.thread.Print = rt.thread.Print, printfunc
-		if passed, errT = rt.userChecks(ctx, callResponse); errT != nil {
+		var passed2 bool
+		if passed2, errT = rt.userChecks(ctx, callResponse); errT != nil {
 			return errT
 		}
 		rt.thread.Print = printfunc
 		log.Printf("[DBG] closeness >>> %+v", rt.thread.Local("closeness"))
-		if !passed {
-			// Return as early as the first check fails
-			return nil
+		if !passed2 {
+			passed = false
+			// Keep going
 		}
 	}
 
@@ -90,8 +92,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 		return errT
 	}
 
-	log.Println("[DBG] checks passed")
-	rt.progress.ChecksPassed()
+	if passed {
+		log.Println("[DBG] checks passed")
+		rt.progress.ChecksPassed()
+	}
 	return nil
 }
 
@@ -110,12 +114,6 @@ func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (bool,
 			return true, nil
 		}
 		log.Println("[NFO] checking", v.Name)
-
-		v.Status = fm.Clt_CallVerifProgress_start
-		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
-			log.Println("[ERR]", errT)
-			return false, errT
-		}
 
 		rt.runCallerCheck(v, lambda)
 
@@ -137,7 +135,9 @@ func (rt *Runtime) runCallerCheck(
 	v *fm.Clt_CallVerifProgress,
 	lambda modeler.CheckerFunc,
 ) {
+	start := time.Now()
 	success, skipped, failure := lambda()
+	v.ElapsedNs = time.Since(start).Nanoseconds()
 	hasSuccess := success != ""
 	hasSkipped := skipped != ""
 	hasFailure := len(failure) != 0
@@ -193,13 +193,9 @@ func (rt *Runtime) userChecks(ctx context.Context, callResponse *types.Struct) (
 		v.UserProperty = true
 		log.Println("[NFO] checking user property:", v.Name)
 
-		v.Status = fm.Clt_CallVerifProgress_start
-		if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
-			log.Println("[ERR]", errT)
-			return false, errT
-		}
-
+		start := time.Now()
 		errL := rt.runUserCheck(v, trggr, cloneResponse)
+		v.ElapsedNs = time.Since(start).Nanoseconds()
 		switch {
 		case errL == nil && v.Status == fm.Clt_CallVerifProgress_success:
 			rt.progress.CheckPassed(v.Name, trggr.act.String())

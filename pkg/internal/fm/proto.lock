@@ -31,24 +31,20 @@
                 "name": "NO_STATUS"
               },
               {
-                "name": "start",
+                "name": "success",
                 "integer": 1
               },
               {
-                "name": "success",
+                "name": "skipped",
                 "integer": 2
               },
               {
-                "name": "skipped",
+                "name": "failure",
                 "integer": 3
               },
               {
-                "name": "failure",
-                "integer": 4
-              },
-              {
                 "name": "done",
-                "integer": 5
+                "integer": 4
               }
             ]
           },
@@ -617,6 +613,11 @@
                     "name": "reason",
                     "type": "string",
                     "is_repeated": true
+                  },
+                  {
+                    "id": 5,
+                    "name": "elapsed_ns",
+                    "type": "int64"
                   }
                 ]
               }
