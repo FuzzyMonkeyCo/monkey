@@ -59,7 +59,7 @@ func (rt *Runtime) Fuzz(
 		Ntensity: ntensity,
 		Resetter: rsttr.ToProto(),
 		Seed:     seed,
-		Tags:     rt.tags,
+		Labels:   rt.labels,
 		Usage:    os.Args,
 		UUIDs:    []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
 	}}}); err != nil {

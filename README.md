@@ -7,10 +7,10 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey	M.m.p	feedb065	go1.15.7	linux	amd64
+monkey	M.m.p	feedb065	go1.15.8	linux	amd64
 
 Usage:
-  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
+  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
                      [--no-shrinking]
                      [--time-budget-overall=DURATION] [--progress=PROGRESS]
                      [--only=REGEX]... [--except=REGEX]...
@@ -34,7 +34,7 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-  --tag=KV                        Labels that can help classification (format: key=value)
+  --label=KV                      Labels that can help classification (format: key=value)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls

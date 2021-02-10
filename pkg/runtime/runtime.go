@@ -36,7 +36,7 @@ type Runtime struct {
 
 	client    *fm.ChBiDi
 	eIds      []uint32
-	tags      map[string]string
+	labels    map[string]string
 	cleanedup bool
 
 	progress            progresser.Interface
@@ -45,7 +45,7 @@ type Runtime struct {
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
+func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 	if name == "" {
 		err = errors.New("unnamed NewMonkey")
 		log.Println("[ERR]", err)
@@ -91,7 +91,7 @@ func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
 	}
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
-	for _, kv := range tags {
+	for _, kv := range labels {
 		if idx := strings.IndexAny(kv, "="); idx != -1 {
 			k, v := kv[:idx], kv[idx+1:]
 			// NOTE: validation also client side for shorter dev loop
@@ -100,13 +100,13 @@ func NewMonkey(name string, tags []string) (rt *Runtime, err error) {
 				return
 			}
 			if v == "" {
-				err = fmt.Errorf("value for tag %q is empty", k)
+				err = fmt.Errorf("value for label %q is empty", k)
 				log.Println("[ERR]", err)
 				return
 			}
-			rt.tags[k] = v
+			rt.labels[k] = v
 		} else {
-			err = fmt.Errorf("tags must follow key=value format: %q", kv)
+			err = fmt.Errorf("labels must follow key=value format: %q", kv)
 			log.Println("[ERR]", err)
 			return
 		}

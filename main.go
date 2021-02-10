@@ -107,7 +107,7 @@ func actualMain() int {
 		return code.OK
 	}
 
-	mrt, err := rt.NewMonkey(binTitle, args.Tags)
+	mrt, err := rt.NewMonkey(binTitle, args.Labels)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed

@@ -50,7 +50,7 @@ message Clt {
     bytes seed = 4;
     uint32 ntensity = 5;
     repeated uint32 EIDs = 6;
-    map<string, string> tags = 7;
+    map<string, string> labels = 7;
     map<string, string> env_read = 8;
     repeated string UUIDs = 9;
   }

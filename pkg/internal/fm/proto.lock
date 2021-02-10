@@ -320,7 +320,7 @@
                     "key_type": "string",
                     "field": {
                       "id": 7,
-                      "name": "tags",
+                      "name": "labels",
                       "type": "string"
                     }
                   },
