@@ -34,6 +34,7 @@ type Runtime struct {
 	triggers    []triggerActionAfterProbe
 	models      map[string]modeler.Interface
 	files       map[string]string
+	checks      map[string]*check
 
 	client    *fm.ChBiDi
 	eIds      []uint32
@@ -65,6 +66,7 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 		files:    map[string]string{localCfg: string(localCfgContents)},
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
+		checks:   make(map[string]*check),
 	}
 	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
@@ -79,10 +81,8 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 
 	rt.thread = &starlark.Thread{
 		Name:  "cfg",
+		Load:  loadDisabled,
 		Print: func(_ *starlark.Thread, msg string) { as.ColorWRN.Println(msg) },
-		Load: func(_ *starlark.Thread, module string) (starlark.StringDict, error) {
-			return nil, errors.New("load() disabled")
-		},
 	}
 	rt.envRead = make(map[string]string)
 	rt.triggers = make([]triggerActionAfterProbe, 0)

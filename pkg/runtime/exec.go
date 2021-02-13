@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 
@@ -15,7 +16,7 @@ import (
 func initExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
-	resolve.AllowSet = false           // sets (no proto representation yet)
+	resolve.AllowSet = false           // sets (no proto representation yet) FIXME: allow but not in ctx.states
 	resolve.AllowGlobalReassign = true // reassignment to top-level names
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
@@ -24,11 +25,15 @@ func initExec() {
 	starlarktruth.NewModule(starlark.Universe)
 }
 
+func loadDisabled(_ *starlark.Thread, module string) (starlark.StringDict, error) {
+	return nil, errors.New("load() disabled")
+}
+
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
 func (rt *Runtime) JustExecREPL() error {
-	rt.thread.Load = repl.MakeLoad()
-	fmt.Println("Welcome to Starlark (go.starlark.net)")
+	fmt.Println("# Welcome to Starlark https://go.starlark.net")
 	rt.thread.Name = "REPL"
+	rt.thread.Load = loadDisabled
 	repl.REPL(rt.thread, rt.globals)
 	return nil
 }

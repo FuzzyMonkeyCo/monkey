@@ -26,7 +26,7 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 			t.Logf("--> %s", msg)
 		},
 		Load: func(_ *starlark.Thread, module string) (starlark.StringDict, error) {
-			return nil, errors.New("load() unsupported")
+			return nil, errors.New("load() disabled")
 		},
 	}
 	script := strings.Join([]string{

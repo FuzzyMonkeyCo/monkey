@@ -98,15 +98,13 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 		break
 	}
 
-	{
-		var state starlark.Value
-		if state, err = slValueCopy(rt.modelState0); err != nil {
+	for _, chk := range rt.checks {
+		if err = chk.reset(); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		rt.modelState = state.(*modelState)
-		log.Println("[NFO] re-initialized model state")
 	}
+	log.Println("[NFO] re-initialized model state")
 
 	stdout := newProgressWriter(rt.progress.Printf)
 	stderr := newProgressWriter(rt.progress.Errorf)
