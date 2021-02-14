@@ -160,30 +160,12 @@ func (rt *Runtime) Fuzz(
 	}
 
 	if counterexample := result.GetCounterexample(); len(counterexample) != 0 {
-		as.ColorNFO.Printf("Initial State")
-		if kvs := rt.modelState0.Items(); len(kvs) == 0 {
-			fmt.Println(" (empty)")
-		} else {
-			as.ColorNFO.Println(":")
-			printModelState(kvs, as.ColorOK.Printf, 0)
-		}
-		as.ColorNFO.Println()
-
 		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(counterexample))
 		as.ColorOK.Println("monkey exec start")
 		for _, ceItem := range counterexample {
 			as.ColorOK.Println(ceItem.CLIString())
 		}
 		as.ColorOK.Println("monkey exec stop")
-		as.ColorNFO.Println()
-
-		as.ColorNFO.Printf("Final State")
-		if kvs := rt.modelState.Items(); len(kvs) == 0 {
-			fmt.Println(" (empty)")
-		} else {
-			as.ColorNFO.Println(":")
-			printModelState(kvs, as.ColorOK.Printf, 0)
-		}
 		as.ColorNFO.Println()
 	}
 

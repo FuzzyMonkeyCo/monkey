@@ -125,6 +125,7 @@ message Clt {
     bool user_property = 3;
     repeated string reason = 4;
     int64 elapsed_ns = 5;
+    uint64 execution_steps = 6;
   }
 
   oneof msg {

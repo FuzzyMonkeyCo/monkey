@@ -208,7 +208,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			}
 			argz = []starlark.Value{arg1, arg2}
 		default:
-			err := fmt.Errorf("unexpected #args for AssertThat.%q(): %d", name, nArgs)
+			err := fmt.Errorf("unexpected #args for %s.that(%s).%q(): %d", Default, t.actual.String(), name, nArgs)
 			return nil, err
 		}
 

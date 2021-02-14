@@ -71,15 +71,15 @@ func fail(value, expected string, suffixes ...string) error {
 
 func TestTrue(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(True).isTrue()`:  nil,
-		`AssertThat(True).isFalse()`: fail("True", "is False"),
+		`assert.that(True).is_true()`:  nil,
+		`assert.that(True).is_false()`: fail("True", "is False"),
 	})
 }
 
 func TestFalse(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(False).isFalse()`: nil,
-		`AssertThat(False).isTrue()`:  fail("False", "is True"),
+		`assert.that(False).is_false()`: nil,
+		`assert.that(False).is_true()`:  fail("False", "is True"),
 	})
 }
 
@@ -97,12 +97,12 @@ func TestTruthyThings(t *testing.T) {
 	}
 	m := make(map[string]error, 4*len(values))
 	for _, v := range values {
-		m[`AssertThat(`+v+`).isTruthy()`] = nil
-		m[`AssertThat(`+v+`).isFalsy()`] = fail(v, "is falsy")
-		m[`AssertThat(`+v+`).isFalse()`] = fail(v, "is False")
+		m[`assert.that(`+v+`).is_truthy()`] = nil
+		m[`assert.that(`+v+`).is_falsy()`] = fail(v, "is falsy")
+		m[`assert.that(`+v+`).is_false()`] = fail(v, "is False")
 		if v != `True` {
-			m[`AssertThat(`+v+`).isTrue()`] = fail(v, "is True",
-				" However, it is truthy. Did you mean to call .isTruthy() instead?")
+			m[`assert.that(`+v+`).is_true()`] = fail(v, "is True",
+				" However, it is truthy. Did you mean to call .is_truthy() instead?")
 		}
 	}
 	testEach(t, m)
@@ -126,12 +126,12 @@ func TestFalsyThings(t *testing.T) {
 		if v == `set()` {
 			vv = `set([])`
 		}
-		m[`AssertThat(`+v+`).isFalsy()`] = nil
-		m[`AssertThat(`+v+`).isTruthy()`] = fail(vv, "is truthy")
-		m[`AssertThat(`+v+`).isTrue()`] = fail(vv, "is True")
+		m[`assert.that(`+v+`).is_falsy()`] = nil
+		m[`assert.that(`+v+`).is_truthy()`] = fail(vv, "is truthy")
+		m[`assert.that(`+v+`).is_true()`] = fail(vv, "is True")
 		if v != `False` {
-			m[`AssertThat(`+v+`).isFalse()`] = fail(vv, "is False",
-				" However, it is falsy. Did you mean to call .isFalsy() instead?")
+			m[`assert.that(`+v+`).is_false()`] = fail(vv, "is False",
+				" However, it is falsy. Did you mean to call .is_falsy() instead?")
 		}
 	}
 	testEach(t, m)
@@ -139,126 +139,126 @@ func TestFalsyThings(t *testing.T) {
 
 func TestIsAtLeast(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isAtLeast(3)`: nil,
-		`AssertThat(5).isAtLeast(5)`: nil,
-		`AssertThat(5).isAtLeast(8)`: fail("5", "is at least <8>"),
+		`assert.that(5).is_at_least(3)`: nil,
+		`assert.that(5).is_at_least(5)`: nil,
+		`assert.that(5).is_at_least(8)`: fail("5", "is at least <8>"),
 	})
 }
 
 func TestIsAtMost(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isAtMost(5)`: nil,
-		`AssertThat(5).isAtMost(8)`: nil,
-		`AssertThat(5).isAtMost(3)`: fail("5", "is at most <3>"),
+		`assert.that(5).is_at_most(5)`: nil,
+		`assert.that(5).is_at_most(8)`: nil,
+		`assert.that(5).is_at_most(3)`: fail("5", "is at most <3>"),
 	})
 }
 
 func TestIsGreaterThan(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isGreaterThan(3)`: nil,
-		`AssertThat(5).isGreaterThan(5)`: fail("5", "is greater than <5>"),
-		`AssertThat(5).isGreaterThan(8)`: fail("5", "is greater than <8>"),
+		`assert.that(5).is_greater_than(3)`: nil,
+		`assert.that(5).is_greater_than(5)`: fail("5", "is greater than <5>"),
+		`assert.that(5).is_greater_than(8)`: fail("5", "is greater than <8>"),
 	})
 }
 
 func TestIsLessThan(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isLessThan(8)`: nil,
-		`AssertThat(5).isLessThan(5)`: fail("5", "is less than <5>"),
-		`AssertThat(5).isLessThan(3)`: fail("5", "is less than <3>"),
+		`assert.that(5).is_less_than(8)`: nil,
+		`assert.that(5).is_less_than(5)`: fail("5", "is less than <5>"),
+		`assert.that(5).is_less_than(3)`: fail("5", "is less than <3>"),
 	})
 }
 
 func TestCannotCompareToNone(t *testing.T) {
 	p := "It is illegal to compare using ."
 	testEach(t, map[string]error{
-		`AssertThat(5).isAtLeast(None)`:     newInvalidAssertion(p + "isAtLeast(None)"),
-		`AssertThat(5).isAtMost(None)`:      newInvalidAssertion(p + "isAtMost(None)"),
-		`AssertThat(5).isGreaterThan(None)`: newInvalidAssertion(p + "isGreaterThan(None)"),
-		`AssertThat(5).isLessThan(None)`:    newInvalidAssertion(p + "isLessThan(None)"),
+		`assert.that(5).is_at_least(None)`:     newInvalidAssertion(p + "is_at_least(None)"),
+		`assert.that(5).is_at_most(None)`:      newInvalidAssertion(p + "is_at_most(None)"),
+		`assert.that(5).is_greater_than(None)`: newInvalidAssertion(p + "is_greater_than(None)"),
+		`assert.that(5).is_less_than(None)`:    newInvalidAssertion(p + "is_less_than(None)"),
 	})
 }
 
 func TestIsEqualTo(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isEqualTo(5)`: nil,
-		`AssertThat(5).isEqualTo(3)`: fail("5", "is equal to <3>"),
-		`AssertThat({1:2,3:4}).isEqualTo([1,2,3,4])`: fail(`{1: 2, 3: 4}`,
+		`assert.that(5).is_equal_to(5)`: nil,
+		`assert.that(5).is_equal_to(3)`: fail("5", "is equal to <3>"),
+		`assert.that({1:2,3:4}).is_equal_to([1,2,3,4])`: fail(`{1: 2, 3: 4}`,
 			"is equal to <[1, 2, 3, 4]>"),
 	})
 }
 
 func TestIsEqualToFailsOnFloatsAsWellAsWithFormattedRepresentations(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(0.3).isEqualTo(0.1+0.2)`: fail("0.3", "is equal to <0.30000000000000004>"),
-		`AssertThat(0.1+0.2).isEqualTo(0.3)`: fail("0.30000000000000004", "is equal to <0.3>"),
+		`assert.that(0.3).is_equal_to(0.1+0.2)`: fail("0.3", "is equal to <0.30000000000000004>"),
+		`assert.that(0.1+0.2).is_equal_to(0.3)`: fail("0.30000000000000004", "is equal to <0.3>"),
 	})
 }
 
 func TestIsNotEqualTo(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(5).isNotEqualTo(3)`: nil,
-		`AssertThat(5).isNotEqualTo(5)`: fail("5", "is not equal to <5>"),
+		`assert.that(5).is_not_equal_to(3)`: nil,
+		`assert.that(5).is_not_equal_to(5)`: fail("5", "is not equal to <5>"),
 	})
 }
 
 func TestSequenceIsEqualToUsesContainsExactlyElementsInPlusInOrder(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat((3,5,[])).isEqualTo((3, 5, []))`: nil,
-		`AssertThat((3,5,[])).isEqualTo(([],3,5))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((3, 5, []))`: nil,
+		`assert.that((3,5,[])).is_equal_to(([],3,5))`: fail("(3, 5, [])",
 			"contains exactly these elements in order <([], 3, 5)>"),
-		`AssertThat((3,5,[])).isEqualTo((3,5,[],9))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((3,5,[],9))`: fail("(3, 5, [])",
 			"contains exactly <(3, 5, [], 9)>. It is missing <9>"),
-		`AssertThat((3,5,[])).isEqualTo((9,3,5,[],10))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((9,3,5,[],10))`: fail("(3, 5, [])",
 			"contains exactly <(9, 3, 5, [], 10)>. It is missing <9, 10>"),
-		`AssertThat((3,5,[])).isEqualTo((3,5))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((3,5))`: fail("(3, 5, [])",
 			"contains exactly <(3, 5)>. It has unexpected items <[]>"),
-		`AssertThat((3,5,[])).isEqualTo(([],3))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to(([],3))`: fail("(3, 5, [])",
 			"contains exactly <([], 3)>. It has unexpected items <5>"),
-		`AssertThat((3,5,[])).isEqualTo((3,))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((3,))`: fail("(3, 5, [])",
 			"contains exactly <(3,)>. It has unexpected items <5, []>"),
-		`AssertThat((3,5,[])).isEqualTo((4,4,3,[],5))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((4,4,3,[],5))`: fail("(3, 5, [])",
 			"contains exactly <(4, 4, 3, [], 5)>. It is missing <4 [2 copies]>"),
-		`AssertThat((3,5,[])).isEqualTo((4,4))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((4,4))`: fail("(3, 5, [])",
 			"contains exactly <(4, 4)>. It is missing <4 [2 copies]> and has unexpected items <3, 5, []>"),
-		`AssertThat((3,5,[])).isEqualTo((3,5,9))`: fail("(3, 5, [])",
+		`assert.that((3,5,[])).is_equal_to((3,5,9))`: fail("(3, 5, [])",
 			"contains exactly <(3, 5, 9)>. It is missing <9> and has unexpected items <[]>"),
-		`AssertThat((3,5,[])).isEqualTo(())`: fail("(3, 5, [])", "is empty"),
+		`assert.that((3,5,[])).is_equal_to(())`: fail("(3, 5, [])", "is empty"),
 	})
 }
 
 func TestSetIsEqualToUsesContainsExactlyElementsIn(t *testing.T) {
-	s := `AssertThat(set([3, 5, 8]))`
+	s := `assert.that(set([3, 5, 8]))`
 	testEach(t, map[string]error{
-		s + `.isEqualTo(set([3, 5, 8]))`: nil,
-		s + `.isEqualTo(set([8, 3, 5]))`: nil,
-		s + `.isEqualTo(set([3, 5, 8, 9]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([3, 5, 8]))`: nil,
+		s + `.is_equal_to(set([8, 3, 5]))`: nil,
+		s + `.is_equal_to(set([3, 5, 8, 9]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([3, 5, 8, 9])>. It is missing <9>"),
-		s + `.isEqualTo(set([9, 3, 5, 8, 10]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([9, 3, 5, 8, 10]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([9, 3, 5, 8, 10])>. It is missing <9, 10>"),
-		s + `.isEqualTo(set([3, 5]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([3, 5]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([3, 5])>. It has unexpected items <8>"),
-		s + `.isEqualTo(set([8, 3]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([8, 3]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([8, 3])>. It has unexpected items <5>"),
-		s + `.isEqualTo(set([3]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([3]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([3])>. It has unexpected items <5, 8>"),
-		s + `.isEqualTo(set([4]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([4]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([4])>. It is missing <4> and has unexpected items <3, 5, 8>"),
-		s + `.isEqualTo(set([3, 5, 9]))`: fail("set([3, 5, 8])",
+		s + `.is_equal_to(set([3, 5, 9]))`: fail("set([3, 5, 8])",
 			"contains exactly <set([3, 5, 9])>. It is missing <9> and has unexpected items <8>"),
-		s + `.isEqualTo(set([]))`: fail("set([3, 5, 8])", "is empty"),
+		s + `.is_equal_to(set([]))`: fail("set([3, 5, 8])", "is empty"),
 	})
 }
 
 func TestSequenceIsEqualToComparedWithNonIterables(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat((3, 5, [])).isEqualTo(3)`: fail("(3, 5, [])", "is equal to <3>"),
+		`assert.that((3, 5, [])).is_equal_to(3)`: fail("(3, 5, [])", "is equal to <3>"),
 	})
 }
 
 func TestSetIsEqualToComparedWithNonIterables(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(set([3, 5, 8])).isEqualTo(3)`: fail("set([3, 5, 8])", "is equal to <3>"),
+		`assert.that(set([3, 5, 8])).is_equal_to(3)`: fail("set([3, 5, 8])", "is equal to <3>"),
 	})
 }
 
@@ -268,7 +268,7 @@ func TestOrderedDictIsEqualToUsesContainsExactlyItemsInPlusInOrder(t *testing.T)
 	d3 := `((4, "four"), (2, "two"))`
 	d4 := `((2, "two"), (4, "for"))`
 	d5 := `((2, "two"), (4, "four"), (5, "five"))`
-	s := `AssertThat(` + d1 + `).isEqualTo(`
+	s := `assert.that(` + d1 + `).is_equal_to(`
 	testEach(t, map[string]error{
 		s + d2 + `)`: nil,
 		s + d3 + `)`: fail(d1, "contains exactly these elements in order <"+d3+">"),
@@ -288,7 +288,7 @@ func TestDictIsEqualToUsesContainsExactlyItemsIn(t *testing.T) {
 	dd := `{2: "two", 4: "for"}`
 	ddd := `{2: "two", 4: "four", 5: "five"}`
 	dBis := `items([(2, "two"), (4, "four")])`
-	s := `AssertThat(` + d + `).isEqualTo(`
+	s := `assert.that(` + d + `).is_equal_to(`
 	testEach(t, map[string]error{
 		s + d + `)`: nil,
 
@@ -306,7 +306,7 @@ func TestDictIsEqualToUsesContainsExactlyItemsIn(t *testing.T) {
 
 func TestIsEqualToComparedWithNonDictionary(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat({2:"two",4:"four"}).isEqualTo(3)`: fail(
+		`assert.that({2:"two",4:"four"}).is_equal_to(3)`: fail(
 			`{2: "two", 4: "four"}`,
 			`is equal to <3>`,
 		),
@@ -314,12 +314,12 @@ func TestIsEqualToComparedWithNonDictionary(t *testing.T) {
 }
 
 func TestNamedMultilineString(t *testing.T) {
-	s := `AssertThat("line1\nline2").named("some-name")`
+	s := `assert.that("line1\nline2").named("some-name")`
 	testEach(t, map[string]error{
-		s + `.isEqualTo("line1\nline2")`: nil,
-		s + `.isEqualTo("")`: newTruthAssertion(
+		s + `.is_equal_to("line1\nline2")`: nil,
+		s + `.is_equal_to("")`: newTruthAssertion(
 			`Not true that actual some-name is equal to <"">.`),
-		s + `.isEqualTo("line1\nline2\n")`: newTruthAssertion(
+		s + `.is_equal_to("line1\nline2\n")`: newTruthAssertion(
 			`Not true that actual some-name is equal to expected, found diff:
 *** Expected
 --- Actual
@@ -335,8 +335,8 @@ func TestNamedMultilineString(t *testing.T) {
 
 func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat("line1\nline2\nline3\nline4\nline5\n") \
-         .isEqualTo("line1\nline2\nline4\nline6\n")`: newTruthAssertion(
+		`assert.that("line1\nline2\nline3\nline4\nline5\n") \
+         .is_equal_to("line1\nline2\nline4\nline6\n")`: newTruthAssertion(
 			`Not true that actual is equal to expected, found diff:
 *** Expected
 --- Actual
@@ -361,13 +361,13 @@ func TestIsEqualToRaisesErrorWithVerboseDiff(t *testing.T) {
 func TestContainsExactly(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsExactly(` + x + `)`
+		return `assert.that(` + ss + `).contains_exactly(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsExactlyInOrder(3, 5, [])`: nil,
-		`AssertThat(` + ss + `).containsExactly(3, 5, [])`:        nil,
-		`AssertThat(` + ss + `).containsExactly([], 3, 5)`:        nil,
-		`AssertThat(` + ss + `).containsExactlyInOrder([], 3, 5)`: fail(ss,
+		`assert.that(` + ss + `).contains_exactly_in_order(3, 5, [])`: nil,
+		`assert.that(` + ss + `).contains_exactly(3, 5, [])`:          nil,
+		`assert.that(` + ss + `).contains_exactly([], 3, 5)`:          nil,
+		`assert.that(` + ss + `).contains_exactly_in_order([], 3, 5)`: fail(ss,
 			"contains exactly these elements in order <([], 3, 5)>"),
 
 		s(`3, 5, [], 9`): fail(ss,
@@ -392,19 +392,19 @@ func TestContainsExactly(t *testing.T) {
 }
 
 func TestContainsExactlyDoesNotWarnIfSingleStringNotContained(t *testing.T) {
-	s := `.containsExactly("abc")`
+	s := `.contains_exactly("abc")`
 	testEach(t, map[string]error{
-		`AssertThat(())` + s:      fail(`()`, `contains exactly <("abc",)>. It is missing <"abc">`),
-		`AssertThat([])` + s:      fail(`[]`, `contains exactly <("abc",)>. It is missing <"abc">`),
-		`AssertThat({})` + s:      errMustBeEqualNumberOfKVPairs(1),
-		`AssertThat("")` + s:      fail(`""`, `contains exactly <("abc",)>. It is missing <"abc">`),
-		`AssertThat(set([]))` + s: fail(`set([])`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`assert.that(())` + s:      fail(`()`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`assert.that([])` + s:      fail(`[]`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`assert.that({})` + s:      errMustBeEqualNumberOfKVPairs(1),
+		`assert.that("")` + s:      fail(`""`, `contains exactly <("abc",)>. It is missing <"abc">`),
+		`assert.that(set([]))` + s: fail(`set([])`, `contains exactly <("abc",)>. It is missing <"abc">`),
 	})
 }
 
 func TestContainsExactlyEmptyContainer(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(` + x + `).containsExactly(3)`
+		return `assert.that(` + x + `).contains_exactly(3)`
 	}
 	testEach(t, map[string]error{
 		s(`()`): fail(`()`, `contains exactly <(3,)>. It is missing <3>`),
@@ -418,7 +418,7 @@ func TestContainsExactlyEmptyContainer(t *testing.T) {
 
 func TestContainsExactlyNothing(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(` + x + `).containsExactly()`
+		return `assert.that(` + x + `).contains_exactly()`
 	}
 	testEach(t, map[string]error{
 		s(`()`):      nil,
@@ -432,12 +432,12 @@ func TestContainsExactlyNothing(t *testing.T) {
 func TestContainsExactlyElementsIn(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsExactlyElementsIn(` + x + `)`
+		return `assert.that(` + ss + `).contains_exactly_elements_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsExactlyElementsInOrderIn((3, 5, []))`: nil,
-		`AssertThat(` + ss + `).containsExactlyElementsIn(([], 3, 5))`:        nil,
-		`AssertThat(` + ss + `).containsExactlyElementsInOrderIn(([], 3, 5))`: fail(ss,
+		`assert.that(` + ss + `).contains_exactly_elements_in_order_in((3, 5, []))`: nil,
+		`assert.that(` + ss + `).contains_exactly_elements_in(([], 3, 5))`:          nil,
+		`assert.that(` + ss + `).contains_exactly_elements_in_order_in(([], 3, 5))`: fail(ss,
 			"contains exactly these elements in order <([], 3, 5)>"),
 
 		s(`(3, 5, [], 9)`):     fail(ss, `contains exactly <(3, 5, [], 9)>. It is missing <9>`),
@@ -453,20 +453,20 @@ func TestContainsExactlyElementsIn(t *testing.T) {
 
 func TestContainsExactlyElementsInEmptyContainer(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(()).containsExactlyElementsIn(())`: nil,
-		`AssertThat(()).containsExactlyElementsIn((3,))`: fail(`()`,
+		`assert.that(()).contains_exactly_elements_in(())`: nil,
+		`assert.that(()).contains_exactly_elements_in((3,))`: fail(`()`,
 			`contains exactly <(3,)>. It is missing <3>`),
 	})
 }
 
 func TestContainsExactlyTargetingOrderedDict(t *testing.T) {
 	ss := `((2, "two"), (4, "four"))`
-	s := `AssertThat(` + ss + `).containsExactly(`
+	s := `assert.that(` + ss + `).contains_exactly(`
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsExactlyInOrder((2, "two"), (4, "four"))`: nil,
-		`AssertThat(` + ss + `).containsExactly((2, "two"), (4, "four"))`:        nil,
-		`AssertThat(` + ss + `).containsExactly((4, "four"), (2, "two"))`:        nil,
-		`AssertThat(` + ss + `).containsExactlyInOrder((4, "four"), (2, "two"))`: fail(ss,
+		`assert.that(` + ss + `).contains_exactly_in_order((2, "two"), (4, "four"))`: nil,
+		`assert.that(` + ss + `).contains_exactly((2, "two"), (4, "four"))`:          nil,
+		`assert.that(` + ss + `).contains_exactly((4, "four"), (2, "two"))`:          nil,
+		`assert.that(` + ss + `).contains_exactly_in_order((4, "four"), (2, "two"))`: fail(ss,
 			`contains exactly these elements in order <((4, "four"), (2, "two"))>`),
 
 		s + `2, "two")`: fail(ss,
@@ -482,13 +482,13 @@ func TestContainsExactlyTargetingOrderedDict(t *testing.T) {
 
 func TestContainsExactlyPassingOddNumberOfArgs(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat({}).containsExactly("key1", "value1", "key2")`: errMustBeEqualNumberOfKVPairs(3),
+		`assert.that({}).contains_exactly("key1", "value1", "key2")`: errMustBeEqualNumberOfKVPairs(3),
 	})
 }
 
 func TestContainsExactlyItemsIn(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat({2: "two", 4: "four"}).containsExactlyItemsIn(` + x + `)`
+		return `assert.that({2: "two", 4: "four"}).contains_exactly_items_in(` + x + `)`
 	}
 	ss := `items([(2, "two"), (4, "four")])`
 	testEach(t, map[string]error{
@@ -514,49 +514,49 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 
 func TestNone(t *testing.T) {
 	testEach(t, map[string]error{
-		`AssertThat(None).isNone()`:     nil,
-		`AssertThat(None).isNotNone()`:  fail(`None`, `is not None`),
-		`AssertThat("abc").isNotNone()`: nil,
-		`AssertThat("abc").isNone()`:    fail(abc, `is None`),
+		`assert.that(None).is_none()`:      nil,
+		`assert.that(None).is_not_none()`:  fail(`None`, `is not None`),
+		`assert.that("abc").is_not_none()`: nil,
+		`assert.that("abc").is_none()`:     fail(abc, `is None`),
 	})
 }
 
 func TestIsIn(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(3).isIn(` + x + `)`
+		return `assert.that(3).is_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat("a").isIn("abc")`: nil,
-		`AssertThat("d").isIn("abc")`: fail(`"d"`, `is equal to any of <"abc">`),
-		s(`(3,)`):                     nil,
-		s(`(3, 5)`):                   nil,
-		s(`(1, 3, 5)`):                nil,
-		s(`{3: "three"}`):             nil,
-		s(`set([3, 5])`):              nil,
-		s(`()`):                       fail(`3`, `is equal to any of <()>`),
-		s(`(2,)`):                     fail(`3`, `is equal to any of <(2,)>`),
+		`assert.that("a").is_in("abc")`: nil,
+		`assert.that("d").is_in("abc")`: fail(`"d"`, `is equal to any of <"abc">`),
+		s(`(3,)`):                       nil,
+		s(`(3, 5)`):                     nil,
+		s(`(1, 3, 5)`):                  nil,
+		s(`{3: "three"}`):               nil,
+		s(`set([3, 5])`):                nil,
+		s(`()`):                         fail(`3`, `is equal to any of <()>`),
+		s(`(2,)`):                       fail(`3`, `is equal to any of <(2,)>`),
 	})
 }
 
 func TestIsNotIn(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(3).isNotIn(` + x + `)`
+		return `assert.that(3).is_not_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat("a").isNotIn("abc")`: fail(`"a"`, `is not in "abc". It was found at index 0`),
-		`AssertThat("d").isNotIn("abc")`: nil,
-		s(`(5,)`):                        nil,
-		s(`set([5])`):                    nil,
-		s(`("3",)`):                      nil,
-		s(`(3,)`):                        fail(`3`, `is not in (3,). It was found at index 0`),
-		s(`(1, 3)`):                      fail(`3`, `is not in (1, 3). It was found at index 1`),
-		s(`set([3])`):                    fail(`3`, `is not in set([3])`),
+		`assert.that("a").is_not_in("abc")`: fail(`"a"`, `is not in "abc". It was found at index 0`),
+		`assert.that("d").is_not_in("abc")`: nil,
+		s(`(5,)`):                           nil,
+		s(`set([5])`):                       nil,
+		s(`("3",)`):                         nil,
+		s(`(3,)`):                           fail(`3`, `is not in (3,). It was found at index 0`),
+		s(`(1, 3)`):                         fail(`3`, `is not in (1, 3). It was found at index 1`),
+		s(`set([3])`):                       fail(`3`, `is not in set([3])`),
 	})
 }
 
 func TestIsAnyOf(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(3).isAnyOf(` + x + `)`
+		return `assert.that(3).is_any_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`):       nil,
@@ -569,7 +569,7 @@ func TestIsAnyOf(t *testing.T) {
 
 func TestIsNoneOf(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat(3).isNoneOf(` + x + `)`
+		return `assert.that(3).is_none_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`5`):    nil,
@@ -581,7 +581,7 @@ func TestIsNoneOf(t *testing.T) {
 
 func TestHasAttribute(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat("my str").hasAttribute(` + x + `)`
+		return `assert.that("my str").has_attribute(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"elems"`):    nil,
@@ -594,7 +594,7 @@ func TestHasAttribute(t *testing.T) {
 
 func TestDoesNotHaveAttribute(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat({1: ()}).doesNotHaveAttribute(` + x + `)`
+		return `assert.that({1: ()}).does_not_have_attribute(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"other_attribute"`): nil,
@@ -607,12 +607,12 @@ func TestDoesNotHaveAttribute(t *testing.T) {
 
 func TestIsCallable(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isCallable()`
+		return `assert.that(` + t + `).is_callable()`
 	}
 	testEach(t, map[string]error{
 		s(`lambda x: x`):    nil,
 		s(`"str".endswith`): nil,
-		s(`AssertThat`):     nil,
+		s(`assert.that`):    nil,
 		s(`None`):           fail(`None`, `is callable`),
 		s(abc):              fail(abc, `is callable`),
 	})
@@ -620,20 +620,20 @@ func TestIsCallable(t *testing.T) {
 
 func TestIsNotCallable(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isNotCallable()`
+		return `assert.that(` + t + `).is_not_callable()`
 	}
 	testEach(t, map[string]error{
 		s(`None`):           nil,
 		s(abc):              nil,
 		s(`lambda x: x`):    fail(`function lambda`, `is not callable`),
 		s(`"str".endswith`): fail(`built-in method endswith of string value`, `is not callable`),
-		s(`AssertThat`):     fail(`built-in function AssertThat`, `is not callable`),
+		s(`assert.that`):    fail(`built-in method assert of assert value`, `is not callable`),
 	})
 }
 
 func TestHasSize(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat((2, 5, 8)).hasSize(` + x + `)`
+		return `assert.that((2, 5, 8)).has_size(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`):  nil,
@@ -644,7 +644,7 @@ func TestHasSize(t *testing.T) {
 
 func TestIsEmpty(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isEmpty()`
+		return `assert.that(` + t + `).is_empty()`
 	}
 	testEach(t, map[string]error{
 		s(`()`):       nil,
@@ -662,7 +662,7 @@ func TestIsEmpty(t *testing.T) {
 
 func TestIsNotEmpty(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isNotEmpty()`
+		return `assert.that(` + t + `).is_not_empty()`
 	}
 	testEach(t, map[string]error{
 		s(`(3,)`):     nil,
@@ -680,7 +680,7 @@ func TestIsNotEmpty(t *testing.T) {
 
 func TestContains(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat((2, 5, [])).contains(` + x + `)`
+		return `assert.that((2, 5, [])).contains(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`2`):   nil,
@@ -694,7 +694,7 @@ func TestContains(t *testing.T) {
 
 func TestDoesNotContain(t *testing.T) {
 	s := func(x string) string {
-		return `AssertThat((2, 5, [])).doesNotContain(` + x + `)`
+		return `assert.that((2, 5, [])).does_not_contain(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`):   nil,
@@ -708,7 +708,7 @@ func TestDoesNotContain(t *testing.T) {
 
 func TestContainsNoDuplicates(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).containsNoDuplicates()`
+		return `assert.that(` + t + `).contains_no_duplicates()`
 	}
 	testEach(t, map[string]error{
 		s(`()`):           nil,
@@ -728,20 +728,20 @@ func TestContainsNoDuplicates(t *testing.T) {
 func TestContainsAllIn(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsAllIn(` + x + `)`
+		return `assert.that(` + ss + `).contains_all_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`()`): nil,
-		`AssertThat(` + ss + `).containsAllIn(())`:                nil,
-		`AssertThat(` + ss + `).containsAllInOrderIn(())`:         nil,
-		`AssertThat(` + ss + `).containsAllIn((3,))`:              nil,
-		`AssertThat(` + ss + `).containsAllInOrderIn((3,))`:       nil,
-		`AssertThat(` + ss + `).containsAllIn((3, []))`:           nil,
-		`AssertThat(` + ss + `).containsAllInOrderIn((3, []))`:    nil,
-		`AssertThat(` + ss + `).containsAllIn((3, 5, []))`:        nil,
-		`AssertThat(` + ss + `).containsAllInOrderIn((3, 5, []))`: nil,
-		`AssertThat(` + ss + `).containsAllIn(([], 5, 3))`:        nil,
-		`AssertThat(` + ss + `).containsAllInOrderIn(([], 5, 3))`: fail(ss,
+		`assert.that(` + ss + `).contains_all_in(())`:                  nil,
+		`assert.that(` + ss + `).contains_all_in_order_in(())`:         nil,
+		`assert.that(` + ss + `).contains_all_in((3,))`:                nil,
+		`assert.that(` + ss + `).contains_all_in_order_in((3,))`:       nil,
+		`assert.that(` + ss + `).contains_all_in((3, []))`:             nil,
+		`assert.that(` + ss + `).contains_all_in_order_in((3, []))`:    nil,
+		`assert.that(` + ss + `).contains_all_in((3, 5, []))`:          nil,
+		`assert.that(` + ss + `).contains_all_in_order_in((3, 5, []))`: nil,
+		`assert.that(` + ss + `).contains_all_in(([], 5, 3))`:          nil,
+		`assert.that(` + ss + `).contains_all_in_order_in(([], 5, 3))`: fail(ss,
 			`contains all elements in order <([], 5, 3)>`),
 		s(`(2, 3)`):    fail(ss, "contains all elements in <(2, 3)>. It is missing <2>"),
 		s(`(2, 3, 6)`): fail(ss, "contains all elements in <(2, 3, 6)>. It is missing <2, 6>"),
@@ -751,19 +751,19 @@ func TestContainsAllIn(t *testing.T) {
 func TestContainsAllOf(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsAllOf(` + x + `)`
+		return `assert.that(` + ss + `).contains_all_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsAllOf()`:                nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder()`:         nil,
-		`AssertThat(` + ss + `).containsAllOf(3)`:               nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder(3)`:        nil,
-		`AssertThat(` + ss + `).containsAllOf(3, [])`:           nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder(3, [])`:    nil,
-		`AssertThat(` + ss + `).containsAllOf(3, 5, [])`:        nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder(3, 5, [])`: nil,
-		`AssertThat(` + ss + `).containsAllOf([], 3, 5)`:        nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder([], 3, 5)`: fail(ss,
+		`assert.that(` + ss + `).contains_all_of()`:                  nil,
+		`assert.that(` + ss + `).contains_all_of_in_order()`:         nil,
+		`assert.that(` + ss + `).contains_all_of(3)`:                 nil,
+		`assert.that(` + ss + `).contains_all_of_in_order(3)`:        nil,
+		`assert.that(` + ss + `).contains_all_of(3, [])`:             nil,
+		`assert.that(` + ss + `).contains_all_of_in_order(3, [])`:    nil,
+		`assert.that(` + ss + `).contains_all_of(3, 5, [])`:          nil,
+		`assert.that(` + ss + `).contains_all_of_in_order(3, 5, [])`: nil,
+		`assert.that(` + ss + `).contains_all_of([], 3, 5)`:          nil,
+		`assert.that(` + ss + `).contains_all_of_in_order([], 3, 5)`: fail(ss,
 			`contains all elements in order <([], 3, 5)>`),
 		s(`2, 3`):    fail(ss, "contains all of <(2, 3)>. It is missing <2>"),
 		s(`2, 3, 6`): fail(ss, "contains all of <(2, 3, 6)>. It is missing <2, 6>"),
@@ -773,13 +773,13 @@ func TestContainsAllOf(t *testing.T) {
 func TestContainsAllMixedHashableElements(t *testing.T) {
 	ss := `(3, [], 5, 8)`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsAllOf(` + x + `)`
+		return `assert.that(` + ss + `).contains_all_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`AssertThat(` + ss + `).containsAllOf(3, [], 5, 8)`:        nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder(3, [], 5, 8)`: nil,
-		`AssertThat(` + ss + `).containsAllOf(5, 3, 8, [])`:        nil,
-		`AssertThat(` + ss + `).containsAllOfInOrder(5, 3, 8, [])`: fail(ss,
+		`assert.that(` + ss + `).contains_all_of(3, [], 5, 8)`:          nil,
+		`assert.that(` + ss + `).contains_all_of_in_order(3, [], 5, 8)`: nil,
+		`assert.that(` + ss + `).contains_all_of(5, 3, 8, [])`:          nil,
+		`assert.that(` + ss + `).contains_all_of_in_order(5, 3, 8, [])`: fail(ss,
 			`contains all elements in order <(5, 3, 8, [])>`),
 		s(`3, [], 8, 5, 9`):  fail(ss, "contains all of <(3, [], 8, 5, 9)>. It is missing <9>"),
 		s(`3, [], 8, 5, {}`): fail(ss, "contains all of <(3, [], 8, 5, {})>. It is missing <{}>"),
@@ -790,7 +790,7 @@ func TestContainsAllMixedHashableElements(t *testing.T) {
 func TestContainsAnyIn(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsAnyIn(` + x + `)`
+		return `assert.that(` + ss + `).contains_any_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`(3,)`):   nil,
@@ -803,7 +803,7 @@ func TestContainsAnyIn(t *testing.T) {
 func TestContainsAnyOf(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsAnyOf(` + x + `)`
+		return `assert.that(` + ss + `).contains_any_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`):    nil,
@@ -816,7 +816,7 @@ func TestContainsAnyOf(t *testing.T) {
 func TestContainsNoneIn(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsNoneIn(` + x + `)`
+		return `assert.that(` + ss + `).contains_none_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`()`):     nil,
@@ -830,7 +830,7 @@ func TestContainsNoneIn(t *testing.T) {
 func TestContainsNoneOf(t *testing.T) {
 	ss := `(3, 5, [])`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsNoneOf(` + x + `)`
+		return `assert.that(` + ss + `).contains_none_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(``):     nil,
@@ -843,7 +843,7 @@ func TestContainsNoneOf(t *testing.T) {
 
 func TestIsOrdered(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isOrdered()`
+		return `assert.that(` + t + `).is_ordered()`
 	}
 	testEach(t, map[string]error{
 		s(`()`):        nil,
@@ -857,7 +857,7 @@ func TestIsOrdered(t *testing.T) {
 
 func TestIsOrderedAccordingTo(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isOrderedAccordingTo(someCmp)`
+		return `assert.that(` + t + `).is_ordered_according_to(someCmp)`
 	}
 	testEach(t, map[string]error{
 		s(`()`):        nil,
@@ -871,7 +871,7 @@ func TestIsOrderedAccordingTo(t *testing.T) {
 
 func TestIsStrictlyOrdered(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isStrictlyOrdered()`
+		return `assert.that(` + t + `).is_strictly_ordered()`
 	}
 	testEach(t, map[string]error{
 		s(`()`):        nil,
@@ -884,7 +884,7 @@ func TestIsStrictlyOrdered(t *testing.T) {
 
 func TestIsStrictlyOrderedAccordingTo(t *testing.T) {
 	s := func(t string) string {
-		return `AssertThat(` + t + `).isStrictlyOrderedAccordingTo(someCmp)`
+		return `assert.that(` + t + `).is_strictly_ordered_according_to(someCmp)`
 	}
 	testEach(t, map[string]error{
 		s(`()`):        nil,
@@ -898,7 +898,7 @@ func TestIsStrictlyOrderedAccordingTo(t *testing.T) {
 func TestContainsKey(t *testing.T) {
 	ss := `{2: "two", None: "None"}`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsKey(` + x + `)`
+		return `assert.that(` + ss + `).contains_key(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`2`):     nil,
@@ -911,7 +911,7 @@ func TestContainsKey(t *testing.T) {
 func TestDoesNotContainKey(t *testing.T) {
 	ss := `{2: "two", None: "None"}`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).doesNotContainKey(` + x + `)`
+		return `assert.that(` + ss + `).does_not_contain_key(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`):     nil,
@@ -924,7 +924,7 @@ func TestDoesNotContainKey(t *testing.T) {
 func TestContainsItem(t *testing.T) {
 	ss := `{2: "two", 4: "four", "too": "two"}`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsItem(` + x + `)`
+		return `assert.that(` + ss + `).contains_item(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`2, "two"`):     nil,
@@ -940,7 +940,7 @@ func TestContainsItem(t *testing.T) {
 func TestDoesNotContainItem(t *testing.T) {
 	ss := `{2: "two", 4: "four", "too": "two"}`
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).doesNotContainItem(` + x + `)`
+		return `assert.that(` + ss + `).does_not_contain_item(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`2, "to"`):    nil,
@@ -954,7 +954,7 @@ func TestDoesNotContainItem(t *testing.T) {
 func TestHasLength(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).hasLength(` + x + `)`
+		return `assert.that(` + ss + `).has_length(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`3`): nil,
@@ -966,7 +966,7 @@ func TestHasLength(t *testing.T) {
 func TestStartsWith(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).startsWith(` + x + `)`
+		return `assert.that(` + ss + `).starts_with(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`""`):   nil,
@@ -980,7 +980,7 @@ func TestStartsWith(t *testing.T) {
 func TestEndsWith(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).endsWith(` + x + `)`
+		return `assert.that(` + ss + `).ends_with(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`""`):   nil,
@@ -994,7 +994,7 @@ func TestEndsWith(t *testing.T) {
 func TestMatches(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).matches(` + x + `)`
+		return `assert.that(` + ss + `).matches(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"a"`):     nil,
@@ -1008,7 +1008,7 @@ func TestMatches(t *testing.T) {
 func TestDoesNotMatch(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).doesNotMatch(` + x + `)`
+		return `assert.that(` + ss + `).does_not_match(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"b"`): nil,
@@ -1026,7 +1026,7 @@ func TestDoesNotMatch(t *testing.T) {
 func TestContainsMatch(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).containsMatch(` + x + `)`
+		return `assert.that(` + ss + `).contains_match(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"a"`):     nil,
@@ -1040,7 +1040,7 @@ func TestContainsMatch(t *testing.T) {
 func TestDoesNotContainMatch(t *testing.T) {
 	ss := abc
 	s := func(x string) string {
-		return `AssertThat(` + ss + `).doesNotContainMatch(` + x + `)`
+		return `assert.that(` + ss + `).does_not_contain_match(` + x + `)`
 	}
 	testEach(t, map[string]error{
 		s(`"d"`): nil,

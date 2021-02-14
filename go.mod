@@ -13,7 +13,6 @@ require (
 	github.com/hashicorp/logutils v1.0.0
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/mitchellh/mapstructure v1.3.3
-	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.0
 	github.com/stretchr/testify v1.5.1
 	github.com/superhawk610/bar v0.0.0-20190614064228-4fbf44d086fd

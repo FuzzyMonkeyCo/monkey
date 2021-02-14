@@ -9,6 +9,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"go.starlark.net/starlark"
 	"golang.org/x/sync/errgroup"
 )
@@ -262,12 +263,15 @@ func (rt *Runtime) runUserCheck(
 		Load:  loadDisabled,
 		Print: func(_ *starlark.Thread, msg string) { rt.progress.Printf("%s", msg) },
 	}
+
 	args := starlark.Tuple{newCtx(chk.state, request, response)}
+
+	defer func() { v.ExecutionSteps = th.ExecutionSteps() }()
 
 	var hookRet starlark.Value
 	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
 		// Check failed or an error happened
-		log.Println("[NFO]", err)
+		log.Println("[ERR]", err)
 		return
 	}
 	if hookRet != starlark.None {
@@ -275,6 +279,14 @@ func (rt *Runtime) runUserCheck(
 		log.Println("[ERR]", err)
 		return
 	}
+
+	// TODO: only check when state was mutated
+	// TODO: fork starlark.Value to forbid runtime assign-then-unassign (SetKey,...) of e.g. set([])
+	if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
+		log.Println("[ERR]", err)
+		return
+	}
+
 	//FIXME log.Printf("[DBG] closeness >>> %+v", th.Local("closeness"))
 
 	// FIXME: didTrigger = chk.state.mutated() || assert.that called

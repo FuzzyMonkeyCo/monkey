@@ -618,6 +618,11 @@
                     "id": 5,
                     "name": "elapsed_ns",
                     "type": "int64"
+                  },
+                  {
+                    "id": 6,
+                    "name": "execution_steps",
+                    "type": "uint64"
                   }
                 ]
               }

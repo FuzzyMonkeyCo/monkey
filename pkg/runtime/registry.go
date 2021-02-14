@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,7 +10,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
@@ -54,7 +54,7 @@ func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 
 			reserved := false
 			if err = printableASCII(key); err != nil {
-				err = errors.Wrap(err, "illegal field")
+				err = fmt.Errorf("illegal field: %v", err)
 				log.Println("[ERR]", err)
 				return
 			}

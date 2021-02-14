@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -12,7 +13,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
-	"github.com/pkg/errors"
 	"go.starlark.net/starlark"
 )
 
@@ -26,15 +26,13 @@ func init() {
 type Runtime struct {
 	binTitle string
 
-	thread      *starlark.Thread
-	globals     starlark.StringDict
-	modelState  *modelState
-	modelState0 *modelState
-	envRead     map[string]string // holds all the envs looked up on initial run
-	triggers    []triggerActionAfterProbe
-	models      map[string]modeler.Interface
-	files       map[string]string
-	checks      map[string]*check
+	thread  *starlark.Thread
+	globals starlark.StringDict
+
+	envRead map[string]string // holds all the envs looked up on initial run
+	models  map[string]modeler.Interface
+	files   map[string]string
+	checks  map[string]*check
 
 	client    *fm.ChBiDi
 	eIds      []uint32
@@ -66,26 +64,24 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 		files:    map[string]string{localCfg: string(localCfgContents)},
 		models:   make(map[string]modeler.Interface, 1),
 		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
-		checks:   make(map[string]*check),
+		thread: &starlark.Thread{
+			Name:  "cfg",
+			Load:  loadDisabled,
+			Print: func(_ *starlark.Thread, msg string) { as.ColorWRN.Println(msg) },
+		},
+		envRead: make(map[string]string),
+		checks:  make(map[string]*check),
 	}
+
 	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
 		log.Printf("[DBG] registered modeler: %q", modelName)
 		builtin := rt.modelMaker(modelName, mdl.NewFromKwargs)
 		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
-
 	for t, b := range rt.builtins() {
 		rt.globals[t] = starlark.NewBuiltin(t, b)
 	}
-
-	rt.thread = &starlark.Thread{
-		Name:  "cfg",
-		Load:  loadDisabled,
-		Print: func(_ *starlark.Thread, msg string) { as.ColorWRN.Println(msg) },
-	}
-	rt.envRead = make(map[string]string)
-	rt.triggers = make([]triggerActionAfterProbe, 0)
 
 	log.Println("[NFO] loading starlark config from", localCfg)
 	start := time.Now()
@@ -148,70 +144,18 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 	for k, v := range rt.envRead {
 		log.Printf("[NFO] env frozen %q: %+v", k, v)
 	}
-	log.Printf("[NFO] readying %d triggers", len(rt.triggers))
+
+	log.Printf("[NFO] checks defined: %d", len(rt.checks))
+	for k, v := range rt.checks {
+		log.Printf("[NFO] defined check %q: %+v", k, v)
+	}
 
 	for t := range rt.builtins() {
 		delete(rt.globals, t)
 	}
-	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
-	for k, v := range rt.globals {
-		log.Printf("[DBG] starlark global %q: %+v", k, v)
-	}
-
-	const tState = "State"
-	if state, ok := rt.globals[tState]; !ok {
-		rt.modelState = newModelState(0)
-		rt.modelState0 = newModelState(0)
-	} else {
-		d, ok := state.(*starlark.Dict)
-		if !ok {
-			err = fmt.Errorf("monkey State must be a dict, got: %s", state.Type())
-			log.Println("[ERR]", err)
-			return
-		}
-		delete(rt.globals, tState)
-		rt.modelState = newModelState(d.Len())
-		for _, kd := range d.Items() {
-			k, v := kd.Index(0), kd.Index(1)
-			// Ensure State keys are all String.s
-			if err = slValuePrintableASCII(k); err != nil {
-				err = errors.Wrap(err, "illegal State key")
-				log.Println("[ERR]", err)
-				return
-			}
-			// Ensure State values are all literals
-			switch v.(type) {
-			case starlark.NoneType, starlark.Bool:
-			case starlark.Int, starlark.Float:
-			case starlark.String:
-			case *starlark.List, *starlark.Dict:
-			default:
-				err = fmt.Errorf("all initial State values must be litterals: State[%s] is %s", k.String(), v.Type())
-				log.Println("[ERR]", err)
-				return
-			}
-			var vv starlark.Value
-			if vv, err = slValueCopy(v); err != nil {
-				log.Println("[ERR]", err)
-				return
-			}
-			if err = rt.modelState.SetKey(k, vv); err != nil {
-				log.Println("[ERR]", err)
-				return
-			}
-		}
-		var state0 starlark.Value
-		if state0, err = slValueCopy(rt.modelState); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		rt.modelState0 = state0.(*modelState)
-	}
-	rt.modelState0.Freeze()
-
 	for key := range rt.globals {
 		if err = printableASCII(key); err != nil {
-			err = errors.Wrap(err, "illegal export")
+			err = fmt.Errorf("illegal export: %v", err)
 			log.Println("[ERR]", err)
 			return
 		}
