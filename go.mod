@@ -22,6 +22,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20201113214410-e292e66a28cd
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/sys v0.0.0-20201116194326-cc9327a14d48 // indirect
 	golang.org/x/text v0.3.4 // indirect
 	google.golang.org/genproto v0.0.0-20201116205149-79184cff4dfe // indirect

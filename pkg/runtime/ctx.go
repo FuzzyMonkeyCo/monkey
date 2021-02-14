@@ -6,6 +6,8 @@ import (
 )
 
 func newCtx(state, request, response starlark.Value) starlark.Value {
+	request.Freeze()
+	response.Freeze()
 	return &starlarkstruct.Module{
 		Name: "ctx",
 		Members: starlark.StringDict{

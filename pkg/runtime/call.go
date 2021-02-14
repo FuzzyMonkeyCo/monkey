@@ -10,6 +10,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"go.starlark.net/starlark"
+	"golang.org/x/sync/errgroup"
 )
 
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
@@ -174,13 +175,44 @@ func (rt *Runtime) runCallerCheck(
 func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse starlark.Value) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.checks))
 
+	g, _ := errgroup.WithContext(ctx)
+	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
+	// Run all checks concurrently, send their results to vs.
+	// Concurrently, consume and send these one-by-one.
+	// Return early if ctx is canceled.
+
+	passed := true
+	g.Go(func() (errT error) {
+		for i := 0; i < len(rt.checks); i++ {
+			select {
+			case <-ctx.Done():
+				errT, passed = ctx.Err(), false
+				return
+			case v := <-vs:
+				if errT = rt.client.Send(ctx, cvp(v)); errT != nil {
+					log.Println("[ERR]", errT)
+					passed = false
+					return
+				}
+				if errT = rt.recvFuzzingProgress(ctx); errT != nil {
+					passed = false
+					return
+				}
+
+				if v.Status == fm.Clt_CallVerifProgress_failure {
+					passed = false
+				}
+			}
+		}
+		close(vs)
+		return
+	})
+
 	for name, chk := range rt.checks {
 		name, chk := name, chk
 
-		passed, errT := func() (bool, error) {
-			v := &fm.Clt_CallVerifProgress{}
-			v.Name = name
-			v.UserProperty = true
+		g.Go(func() error {
+			v := &fm.Clt_CallVerifProgress{Name: name, UserProperty: true}
 			log.Println("[NFO] checking user property:", v.Name)
 
 			start := time.Now()
@@ -191,11 +223,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse sta
 				rt.progress.CheckPassed(v.Name, chk.hook.String())
 			case errL == nil && v.Status == fm.Clt_CallVerifProgress_skipped:
 				rt.progress.CheckSkipped(v.Name, "")
-			case errL == nil: // unreachable
-				errL = fmt.Errorf("unexpected v.Status %+v %q", v.Status, v.Status)
-				log.Println("[ERR]", errL)
-			}
-			if errL != nil {
+			case errL != nil:
 				v.Status = fm.Clt_CallVerifProgress_failure
 				var reason string
 				if e, ok := errL.(*starlark.EvalError); ok {
@@ -205,23 +233,20 @@ func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse sta
 				}
 				v.Reason = strings.Split(reason, "\n")
 				rt.progress.CheckFailed(v.Name, v.Reason)
+			default: // unreachable
+				errL = fmt.Errorf("unexpected v.Status %+v", v)
+				log.Println("[ERR]", errL)
 			}
 
-			if errT := rt.client.Send(ctx, cvp(v)); errT != nil {
-				log.Println("[ERR]", errT)
-				return false, errT
-			}
-			if errT := rt.recvFuzzingProgress(ctx); errT != nil {
-				return false, errT
-			}
-
-			return v.Status == fm.Clt_CallVerifProgress_failure, nil
-		}()
-		if !passed || errT != nil {
-			return passed, errT
-		}
+			vs <- v
+			return nil
+		})
 	}
-	return true, nil
+
+	if errT := g.Wait(); errT != nil {
+		return false, errT
+	}
+	return passed, nil
 }
 
 func (rt *Runtime) runUserCheck(
@@ -237,10 +262,7 @@ func (rt *Runtime) runUserCheck(
 		Load:  loadDisabled,
 		Print: func(_ *starlark.Thread, msg string) { rt.progress.Printf("%s", msg) },
 	}
-
 	args := starlark.Tuple{newCtx(chk.state, request, response)}
-	// args.Freeze()
-	log.Println("[NFO] >>>", v.Name, args.String())
 
 	var hookRet starlark.Value
 	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
@@ -253,7 +275,7 @@ func (rt *Runtime) runUserCheck(
 		log.Println("[ERR]", err)
 		return
 	}
-	log.Printf("[DBG] closeness >>> %+v", th.Local("closeness"))
+	//FIXME log.Printf("[DBG] closeness >>> %+v", th.Local("closeness"))
 
 	// FIXME: didTrigger = chk.state.mutated() || assert.that called
 	// if !didTrigger {

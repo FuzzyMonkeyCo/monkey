@@ -86,8 +86,6 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 			switch w.Category {
 			case "module-docstring":
 				continue
-			case "uninitialized":
-				continue // FIXME: buildifier doesn't know about def'd in same module?
 			case "function-docstring-args":
 				if strings.HasPrefix(msg, `Argument "ctx" is not documented.`) && strings.Contains(msg, "(ctx):\n") {
 					// Skip warning about our special ctx positional argument

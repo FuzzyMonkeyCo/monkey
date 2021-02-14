@@ -42,7 +42,6 @@ func (rt *Runtime) bEnv(th *starlark.Thread, b *starlark.Builtin, args starlark.
 }
 
 type check struct {
-	// name starlark.String
 	hook          *starlark.Function
 	tags          map[string]struct{}
 	state, state0 starlark.Value
@@ -88,18 +87,17 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 		tags:   tags.uniques,
 		state0: state0,
 	}
-
 	if err := chk.reset(); err != nil {
 		return nil, err
 	}
 
-	cname := name.GoString()
-	if _, ok := rt.checks[cname]; ok {
+	chkname := name.GoString()
+	if _, ok := rt.checks[chkname]; ok {
 		return nil, fmt.Errorf("a Check named %s already exists", name.String())
 	}
+	rt.checks[chkname] = chk
+	log.Printf("[NFO] registered %v: %+v", b.Name(), chk)
 
-	rt.checks[cname] = chk
-	log.Printf("[NFO] registered %v: %+v", b.Name(), rt.checks[cname])
 	return starlark.None, nil
 }
 
