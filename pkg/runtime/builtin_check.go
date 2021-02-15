@@ -13,7 +13,7 @@ import (
 
 type check struct {
 	hook          *starlark.Function
-	tags          map[string]struct{}
+	tags          tags.Tags
 	state, state0 starlark.Value
 	//FIXME set/get ctx values: th.Local(k) / th.SetLocal(k,v)
 }
@@ -26,7 +26,7 @@ func (chk *check) reset() (err error) {
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var hook *starlark.Function
 	var name starlark.String
-	var tags starlarkStringList
+	var tags tags.StarlarkStringList
 	var state0 starlark.Value //FIXME: only Value.s of ptypes
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"hook", &hook,
@@ -56,7 +56,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	state0.Freeze()
 	chk := &check{
 		hook:   hook,
-		tags:   tags.uniques,
+		tags:   tags.Uniques,
 		state0: state0,
 	}
 	if err := chk.reset(); err != nil {
@@ -71,36 +71,4 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	log.Printf("[NFO] registered %v: %+v", b.Name(), chk)
 
 	return starlark.None, nil
-}
-
-var _ starlark.Unpacker = (*starlarkStringList)(nil)
-
-type starlarkStringList struct {
-	uniques map[string]struct{}
-}
-
-func (sl *starlarkStringList) Unpack(v starlark.Value) error {
-	list, ok := v.(*starlark.List)
-	if !ok {
-		return fmt.Errorf("got %s, want list", v.Type())
-	}
-
-	sl.uniques = make(map[string]struct{}, list.Len())
-	it := list.Iterate()
-	defer it.Done()
-	var x starlark.Value
-	for it.Next(&x) {
-		str, ok := starlark.AsString(x)
-		if !ok {
-			return fmt.Errorf("got %s, want string", x.Type())
-		}
-		if err := tags.LegalName(str); err != nil {
-			return err
-		}
-		if _, ok := sl.uniques[str]; ok {
-			return fmt.Errorf("string %s appears at least twice in list", x.String())
-		}
-		sl.uniques[str] = struct{}{}
-	}
-	return nil
 }

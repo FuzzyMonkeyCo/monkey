@@ -6,12 +6,13 @@ import (
 	"unicode"
 )
 
-type tags = map[string]struct{}
+// Tags represent a set of legal (per LegalName) tags.
+type Tags = map[string]struct{}
 
 // Filter is used to activate or deactivate a Check during Fuzz.
 type Filter struct {
 	excludeAll, includeAll bool
-	include, exclude       tags
+	include, exclude       Tags
 }
 
 // NewFilter attempts to build a tags filter from CLI-ish arguments.
@@ -35,7 +36,7 @@ func NewFilter(includeSetButZero, excludeSetButZero bool, i, o []string) (r *Fil
 }
 
 // Excludes applies the filter to a Check's tags.
-func (f *Filter) Excludes(checking tags) bool {
+func (f *Filter) Excludes(checking Tags) bool {
 	if f.includeAll {
 		return false
 	}
@@ -53,8 +54,8 @@ func (f *Filter) Excludes(checking tags) bool {
 	return false
 }
 
-func fromSlice(xs []string) (r tags, err error) {
-	m := make(tags, len(xs))
+func fromSlice(xs []string) (r Tags, err error) {
+	m := make(Tags, len(xs))
 	for _, x := range xs {
 		if err = LegalName(x); err != nil {
 			return
