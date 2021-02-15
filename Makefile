@@ -46,7 +46,8 @@ lint:
 debug: all
 	./$(EXE) fmt
 	./$(EXE) lint
-	./$(EXE) -vvv fuzz --exclude-tags=failing
+# 	./$(EXE) -vvv fuzz --exclude-tags=failing
+	./$(EXE) fuzz --exclude-tags=failing --progress=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)

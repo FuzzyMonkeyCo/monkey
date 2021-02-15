@@ -142,7 +142,7 @@ func containsExactlyInOrder(t *T, args ...starlark.Value) (starlark.Value, error
 
 func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if t.askedInOrder {
-		// TODO: error about how inOrder is invalid with dicts
+		// TODO: error about how in_order is invalid with dicts
 		return nil, errUnhandled
 	}
 	arg1 := args[0] // TODO: what when passed **kwargs?
@@ -214,7 +214,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		iterations++
 
 		// As soon as we encounter a pair of elements that differ, we know that
-		// inOrder cannot succeed, so we can check the rest of the elements
+		// in_order cannot succeed, so we can check the rest of the elements
 		// more normally. Since any previous pairs of elements we iterated
 		// over were equal, they have no effect on the result now.
 		ok, err := starlark.CompareDepth(syntax.NEQ, elemActual, elemExpected, maxdepth)

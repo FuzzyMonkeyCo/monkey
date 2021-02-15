@@ -9,6 +9,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
@@ -189,6 +190,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, call
 			select {
 			case <-ctx.Done():
 				errT, passed = ctx.Err(), false
+				// TODO: (*starlark.Thread).Cancel(ctx.Err().Error()) for each userCheck
 				return
 			case v := <-vs:
 				if errT = rt.client.Send(ctx, cvp(v)); errT != nil {
@@ -271,6 +273,8 @@ func (rt *Runtime) runUserCheck(
 		Print: func(_ *starlark.Thread, msg string) { rt.progress.Printf("%s", msg) },
 	}
 
+	snapshot := chk.state.String() // Assumes deterministic repr
+
 	args := starlark.Tuple{newCtx(chk.state, request, response)}
 
 	defer func() { v.ExecutionSteps = th.ExecutionSteps() }()
@@ -286,21 +290,24 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	// TODO: only check when state was mutated
-	// TODO: fork starlark.Value to forbid runtime assign-then-unassign (SetKey,...) of e.g. set([])
-	if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
-		log.Println("[ERR]", err)
-		return
+	wasMutated := snapshot == chk.state.String()
+
+	if wasMutated {
+		// Ensure ctx.state is still proto-representatble
+		if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
 	}
 
-	//FIXME log.Printf("[DBG] closeness >>> %+v", th.Local("closeness"))
+	// Signals assert.that(...) was called
+	usedTruth := th.Local(starlarktruth.Default) != nil
 
-	// FIXME: didTrigger = chk.state.mutated() || assert.that called
-	// if !didTrigger {
-	// 	// Predicate did not trigger
-	// 	v.Status = fm.Clt_CallVerifProgress_skipped
-	// 	return
-	// }
+	if !wasMutated && !usedTruth {
+		// Predicate did not trigger
+		v.Status = fm.Clt_CallVerifProgress_skipped
+		return
+	}
 
 	// Check passed
 	v.Status = fm.Clt_CallVerifProgress_success

@@ -15,7 +15,6 @@ type check struct {
 	hook          *starlark.Function
 	tags          tags.Tags
 	state, state0 starlark.Value
-	//FIXME set/get ctx values: th.Local(k) / th.SetLocal(k,v)
 }
 
 func (chk *check) reset() (err error) {
@@ -27,7 +26,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	var hook *starlark.Function
 	var name starlark.String
 	var tags tags.StarlarkStringList
-	var state0 starlark.Value //FIXME: only Value.s of ptypes
+	var state0 starlark.Value
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"hook", &hook,
 		"name", &name,
@@ -50,7 +49,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	if state0 == nil {
 		state0 = starlark.None
 	}
-	if err := starlarkvalue.ProtoCompatible(state0); err != nil {
+	if err := starlarkvalue.ProtoCompatible(state0); err != nil { // TODO: ensure through preempting SetKey,...
 		return nil, err
 	}
 	state0.Freeze()

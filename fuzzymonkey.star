@@ -32,30 +32,33 @@ Check(
 
 ## Express stateful properties
 
-def stateful_model(ctx):
+def stateful_model_of_posts(ctx):
     """Properties on posts. State collects posts returned by API."""
 
     # NOTE: response has already been decoded & validated for us.
 
+    url = ctx.request.url
+
     if all([
         ctx.request.method == "GET",
-        "/posts/" in ctx.request.url,
+        "/posts/" in url and url[-1] in "1234567890",  # /posts/{post_id}
         ctx.response.status_code in range(200, 299),
-        "id" in ctx.response.body and ctx.response.body["id"] in ctx.state,
     ]):
-        post_id = int(ctx.request.url.split("/")[-1])
+        post_id = int(url.split("/")[-1])
         post = ctx.response.body
 
         # Ensure post ID in response matches ID in URL (an API contract):
         assert.that(post["id"]).is_equal_to(post_id)
 
         # Verify that retrieved post matches local model
-        assert.that(ctx.state).contains(post_id)
-        assert.that(post).is_equal_to(ctx.state[post_id])
+        if post_id in ctx.state:
+            assert.that(post).is_equal_to(ctx.state[post_id])
+
+        return
 
     if all([
         ctx.request.method == "GET",
-        ctx.request.url.endswith("/posts"),
+        url.endswith("/posts"),
         ctx.response.status_code == 200,
     ]):
         # Store posts in state
@@ -66,7 +69,7 @@ def stateful_model(ctx):
 
 Check(
     name = "some props",
-    hook = stateful_model,
+    hook = stateful_model_of_posts,
     state = {},
 )
 
