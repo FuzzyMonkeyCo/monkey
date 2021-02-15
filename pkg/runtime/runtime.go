@@ -12,6 +12,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
 
@@ -92,7 +93,7 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 	for _, kv := range labels {
 		if idx := strings.IndexAny(kv, "="); idx != -1 {
 			k, v := kv[:idx], kv[idx+1:]
-			if err = legalName(k); err != nil {
+			if err = tags.LegalName(k); err != nil {
 				log.Println("[ERR]", err)
 				return
 			}
@@ -152,7 +153,7 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 		delete(rt.globals, t)
 	}
 	for key := range rt.globals {
-		if err = legalName(key); err != nil {
+		if err = tags.LegalName(key); err != nil {
 			err = fmt.Errorf("illegal value name: %v", err)
 			log.Println("[ERR]", err)
 			return

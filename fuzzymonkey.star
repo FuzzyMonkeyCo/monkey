@@ -90,10 +90,10 @@ Check(
     tags = ["encapsulation"],
 )
 
-## A (disabled) test that always fails
+## A test that always fails
 
-if False:
-    Check(
-        name = "always_fails",
-        hook = lambda ctx: assert.that(None).is_not_none(),
-    )
+Check(
+    name = "always_fails",
+    hook = lambda ctx: assert.that(None).is_not_none(),
+    tags = ["failing"],
+)

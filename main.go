@@ -17,6 +17,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
 	"github.com/hashicorp/logutils"
 )
@@ -201,12 +202,20 @@ func actualMain() int {
 		return code.Failed
 	}
 
+	tagsFilter, err := newTagsFilter(args, os.Args)
+	if err != nil {
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
+		return code.Failed
+	}
+
 	if timeout := args.OverallBudgetTime; timeout != 0 {
 		ctx, cancel = context.WithTimeout(ctx, timeout)
 	}
 	defer cancel()
+
 	as.ColorNFO.Printf("\n Running tests...\n\n")
-	err = mrt.Fuzz(ctx, args.N, args.Seed, args.Verbosity, args.Progress, apiKey)
+	err = mrt.Fuzz(ctx, args.N, args.Seed, args.Verbosity, tagsFilter, args.Progress, apiKey)
 	defer func() {
 		if errC := mrt.Cleanup(context.Background()); errC != nil {
 			as.ColorERR.Println(err)
@@ -309,6 +318,24 @@ func doEnv(vars []string) int {
 		penv(key)
 	}
 	return code.OK
+}
+
+func newTagsFilter(args *params, osargs []string) (*tags.Filter, error) {
+	var hasInclude, hasExclude bool
+	var included, excluded []string
+	if args.Tags != nil {
+		if csv := *args.Tags; csv != "" {
+			included = strings.Split(csv, ",")
+		}
+		hasInclude = len(included) == 0
+	}
+	if args.TagsExcluded != nil {
+		if csv := *args.TagsExcluded; csv != "" {
+			excluded = strings.Split(csv, ",")
+		}
+		hasExclude = len(excluded) == 0
+	}
+	return tags.NewFilter(hasInclude, hasExclude, included, excluded)
 }
 
 func retryOrReport() int {

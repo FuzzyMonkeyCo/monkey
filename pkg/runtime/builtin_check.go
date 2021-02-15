@@ -7,6 +7,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkclone"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
 
@@ -93,7 +94,7 @@ func (sl *starlarkStringList) Unpack(v starlark.Value) error {
 		if !ok {
 			return fmt.Errorf("got %s, want string", x.Type())
 		}
-		if err := legalName(str); err != nil {
+		if err := tags.LegalName(str); err != nil {
 			return err
 		}
 		if _, ok := sl.uniques[str]; ok {

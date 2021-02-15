@@ -11,6 +11,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/google/uuid"
 	"google.golang.org/grpc/metadata"
 )
@@ -24,6 +25,7 @@ func (rt *Runtime) Fuzz(
 	ntensity uint32,
 	seed []byte,
 	vvv uint8,
+	tagsFilter *tags.Filter,
 	ptype, apiKey string,
 ) (err error) {
 	start := time.Now()
@@ -107,7 +109,7 @@ func (rt *Runtime) Fuzz(
 			case nil:
 				return
 			case *fm.Srv_Call_:
-				if err = rt.call(ctx, msg.Call); err != nil {
+				if err = rt.call(ctx, msg.Call, tagsFilter); err != nil {
 					return
 				}
 			case *fm.Srv_Reset_:
@@ -145,7 +147,7 @@ func (rt *Runtime) Fuzz(
 
 	l := rt.lastFuzzingProgress
 
-	log.Printf("[NFO] ran %d tests: %d calls: %d checks",
+	log.Printf("[NFO] ran tests:%d calls:%d checks:%d",
 		l.GetTotalTestsCount(), l.GetTotalCallsCount(), l.GetTotalChecksCount())
 	as.ColorWRN.Printf("\n\nRan %d %s totalling %d %s and %d %s in %s.\n\n",
 		l.GetTotalTestsCount(), plural("test", l.GetTotalTestsCount()),
@@ -176,7 +178,7 @@ func (rt *Runtime) Fuzz(
 
 	if newSeed := result.GetNextSeed(); len(newSeed) != 0 {
 		log.Println("[NFO] continuing with new seed")
-		return rt.Fuzz(ctx, ntensity, newSeed, vvv, ptype, "")
+		return rt.Fuzz(ctx, ntensity, newSeed, vvv, tagsFilter, ptype, "")
 	}
 
 	if l.GetSuccess() {

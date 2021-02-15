@@ -11,8 +11,10 @@ monkey M.m.p feedb065 go1.15.8 linux amd64
 
 Usage:
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
+                     [--tags=TAGS | --exclude-tags=TAGS]
                      [--no-shrinking]
-                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
+                     [--progress=PROGRESS]
+                     [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -35,6 +37,7 @@ Options:
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --label=KV                      Labels that can help classification (format: key=value)
+  --tags=TAGS                     Only run Check.s whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls

@@ -10,11 +10,12 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 	"golang.org/x/sync/errgroup"
 )
 
-func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
+func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter) error {
 	showf := func(format string, s ...interface{}) {
 		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Printf(format, s...)
@@ -69,7 +70,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call) error {
 	{
 		callResponse := outputAsValue(output.GetOutput())
 		var passed2 bool
-		if passed2, errT = rt.userChecks(ctx, callRequest, callResponse); errT != nil {
+		if passed2, errT = rt.userChecks(ctx, tagsFilter, callRequest, callResponse); errT != nil {
 			return errT
 		}
 		if !passed2 {
@@ -173,7 +174,7 @@ func (rt *Runtime) runCallerCheck(
 	}
 }
 
-func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse starlark.Value) (bool, error) {
+func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, callRequest, callResponse starlark.Value) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.checks))
 
 	g, _ := errgroup.WithContext(ctx)
@@ -217,7 +218,7 @@ func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse sta
 			log.Println("[NFO] checking user property:", v.Name)
 
 			start := time.Now()
-			errL := rt.runUserCheck(v, chk, callRequest, callResponse)
+			errL := rt.runUserCheck(v, chk, tagsFilter, callRequest, callResponse)
 			v.ElapsedNs = time.Since(start).Nanoseconds()
 			switch {
 			case errL == nil && v.Status == fm.Clt_CallVerifProgress_success:
@@ -253,10 +254,16 @@ func (rt *Runtime) userChecks(ctx context.Context, callRequest, callResponse sta
 func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
 	chk *check,
+	tagsFilter *tags.Filter,
 	request, response starlark.Value,
 ) (err error) {
 	// On success or skipping set status + return no error,
 	// in all other cases just return error.
+
+	if tagsFilter.Excludes(chk.tags) {
+		v.Status = fm.Clt_CallVerifProgress_skipped
+		return
+	}
 
 	th := &starlark.Thread{
 		Name:  v.Name,
@@ -270,9 +277,8 @@ func (rt *Runtime) runUserCheck(
 
 	var hookRet starlark.Value
 	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
-		// Check failed or an error happened
 		log.Println("[ERR]", err)
-		return
+		return // Check failed or an error happened
 	}
 	if hookRet != starlark.None {
 		err = fmt.Errorf("hooks should return None, got: %s", hookRet.String())

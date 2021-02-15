@@ -8,6 +8,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
 
@@ -68,7 +69,7 @@ func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = legalName(modelName); err != nil {
+		if err = tags.LegalName(modelName); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
