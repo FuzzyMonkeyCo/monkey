@@ -16,13 +16,14 @@ import (
 func initExec() {
 	resolve.AllowNestedDef = false     // def statements within function bodies
 	resolve.AllowLambda = true         // lambda x, y: (x,y)
-	resolve.AllowSet = false           // sets (no proto representation yet) FIXME: allow but not in ctx.states
+	resolve.AllowSet = true            // sets (no proto representation)
 	resolve.AllowGlobalReassign = true // reassignment to top-level names
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
 
 	starlarktruth.NewModule(starlark.Universe)
+	delete(starlark.Universe, "fail")
 }
 
 func loadDisabled(_ *starlark.Thread, module string) (starlark.StringDict, error) {

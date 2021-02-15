@@ -93,8 +93,8 @@ func (sl *starlarkStringList) Unpack(v starlark.Value) error {
 		if !ok {
 			return fmt.Errorf("got %s, want string", x.Type())
 		}
-		if str == "" {
-			return errors.New("empty strings are illegal")
+		if err := legalName(str); err != nil {
+			return err
 		}
 		if _, ok := sl.uniques[str]; ok {
 			return fmt.Errorf("string %s appears at least twice in list", x.String())

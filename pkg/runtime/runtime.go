@@ -7,7 +7,6 @@ import (
 	"log"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
@@ -93,8 +92,7 @@ func NewMonkey(name string, labels []string) (rt *Runtime, err error) {
 	for _, kv := range labels {
 		if idx := strings.IndexAny(kv, "="); idx != -1 {
 			k, v := kv[:idx], kv[idx+1:]
-			// NOTE: validation also client side for shorter dev loop
-			if err = printableASCII(k); err != nil {
+			if err = legalName(k); err != nil {
 				log.Println("[ERR]", err)
 				return
 			}
@@ -154,18 +152,10 @@ func (rt *Runtime) loadCfg(localCfg string) (err error) {
 		delete(rt.globals, t)
 	}
 	for key := range rt.globals {
-		if err = printableASCII(key); err != nil {
-			err = fmt.Errorf("illegal export: %v", err)
+		if err = legalName(key); err != nil {
+			err = fmt.Errorf("illegal value name: %v", err)
 			log.Println("[ERR]", err)
 			return
-		}
-		for _, c := range key {
-			if unicode.IsUpper(c) {
-				err = fmt.Errorf("user defined exports must not be uppercase: %q", key)
-				log.Println("[ERR]", err)
-				return
-			}
-			break
 		}
 	}
 	log.Printf("[DBG] starlark globals: %d", len(rt.globals))

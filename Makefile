@@ -44,6 +44,7 @@ lint:
 	go vet ./...
 
 debug: all
+	./$(EXE) fmt
 	./$(EXE) lint
 	./$(EXE) -vvv fuzz
 

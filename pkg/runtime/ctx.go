@@ -5,6 +5,9 @@ import (
 	"go.starlark.net/starlarkstruct"
 )
 
+// # TODO: easy access to generated parameters. For instance:
+// # post_id = ctx.request["parameters"]["path"]["{id}"] (note decoded int)
+
 func newCtx(state, request, response starlark.Value) starlark.Value {
 	request.Freeze()
 	response.Freeze()
