@@ -4,7 +4,7 @@ EXE = monkey
 
 GPB ?= 3.6.1
 GPB_IMG ?= znly/protoc:0.4.0
-GOGO ?= v1.3.1
+GOGO ?= v1.3.2
 RUN ?= docker run --rm --user $$(id -u):$$(id -g)
 PROTOC = $(RUN) -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
