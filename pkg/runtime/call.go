@@ -303,7 +303,7 @@ func (rt *Runtime) runUserCheck(
 	// Signals assert.that(...) was called
 	usedTruth := th.Local(starlarktruth.Default) != nil
 
-	if !wasMutated && !usedTruth {
+	if !(wasMutated || usedTruth) {
 		// Predicate did not trigger
 		v.Status = fm.Clt_CallVerifProgress_skipped
 		return
