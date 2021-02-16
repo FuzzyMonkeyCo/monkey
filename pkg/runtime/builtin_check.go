@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -25,19 +24,20 @@ func (chk *check) reset() (err error) {
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var hook *starlark.Function
 	var name starlark.String
-	var tags tags.StarlarkStringList
+	var taglist tags.StarlarkStringList
 	var state0 starlark.Value
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"hook", &hook,
 		"name", &name,
-		"tags?", &tags,
+		"tags?", &taglist,
 		"state?", &state0,
 	); err != nil {
 		return nil, err
 	}
 
-	if name.Len() == 0 {
-		return nil, errors.New("name for Check must be non-empty")
+	chkname := name.GoString()
+	if err := tags.LegalName(chkname); err != nil {
+		return nil, fmt.Errorf("bad name for Check: %v", err)
 	}
 	if hook.HasVarargs() || hook.HasKwargs() || hook.NumParams() != 1 {
 		return nil, fmt.Errorf("hook for Check %s must have only one param: ctx", name.String())
@@ -55,19 +55,18 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	state0.Freeze()
 	chk := &check{
 		hook:   hook,
-		tags:   tags.Uniques,
+		tags:   taglist.Uniques,
 		state0: state0,
 	}
 	if err := chk.reset(); err != nil {
 		return nil, err
 	}
 
-	chkname := name.GoString()
 	if _, ok := rt.checks[chkname]; ok {
 		return nil, fmt.Errorf("a Check named %s already exists", name.String())
 	}
 	rt.checks[chkname] = chk
-	log.Printf("[NFO] registered %v: %+v", b.Name(), chk)
+	log.Printf("[NFO] registered %s: %+v", b.Name(), chk)
 
 	return starlark.None, nil
 }
