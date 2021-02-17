@@ -81,6 +81,8 @@ func LegalName(s string) error {
 			return fmt.Errorf("string contains non-printable characters: %q", s)
 		case unicode.IsUpper(c):
 			return fmt.Errorf("string contains upper case characters: %q", s)
+		case !(c == '_' || unicode.IsLetter(c) || unicode.IsDigit(c)):
+			return fmt.Errorf("string contains non alpha-numeric characters: %q", s)
 		}
 		l++
 	}
