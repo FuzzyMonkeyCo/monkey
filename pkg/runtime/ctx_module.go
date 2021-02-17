@@ -7,17 +7,18 @@ import (
 	"go.starlark.net/starlark"
 )
 
-// TODO? easy access to generated parameters. For instance:
-// post_id = ctx.request["parameters"]["path"]["{id}"] (note decoded int)
+type ctxctor func(starlark.Value) starlark.Value
 
-func newCtx(state, request, response starlark.Value) starlark.Value {
+func ctxMaker(request, response starlark.Value) ctxctor {
 	request.Freeze()
 	response.Freeze()
 	// state is mutated through checks
-	return &ctxModule{
-		request:  request,
-		response: response,
-		state:    state,
+	return func(state starlark.Value) starlark.Value {
+		return &ctxModule{
+			request:  request,
+			response: response,
+			state:    state,
+		}
 	}
 }
 
@@ -26,10 +27,13 @@ type ctxModule struct {
 	accessedState     bool
 	request, response starlark.Value
 	state             starlark.Value
-	// specs             starlark.Value
+	//TODO: specs             starlark.Value
 	//TODO: CLI filter `--only="starlark.expr(ctx.specs)"`
 	//TODO: ctx.specs stops being accessible on first ctx.state access
 }
+
+// TODO? easy access to generated parameters. For instance:
+// post_id = ctx.request["parameters"]["path"]["{id}"] (note decoded int)
 
 var _ starlark.HasAttrs = (*ctxModule)(nil)
 

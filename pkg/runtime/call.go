@@ -212,6 +212,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, call
 		return
 	})
 
+	ctxer := ctxMaker(callRequest, callResponse)
 	for name, chk := range rt.checks {
 		name, chk := name, chk
 
@@ -220,7 +221,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, call
 			log.Println("[NFO] checking user property:", v.Name)
 
 			start := time.Now()
-			errL := rt.runUserCheck(v, chk, tagsFilter, callRequest, callResponse)
+			errL := rt.runUserCheck(v, chk, tagsFilter, ctxer)
 			v.ElapsedNs = time.Since(start).Nanoseconds()
 			switch {
 			case errL == nil && v.Status == fm.Clt_CallVerifProgress_success:
@@ -257,7 +258,7 @@ func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
 	chk *check,
 	tagsFilter *tags.Filter,
-	request, response starlark.Value,
+	ctxer ctxctor,
 ) (err error) {
 	// On success or skipping set status + return no error,
 	// in all other cases just return error.
@@ -275,7 +276,7 @@ func (rt *Runtime) runUserCheck(
 
 	snapshot := chk.state.String() // Assumes deterministic repr
 
-	args := starlark.Tuple{newCtx(chk.state, request, response)}
+	args := starlark.Tuple{ctxer(chk.state)}
 
 	defer func() { v.ExecutionSteps = th.ExecutionSteps() }()
 
