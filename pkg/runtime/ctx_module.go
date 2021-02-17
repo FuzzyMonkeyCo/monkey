@@ -4,20 +4,28 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"go.starlark.net/starlark"
 )
 
-type ctxctor func(starlark.Value) starlark.Value
+type (
+	ctxctor2 func(*fm.Clt_CallResponseRaw_Output) ctxctor1
+	ctxctor1 func(starlark.Value) starlark.Value
+)
 
-func ctxMaker(request, response starlark.Value) ctxctor {
+func ctxCurry(callInput *fm.Clt_CallRequestRaw_Input) ctxctor2 {
+	request := inputAsValue(callInput)
 	request.Freeze()
-	response.Freeze()
-	// state is mutated through checks
-	return func(state starlark.Value) starlark.Value {
-		return &ctxModule{
-			request:  request,
-			response: response,
-			state:    state,
+	return func(callOutput *fm.Clt_CallResponseRaw_Output) ctxctor1 {
+		response := outputAsValue(callOutput)
+		response.Freeze()
+		return func(state starlark.Value) starlark.Value {
+			// state is mutated through checks
+			return &ctxModule{
+				request:  request,
+				response: response,
+				state:    state,
+			}
 		}
 	}
 }

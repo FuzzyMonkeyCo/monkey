@@ -42,7 +42,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		// An error happened building the request: cannot continue.
 		return nil
 	}
-	callRequest := inputAsValue(input.GetInput())
+	ctxer2 := ctxCurry(input.GetInput())
 
 	cllr.Do(ctx)
 
@@ -69,9 +69,9 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	}
 
 	{
-		callResponse := outputAsValue(output.GetOutput())
+		ctxer1 := ctxer2(output.GetOutput())
 		var passed2 bool
-		if passed2, errT = rt.userChecks(ctx, tagsFilter, callRequest, callResponse); errT != nil {
+		if passed2, errT = rt.userChecks(ctx, tagsFilter, ctxer1); errT != nil {
 			return errT
 		}
 		if !passed2 {
@@ -175,7 +175,7 @@ func (rt *Runtime) runCallerCheck(
 	}
 }
 
-func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, callRequest, callResponse starlark.Value) (bool, error) {
+func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxer1 ctxctor1) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.checks))
 
 	g, _ := errgroup.WithContext(ctx)
@@ -212,7 +212,6 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, call
 		return
 	})
 
-	ctxer := ctxMaker(callRequest, callResponse)
 	for name, chk := range rt.checks {
 		name, chk := name, chk
 
@@ -221,7 +220,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, call
 			log.Println("[NFO] checking user property:", v.Name)
 
 			start := time.Now()
-			errL := rt.runUserCheck(v, chk, tagsFilter, ctxer)
+			errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1)
 			v.ElapsedNs = time.Since(start).Nanoseconds()
 			switch {
 			case errL == nil && v.Status == fm.Clt_CallVerifProgress_success:
@@ -258,7 +257,7 @@ func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
 	chk *check,
 	tagsFilter *tags.Filter,
-	ctxer ctxctor,
+	ctxer1 ctxctor1,
 ) (err error) {
 	// On success or skipping set status + return no error,
 	// in all other cases just return error.
@@ -276,7 +275,7 @@ func (rt *Runtime) runUserCheck(
 
 	snapshot := chk.state.String() // Assumes deterministic repr
 
-	args := starlark.Tuple{ctxer(chk.state)}
+	args := starlark.Tuple{ctxer1(chk.state)}
 
 	defer func() { v.ExecutionSteps = th.ExecutionSteps() }()
 
