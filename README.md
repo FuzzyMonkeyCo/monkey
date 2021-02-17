@@ -110,7 +110,7 @@ print("Now testing {}.".format(spec))
 OpenAPIv3(
     name = "my_model",
     file = spec,
-    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "80")),
+    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
     # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
 
     # Note: exec commands are executed in shells sharing the same environment variables,
@@ -171,17 +171,15 @@ def stateful_model_of_posts(ctx):
         print("State contains {} posts".format(len(ctx.state)))
 
 Check(
-    name = "some props",
+    name = "some_props",
     hook = stateful_model_of_posts,
-    state = {},
 )
 
 ## Encapsulation: ensure each Check owns its own ctx.state.
 
 def encapsulation_1_of_2(ctx):
     """Show that state is not shared with encapsulation_2_of_2"""
-    assert.that(ctx.state).is_not_equal_to(42)
-    assert.that(ctx.state).is_none()
+    assert.that(ctx.state).is_empty()
 
 Check(
     name = "encapsulation_1_of_2",
@@ -192,7 +190,7 @@ Check(
 Check(
     name = "encapsulation_2_of_2",
     hook = lambda ctx: None,
-    state = 42,
+    state = {"data": 42},
     tags = ["encapsulation"],
 )
 
