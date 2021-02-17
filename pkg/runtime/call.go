@@ -216,21 +216,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		name, chk := name, chk
 
 		g.Go(func() error {
-			v := &fm.Clt_CallVerifProgress{Name: name, UserProperty: true}
-			log.Println("[NFO] checking user property:", v.Name)
-
-			start := time.Now()
-			errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1)
-			v.ElapsedNs = time.Since(start).Nanoseconds()
-			if errL != nil {
-				var reason string
-				if e, ok := errL.(*starlark.EvalError); ok {
-					reason = e.Backtrace()
-				} else {
-					reason = errL.Error()
-				}
-				v.Reason = strings.Split(reason, "\n")
-			}
+			v := rt.runUserCheckWrapper(name, chk, tagsFilter, ctxer1)
 			switch v.Status {
 			case fm.Clt_CallVerifProgress_success:
 				rt.progress.CheckPassed(v.Name, chk.hook.String())
@@ -249,6 +235,30 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		return false, errT
 	}
 	return passed, nil
+}
+
+func (rt *Runtime) runUserCheckWrapper(
+	name string,
+	chk *check,
+	tagsFilter *tags.Filter,
+	ctxer1 ctxctor1,
+) *fm.Clt_CallVerifProgress {
+	v := &fm.Clt_CallVerifProgress{Name: name, UserProperty: true}
+	log.Println("[NFO] checking user property:", v.Name)
+
+	start := time.Now()
+	errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1)
+	v.ElapsedNs = time.Since(start).Nanoseconds()
+	if errL != nil {
+		var reason string
+		if e, ok := errL.(*starlark.EvalError); ok {
+			reason = e.Backtrace()
+		} else {
+			reason = errL.Error()
+		}
+		v.Reason = strings.Split(reason, "\n")
+	}
+	return v
 }
 
 func (rt *Runtime) runUserCheck(
@@ -279,6 +289,7 @@ func (rt *Runtime) runUserCheck(
 
 	var hookRet starlark.Value
 	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
+		err = errStateDict(v.Name, err)
 		log.Println("[ERR]", err)
 		// Check failed or an error happened
 		v.Status = fm.Clt_CallVerifProgress_failure
@@ -294,7 +305,12 @@ func (rt *Runtime) runUserCheck(
 	wasMutated := snapshot != chk.state.String()
 
 	if wasMutated {
-		// Ensure ctx.state is still proto-representatble
+		if err = ensureStateDict(v.Name, chk.state); err != nil {
+			log.Println("[ERR]", err)
+			v.Status = fm.Clt_CallVerifProgress_failure
+			return
+		}
+		// Ensure ctx.state is still proto-representable
 		if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
 			log.Println("[ERR]", err)
 			v.Status = fm.Clt_CallVerifProgress_failure

@@ -3,6 +3,7 @@ package runtime
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkclone"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
@@ -13,11 +14,32 @@ import (
 type check struct {
 	hook          *starlark.Function
 	tags          tags.Tags
-	state, state0 starlark.Value
+	state, state0 *starlark.Dict
 }
 
-func (chk *check) reset() (err error) {
-	chk.state, err = starlarkclone.Clone(chk.state0)
+func (chk *check) reset(chkname string) (err error) {
+	var state starlark.Value
+	if state, err = starlarkclone.Clone(chk.state0); err != nil {
+		return
+	}
+	if err = ensureStateDict(chkname, state); err != nil {
+		return
+	}
+	chk.state = state.(*starlark.Dict)
+	return
+}
+
+func errStateDict(chkname string, err error) error {
+	if strings.Contains(err.Error(), `can't assign to .state field of `) {
+		return fmt.Errorf("state for Check %q must be dict", chkname)
+	}
+	return err
+}
+
+func ensureStateDict(chkname string, v starlark.Value) (err error) {
+	if _, ok := v.(*starlark.Dict); !ok {
+		err = fmt.Errorf("state for Check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
+	}
 	return
 }
 
@@ -25,7 +47,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	var hook *starlark.Function
 	var name starlark.String
 	var taglist tags.StarlarkStringList
-	var state0 starlark.Value
+	var state0 *starlark.Dict
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"hook", &hook,
 		"name", &name,
@@ -47,7 +69,10 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	}
 
 	if state0 == nil {
-		state0 = starlark.None
+		state0 = &starlark.Dict{}
+	}
+	if err := ensureStateDict(chkname, state0); err != nil {
+		return nil, err
 	}
 	if err := starlarkvalue.ProtoCompatible(state0); err != nil { // TODO: ensure through preempting SetKey,...
 		return nil, err
@@ -58,7 +83,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 		tags:   taglist.Uniques,
 		state0: state0,
 	}
-	if err := chk.reset(); err != nil {
+	if err := chk.reset(chkname); err != nil {
 		return nil, err
 	}
 

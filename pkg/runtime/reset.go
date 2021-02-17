@@ -98,8 +98,8 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 		break
 	}
 
-	for _, chk := range rt.checks {
-		if err = chk.reset(); err != nil {
+	for name, chk := range rt.checks {
+		if err = chk.reset(name); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}

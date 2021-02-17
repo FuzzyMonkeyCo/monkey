@@ -35,10 +35,12 @@ func ProtoCompatible(value starlark.Value) (err error) {
 		return
 	case *starlark.Dict:
 		for _, kv := range v.Items() {
-			for i := range make([]struct{} /*no,alloc*/, 2) {
-				if err = ProtoCompatible(kv.Index(i)); err != nil {
-					return
-				}
+			if _, ok := kv.Index(0).(starlark.String); !ok {
+				err = fmt.Errorf("want string key, got: (%s) %s", value.Type(), value.String())
+				return
+			}
+			if err = ProtoCompatible(kv.Index(1)); err != nil {
+				return
 			}
 		}
 		return

@@ -3,7 +3,6 @@ package runtime
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 	"time"
@@ -74,17 +73,16 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 	}
 
 	var localCfgContents []byte
-	if localCfgContents, err = ioutil.ReadFile(localCfg); err != nil {
+	if localCfgContents, err = localcfgdata(); err != nil {
 		log.Println("[ERR]", err)
 		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
 		return
 	}
 
-	rt = &Runtime{
+	r := &Runtime{
 		binTitle: name,
 		files:    map[string]string{localCfg: string(localCfgContents)},
 		models:   make(map[string]modeler.Interface, 1),
-		globals:  make(starlark.StringDict, len(rt.builtins())+len(registeredModelers)),
 		thread: &starlark.Thread{
 			Name:  "cfg",
 			Load:  loadDisabled,
@@ -94,24 +92,26 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 		envRead: make(map[string]string),
 		checks:  make(map[string]*check),
 	}
+	r.globals = make(starlark.StringDict, len(r.builtins())+len(registeredModelers))
 
 	log.Println("[NFO] registered modelers:", len(registeredModelers))
 	for modelName, mdl := range registeredModelers {
 		log.Printf("[DBG] registered modeler: %q", modelName)
-		builtin := rt.modelMaker(modelName, mdl.NewFromKwargs)
-		rt.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
+		builtin := r.modelMaker(modelName, mdl.NewFromKwargs)
+		r.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
 	}
-	for t, b := range rt.builtins() {
-		rt.globals[t] = starlark.NewBuiltin(t, b)
+	for t, b := range r.builtins() {
+		r.globals[t] = starlark.NewBuiltin(t, b)
 	}
 
 	log.Println("[NFO] loading starlark config from", localCfg)
 	start := time.Now()
-	if err = rt.loadCfg(); err != nil {
+	if err = r.loadCfg(); err != nil {
 		return
 	}
 	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
 
+	rt = r
 	return
 }
 
@@ -121,7 +121,7 @@ func (rt *Runtime) loadCfg() (err error) {
 		log.Printf("[DBG] starlark global %q: %+v", k, v)
 	}
 
-	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, nil, rt.globals); err != nil {
+	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, rt.files[localCfg], rt.globals); err != nil {
 		log.Println("[ERR]", err)
 		if evalErr, ok := err.(*starlark.EvalError); ok {
 			bt := evalErr.Backtrace()
