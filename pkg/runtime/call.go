@@ -291,7 +291,7 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	wasMutated := snapshot == chk.state.String()
+	wasMutated := snapshot != chk.state.String()
 
 	if wasMutated {
 		// Ensure ctx.state is still proto-representatble
