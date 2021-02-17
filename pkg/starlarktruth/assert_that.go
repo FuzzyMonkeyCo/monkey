@@ -142,7 +142,7 @@ func containsExactlyInOrder(t *T, args ...starlark.Value) (starlark.Value, error
 
 func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if t.askedInOrder {
-		// TODO: error about how inOrder is invalid with dicts
+		// TODO: error about how in_order is invalid with dicts
 		return nil, errUnhandled
 	}
 	arg1 := args[0] // TODO: what when passed **kwargs?
@@ -214,7 +214,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		iterations++
 
 		// As soon as we encounter a pair of elements that differ, we know that
-		// inOrder cannot succeed, so we can check the rest of the elements
+		// in_order cannot succeed, so we can check the rest of the elements
 		// more normally. Since any previous pairs of elements we iterated
 		// over were equal, they have no effect on the result now.
 		ok, err := starlark.CompareDepth(syntax.NEQ, elemActual, elemExpected, maxdepth)
@@ -307,7 +307,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 //
 // This is especially useful in the context of types that have no helpful
 // string representation (e.g., boolean). Writing
-// AssertThat(foo).Named('foo').IsTrue()
+// assert.that(foo).named('foo').is_true()
 // then results in a more reasonable error.
 func named(t *T, args ...starlark.Value) (starlark.Value, error) {
 	str, ok := args[0].(starlark.String)
@@ -338,7 +338,7 @@ func isFalse(t *T, args ...starlark.Value) (starlark.Value, error) {
 	}
 	suffix := ""
 	if !t.actual.Truth() {
-		suffix = " However, it is falsy. Did you mean to call .isFalsy() instead?"
+		suffix = " However, it is falsy. Did you mean to call .is_falsy() instead?"
 	}
 	return nil, t.failWithProposition("is False", suffix)
 }
@@ -356,7 +356,7 @@ func isTrue(t *T, args ...starlark.Value) (starlark.Value, error) {
 	}
 	suffix := ""
 	if t.actual.Truth() {
-		suffix = " However, it is truthy. Did you mean to call .isTruthy() instead?"
+		suffix = " However, it is truthy. Did you mean to call .is_truthy() instead?"
 	}
 	return nil, t.failWithProposition("is True", suffix)
 }
@@ -383,19 +383,19 @@ func (t *T) comparable(bName, verb string, op syntax.Token, other starlark.Value
 }
 
 func isAtLeast(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.comparable("isAtLeast", "is at least", syntax.LT, args[0])
+	return t.comparable("is_at_least", "is at least", syntax.LT, args[0])
 }
 
 func isAtMost(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.comparable("isAtMost", "is at most", syntax.GT, args[0])
+	return t.comparable("is_at_most", "is at most", syntax.GT, args[0])
 }
 
 func isGreaterThan(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.comparable("isGreaterThan", "is greater than", syntax.LE, args[0])
+	return t.comparable("is_greater_than", "is greater than", syntax.LE, args[0])
 }
 
 func isLessThan(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.comparable("isLessThan", "is less than", syntax.GE, args[0])
+	return t.comparable("is_less_than", "is less than", syntax.GE, args[0])
 }
 
 func isIn(t *T, args ...starlark.Value) (starlark.Value, error) {

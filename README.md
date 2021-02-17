@@ -7,12 +7,14 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey	M.m.p	feedb065	go1.15.7	linux	amd64
+monkey M.m.p feedb065 go1.15.8 linux amd64
 
 Usage:
-  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
+  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
+                     [--tags=TAGS | --exclude-tags=TAGS]
                      [--no-shrinking]
-                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
+                     [--progress=PROGRESS]
+                     [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -34,7 +36,8 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-  --tag=KV                        Labels that can help classification (format: key=value)
+  --label=KV                      Labels that can help classification (format: key=value)
+  --tags=TAGS                     Only run Check.s whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
@@ -52,6 +55,8 @@ Try:
 
 ### Getting started
 
+**Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/action-monkey).
+
 Quick install:
 
 ```shell
@@ -64,72 +69,140 @@ or the equivalent:
 curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownloader.sh | BINDIR=/usr/local/bin sh
 ```
 
-Or simply install the [latest release from here](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
+Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
 
 ### Configuration
 
-`monkey` uses Starlark as its configuration language: a simple Python-like language developped at Google for the Bazel build system.
-From [https://github.com/bazelbuild/starlark](https://github.com/bazelbuild/starlark):
-> Starlark (formerly known as Skylark) is a language intended for use as a configuration language. It was designed for the Bazel build system, but may be useful for other projects as well. [...]
->
-> Starlark is a dialect of Python. Like Python, it is a dynamically typed language with high-level data types, first-class functions with lexical scope, and garbage collection. Independent Starlark threads execute in parallel, so Starlark workloads scale well on parallel machines. Starlark is a small and simple language with a familiar and highly readable syntax. You can use it as an expressive notation for structured data, defining functions to eliminate repetition, or you can use it to add scripting capabilities to an existing application.
-> [...]
-> Design Principles
-> * Deterministic evaluation. Executing the same code twice will give the same results.
-> * Hermetic execution. Execution cannot access the file system, network, system clock. It is safe to execute untrusted code.
-> * Parallel evaluation. Modules can be loaded in parallel. To guarantee a thread-safe execution, shared data becomes immutable.
-> * Simplicity. We try to limit the number of concepts needed to understand the code. Users should be able to quickly read and write code, even if they are not expert. The language should avoid pitfalls as much as possible.
-> * Focus on tooling. We recognize that the source code will be read, analyzed, modified, by both humans and tools.
-> * Python-like. Python is a widely used language. Keeping the language similar to Python can reduce the learning curve and make the semantics more obvious to users.
+`monkey` uses [Starlark](https://github.com/bazelbuild/starlark) as its configuration language: a simple Python-like deterministic language.
 
-#### Example `fuzzymonkey.star` file
+#### Minimal example `fuzzymonkey.star` file
 
 
 ```python
 OpenAPIv3(
-  name = "my model on localhost",
-  # Note: references to schemas in `file` are resolved relative to file's location.
-  file = "openapi3.json",
-  host = "http://localhost:6773",
-  header_authorization = "Bearer " + "MY_DEVTIME_TOKEN",
+  name = "dev_spec",
+  file = "openapi/openapi.yaml",
+  host = "http://localhost:3000",
 
-  ExecReset = "curl --fail -X DELETE http://localhost:6773/api/1/items",
+  ExecReset = "curl -fsSL -X DELETE http://localhost:3000/api/1/items",
 )
 ```
 
-#### A more involved `fuzzymonkey.star`
+#### Demos
+
+* [demo_erlang_cowboy_simpleREST](https://github.com/FuzzyMonkeyCo/demo_erlang_cowboy_simpleREST)
+
+#### A more involved [`fuzzymonkey.star`](./fuzzymonkey.star)
 
 ```python
+# Invariants of our APIs expressed in a Python-like language
+
+print("$THIS_ENVIRONMENT_VARIABLE is", Env("THIS_ENVIRONMENT_VARIABLE", "not set"))
+
+host, spec = "https://jsonplaceholder.typicode.com", None
+mode = Env("TESTING_WHAT", "")
+if mode == "":
+    spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
+elif mode == "other-thing":
+    pass
+else:
+    assert.that(mode).is_equal_to("unhandled testing mode")
+print("Now testing {}.".format(spec))
+
 OpenAPIv3(
-  name = "my other model running with Docker",
-  file = "dist/openapi3v2.json",
-  # `host` does not go through shell execution
-  host_resolver = 'echo "https://localhost:${CONTAINER_PORT}"',
-##host = Eval("echo "https://localhost:${CONTAINER_PORT}"), TODO
+    name = "my_model",
+    # Note: references to schemas in `file` are resolved relative to file's location.
+    file = spec,
+    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
+    # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
 
-  # Note: commands are executed in shells sharing the same environment variables,
-  # with `set -e` and `set -o pipefail` flags on.
+    # Note: exec commands are executed in shells sharing the same environment variables,
+    # with `set -e` and `set -o pipefail` flags on.
 
-  # The following get executed once per test
-  #   so have these commands complete as fast as possible.
-  # Also, make sure that each test starts from a clean slate
-  #   otherwise results will be unreliable.
-  ExecStart = """
-  CONTAINER_ID=$(docker run --rm -d -p 8080 cake_sample_master)
-  cmd="$(docker port $CONTAINER_ID 6773/tcp)"
-  CONTAINER_PORT=$(python -c "_, port = '$cmd'.split(':'); print(port)")
-  host=localhost
-  until $(curl -# --output /dev/null --silent --fail --head http://$host:$CONTAINER_PORT/api/1/items); do
-    printf .
-    sleep 5
-  done
-  """,
+    # The following get executed once per test
+    #   so have these commands complete as fast as possible.
+    # Also, make sure that each test starts from a clean slate
+    #   otherwise results will be unreliable.
+    ExecReset = """
+    echo Resetting state...
+    """,
+)
 
-  ExecReset = """
-  [[ 204 = $(curl -# --output /dev/null --write-out '%{http_code}' -X DELETE http://$host:$CONTAINER_PORT/api/1/items) ]]
-  """,
+## Ensure some general property
 
-  ExecStop = "docker stop --time 5 $CONTAINER_ID",
+Check(
+    name = "responds_in_a_timely_manner",
+    hook = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
+    tags = ["timing"],
+)
+
+## Express stateful properties
+
+def stateful_model_of_posts(ctx):
+    """Properties on posts. State collects posts returned by API."""
+
+    # NOTE: response has already been decoded & validated for us.
+
+    url = ctx.request.url
+
+    if all([
+        ctx.request.method == "GET",
+        "/posts/" in url and url[-1] in "1234567890",  # /posts/{post_id}
+        ctx.response.status_code in range(200, 299),
+    ]):
+        post_id = int(url.split("/")[-1])
+        post = ctx.response.body
+
+        # Ensure post ID in response matches ID in URL (an API contract):
+        assert.that(post["id"]).is_equal_to(post_id)
+
+        # Verify that retrieved post matches local model
+        if post_id in ctx.state:
+            assert.that(post).is_equal_to(ctx.state[post_id])
+
+        return
+
+    if all([
+        ctx.request.method == "GET",
+        url.endswith("/posts"),
+        ctx.response.status_code == 200,
+    ]):
+        # Store posts in state
+        for post in ctx.response.body:
+            post_id = int(post["id"])
+            ctx.state[post_id] = post
+        print("State contains {} posts".format(len(ctx.state)))
+
+Check(
+    name = "some_props",
+    hook = stateful_model_of_posts,
+)
+
+## Encapsulation: ensure each Check owns its own ctx.state.
+
+def encapsulation_1_of_2(ctx):
+    """Show that state is not shared with encapsulation_2_of_2"""
+    assert.that(ctx.state).is_empty()
+
+Check(
+    name = "encapsulation_1_of_2",
+    hook = encapsulation_1_of_2,
+    tags = ["encapsulation"],
+)
+
+Check(
+    name = "encapsulation_2_of_2",
+    hook = lambda ctx: None,
+    state = {"data": 42},
+    tags = ["encapsulation"],
+)
+
+## A test that always fails
+
+Check(
+    name = "always_fails",
+    hook = lambda ctx: assert.that(None).is_not_none(),
+    tags = ["failing"],
 )
 ```
 

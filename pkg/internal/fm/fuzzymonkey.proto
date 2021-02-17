@@ -50,12 +50,10 @@ message Clt {
     bytes seed = 4;
     uint32 ntensity = 5;
     repeated uint32 EIDs = 6;
-    map<string, string> tags = 7;
+    map<string, string> labels = 7;
     map<string, string> env_read = 8;
     repeated string UUIDs = 9;
-  }
-
-  message Metrics {
+    map<string, string> files = 10;
   }
 
   message ResetProgress {
@@ -118,30 +116,29 @@ message Clt {
     string name = 1;
     enum Status {
       NO_STATUS = 0;
-      start = 1;
-      success = 2;
-      skipped = 3;
-      failure = 4;
-      done = 5;
+      success = 1;
+      skipped = 2;
+      failure = 3;
+      done = 4;
     }
     Status status = 2;
     bool user_property = 3;
     repeated string reason = 4;
+    int64 elapsed_ns = 5;
+    uint64 execution_steps = 6;
   }
 
   oneof msg {
     // Initiates testing
     Fuzz fuzz = 1;
-    // Logs & observed SUT
-    Metrics metrics = 2;
     // SUT state resetting
-    ResetProgress reset_progress = 3;
+    ResetProgress reset_progress = 2;
     // Actual call to SUT
-    CallRequestRaw call_request_raw = 4;
+    CallRequestRaw call_request_raw = 3;
     // SUT call response
-    CallResponseRaw call_response_raw = 5;
+    CallResponseRaw call_response_raw = 4;
     // SUT call verifications
-    CallVerifProgress call_verif_progress = 6;
+    CallVerifProgress call_verif_progress = 5;
   }
 }
 

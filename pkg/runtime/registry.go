@@ -1,15 +1,14 @@
 package runtime
 
 import (
+	"errors"
 	"fmt"
 	"log"
-	"strings"
-	"unicode"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/pkg/errors"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
 
@@ -52,17 +51,11 @@ func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 				}
 			}
 
-			reserved := false
-			if err = printableASCII(key); err != nil {
-				err = errors.Wrap(err, "illegal field")
+			var reserved bool
+			if reserved, err = printableASCIItmp(key); err != nil { // FIXME: no more CamelReserved kwargs
+				err = fmt.Errorf("illegal field: %v", err)
 				log.Println("[ERR]", err)
 				return
-			}
-			for i, c := range key {
-				if i == 0 && unicode.IsUpper(c) {
-					reserved = true
-					break
-				}
 			}
 			if !reserved {
 				u[key] = v
@@ -72,16 +65,11 @@ func (rt *Runtime) modelMaker(modelerName string, mdlr modeler.Func) builtin {
 		}
 
 		if modelName == "" {
-			err = errors.New("model's Name must be set")
+			err = errors.New("model's name must be set")
 			log.Println("[ERR]", err)
 			return
 		}
-		if err = printableASCII(modelerName); err != nil {
-			log.Println("[ERR]", err)
-			return
-		}
-		if modelName != strings.ToLower(modelName) {
-			err = fmt.Errorf("model name %q must be lowercase", modelName)
+		if err = tags.LegalName(modelName); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}

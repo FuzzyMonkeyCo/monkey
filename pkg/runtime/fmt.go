@@ -86,14 +86,9 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 			switch w.Category {
 			case "module-docstring":
 				continue
-			case "function-docstring-return":
-				//fuzzymonkey.star:117: (function-docstring-return) Return value of "add_new_item" is not documented.
-				continue
 			case "function-docstring-args":
-				if strings.HasPrefix(msg, `Arguments "State", "response" are not documented.`) ||
-					strings.HasPrefix(msg, `Arguments "_State", "response" are not documented.`) ||
-					strings.HasPrefix(msg, `Arguments "_State", "_response" are not documented.`) {
-					// Skip warning about our special State & response positional arguments
+				if strings.HasPrefix(msg, `Argument "ctx" is not documented.`) && strings.Contains(msg, "(ctx):\n") {
+					// Skip warning about our special ctx positional argument
 					continue
 				}
 			case "name-conventions":
@@ -101,10 +96,6 @@ func runFormat(inputType, mode, lint string, warningsList []string) (err error) 
 					"be lower_snake_case (for variables), UPPER_SNAKE_CASE (for constants), or UpperCamelCase ending with 'Info' (for providers).",
 					"be lower_snake_case.",
 				)
-			}
-			if msg == `Variable name "State" should be lower_snake_case.` {
-				// Skip warning about our special modelState variable name convention
-				continue
 			}
 			msg = strings.ReplaceAll(msg, "Buildifier", "`fmt`")
 

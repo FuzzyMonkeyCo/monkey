@@ -111,7 +111,11 @@ func (p *Progresser) ChecksPassed() {
 // CheckPassed may be called many times during testing
 func (p *Progresser) CheckPassed(name, msg string) {
 	if msg != "" {
-		msg = ": " + msg
+		if msg == "<function lambda>" { // name of user check
+			msg = ""
+		} else {
+			msg = ": " + msg
+		}
 	}
 	p.bar.Interruptf(" %s %s%s",
 		as.ColorOK.Sprintf(prefixSucceeded),
@@ -123,7 +127,11 @@ func (p *Progresser) CheckPassed(name, msg string) {
 // CheckSkipped may be called many times during testing
 func (p *Progresser) CheckSkipped(name, msg string) {
 	if msg != "" {
-		msg = ": " + msg
+		if msg == "<function lambda>" { // name of user check
+			msg = ""
+		} else {
+			msg = ": " + msg
+		}
 	}
 	p.bar.Interruptf(" %s %s SKIPPED%s",
 		as.ColorWRN.Sprintf(prefixSkipped),

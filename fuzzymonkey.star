@@ -2,21 +2,30 @@
 
 print("$THIS_ENVIRONMENT_VARIABLE is", Env("THIS_ENVIRONMENT_VARIABLE", "not set"))
 
-host, spec = "https://jsonplaceholder.typicode.com/", None
-mode = Env("TESTING_WHAT")
+host, spec = "https://jsonplaceholder.typicode.com", None
+mode = Env("TESTING_WHAT", "")
 if mode == "":
     spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
 elif mode == "other-thing":
     pass
 else:
-    fail("Unhandled testing mode '{}'".format(mode))
+    assert.that(mode).is_equal_to("unhandled testing mode")
 print("Now testing {}.".format(spec))
 
 OpenAPIv3(
     name = "my_model",
+    # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
-    host = host,
-    # header_authorization = 'Bearer ' + ...,
+    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
+    # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
+
+    # Note: exec commands are executed in shells sharing the same environment variables,
+    # with `set -e` and `set -o pipefail` flags on.
+
+    # The following get executed once per test
+    #   so have these commands complete as fast as possible.
+    # Also, make sure that each test starts from a clean slate
+    #   otherwise results will be unreliable.
     ExecReset = """
     echo Resetting state...
     """,
@@ -24,127 +33,77 @@ OpenAPIv3(
 
 ## Ensure some general property
 
-# def generallyRootOfXSquaredIsX(State, response):
-#     x = response["body"]['id']
-#     if sqrt(x*x) != x:
-#         fail("sqrt({}) != {}".format(x*x, x))
-
-# TriggerActionAfterProbe(
-#     name = 'sqrt(x * x) == x',
-#     predicate = lambda State, response: True,
-#     action = generallyRootOfXSquaredIsX,
-# )
+Check(
+    name = "responds_in_a_timely_manner",
+    hook = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
+    tags = ["timing"],
+)
 
 ## Express stateful properties
 
-# State is optional but has to be a Dict.
-State = {
-    "posts": {},
-}
+def stateful_model_of_posts(ctx):
+    """Properties on posts. State collects posts returned by API."""
 
-def actionAfterPosts(State, response):
-    """Stores posts in State"""
+    # NOTE: response has already been decoded & validated for us.
 
-    # When entering actions, response has already been validated and decoded.
-    for post in response["body"]:
-        # Note: keys in State must be strings
-        post_id = str(int(post["id"]))
+    url = ctx.request.url
 
-        # Set some state
-        State["posts"][post_id] = post
-    print("State has {} items".format(len(State["posts"])))
-    return State
+    if all([
+        ctx.request.method == "GET",
+        "/posts/" in url and url[-1] in "1234567890",  # /posts/{post_id}
+        ctx.response.status_code in range(200, 299),
+    ]):
+        post_id = int(url.split("/")[-1])
+        post = ctx.response.body
 
-def ensureIdMatchesURL(State, response):
-    # TODO: easy access to generated parameters. For instance:
-    # post_id = response["request"]["parameters"]["path"]["{id}"] (note decoded int)
-    post_id = int(response["request"]["url"].split("/")[-1])
-    post = response["body"]
+        # Ensure post ID in response matches ID in URL (an API contract):
+        assert.that(post["id"]).is_equal_to(post_id)
 
-    # Implied: post_id in State['posts'] and post == State['posts'][post_id]
-    # Ensure an API contract:
-    AssertThat(post["id"]).isEqualTo(post_id)
+        # Verify that retrieved post matches local model
+        if post_id in ctx.state:
+            assert.that(post).is_equal_to(ctx.state[post_id])
 
-def actionAfterGetExistingPost(State, response):
-    post_id = int(response["request"]["url"].split("/")[-1])
-    post = response["body"]
+        return
 
-    # Verify that retrieved post matches local model
-    AssertThat(State["posts"]).contains(post_id)
-    AssertThat(post).isEqualTo(State["posts"][post_id])
+    if all([
+        ctx.request.method == "GET",
+        url.endswith("/posts"),
+        ctx.response.status_code == 200,
+    ]):
+        # Store posts in state
+        for post in ctx.response.body:
+            post_id = int(post["id"])
+            ctx.state[post_id] = post
+        print("State contains {} posts".format(len(ctx.state)))
 
-TriggerActionAfterProbe(
-    name = "Collect things",
-    probe = ("monkey", "http", "response"),
-    predicate = lambda State, response: all([
-        response["request"]["method"] == "GET",
-        response["request"]["url"].endswith("/posts"),
-        response["status_code"] == 200,
-    ]),
-    # predicate = None,
-    # match = {
-    #     'request': {'method': 'GET', 'path': '/posts'},
-    #     'status_code': 200,
-    # },
-    action = actionAfterPosts,
+Check(
+    name = "some_props",
+    hook = stateful_model_of_posts,
 )
 
-for action in [ensureIdMatchesURL, actionAfterGetExistingPost]:
-    TriggerActionAfterProbe(
-        # name = 'Ensure things match collected',
-        probe = ("http", "response"),
-        predicate = lambda State, response: all([
-            response["request"]["method"] == "GET",
-            response["request"]["url"].find("/posts/") != -1,
-            response["status_code"] in range(200, 299),
-            "id" in response["body"] and response["body"]["id"] in State["posts"],
-        ]),
-        # match = None,
-        action = action,
-    )
+## Encapsulation: ensure each Check owns its own ctx.state.
 
-TriggerActionAfterProbe(
-    probe = ("http", "response"),
-    predicate = lambda State, response: all([
-        response["request"]["method"] == "GET",
-        response["request"]["url"].find("/posts/") != -1,
-        response["request"]["url"].endswith("/comments"),
-        response["status_code"] in range(200, 299),
-    ]),
-    action = lambda State, response: None,
+def encapsulation_1_of_2(ctx):
+    """Show that state is not shared with encapsulation_2_of_2"""
+    assert.that(ctx.state).is_empty()
+
+Check(
+    name = "encapsulation_1_of_2",
+    hook = encapsulation_1_of_2,
+    tags = ["encapsulation"],
 )
 
-## MISC
-
-def sharing_1_2(State, response):
-    """Sharing 1-2: ensure argument mutation doesn't corrupt model state
-    """
-    if "sharing" in State and State["sharing"] == 42:
-        fail("State['sharing'] must not already be set")
-    State["sharing"] = 42
-    if not ("sharing" in State and State["sharing"] == 42):
-        fail("State argument is not mutable")
-
-TriggerActionAfterProbe(
-    name = "sharing 1/2",
-    predicate = lambda State, response: True,
-    action = sharing_1_2,
+Check(
+    name = "encapsulation_2_of_2",
+    hook = lambda ctx: None,
+    state = {"data": 42},
+    tags = ["encapsulation"],
 )
 
-def sharing_2_2(State, response):
-    if "sharing" in State and State["sharing"] == 42:
-        fail("State mutation must only happen through `return`")
+## A test that always fails
 
-TriggerActionAfterProbe(
-    name = "sharing 2/2",
-    predicate = lambda State, response: True,
-    action = sharing_2_2,
+Check(
+    name = "always_fails",
+    hook = lambda ctx: assert.that(None).is_not_none(),
+    tags = ["failing"],
 )
-
-### A test that always fails
-
-# TriggerActionAfterProbe(
-#     name = 'always failling',
-#     predicate = lambda State, response: True,
-#     action = lambda State, response: fail("Always fail!"),
-# )

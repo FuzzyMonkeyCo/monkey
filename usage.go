@@ -18,13 +18,15 @@ type params struct {
 	FmtW                               bool          `mapstructure:"-w"`
 	ShowSpec                           bool          `mapstructure:"--show-spec"`
 	Seed                               []byte        `mapstructure:"--seed"`
-	Tags                               []string      `mapstructure:"--tag"`
+	EnvVars                            []string      `mapstructure:"VAR"`
+	Labels                             []string      `mapstructure:"--label"`
 	N                                  uint32        `mapstructure:"--intensity"`
 	Verbosity                          uint8         `mapstructure:"-v"`
 	LogOffset                          uint64        `mapstructure:"--previous"`
-	ValidateAgainst                    string        `mapstructure:"--validate-against"`
 	Progress                           string        `mapstructure:"--progress"`
-	EnvVars                            []string      `mapstructure:"VAR"`
+	ValidateAgainst                    string        `mapstructure:"--validate-against"`
+	Tags                               *string       `mapstructure:"--tags"`
+	TagsExcluded                       *string       `mapstructure:"--exclude-tags"`
 	OverallBudgetTime                  time.Duration `mapstructure:"--time-budget-overall"`
 }
 
@@ -36,9 +38,11 @@ func usage() (args *params, ret int) {
 	usage := binTitle + `
 
 Usage:
-  ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--tag=KV]...
+  ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
+                     [--tags=TAGS | --exclude-tags=TAGS]
                      [--no-shrinking]
-                     [--time-budget-overall=DURATION] [--progress=PROGRESS]
+                     [--progress=PROGRESS]
+                     [--time-budget-overall=DURATION]
                      [--only=REGEX]... [--except=REGEX]...
                      [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
                      [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
@@ -60,7 +64,8 @@ Options:
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
-  --tag=KV                        Labels that can help classification (format: key=value)
+  --label=KV                      Labels that can help classification (format: key=value)
+  --tags=TAGS                     Only run Check.s whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls

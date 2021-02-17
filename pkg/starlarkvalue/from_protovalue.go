@@ -7,6 +7,49 @@ import (
 	"go.starlark.net/starlark"
 )
 
+// ProtoCompatible returns a non-nil error when the Starlark value
+// has no trivial Protocol Buffers Well-Known-Types representation.
+func ProtoCompatible(value starlark.Value) (err error) {
+	switch v := value.(type) {
+	case starlark.NoneType:
+		return
+	case starlark.Bool:
+		return
+	case starlark.Int, starlark.Float:
+		return
+	case starlark.String:
+		return
+	case *starlark.List:
+		for i := 0; i < v.Len(); i++ {
+			if err = ProtoCompatible(v.Index(i)); err != nil {
+				return
+			}
+		}
+		return
+	case starlark.Tuple:
+		for i := 0; i < v.Len(); i++ {
+			if err = ProtoCompatible(v.Index(i)); err != nil {
+				return
+			}
+		}
+		return
+	case *starlark.Dict:
+		for _, kv := range v.Items() {
+			if _, ok := kv.Index(0).(starlark.String); !ok {
+				err = fmt.Errorf("want string key, got: (%s) %s", value.Type(), value.String())
+				return
+			}
+			if err = ProtoCompatible(kv.Index(1)); err != nil {
+				return
+			}
+		}
+		return
+	default:
+		err = fmt.Errorf("incompatible value %T: %s", value, value.String())
+		return
+	}
+}
+
 // FromProtoValue converts a Google Well-Known-Type Value to a Starlark value.
 // Panics on unexpected proto value.
 func FromProtoValue(x *types.Value) starlark.Value {

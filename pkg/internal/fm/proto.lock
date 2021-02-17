@@ -31,24 +31,20 @@
                 "name": "NO_STATUS"
               },
               {
-                "name": "start",
+                "name": "success",
                 "integer": 1
               },
               {
-                "name": "success",
+                "name": "skipped",
                 "integer": 2
               },
               {
-                "name": "skipped",
+                "name": "failure",
                 "integer": 3
               },
               {
-                "name": "failure",
-                "integer": 4
-              },
-              {
                 "name": "done",
-                "integer": 5
+                "integer": 4
               }
             ]
           },
@@ -248,26 +244,21 @@
               },
               {
                 "id": 2,
-                "name": "metrics",
-                "type": "Metrics"
-              },
-              {
-                "id": 3,
                 "name": "reset_progress",
                 "type": "ResetProgress"
               },
               {
-                "id": 4,
+                "id": 3,
                 "name": "call_request_raw",
                 "type": "CallRequestRaw"
               },
               {
-                "id": 5,
+                "id": 4,
                 "name": "call_response_raw",
                 "type": "CallResponseRaw"
               },
               {
-                "id": 6,
+                "id": 5,
                 "name": "call_verif_progress",
                 "type": "CallVerifProgress"
               }
@@ -320,7 +311,7 @@
                     "key_type": "string",
                     "field": {
                       "id": 7,
-                      "name": "tags",
+                      "name": "labels",
                       "type": "string"
                     }
                   },
@@ -329,6 +320,14 @@
                     "field": {
                       "id": 8,
                       "name": "env_read",
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 10,
+                      "name": "files",
                       "type": "string"
                     }
                   }
@@ -404,9 +403,6 @@
                     ]
                   }
                 ]
-              },
-              {
-                "name": "Metrics"
               },
               {
                 "name": "ResetProgress",
@@ -617,6 +613,16 @@
                     "name": "reason",
                     "type": "string",
                     "is_repeated": true
+                  },
+                  {
+                    "id": 5,
+                    "name": "elapsed_ns",
+                    "type": "int64"
+                  },
+                  {
+                    "id": 6,
+                    "name": "execution_steps",
+                    "type": "uint64"
                   }
                 ]
               }

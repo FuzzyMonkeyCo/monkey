@@ -4,20 +4,20 @@ import (
 	"go.starlark.net/starlark"
 )
 
+// T wraps an assert target
 type T struct {
-	// Target in AssertThat(target)
+	// Target in assert.that(target)
 	actual starlark.Value
 
-	// Readable optional prefix with .Named(name)
+	// Readable optional prefix with .named(name)
 	name string
 
 	// True when actual was a String and was made into an iterable.
 	// Helps when pretty printing.
 	actualIsIterableFromString bool
 
-	// FIXME: closedness
-	// Whether an AssertThat(x)... call chain was properly terminated
-	closed bool
+	// Whether an assert.that(x)... call chain was properly terminated
+	closed bool // FIXME: closedness
 
 	// True when asserting order
 	askedInOrder bool

@@ -1,0 +1,40 @@
+name: testaction
+
+on:
+  pull_request:
+  push:
+
+jobs:
+
+  on_ubuntu:
+    name: ubuntu
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: lint
+      uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: lint
+        github_token: ${{ secrets.github_token }}
+
+  on_macos:
+    name: macos
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: lint
+      uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: lint
+        github_token: ${{ secrets.github_token }}
+
+  on_windows:
+    name: windows
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: lint
+      uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: lint
+        github_token: ${{ secrets.github_token }}
