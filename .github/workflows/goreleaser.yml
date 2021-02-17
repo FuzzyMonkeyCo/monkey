@@ -19,7 +19,7 @@ jobs:
 
     - name: Lint
       run: |
-        sudo apt-get install -y silversearcher-ag  # For goolint.sh
+        sudo apt-get install -y silversearcher-ag  # For golint.sh
         ag --version
         [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
         make lint

@@ -2,7 +2,7 @@
 
 print("$THIS_ENVIRONMENT_VARIABLE is", Env("THIS_ENVIRONMENT_VARIABLE", "not set"))
 
-host, spec = "https://jsonplaceholder.typicode.com/", None
+host, spec = "https://jsonplaceholder.typicode.com", None
 mode = Env("TESTING_WHAT", "")
 if mode == "":
     spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
@@ -15,8 +15,16 @@ print("Now testing {}.".format(spec))
 OpenAPIv3(
     name = "my_model",
     file = spec,
-    host = host,
+    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "80")),
     # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
+
+    # Note: exec commands are executed in shells sharing the same environment variables,
+    # with `set -e` and `set -o pipefail` flags on.
+
+    # The following get executed once per test
+    #   so have these commands complete as fast as possible.
+    # Also, make sure that each test starts from a clean slate
+    #   otherwise results will be unreliable.
     ExecReset = """
     echo Resetting state...
     """,

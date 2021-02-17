@@ -1,6 +1,6 @@
 #!/bin/sh -u
 
-# goolint: farther than golint
+# golint.sh: farther than golint
 # go fmt first
 
 [ -f go.mod ] || exit 0
