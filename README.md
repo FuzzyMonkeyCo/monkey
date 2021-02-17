@@ -75,20 +75,22 @@ Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/r
 
 `monkey` uses [Starlark](https://github.com/bazelbuild/starlark) as its configuration language: a simple Python-like deterministic language.
 
-#### Example `fuzzymonkey.star` file
+#### Minimal example `fuzzymonkey.star` file
 
 
 ```python
 OpenAPIv3(
-  name = "my model on localhost",
-  # Note: references to schemas in `file` are resolved relative to file's location.
-  file = "openapi3.json",
-  host = "http://localhost:6773",
-  header_authorization = "Bearer " + "MY_DEVTIME_TOKEN",
+  name = "dev_spec",
+  file = "openapi/openapi.yaml",
+  host = "http://localhost:3000",
 
-  ExecReset = "curl --fail -X DELETE http://localhost:6773/api/1/items",
+  ExecReset = "curl -fsSL -X DELETE http://localhost:3000/api/1/items",
 )
 ```
+
+#### Demos
+
+* [demo_erlang_cowboy_simpleREST](https://github.com/FuzzyMonkeyCo/demo_erlang_cowboy_simpleREST)
 
 #### A more involved [`fuzzymonkey.star`](./fuzzymonkey.star)
 
@@ -109,6 +111,7 @@ print("Now testing {}.".format(spec))
 
 OpenAPIv3(
     name = "my_model",
+    # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
     host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
     # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),

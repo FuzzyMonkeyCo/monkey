@@ -14,6 +14,7 @@ print("Now testing {}.".format(spec))
 
 OpenAPIv3(
     name = "my_model",
+    # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
     host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
     # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
