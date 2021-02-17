@@ -16,9 +16,6 @@ type T struct {
 	// Helps when pretty printing.
 	actualIsIterableFromString bool
 
-	// Whether an assert.that(x)... call chain was properly terminated
-	closed bool // FIXME: closedness
-
 	// True when asserting order
 	askedInOrder bool
 
