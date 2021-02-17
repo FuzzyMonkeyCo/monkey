@@ -10,15 +10,6 @@ import (
 	"go.starlark.net/starlark"
 )
 
-// func TestCheckNameIsPresent(t *testing.T) {
-// 	rt, err := newFakeMonkey(prelude + `
-// Check(
-// 	hook = lambda ctx: None,
-// )`)
-// 	require.EqualError(t, err, `Check: missing argument for name`)
-// 	require.Nil(t, rt)
-// }
-
 func TestEnvReadsVar(t *testing.T) {
 	err := os.Setenv("SOME_VAR", "42")
 	require.NoError(t, err)
@@ -47,6 +38,19 @@ func TestEnvReadsVarButIncorrectDefault(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `value = Env("SOME_VAR", None)`)
 	require.EqualError(t, err, `expected string, got NoneType: None`)
 	require.Nil(t, rt)
+}
+
+func TestEnvReadsVarGoodDefault(t *testing.T) {
+	err := os.Setenv("SOME_VAR", "42")
+	require.NoError(t, err)
+	defer func() {
+		err := os.Unsetenv("SOME_VAR")
+		require.NoError(t, err)
+	}()
+
+	rt, err := newFakeMonkey(simplestPrelude + `value = Env("SOME_VAR", "")`)
+	require.NoError(t, err)
+	require.Equal(t, rt.globals["value"], starlark.String("42"))
 }
 
 func TestEnvUnsetVarNoDefault(t *testing.T) {
