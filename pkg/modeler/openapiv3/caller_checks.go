@@ -54,7 +54,7 @@ func (m *oa3) checkHTTPCode() (s, skipped string, f []string) {
 
 func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
 	if len(m.tcap.repProto.Body) == 0 {
-		s = "response body is empty"
+		skipped = "response body is empty"
 		return
 	}
 
