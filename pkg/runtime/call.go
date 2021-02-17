@@ -222,13 +222,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 			start := time.Now()
 			errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1)
 			v.ElapsedNs = time.Since(start).Nanoseconds()
-			switch {
-			case errL == nil && v.Status == fm.Clt_CallVerifProgress_success:
-				rt.progress.CheckPassed(v.Name, chk.hook.String())
-			case errL == nil && v.Status == fm.Clt_CallVerifProgress_skipped:
-				rt.progress.CheckSkipped(v.Name, "")
-			case errL != nil:
-				v.Status = fm.Clt_CallVerifProgress_failure
+			if errL != nil {
 				var reason string
 				if e, ok := errL.(*starlark.EvalError); ok {
 					reason = e.Backtrace()
@@ -236,10 +230,14 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 					reason = errL.Error()
 				}
 				v.Reason = strings.Split(reason, "\n")
+			}
+			switch v.Status {
+			case fm.Clt_CallVerifProgress_success:
+				rt.progress.CheckPassed(v.Name, chk.hook.String())
+			case fm.Clt_CallVerifProgress_skipped:
+				rt.progress.CheckSkipped(v.Name, "")
+			case fm.Clt_CallVerifProgress_failure:
 				rt.progress.CheckFailed(v.Name, v.Reason)
-			default: // unreachable
-				errL = fmt.Errorf("unexpected v.Status %+v", v)
-				log.Println("[ERR]", errL)
 			}
 
 			vs <- v
@@ -282,11 +280,14 @@ func (rt *Runtime) runUserCheck(
 	var hookRet starlark.Value
 	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
 		log.Println("[ERR]", err)
-		return // Check failed or an error happened
+		// Check failed or an error happened
+		v.Status = fm.Clt_CallVerifProgress_failure
+		return
 	}
 	if hookRet != starlark.None {
 		err = fmt.Errorf("hooks should return None, got: %s", hookRet.String())
 		log.Println("[ERR]", err)
+		v.Status = fm.Clt_CallVerifProgress_failure
 		return
 	}
 
@@ -296,6 +297,7 @@ func (rt *Runtime) runUserCheck(
 		// Ensure ctx.state is still proto-representatble
 		if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
 			log.Println("[ERR]", err)
+			v.Status = fm.Clt_CallVerifProgress_failure
 			return
 		}
 	}
