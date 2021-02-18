@@ -37,7 +37,7 @@ func (rt *Runtime) JustExecREPL() error {
 	rt.thread.Name = "REPL"
 	rt.thread.Load = loadDisabled
 	repl.REPL(rt.thread, rt.globals)
-	return nil
+	return starlarktruth.Close(rt.thread)
 }
 
 // JustExecStart only executes SUT 'start'

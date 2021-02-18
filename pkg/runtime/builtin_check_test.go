@@ -249,3 +249,26 @@ Check(
 		require.Equal(t, uint64(12), v.ExecutionSteps)
 	}
 }
+
+func TestCheckIncorrectAssert(t *testing.T) {
+	name := "incorrect_assert"
+	rt, err := newFakeMonkey(simplestPrelude + `
+Check(
+	name = "` + name + `",
+	hook = lambda ctx: assert.that(ctx.request.method),
+)`)
+	require.NoError(t, err)
+	require.Len(t, rt.checks, 1)
+
+	for range make([]struct{}, iters) {
+		v := rt.runFakeUserCheck(t, name)
+		require.Equal(t, name, v.Name)
+		require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
+		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, []string{
+			"fuzzymonkey.star:10:32: assert.that(...) is missing an assertion",
+		}, v.Reason)
+		require.NotEmpty(t, v.ElapsedNs)
+		require.Equal(t, uint64(7), v.ExecutionSteps)
+	}
+}

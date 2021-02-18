@@ -295,6 +295,12 @@ func (rt *Runtime) runUserCheck(
 		v.Status = fm.Clt_CallVerifProgress_failure
 		return
 	}
+	if err = starlarktruth.Close(th); err != nil {
+		log.Println("[ERR]", err)
+		// Incomplete assert.that() call
+		v.Status = fm.Clt_CallVerifProgress_failure
+		return
+	}
 	if hookRet != starlark.None {
 		err = fmt.Errorf("hooks should return None, got: %s", hookRet.String())
 		log.Println("[ERR]", err)
