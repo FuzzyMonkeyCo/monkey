@@ -20,6 +20,7 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 
 	predeclared := starlark.StringDict{}
 	NewModule(predeclared)
+
 	thread := &starlark.Thread{
 		Name: t.Name(),
 		Print: func(_ *starlark.Thread, msg string) {
@@ -29,12 +30,21 @@ func helper(t *testing.T, program string) (starlark.StringDict, error) {
 			return nil, errors.New("load() disabled")
 		},
 	}
+
 	script := strings.Join([]string{
 		`dfltCmp = ` + cmpSrc,
 		`someCmp = lambda a, b: dfltCmp(b, a)`,
 		program,
 	}, "\n")
-	return starlark.ExecFile(thread, t.Name()+".star", script, predeclared)
+
+	d, err := starlark.ExecFile(thread, t.Name()+".star", script, predeclared)
+	if err != nil {
+		return nil, err
+	}
+	if err := Close(thread); err != nil {
+		return nil, err
+	}
+	return d, nil
 }
 
 func testEach(t *testing.T, m map[string]error) {
@@ -67,6 +77,15 @@ func fail(value, expected string, suffixes ...string) error {
 	}
 	msg := "Not true that <" + value + "> " + expected + "." + suffix
 	return newTruthAssertion(msg)
+}
+
+func TestClosedness(t *testing.T) {
+	testEach(t, map[string]error{
+		`assert.that(True)`:                       IntegrityError("TestClosedness/assert.that(True).star:3:12"),
+		`assert.that(True).is_true()`:             nil,
+		`assert.that(True).named("eh")`:           IntegrityError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
+		`assert.that(True).named("eh").is_true()`: nil,
+	})
 }
 
 func TestTrue(t *testing.T) {

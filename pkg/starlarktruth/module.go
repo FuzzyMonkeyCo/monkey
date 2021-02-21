@@ -33,11 +33,16 @@ func (m *module) Attr(name string) (starlark.Value, error) {
 
 // Implements the `.that(target)` builtin
 func that(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	//TODO? b.Receiver() to check closedness
 	var target starlark.Value
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
 		return nil, err
 	}
+
+	if err := Close(thread); err != nil {
+		return nil, err
+	}
+	thread.SetLocal(Default, thread.CallFrame(1))
+
 	return newT(target), nil
 }
 

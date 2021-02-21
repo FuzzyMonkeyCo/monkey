@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"go.starlark.net/starlark"
+	"go.starlark.net/syntax"
 )
 
 type (
@@ -117,19 +118,28 @@ func findAttr(name string) (attr, int) {
 	return nil, 0
 }
 
+var εCallFrame = starlark.CallFrame{Pos: syntax.Position{Line: -1, Col: -1}}
+
+// Close possibly returns an IntegrityError.
+func Close(th *starlark.Thread) (err error) {
+	if c, ok := th.Local(Default).(starlark.CallFrame); ok && c != εCallFrame {
+		err = IntegrityError(c.Pos.String())
+	}
+	return
+}
+
+// Asserted returns whether an assert.that(x)... call chain was properly terminated
+func Asserted(th *starlark.Thread) bool {
+	_, ok := th.Local(Default).(starlark.CallFrame)
+	return ok
+}
+
 func builtinAttr(t *T, name string) (starlark.Value, error) {
 	method, nArgs := findAttr(name)
 	if method == nil {
 		return nil, nil // no such method
 	}
 	impl := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-		closedness := 0
-		if c, ok := thread.Local(Default).(int); ok {
-			// TODO thread.Print(thread, fmt.Sprintf(">>> closedness = %d", c))
-			closedness = c
-		}
-		defer thread.SetLocal(Default, 1+closedness)
-
 		if err := t.registerValues(thread); err != nil {
 			return nil, err
 		}
@@ -160,6 +170,10 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		default:
 			err := fmt.Errorf("unexpected #args for %s.that(%s).%q(): %d", Default, t.actual.String(), name, nArgs)
 			return nil, err
+		}
+
+		if b.Name() != "named" {
+			defer thread.SetLocal(Default, εCallFrame)
 		}
 
 		ret, err := method(t, argz...)
