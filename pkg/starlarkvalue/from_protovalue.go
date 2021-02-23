@@ -2,6 +2,7 @@ package starlarkvalue
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
@@ -15,7 +16,12 @@ func ProtoCompatible(value starlark.Value) (err error) {
 		return
 	case starlark.Bool:
 		return
-	case starlark.Int, starlark.Float:
+	case starlark.Int:
+		return
+	case starlark.Float:
+		if !isFinite(float64(v)) {
+			return fmt.Errorf("non-finite float: %v", v)
+		}
 		return
 	case starlark.String:
 		return
@@ -91,4 +97,10 @@ func FromProtoValue(x *types.Value) starlark.Value {
 	default:
 		panic(fmt.Errorf("unhandled: %T %+v", x.GetKind(), x)) // unreachable: only proto values.
 	}
+}
+
+// isFinite reports whether f represents a finite rational value.
+// It is equivalent to !math.IsNan(f) && !math.IsInf(f, 0).
+func isFinite(f float64) bool {
+	return math.Abs(f) <= math.MaxFloat64
 }
