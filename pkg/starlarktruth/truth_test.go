@@ -53,6 +53,7 @@ func testEach(t *testing.T, m map[string]error) {
 			globals, err := helper(t, code)
 			delete(globals, "dfltCmp")
 			delete(globals, "someCmp")
+			delete(globals, "fortytwo")
 			require.Empty(t, globals)
 			if expectedErr == nil {
 				require.NoError(t, err)
@@ -85,6 +86,17 @@ func TestClosedness(t *testing.T) {
 		`assert.that(True).is_true()`:             nil,
 		`assert.that(True).named("eh")`:           IntegrityError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
 		`assert.that(True).named("eh").is_true()`: nil,
+	})
+}
+
+func TestAsValue(t *testing.T) {
+	testEach(t, map[string]error{
+		`
+fortytwo = assert.that(42)
+fortytwo.is_equal_to(42.0)
+fortytwo.is_not_callable()
+fortytwo.is_at_least(42)
+`: nil,
 	})
 }
 
