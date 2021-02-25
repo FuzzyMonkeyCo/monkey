@@ -27,12 +27,12 @@ func (m *module) Attr(name string) (starlark.Value, error) {
 	if name != "that" {
 		return nil, nil // no such method
 	}
-	b := starlark.NewBuiltin(Default, that)
+	b := starlark.NewBuiltin(Default, That)
 	return b.BindReceiver(m), nil
 }
 
-// Implements the `.that(target)` builtin
-func that(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+// That implements the `.that(target)` builtin
+func That(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var target starlark.Value
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
 		return nil, err
