@@ -1154,3 +1154,29 @@ func doesNotContainMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
 	}
 	return nil, errUnhandled
 }
+
+func isOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if expected, ok := args[0].(starlark.String); ok {
+		actualType := t.actual.Type()
+		if expected.GoString() == actualType {
+			return starlark.None, nil
+		}
+		msg := fmt.Sprintf("is of type <%s>", expected)
+		suffix := fmt.Sprintf(" However, it is of type <%q>", actualType)
+		return nil, t.failWithProposition(msg, suffix)
+	}
+	return nil, errUnhandled
+}
+
+func isNotOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if expected, ok := args[0].(starlark.String); ok {
+		actualType := t.actual.Type()
+		if expected.GoString() != actualType {
+			return starlark.None, nil
+		}
+		msg := fmt.Sprintf("is not of type <%s>", expected)
+		suffix := fmt.Sprintf(" However, it is of type <%q>", actualType)
+		return nil, t.failWithProposition(msg, suffix)
+	}
+	return nil, errUnhandled
+}

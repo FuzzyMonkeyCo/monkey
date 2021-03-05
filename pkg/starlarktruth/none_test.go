@@ -42,26 +42,24 @@ func TestNoneSuccess(t *testing.T) {
 		`that(None).is_any_of(5, None, "six")`: nil,
 		`that(None).is_none_of()`:              nil,
 		`that(None).is_none_of(5, "six")`:      nil,
-		// TODO: `that(None).is_instance_of(type(None))`:nil,
-		// TODO: `that(None).is_not_instance_of(int)`:nil,
-		`that(None).is_not_callable()`: nil,
+		`that(None).is_of_type(type(None))`:    nil,
+		`that(None).is_not_of_type("int")`:     nil,
+		`that(None).is_not_callable()`:         nil,
 	})
 }
 
 func TestNoneFailure(t *testing.T) {
 	testEach(t, map[string]error{
-		`that(None).is_not_none()`:         fail(`None`, `is not None`),
-		`that(None).is_truthy()`:           fail(`None`, `is truthy`),
-		`that(None).is_equal_to(0)`:        fail(`None`, `is equal to <0>`),
-		`that(None).is_not_equal_to(None)`: fail(`None`, `is not equal to <None>`),
-		`that(None).is_in((5, "six"))`:     fail(`None`, `is equal to any of <(5, "six")>`),
-		`that(None).is_not_in((5, None))`:  fail(`None`, `is not in (5, None). It was found at index 1`),
-		`that(None).is_any_of(5, "six")`:   fail(`None`, `is equal to any of <(5, "six")>`),
-		`that(None).is_none_of(5, None)`:   fail(`None`, `is not in (5, None). It was found at index 1`),
-		// TODO: with self.Failure("is an instance of <<{0} 'int'>>".format(TYPE_WORD),'NoneType'):
-		// TODO: 	s.IsInstanceOf(int)
-		// TODO: with self.Failure('expected not to be an instance of', 'NoneType'):
-		// TODO: 	s.IsNotInstanceOf(type(None))
+		`that(None).is_not_none()`:                   fail(`None`, `is not None`),
+		`that(None).is_truthy()`:                     fail(`None`, `is truthy`),
+		`that(None).is_equal_to(0)`:                  fail(`None`, `is equal to <0>`),
+		`that(None).is_not_equal_to(None)`:           fail(`None`, `is not equal to <None>`),
+		`that(None).is_in((5, "six"))`:               fail(`None`, `is equal to any of <(5, "six")>`),
+		`that(None).is_not_in((5, None))`:            fail(`None`, `is not in (5, None). It was found at index 1`),
+		`that(None).is_any_of(5, "six")`:             fail(`None`, `is equal to any of <(5, "six")>`),
+		`that(None).is_none_of(5, None)`:             fail(`None`, `is not in (5, None). It was found at index 1`),
+		`that(None).is_of_type("int")`:               fail(`None`, `is of type <"int">`, ` However, it is of type <"NoneType">`),
+		`that(None).is_not_of_type(type(None))`:      fail(`None`, `is not of type <"NoneType">`, ` However, it is of type <"NoneType">`),
 		`that(None).has_attribute("test_attribute")`: fail(`None`, `has attribute <"test_attribute">`),
 		`that(None).is_callable()`:                   fail(`None`, `is callable`),
 
@@ -98,10 +96,6 @@ func TestInvalidOperationOnNone(t *testing.T) {
 		`that(None).does_not_contain_item("key", "value")`:       fmt.Errorf(`Invalid assertion .does_not_contain_item("key", "value") on value of type NoneType`),
 		`that(None).contains_exactly("key", "value")`:            fmt.Errorf(`Invalid assertion .contains_exactly("key", "value") on value of type NoneType`),
 		`that(None).contains_exactly_items_in({"key": "value"})`: fmt.Errorf(`Invalid assertion .contains_exactly_items_in({"key": "value"}) on value of type NoneType`),
-
-		// Numeric subject
-		// TODO? 'IsWithin': (0.1,),
-		// TODO? 'IsNotWithin': (0.1,),
 
 		// String subject
 		`that(None).has_length(0)`:              fmt.Errorf(`Invalid assertion .has_length(0) on value of type NoneType`),

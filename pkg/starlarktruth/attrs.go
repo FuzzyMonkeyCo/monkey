@@ -60,6 +60,8 @@ var (
 		"is_less_than":                          isLessThan,
 		"is_not_equal_to":                       isNotEqualTo,
 		"is_not_in":                             isNotIn,
+		"is_not_of_type":                        isNotOfType,
+		"is_of_type":                            isOfType,
 		"is_ordered_according_to":               isOrderedAccordingTo,
 		"is_strictly_ordered_according_to":      isStrictlyOrderedAccordingTo,
 		"matches":                               matches,
