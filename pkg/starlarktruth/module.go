@@ -51,10 +51,10 @@ var _ starlark.HasAttrs = (*T)(nil)
 
 func newT(target starlark.Value) *T { return &T{actual: target} }
 
-func (t *T) String() string                           { return fmt.Sprintf("%s.that(_)", Default) }
+func (t *T) String() string                           { return fmt.Sprintf("%s.that(%s)", Default, t.actual.String()) }
 func (t *T) Type() string                             { return Default }
 func (t *T) Freeze()                                  { t.actual.Freeze() }
-func (t *T) Truth() starlark.Bool                     { return t.actual.Truth() }
-func (t *T) Hash() (uint32, error)                    { return t.actual.Hash() }
+func (t *T) Truth() starlark.Bool                     { return true }
+func (t *T) Hash() (uint32, error)                    { return 0, fmt.Errorf("unhashable: %s", t.Type()) }
 func (t *T) Attr(name string) (starlark.Value, error) { return builtinAttr(t, name) }
 func (t *T) AttrNames() []string                      { return attrNames }
