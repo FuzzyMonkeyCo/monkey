@@ -74,8 +74,10 @@ func testEach(t *testing.T, m map[string]error, asSlice ...asWhat) {
 			} else {
 				require.Error(t, err)
 				require.EqualError(t, err, expectedErr.Error())
-				require.True(t, errors.As(err, &expectedErr))
-				require.IsType(t, expectedErr, err)
+				if _, ok := err.(UnhandledError); !ok {
+					require.True(t, errors.As(err, &expectedErr))
+					require.IsType(t, expectedErr, err)
+				}
 			}
 		})
 	}

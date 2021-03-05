@@ -2,6 +2,7 @@ package starlarktruth
 
 import (
 	"fmt"
+	"strings"
 
 	"go.starlark.net/starlark"
 )
@@ -35,6 +36,7 @@ var _ error = (unhandledError)(0)
 
 func (e unhandledError) Error() string { return "unhandled" }
 
+// UnhandledError appears when an operation on an incompatible type is attempted.
 type UnhandledError struct {
 	name   string
 	actual starlark.Value
@@ -50,8 +52,21 @@ func (t *T) unhandled(name string, args ...starlark.Value) *UnhandledError {
 		args:   args,
 	}
 }
+
 func (e UnhandledError) Error() string {
-	return fmt.Sprintf("unhandled .%s with %s for %s", e.name, e.actual.String(), e.args.String())
+	var b strings.Builder
+	b.WriteString("Invalid assertion .")
+	b.WriteString(e.name)
+	b.WriteByte('(')
+	for i, arg := range e.args {
+		if i != 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(arg.String())
+	}
+	b.WriteString(") on value of type ")
+	b.WriteString(e.actual.Type())
+	return b.String()
 }
 
 var _ error = (*IntegrityError)(nil)
