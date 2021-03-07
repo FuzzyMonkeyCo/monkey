@@ -193,11 +193,15 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		case "is_not_within":
 		default:
 			defer thread.SetLocal(Default, εCallFrame)
+			deferred = true
 		}
 
 		ret, err := method(t, argz...)
 		switch err {
 		case nil:
+			if deferred && ret != starlark.None {
+				panic("unreachable")
+			}
 			return ret, nil
 		case errUnhandled:
 			return nil, t.unhandled(bName, argz...)
