@@ -32,61 +32,63 @@ func newDuplicateCounter() *duplicateCounter {
 }
 
 // HasDupes indicates whether there are values that appears > 1 times.
-func (c *duplicateCounter) HasDupes() bool { return c.d != 0 }
+func (dc *duplicateCounter) HasDupes() bool { return dc.d != 0 }
 
-func (c *duplicateCounter) Empty() bool { return len(c.m) == 0 }
+func (dc *duplicateCounter) Empty() bool { return len(dc.m) == 0 }
 
-func (c *duplicateCounter) Contains(v starlark.Value) bool {
-	return c.contains(v.String())
+func (dc *duplicateCounter) Len() int { return len(dc.m) }
+
+func (dc *duplicateCounter) Contains(v starlark.Value) bool {
+	return dc.contains(v.String())
 }
 
-func (c *duplicateCounter) contains(v string) bool {
-	_, ok := c.m[v]
+func (dc *duplicateCounter) contains(v string) bool {
+	_, ok := dc.m[v]
 	return ok
 }
 
 // Increment increments a count by 1. Inserts the item if not present.
-func (c *duplicateCounter) Increment(v starlark.Value) {
-	c.increment(v.String())
+func (dc *duplicateCounter) Increment(v starlark.Value) {
+	dc.increment(v.String())
 }
 
-func (c *duplicateCounter) increment(v string) {
-	if _, ok := c.m[v]; !ok {
-		c.m[v] = 0
-		c.s = append(c.s, v)
+func (dc *duplicateCounter) increment(v string) {
+	if _, ok := dc.m[v]; !ok {
+		dc.m[v] = 0
+		dc.s = append(dc.s, v)
 	}
-	c.m[v]++
-	if c.m[v] == 2 {
-		c.d++
+	dc.m[v]++
+	if dc.m[v] == 2 {
+		dc.d++
 	}
 }
 
 // Decrement decrements a count by 1. Expunges the item if the count is 0.
 // If the item is not present, has no effect.
-func (c *duplicateCounter) Decrement(v starlark.Value) {
-	c.decrement(v.String())
+func (dc *duplicateCounter) Decrement(v starlark.Value) {
+	dc.decrement(v.String())
 }
 
-func (c *duplicateCounter) decrement(v string) {
-	if count, ok := c.m[v]; ok {
+func (dc *duplicateCounter) decrement(v string) {
+	if count, ok := dc.m[v]; ok {
 		if count != 1 {
-			c.m[v]--
-			if c.m[v] == 1 {
-				c.d--
+			dc.m[v]--
+			if dc.m[v] == 1 {
+				dc.d--
 			}
 			return
 		}
-		delete(c.m, v)
-		if sz := len(c.s); sz != 1 {
-			s := make([]string, 0, len(c.s)-1)
-			for _, vv := range c.s {
+		delete(dc.m, v)
+		if sz := len(dc.s); sz != 1 {
+			s := make([]string, 0, len(dc.s)-1)
+			for _, vv := range dc.s {
 				if vv != v {
 					s = append(s, vv)
 				}
 			}
-			c.s = s
+			dc.s = s
 		} else {
-			c.s = nil
+			dc.s = nil
 		}
 	}
 }
@@ -96,35 +98,31 @@ func (c *duplicateCounter) decrement(v string) {
 // Items occurring more than once are accompanied by their count.
 // Otherwise the count is implied to be 1.
 //
-// For example, if the internal dict is {2: 1, 3: 4, 'abc': 1}, this returns
-// the string "[{2, 3 [4 copies], 'abc'}]".
-func (c *duplicateCounter) String() string {
+// For example, if the internal dict is `{2: 1, 3: 4, "abc": 1}`, this returns
+// the string `2, 3 [4 copies], "abc"`.
+func (dc *duplicateCounter) String() string {
 	var b strings.Builder
-	first := true
-	// b.WriteString("[")
-	for _, vv := range c.s {
-		if !first {
+	for i, vv := range dc.s {
+		if i != 0 {
 			b.WriteString(", ")
 		}
-		first = false
 
 		b.WriteString(vv)
-		if count := c.m[vv]; count != 1 {
+		if count := dc.m[vv]; count != 1 {
 			b.WriteString(" [")
 			b.WriteString(fmt.Sprintf("%d", count))
 			b.WriteString(" copies]")
 		}
 	}
-	// b.WriteString("]")
 	return b.String()
 }
 
 // Dupes shows only items whose count > 1.
-func (c *duplicateCounter) Dupes() string {
+func (dc *duplicateCounter) Dupes() string {
 	var b strings.Builder
 	first := true
-	for _, vv := range c.s {
-		if count := c.m[vv]; count != 1 {
+	for _, vv := range dc.s {
+		if count := dc.m[vv]; count != 1 {
 			if !first {
 				b.WriteString(", ")
 			}
