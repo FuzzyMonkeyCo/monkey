@@ -3,6 +3,8 @@ package starlarktruth
 import (
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"regexp"
 	"strings"
 
@@ -1179,4 +1181,178 @@ func isNotOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
 		return nil, t.failWithProposition(msg, suffix)
 	}
 	return nil, errUnhandled
+}
+
+func isFloatNotFinite(f float64) bool { return math.IsInf(f, 0) || math.IsNaN(f) }
+
+func isFinite(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if isFloatNotFinite(float64(actual)) {
+			return nil, t.failWithSubject("should have been finite")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNotFinite(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if !isFloatNotFinite(float64(actual)) {
+			return nil, t.failWithSubject("should not have been finite")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return nil, t.failWithSubject("should not have been finite")
+	default:
+		return nil, errUnhandled
+	}
+}
+
+var (
+	pInf = starlark.Float(math.Inf(+1))
+	nInf = starlark.Float(math.Inf(-1))
+)
+
+func isPositiveInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isEqualTo(t, pInf)
+}
+
+func isNegativeInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isEqualTo(t, nInf)
+}
+
+func isNotPositiveInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isNotEqualTo(t, pInf)
+}
+
+func isNotNegativeInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isNotEqualTo(t, nInf)
+}
+
+var nan = starlark.Float(math.NaN())
+
+func isNaN(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if !math.IsNaN(float64(actual)) {
+			return nil, t.failComparingValues("is equal to", nan, "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return nil, t.failComparingValues("is equal to", nan, "")
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNotNaN(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if math.IsNaN(float64(actual)) {
+			return nil, t.failWithSubject("should not have been <nan>")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func (t *T) setWithinTolerance(tolerance starlark.Value, within bool) (starlark.Value, error) {
+	wt := withinTolerance{
+		within:           within,
+		toleranceAsValue: tolerance,
+	}
+
+	switch delta := tolerance.(type) {
+	case starlark.Float:
+		f := float64(delta)
+		if math.IsNaN(f) {
+			return nil, newInvalidAssertion("tolerance cannot be <nan>")
+		}
+		if f < 0 {
+			return nil, newInvalidAssertion("tolerance cannot be negative")
+		}
+		if math.IsInf(f, +1) {
+			return nil, newInvalidAssertion("tolerance cannot be positive infinity")
+		}
+		wt.tolerance = new(big.Rat).SetFloat64(f)
+	case starlark.Int:
+		if delta.Sign() < 0 {
+			return nil, newInvalidAssertion("tolerance cannot be negative")
+		}
+		wt.tolerance = new(big.Rat).SetInt(delta.BigInt())
+	default:
+		return nil, errUnhandled
+	}
+
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		wt.actual = new(big.Rat).SetFloat64(float64(actual))
+	case starlark.Int:
+		wt.actual = new(big.Rat).SetInt(actual.BigInt())
+	default:
+		return nil, errUnhandled
+	}
+
+	if t.withinTolerance != nil {
+		return nil, newInvalidAssertion("tolerance cannot be overwritten")
+	}
+	t.withinTolerance = &wt
+	return t, nil
+}
+
+func isWithin(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.setWithinTolerance(args[0], true)
+}
+
+func isNotWithin(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.setWithinTolerance(args[0], false)
+}
+
+func (t *T) withinToleranceOf(expected *big.Rat, expectedAsValue starlark.Value) (starlark.Value, error) {
+	if t.withinTolerance == nil {
+		// .of() called, .is_within()/.is_not_within() not called
+		return nil, errUnhandled
+	}
+
+	tolerablyEqual := false
+	if expected != nil && t.withinTolerance.actual != nil {
+		// tolerably_equal = abs(self._actual - expected) <= self._tolerance
+		diff := new(big.Rat).Sub(t.withinTolerance.actual, expected)
+		tolerablyEqual = new(big.Rat).Abs(diff).Cmp(t.withinTolerance.tolerance) < 1
+	}
+	// Otherwise, (*big.Rat).SetFloat64(float64) was given non-finite
+	// in which case Cmp must fail (i.e tolerablyEqual=false)
+
+	notWithin := ""
+	if !t.withinTolerance.within {
+		notWithin = "not "
+	}
+	if t.withinTolerance.within != tolerablyEqual {
+		msg := fmt.Sprintf("and <%s> should %shave been within <%s> of each other",
+			expectedAsValue, notWithin, t.withinTolerance.toleranceAsValue)
+		return nil, t.failWithSubject(msg)
+	}
+	return starlark.None, nil
+}
+
+func of(t *T, args ...starlark.Value) (starlark.Value, error) {
+	expected := args[0]
+	switch x := expected.(type) {
+	case starlark.Float:
+		r := new(big.Rat).SetFloat64(float64(x))
+		return t.withinToleranceOf(r, expected)
+	case starlark.Int:
+		r := new(big.Rat).SetInt(x.BigInt())
+		return t.withinToleranceOf(r, expected)
+	default:
+		return nil, errUnhandled
+	}
 }

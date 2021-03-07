@@ -17,14 +17,12 @@ func newInvalidAssertion(prop string) InvalidAssertion { return InvalidAssertion
 func (e InvalidAssertion) Error() string               { return string(e) }
 
 // TruthAssertion signifies an assertion predicate was invalidated.
-type TruthAssertion struct {
-	e string
-}
+type TruthAssertion string
 
-var _ error = (*TruthAssertion)(nil)
+var _ error = (TruthAssertion)("")
 
-func newTruthAssertion(msg string) *TruthAssertion { return &TruthAssertion{e: msg} }
-func (a *TruthAssertion) Error() string            { return a.e }
+func newTruthAssertion(msg string) TruthAssertion { return TruthAssertion(msg) }
+func (e TruthAssertion) Error() string            { return string(e) }
 
 // unhandled internal & public errors
 
@@ -32,7 +30,7 @@ const errUnhandled = unhandledError(0)
 
 type unhandledError int
 
-var _ error = (unhandledError)(0)
+var _ error = errUnhandled
 
 func (e unhandledError) Error() string { return "unhandled" }
 
@@ -69,11 +67,14 @@ func (e UnhandledError) Error() string {
 	return b.String()
 }
 
-var _ error = (*IntegrityError)(nil)
-
 // IntegrityError describes that an `assert.that(actual)` was called but never any of its `.truth_methods(subject)`.
-// At the exception of `.named(name)` as by itself this still requires an assertion.
+// At the exception of (as each by themselves this still require an assertion):
+// * `.named(name)`
+// * `.is_within(tolerance)`
+// * `.is_not_within(tolerance)`
 type IntegrityError string
+
+var _ error = (IntegrityError)("")
 
 func (e IntegrityError) Error() string {
 	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)

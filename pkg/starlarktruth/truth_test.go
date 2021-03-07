@@ -20,6 +20,8 @@ const (
 const abc = `"abc"` // Please linter
 
 func helper(t *testing.T, as asWhat, program string) (starlark.StringDict, error) {
+	t.Helper() // TODO: make this work (for failed test reports)
+
 	// Enabled so they can be tested
 	resolve.AllowFloat = true
 	resolve.AllowSet = true
@@ -98,10 +100,16 @@ func fail(value, expected string, suffixes ...string) error {
 
 func TestClosedness(t *testing.T) {
 	testEach(t, map[string]error{
-		`assert.that(True)`:                       IntegrityError("TestClosedness/assert.that(True).star:3:12"),
-		`assert.that(True).is_true()`:             nil,
+		`assert.that(True)`:           IntegrityError("TestClosedness/assert.that(True).star:3:12"),
+		`assert.that(True).is_true()`: nil,
+
 		`assert.that(True).named("eh")`:           IntegrityError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
 		`assert.that(True).named("eh").is_true()`: nil,
+
+		`assert.that(10).is_within(0.1)`:            IntegrityError("TestClosedness/assert.that(10).is_within(0.1).star:3:12"),
+		`assert.that(10).is_within(0.1).of(10)`:     nil,
+		`assert.that(10).is_not_within(0.1)`:        IntegrityError("TestClosedness/assert.that(10).is_not_within(0.1).star:3:12"),
+		`assert.that(10).is_not_within(0.1).of(42)`: nil,
 	}, asModule)
 }
 

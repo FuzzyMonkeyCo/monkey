@@ -1,6 +1,8 @@
 package starlarktruth
 
 import (
+	"math/big"
+
 	"go.starlark.net/starlark"
 )
 
@@ -19,7 +21,18 @@ type T struct {
 	// True when asserting order
 	askedInOrder bool
 
+	// registered holds the compiled default compare function
 	registered *registeredValues
+
+	// withinTolerance is used to delta-compare numbers
+	withinTolerance *withinTolerance
+}
+
+type withinTolerance struct {
+	within           bool
+	actual           *big.Rat
+	tolerance        *big.Rat
+	toleranceAsValue starlark.Value
 }
 
 func (t *T) turnActualIntoIterableFromString() {

@@ -63,7 +63,7 @@ func (t *T) failWithBadResults(
 }
 
 func (t *T) failWithSubject(verb string) error {
-	msg := fmt.Sprintf("%s %s", t.subject(), verb)
+	msg := fmt.Sprintf("%s %s.", t.subject(), verb)
 	return newTruthAssertion(msg)
 }
 

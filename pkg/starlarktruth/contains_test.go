@@ -164,9 +164,9 @@ func TestContains(t *testing.T) {
 		s(`2`):   nil,
 		s(`5`):   nil,
 		s(`[]`):  nil,
-		s(`3`):   newTruthAssertion(`<(2, 5, [])> should have contained 3`),
-		s(`"2"`): newTruthAssertion(`<(2, 5, [])> should have contained "2"`),
-		s(`{}`):  newTruthAssertion(`<(2, 5, [])> should have contained {}`),
+		s(`3`):   newTruthAssertion(`<(2, 5, [])> should have contained 3.`),
+		s(`"2"`): newTruthAssertion(`<(2, 5, [])> should have contained "2".`),
+		s(`{}`):  newTruthAssertion(`<(2, 5, [])> should have contained {}.`),
 	})
 }
 
@@ -178,9 +178,9 @@ func TestDoesNotContain(t *testing.T) {
 		s(`3`):   nil,
 		s(`"2"`): nil,
 		s(`{}`):  nil,
-		s(`2`):   newTruthAssertion(`<(2, 5, [])> should not have contained 2`),
-		s(`5`):   newTruthAssertion(`<(2, 5, [])> should not have contained 5`),
-		s(`[]`):  newTruthAssertion(`<(2, 5, [])> should not have contained []`),
+		s(`2`):   newTruthAssertion(`<(2, 5, [])> should not have contained 2.`),
+		s(`5`):   newTruthAssertion(`<(2, 5, [])> should not have contained 5.`),
+		s(`[]`):  newTruthAssertion(`<(2, 5, [])> should not have contained [].`),
 	})
 }
 
@@ -195,11 +195,10 @@ func TestContainsNoDuplicates(t *testing.T) {
 		s(`(2, 5)`):       nil,
 		s(`{2: 2}`):       nil,
 		s(`set([2])`):     nil,
-		s(`"aaa"`):        newTruthAssertion(`<"aaa"> has the following duplicates: <"a" [3 copies]>`),
-		s(`(3, 2, 5, 2)`): newTruthAssertion(`<(3, 2, 5, 2)> has the following duplicates: <2 [2 copies]>`),
+		s(`"aaa"`):        newTruthAssertion(`<"aaa"> has the following duplicates: <"a" [3 copies]>.`),
+		s(`(3, 2, 5, 2)`): newTruthAssertion(`<(3, 2, 5, 2)> has the following duplicates: <2 [2 copies]>.`),
 		s(`"abcabc"`): newTruthAssertion(
-			`<"abcabc"> has the following duplicates:` +
-				` <"a" [2 copies], "b" [2 copies], "c" [2 copies]>`),
+			`<"abcabc"> has the following duplicates: <"a" [2 copies], "b" [2 copies], "c" [2 copies]>.`),
 	})
 }
 

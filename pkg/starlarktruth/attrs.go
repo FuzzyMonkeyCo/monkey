@@ -17,19 +17,27 @@ type (
 
 var (
 	methods0args = attrs{
-		"contains_no_duplicates": containsNoDuplicates,
-		"is_callable":            isCallable,
-		"is_empty":               isEmpty,
-		"is_false":               isFalse,
-		"is_falsy":               isFalsy,
-		"is_none":                isNone,
-		"is_not_callable":        isNotCallable,
-		"is_not_empty":           isNotEmpty,
-		"is_not_none":            isNotNone,
-		"is_ordered":             isOrdered,
-		"is_strictly_ordered":    isStrictlyOrdered,
-		"is_true":                isTrue,
-		"is_truthy":              isTruthy,
+		"contains_no_duplicates":   containsNoDuplicates,
+		"is_callable":              isCallable,
+		"is_empty":                 isEmpty,
+		"is_false":                 isFalse,
+		"is_falsy":                 isFalsy,
+		"is_finite":                isFinite,
+		"is_nan":                   isNaN,
+		"is_negative_infinity":     isNegativeInfinity,
+		"is_none":                  isNone,
+		"is_not_callable":          isNotCallable,
+		"is_not_empty":             isNotEmpty,
+		"is_not_finite":            isNotFinite,
+		"is_not_nan":               isNotNaN,
+		"is_not_negative_infinity": isNotNegativeInfinity,
+		"is_not_none":              isNotNone,
+		"is_not_positive_infinity": isNotPositiveInfinity,
+		"is_ordered":               isOrdered,
+		"is_positive_infinity":     isPositiveInfinity,
+		"is_strictly_ordered":      isStrictlyOrdered,
+		"is_true":                  isTrue,
+		"is_truthy":                isTruthy,
 	}
 
 	methods1arg = attrs{
@@ -61,11 +69,14 @@ var (
 		"is_not_equal_to":                       isNotEqualTo,
 		"is_not_in":                             isNotIn,
 		"is_not_of_type":                        isNotOfType,
+		"is_not_within":                         isNotWithin,
 		"is_of_type":                            isOfType,
 		"is_ordered_according_to":               isOrderedAccordingTo,
 		"is_strictly_ordered_according_to":      isStrictlyOrderedAccordingTo,
+		"is_within":                             isWithin,
 		"matches":                               matches,
 		"named":                                 named,
+		"of":                                    of,
 		"starts_with":                           startsWith,
 	}
 
@@ -145,27 +156,28 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		if err := t.registerValues(thread); err != nil {
 			return nil, err
 		}
+		bName := b.Name()
 
 		var argz []starlark.Value
 		switch nArgs {
 		case -1:
 			if len(kwargs) > 0 {
-				return nil, fmt.Errorf("%s: unexpected keyword arguments", b.Name())
+				return nil, fmt.Errorf("%s: unexpected keyword arguments", bName)
 			}
 			argz = []starlark.Value(args)
 		case 0:
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs); err != nil {
+			if err := starlark.UnpackPositionalArgs(bName, args, kwargs, nArgs); err != nil {
 				return nil, err
 			}
 		case 1:
 			var arg1 starlark.Value
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs, &arg1); err != nil {
+			if err := starlark.UnpackPositionalArgs(bName, args, kwargs, nArgs, &arg1); err != nil {
 				return nil, err
 			}
 			argz = []starlark.Value{arg1}
 		case 2:
 			var arg1, arg2 starlark.Value
-			if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, nArgs, &arg1, &arg2); err != nil {
+			if err := starlark.UnpackPositionalArgs(bName, args, kwargs, nArgs, &arg1, &arg2); err != nil {
 				return nil, err
 			}
 			argz = []starlark.Value{arg1, arg2}
@@ -174,7 +186,12 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			return nil, err
 		}
 
-		if b.Name() != "named" {
+		deferred := false
+		switch bName {
+		case "named":
+		case "is_within":
+		case "is_not_within":
+		default:
 			defer thread.SetLocal(Default, εCallFrame)
 		}
 
@@ -183,7 +200,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		case nil:
 			return ret, nil
 		case errUnhandled:
-			return nil, t.unhandled(b.Name(), argz...)
+			return nil, t.unhandled(bName, argz...)
 		default:
 			return nil, err
 		}
