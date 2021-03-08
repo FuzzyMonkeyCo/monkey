@@ -100,6 +100,17 @@ func fail(value, expected string, suffixes ...string) error {
 
 func TestClosedness(t *testing.T) {
 	testEach(t, map[string]error{
+		`
+fortytwo = that(True)
+that(False).is_false()
+`: IntegrityError("TestClosedness/_fortytwo_=_that(True)_that(False).is_false()_.star:4:16"),
+		`
+fortytwo = that(True)
+fortytwo.is_true()
+that(False).is_false()
+`: nil,
+	})
+	testEach(t, map[string]error{
 		`assert.that(True)`:           IntegrityError("TestClosedness/assert.that(True).star:3:12"),
 		`assert.that(True).is_true()`: nil,
 

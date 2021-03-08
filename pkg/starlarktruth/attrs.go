@@ -143,7 +143,7 @@ func Close(th *starlark.Thread) (err error) {
 	return
 }
 
-// Asserted returns whether an assert.that(x)... call chain was properly terminated
+// Asserted returns whether all assert.that(x)... call chains were properly terminated
 func Asserted(th *starlark.Thread) bool {
 	_, ok := th.Local(Default).(starlark.CallFrame)
 	return ok
