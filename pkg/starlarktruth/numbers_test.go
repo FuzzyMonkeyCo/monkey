@@ -7,10 +7,13 @@ import (
 
 func TestZero(t *testing.T) {
 	zeros := []string{`0`, `0.0`, `-0.0`}
-	m := make(map[string]error, 42)
+	m := make(map[string]error, 42+3*2)
 
-	// TODO: investigate +0.0 = -0.0
 	for i := 0; i < len(zeros); i++ {
+		m[fmt.Sprintf(`that(%s).is_zero()`, zeros[i])] = nil
+		m[fmt.Sprintf(`that(%s).is_non_zero()`, zeros[i])] =
+			fail(zeros[i], `is non-zero`)
+
 		for j := len(zeros) - 1; j >= 0; j-- {
 			m[fmt.Sprintf(`that(%s).is_equal_to(%s)`, zeros[i], zeros[j])] = nil
 			m[fmt.Sprintf(`that(%s).is_not_equal_to(%s)`, zeros[i], zeros[j])] =
@@ -41,6 +44,8 @@ func TestZero(t *testing.T) {
 
 func TestNumericEdges(t *testing.T) {
 	testEach(t, map[string]error{
+		`that(9).is_zero()`:                  fail(`9`, `is zero`),
+		`that(9).is_non_zero()`:              nil,
 		`that(9).is_finite()`:                nil,
 		`that(9).is_not_finite()`:            newTruthAssertion(`<9> should not have been finite.`),
 		`that(9).is_not_nan()`:               nil,
@@ -50,6 +55,8 @@ func TestNumericEdges(t *testing.T) {
 		`that(9).is_not_negative_infinity()`: nil,
 		`that(9).is_negative_infinity()`:     fail(`9`, `is equal to <-inf>`),
 
+		`that(float("+inf")).is_zero()`:                  fail(`+inf`, `is zero`),
+		`that(float("+inf")).is_non_zero()`:              nil,
 		`that(float("+inf")).is_finite()`:                newTruthAssertion(`<+inf> should have been finite.`),
 		`that(float("+inf")).is_not_finite()`:            nil,
 		`that(float("+inf")).is_not_nan()`:               nil,
@@ -59,6 +66,8 @@ func TestNumericEdges(t *testing.T) {
 		`that(float("+inf")).is_not_negative_infinity()`: nil,
 		`that(float("+inf")).is_negative_infinity()`:     fail(`+inf`, `is equal to <-inf>`),
 
+		`that(float("-inf")).is_zero()`:                  fail(`-inf`, `is zero`),
+		`that(float("-inf")).is_non_zero()`:              nil,
 		`that(float("-inf")).is_finite()`:                newTruthAssertion(`<-inf> should have been finite.`),
 		`that(float("-inf")).is_not_finite()`:            nil,
 		`that(float("-inf")).is_not_nan()`:               nil,
@@ -68,6 +77,8 @@ func TestNumericEdges(t *testing.T) {
 		`that(float("-inf")).is_not_negative_infinity()`: fail(`-inf`, `is not equal to <-inf>`),
 		`that(float("-inf")).is_negative_infinity()`:     nil,
 
+		`that(float("nan")).is_zero()`:                  fail(`nan`, `is zero`),
+		`that(float("nan")).is_non_zero()`:              nil,
 		`that(float("nan")).is_finite()`:                newTruthAssertion(`<nan> should have been finite.`),
 		`that(float("nan")).is_not_finite()`:            nil,
 		`that(float("nan")).is_not_nan()`:               newTruthAssertion(`<nan> should not have been <nan>.`),

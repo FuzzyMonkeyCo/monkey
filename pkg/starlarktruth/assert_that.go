@@ -1180,6 +1180,40 @@ func isNotOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return nil, errUnhandled
 }
 
+func isZero(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if actual != 0 {
+			return nil, t.failWithProposition("is zero", "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		if actual.Truth() {
+			return nil, t.failWithProposition("is zero", "")
+		}
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNonZero(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if actual == 0 {
+			return nil, t.failWithProposition("is non-zero", "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		if !actual.Truth() {
+			return nil, t.failWithProposition("is non-zero", "")
+		}
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
 func isFloatNotFinite(f float64) bool { return math.IsInf(f, 0) || math.IsNaN(f) }
 
 func isFinite(t *T, args ...starlark.Value) (starlark.Value, error) {

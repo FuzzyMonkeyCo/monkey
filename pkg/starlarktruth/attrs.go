@@ -25,6 +25,7 @@ var (
 		"is_finite":                isFinite,
 		"is_nan":                   isNaN,
 		"is_negative_infinity":     isNegativeInfinity,
+		"is_non_zero":              isNonZero,
 		"is_none":                  isNone,
 		"is_not_callable":          isNotCallable,
 		"is_not_empty":             isNotEmpty,
@@ -38,6 +39,7 @@ var (
 		"is_strictly_ordered":      isStrictlyOrdered,
 		"is_true":                  isTrue,
 		"is_truthy":                isTruthy,
+		"is_zero":                  isZero,
 	}
 
 	methods1arg = attrs{
