@@ -13,12 +13,9 @@ import (
 	"go.starlark.net/syntax"
 )
 
-// Maximum nesting browsed when comparing values
-const maxdepth = 10
-
 func isNotEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 	other := args[0]
-	ok, err := starlark.CompareDepth(syntax.EQL, t.actual, other, maxdepth)
+	ok, err := starlark.Compare(syntax.EQL, t.actual, other)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +66,7 @@ func isEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	default:
 	}
-	ok, err := starlark.CompareDepth(syntax.NEQ, t.actual, arg1, maxdepth)
+	ok, err := starlark.Compare(syntax.NEQ, t.actual, arg1)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +216,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		// in_order cannot succeed, so we can check the rest of the elements
 		// more normally. Since any previous pairs of elements we iterated
 		// over were equal, they have no effect on the result now.
-		ok, err := starlark.CompareDepth(syntax.NEQ, elemActual, elemExpected, maxdepth)
+		ok, err := starlark.Compare(syntax.NEQ, elemActual, elemExpected)
 		if err != nil {
 			return nil, err
 		}
@@ -374,7 +371,7 @@ func (t *T) comparable(bName, verb string, op syntax.Token, other starlark.Value
 	if err := t.failNone(bName, other); err != nil {
 		return nil, err
 	}
-	ok, err := starlark.CompareDepth(op, t.actual, other, maxdepth)
+	ok, err := starlark.Compare(op, t.actual, other)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +405,7 @@ func isIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -445,7 +442,7 @@ func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	case starlark.Indexable:
 		for ix := 0; ix < iterable.Len(); ix++ {
 			e := iterable.Index(ix)
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -462,7 +459,7 @@ func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -615,7 +612,7 @@ func contains(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, e, arg1)
 			if err != nil {
 				return nil, err
 			}
@@ -645,7 +642,7 @@ func doesNotContain(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, e, arg1)
 			if err != nil {
 				return nil, err
 			}
@@ -728,7 +725,7 @@ func collect(iterable starlark.Iterable) []starlark.Value {
 
 func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
 	for i, x := range xs {
-		ok, err := starlark.CompareDepth(syntax.EQL, v, x, maxdepth)
+		ok, err := starlark.Compare(syntax.EQL, v, x)
 		if err != nil {
 			return -2, err
 		}
@@ -969,7 +966,7 @@ func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 			return nil, err
 		}
 		if found {
-			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, value, val)
 			if err != nil {
 				return nil, err
 			}
@@ -991,7 +988,7 @@ func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 				if len(kv) != 2 {
 					break
 				}
-				ok, err := starlark.CompareDepth(syntax.EQL, value, kv[1], maxdepth)
+				ok, err := starlark.Compare(syntax.EQL, value, kv[1])
 				if err != nil {
 					return nil, err
 				}
@@ -1024,7 +1021,7 @@ func doesNotContainItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 			return nil, err
 		}
 		if found {
-			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, value, val)
 			if err != nil {
 				return nil, err
 			}
