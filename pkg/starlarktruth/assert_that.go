@@ -121,11 +121,7 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 			_, isString := args[0].(starlark.String)
 			expectingSingleIterable = isIterable && !isString
 		}
-		opts := []containsOption{}
-		if expectingSingleIterable {
-			opts = append(opts, warnElementsIn())
-		}
-		return t.containsExactlyElementsIn(tup, opts...)
+		return t.containsExactlyElementsIn(tup, expectingSingleIterable)
 	case starlark.String:
 		t.turnActualIntoIterableFromString()
 		return containsExactly(t, args...)
@@ -156,28 +152,15 @@ func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error
 
 func containsExactlyElementsInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	t.askedInOrder = true
-	return t.containsExactlyElementsIn(args[0])
+	return t.containsExactlyElementsIn(args[0], false)
 }
 
 func containsExactlyElementsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.containsExactlyElementsIn(args[0])
+	return t.containsExactlyElementsIn(args[0], false)
 }
-
-type containsOptions struct {
-	warnElementsIn bool
-}
-
-type containsOption func(*containsOptions)
-
-func warnElementsIn() containsOption { return func(o *containsOptions) { o.warnElementsIn = true } }
 
 // Determines if the subject contains exactly the expected elements.
-func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOption) (starlark.Value, error) {
-	opts := &containsOptions{}
-	for _, o := range os {
-		o(opts)
-	}
-
+func (t *T) containsExactlyElementsIn(expected starlark.Value, warnElementsIn bool) (starlark.Value, error) {
 	iterableActual, err := t.failIterable()
 	if err != nil {
 		return nil, err
@@ -195,7 +178,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	defer iterExpected.Done()
 
 	warning := ""
-	if opts.warnElementsIn {
+	if warnElementsIn {
 		warning = warnContainsExactlySingleIterable
 	}
 
