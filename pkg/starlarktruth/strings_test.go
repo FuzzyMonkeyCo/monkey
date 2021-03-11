@@ -49,8 +49,8 @@ func TestMatches(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`"a"`):     nil,
-		s(`r".b"`):   nil, // TODO: call re.compile if re module loaded
-		s(`r"[Aa]"`): nil, // TODO: use re.I flag if re module loaded
+		s(`r".b"`):   nil,
+		s(`r"[Aa]"`): nil,
 		s(`"d"`):     fail(ss, `matches <"d">`),
 		s(`"b"`):     fail(ss, `matches <"b">`),
 	})
@@ -62,15 +62,11 @@ func TestDoesNotMatch(t *testing.T) {
 		return `that(` + ss + `).does_not_match(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		s(`"b"`): nil,
-		s(`"d"`): nil,
-		s(`"a"`): fail(ss, `fails to match <"a">`),
-		s(`r".b"`): fail(ss,
-			// TODO: call re.compile if re module loaded
-			`fails to match <".b">`),
-		s(`r"[Aa]"`): fail(ss,
-			// TODO: use re.I flag if re module loaded
-			`fails to match <"[Aa]">`),
+		s(`"b"`):     nil,
+		s(`"d"`):     nil,
+		s(`"a"`):     fail(ss, `fails to match <"a">`),
+		s(`r".b"`):   fail(ss, `fails to match <".b">`),
+		s(`r"[Aa]"`): fail(ss, `fails to match <"[Aa]">`),
 	})
 }
 
@@ -81,8 +77,8 @@ func TestContainsMatch(t *testing.T) {
 	}
 	testEach(t, map[string]error{
 		s(`"a"`):     nil,
-		s(`r".b"`):   nil, // TODO: call re.compile if re module loaded
-		s(`r"[Aa]"`): nil, // TODO: use re.I flag if re module loaded
+		s(`r".b"`):   nil,
+		s(`r"[Aa]"`): nil,
 		s(`"b"`):     nil,
 		s(`"d"`):     fail(ss, `should have contained a match for <"d">`),
 	})
@@ -94,14 +90,10 @@ func TestDoesNotContainMatch(t *testing.T) {
 		return `that(` + ss + `).does_not_contain_match(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		s(`"d"`): nil,
-		s(`"a"`): fail(ss, `should not have contained a match for <"a">`),
-		s(`"b"`): fail(ss, `should not have contained a match for <"b">`),
-		s(`r".b"`): fail(ss,
-			// TODO: call re.compile if re module loaded
-			`should not have contained a match for <".b">`),
-		s(`r"[Aa]"`): fail(ss,
-			// TODO: use re.I flag if re module loaded
-			`should not have contained a match for <"[Aa]">`),
+		s(`"d"`):     nil,
+		s(`"a"`):     fail(ss, `should not have contained a match for <"a">`),
+		s(`"b"`):     fail(ss, `should not have contained a match for <"b">`),
+		s(`r".b"`):   fail(ss, `should not have contained a match for <".b">`),
+		s(`r"[Aa]"`): fail(ss, `should not have contained a match for <"[Aa]">`),
 	})
 }
