@@ -2,6 +2,7 @@ package starlarktruth
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -132,5 +133,20 @@ fortytwo.is_equal_to(42.0)
 fortytwo.is_not_callable()
 fortytwo.is_at_least(42)
 `: nil,
+
+		`
+fortytwo = that([1,2,3])
+fortytwo.contains(2)
+fortytwo.contains_exactly(1,2,3)
+fortytwo.contains_exactly(1,2,3).in_order()
+fortytwo.contains_all_of(2,3).in_order()
+`: nil,
+	})
+}
+
+func TestImpossibleInOrder(t *testing.T) {
+	testEach(t, map[string]error{
+		`that([1,2,3]).is_ordered()`: nil,
+		`that([1,2,3]).in_order()`:   fmt.Errorf(`Invalid assertion .in_order() on value of type list`),
 	})
 }

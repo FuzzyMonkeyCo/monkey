@@ -128,11 +128,9 @@ func TestDictIsEqualToUsesContainsExactlyItemsIn(t *testing.T) {
 }
 
 func TestIsEqualToComparedWithNonDictionary(t *testing.T) {
+	ss := `{2: "two", 4: "four"}`
 	testEach(t, map[string]error{
-		`that({2:"two",4:"four"}).is_equal_to(3)`: fail(
-			`{2: "two", 4: "four"}`,
-			`is equal to <3>`,
-		),
+		`that(` + ss + `).is_equal_to(3)`: fail(ss, `is equal to <3>`),
 	})
 }
 

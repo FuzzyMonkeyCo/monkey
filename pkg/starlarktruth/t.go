@@ -18,14 +18,18 @@ type T struct {
 	// Helps when pretty printing.
 	actualIsIterableFromString bool
 
-	// True when asserting order
-	askedInOrder bool
+	// forOrdering is relevant to .in_order() assertions
+	forOrdering *forOrdering
 
 	// registered holds the compiled default compare function
 	registered *registeredValues
 
 	// withinTolerance is used to delta-compare numbers
 	withinTolerance *withinTolerance
+}
+
+type forOrdering struct {
+	inOrderError error
 }
 
 type withinTolerance struct {

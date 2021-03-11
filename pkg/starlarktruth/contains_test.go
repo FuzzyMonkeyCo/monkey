@@ -8,10 +8,10 @@ func TestContainsExactly(t *testing.T) {
 		return `that(` + ss + `).contains_exactly(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`that(` + ss + `).contains_exactly_in_order(3, 5, [])`: nil,
-		`that(` + ss + `).contains_exactly(3, 5, [])`:          nil,
-		`that(` + ss + `).contains_exactly([], 3, 5)`:          nil,
-		`that(` + ss + `).contains_exactly_in_order([], 3, 5)`: fail(ss,
+		`that(` + ss + `).contains_exactly(3, 5, []).in_order()`: nil,
+		`that(` + ss + `).contains_exactly(3, 5, [])`:            nil,
+		`that(` + ss + `).contains_exactly([], 3, 5)`:            nil,
+		`that(` + ss + `).contains_exactly([], 3, 5).in_order()`: fail(ss,
 			"contains exactly these elements in order <([], 3, 5)>"),
 
 		s(`3, 5, [], 9`): fail(ss,
@@ -79,9 +79,9 @@ func TestContainsExactlyElementsIn(t *testing.T) {
 		return `that(` + ss + `).contains_exactly_elements_in(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`that(` + ss + `).contains_exactly_elements_in_order_in((3, 5, []))`: nil,
-		`that(` + ss + `).contains_exactly_elements_in(([], 3, 5))`:          nil,
-		`that(` + ss + `).contains_exactly_elements_in_order_in(([], 3, 5))`: fail(ss,
+		`that(` + ss + `).contains_exactly_elements_in((3, 5, [])).in_order()`: nil,
+		`that(` + ss + `).contains_exactly_elements_in(([], 3, 5))`:            nil,
+		`that(` + ss + `).contains_exactly_elements_in(([], 3, 5)).in_order()`: fail(ss,
 			"contains exactly these elements in order <([], 3, 5)>"),
 
 		s(`(3, 5, [], 9)`):     fail(ss, `contains exactly <(3, 5, [], 9)>. It is missing <9>`),
@@ -107,10 +107,10 @@ func TestContainsExactlyTargetingOrderedDict(t *testing.T) {
 	ss := `((2, "two"), (4, "four"))`
 	s := `that(` + ss + `).contains_exactly(`
 	testEach(t, map[string]error{
-		`that(` + ss + `).contains_exactly_in_order((2, "two"), (4, "four"))`: nil,
-		`that(` + ss + `).contains_exactly((2, "two"), (4, "four"))`:          nil,
-		`that(` + ss + `).contains_exactly((4, "four"), (2, "two"))`:          nil,
-		`that(` + ss + `).contains_exactly_in_order((4, "four"), (2, "two"))`: fail(ss,
+		`that(` + ss + `).contains_exactly((2, "two"), (4, "four")).in_order()`: nil,
+		`that(` + ss + `).contains_exactly((2, "two"), (4, "four"))`:            nil,
+		`that(` + ss + `).contains_exactly((4, "four"), (2, "two"))`:            nil,
+		`that(` + ss + `).contains_exactly((4, "four"), (2, "two")).in_order()`: fail(ss,
 			`contains exactly these elements in order <((4, "four"), (2, "two"))>`),
 
 		s + `2, "two")`: fail(ss,
@@ -136,13 +136,13 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 	}
 	ss := `items([(2, "two"), (4, "four")])`
 	testEach(t, map[string]error{
-		// NOTE: not ported over from pytruth
-		// as Starlark's Dict is not ordered (uses insertion order)
-		// d2 = collections.OrderedDict(((2, 'two'), (4, 'four')))
-		// d3 = collections.OrderedDict(((4, 'four'), (2, 'two')))
-		// self.assertIsInstance(s.ContainsExactlyItemsIn(d2), truth._InOrder)
-		// self.assertIsInstance(s.ContainsExactlyItemsIn(d3), truth._NotInOrder)
-		// FIXME: still test for unhandled
+		s(`{2: "two", 4: "four"}`): nil,
+
+		s(`{}`) + `.in_order()`: fail(ss, `is empty`),
+
+		s(`{4: "four", 2: "two"}`) + `.in_order()`: newInvalidAssertion("values of type dict are not ordered"),
+		// Starlark's dict is not ordered (uses insertion order)
+		s(`{2: "two", 4: "four"}`) + `.in_order()`: newInvalidAssertion("values of type dict are not ordered"),
 
 		s(`{2: "two"}`): fail(ss,
 			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`,
@@ -210,15 +210,15 @@ func TestContainsAllIn(t *testing.T) {
 	testEach(t, map[string]error{
 		s(`()`):                                nil,
 		`that(` + ss + `).contains_all_in(())`: nil,
-		`that(` + ss + `).contains_all_in_order_in(())`:         nil,
-		`that(` + ss + `).contains_all_in((3,))`:                nil,
-		`that(` + ss + `).contains_all_in_order_in((3,))`:       nil,
-		`that(` + ss + `).contains_all_in((3, []))`:             nil,
-		`that(` + ss + `).contains_all_in_order_in((3, []))`:    nil,
-		`that(` + ss + `).contains_all_in((3, 5, []))`:          nil,
-		`that(` + ss + `).contains_all_in_order_in((3, 5, []))`: nil,
-		`that(` + ss + `).contains_all_in(([], 5, 3))`:          nil,
-		`that(` + ss + `).contains_all_in_order_in(([], 5, 3))`: fail(ss,
+		`that(` + ss + `).contains_all_in(()).in_order()`:         nil,
+		`that(` + ss + `).contains_all_in((3,))`:                  nil,
+		`that(` + ss + `).contains_all_in((3,)).in_order()`:       nil,
+		`that(` + ss + `).contains_all_in((3, []))`:               nil,
+		`that(` + ss + `).contains_all_in((3, [])).in_order()`:    nil,
+		`that(` + ss + `).contains_all_in((3, 5, []))`:            nil,
+		`that(` + ss + `).contains_all_in((3, 5, [])).in_order()`: nil,
+		`that(` + ss + `).contains_all_in(([], 5, 3))`:            nil,
+		`that(` + ss + `).contains_all_in(([], 5, 3)).in_order()`: fail(ss,
 			`contains all elements in order <([], 5, 3)>`),
 		s(`(2, 3)`):    fail(ss, "contains all elements in <(2, 3)>. It is missing <2>"),
 		s(`(2, 3, 6)`): fail(ss, "contains all elements in <(2, 3, 6)>. It is missing <2, 6>"),
@@ -231,16 +231,16 @@ func TestContainsAllOf(t *testing.T) {
 		return `that(` + ss + `).contains_all_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`that(` + ss + `).contains_all_of()`:                  nil,
-		`that(` + ss + `).contains_all_of_in_order()`:         nil,
-		`that(` + ss + `).contains_all_of(3)`:                 nil,
-		`that(` + ss + `).contains_all_of_in_order(3)`:        nil,
-		`that(` + ss + `).contains_all_of(3, [])`:             nil,
-		`that(` + ss + `).contains_all_of_in_order(3, [])`:    nil,
-		`that(` + ss + `).contains_all_of(3, 5, [])`:          nil,
-		`that(` + ss + `).contains_all_of_in_order(3, 5, [])`: nil,
-		`that(` + ss + `).contains_all_of([], 3, 5)`:          nil,
-		`that(` + ss + `).contains_all_of_in_order([], 3, 5)`: fail(ss,
+		`that(` + ss + `).contains_all_of()`:                    nil,
+		`that(` + ss + `).contains_all_of().in_order()`:         nil,
+		`that(` + ss + `).contains_all_of(3)`:                   nil,
+		`that(` + ss + `).contains_all_of(3).in_order()`:        nil,
+		`that(` + ss + `).contains_all_of(3, [])`:               nil,
+		`that(` + ss + `).contains_all_of(3, []).in_order()`:    nil,
+		`that(` + ss + `).contains_all_of(3, 5, [])`:            nil,
+		`that(` + ss + `).contains_all_of(3, 5, []).in_order()`: nil,
+		`that(` + ss + `).contains_all_of([], 3, 5)`:            nil,
+		`that(` + ss + `).contains_all_of([], 3, 5).in_order()`: fail(ss,
 			`contains all elements in order <([], 3, 5)>`),
 		s(`2, 3`):    fail(ss, "contains all of <(2, 3)>. It is missing <2>"),
 		s(`2, 3, 6`): fail(ss, "contains all of <(2, 3, 6)>. It is missing <2, 6>"),
@@ -253,10 +253,10 @@ func TestContainsAllMixedHashableElements(t *testing.T) {
 		return `that(` + ss + `).contains_all_of(` + x + `)`
 	}
 	testEach(t, map[string]error{
-		`that(` + ss + `).contains_all_of(3, [], 5, 8)`:          nil,
-		`that(` + ss + `).contains_all_of_in_order(3, [], 5, 8)`: nil,
-		`that(` + ss + `).contains_all_of(5, 3, 8, [])`:          nil,
-		`that(` + ss + `).contains_all_of_in_order(5, 3, 8, [])`: fail(ss,
+		`that(` + ss + `).contains_all_of(3, [], 5, 8)`:            nil,
+		`that(` + ss + `).contains_all_of(3, [], 5, 8).in_order()`: nil,
+		`that(` + ss + `).contains_all_of(5, 3, 8, [])`:            nil,
+		`that(` + ss + `).contains_all_of(5, 3, 8, []).in_order()`: fail(ss,
 			`contains all elements in order <(5, 3, 8, [])>`),
 		s(`3, [], 8, 5, 9`):  fail(ss, "contains all of <(3, [], 8, 5, 9)>. It is missing <9>"),
 		s(`3, [], 8, 5, {}`): fail(ss, "contains all of <(3, [], 8, 5, {})>. It is missing <{}>"),

@@ -3,6 +3,7 @@ package starlarktruth
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
@@ -13,11 +14,10 @@ type (
 	attrs map[string]attr
 )
 
-// TODO: turn all builtins matching *InOrder* into closedness-aware .in_order()s
-
 var (
 	methods0args = attrs{
 		"contains_no_duplicates":   containsNoDuplicates,
+		"in_order":                 inOrder,
 		"is_callable":              isCallable,
 		"is_empty":                 isEmpty,
 		"is_false":                 isFalse,
@@ -43,43 +43,41 @@ var (
 	}
 
 	methods1arg = attrs{
-		"contains":                              contains,
-		"contains_all_in":                       containsAllIn,
-		"contains_all_in_order_in":              containsAllInOrderIn,
-		"contains_any_in":                       containsAnyIn,
-		"contains_exactly_elements_in":          containsExactlyElementsIn,
-		"contains_exactly_elements_in_order_in": containsExactlyElementsInOrderIn,
-		"contains_exactly_items_in":             containsExactlyItemsIn,
-		"contains_key":                          containsKey,
-		"contains_match":                        containsMatch,
-		"contains_none_in":                      containsNoneIn,
-		"does_not_contain":                      doesNotContain,
-		"does_not_contain_key":                  doesNotContainKey,
-		"does_not_contain_match":                doesNotContainMatch,
-		"does_not_have_attribute":               doesNotHaveAttribute,
-		"does_not_match":                        doesNotMatch,
-		"ends_with":                             endsWith,
-		"has_attribute":                         hasAttribute,
-		"has_length":                            hasLength,
-		"has_size":                              hasSize,
-		"is_at_least":                           isAtLeast,
-		"is_at_most":                            isAtMost,
-		"is_equal_to":                           isEqualTo,
-		"is_greater_than":                       isGreaterThan,
-		"is_in":                                 isIn,
-		"is_less_than":                          isLessThan,
-		"is_not_equal_to":                       isNotEqualTo,
-		"is_not_in":                             isNotIn,
-		"is_not_of_type":                        isNotOfType,
-		"is_not_within":                         isNotWithin,
-		"is_of_type":                            isOfType,
-		"is_ordered_according_to":               isOrderedAccordingTo,
-		"is_strictly_ordered_according_to":      isStrictlyOrderedAccordingTo,
-		"is_within":                             isWithin,
-		"matches":                               matches,
-		"named":                                 named,
-		"of":                                    of,
-		"starts_with":                           startsWith,
+		"contains":                         contains,
+		"contains_all_in":                  containsAllIn,
+		"contains_any_in":                  containsAnyIn,
+		"contains_exactly_elements_in":     containsExactlyElementsIn,
+		"contains_exactly_items_in":        containsExactlyItemsIn,
+		"contains_key":                     containsKey,
+		"contains_match":                   containsMatch,
+		"contains_none_in":                 containsNoneIn,
+		"does_not_contain":                 doesNotContain,
+		"does_not_contain_key":             doesNotContainKey,
+		"does_not_contain_match":           doesNotContainMatch,
+		"does_not_have_attribute":          doesNotHaveAttribute,
+		"does_not_match":                   doesNotMatch,
+		"ends_with":                        endsWith,
+		"has_attribute":                    hasAttribute,
+		"has_length":                       hasLength,
+		"has_size":                         hasSize,
+		"is_at_least":                      isAtLeast,
+		"is_at_most":                       isAtMost,
+		"is_equal_to":                      isEqualTo,
+		"is_greater_than":                  isGreaterThan,
+		"is_in":                            isIn,
+		"is_less_than":                     isLessThan,
+		"is_not_equal_to":                  isNotEqualTo,
+		"is_not_in":                        isNotIn,
+		"is_not_of_type":                   isNotOfType,
+		"is_not_within":                    isNotWithin,
+		"is_of_type":                       isOfType,
+		"is_ordered_according_to":          isOrderedAccordingTo,
+		"is_strictly_ordered_according_to": isStrictlyOrderedAccordingTo,
+		"is_within":                        isWithin,
+		"matches":                          matches,
+		"named":                            named,
+		"of":                               of,
+		"starts_with":                      startsWith,
 	}
 
 	methods2args = attrs{
@@ -88,14 +86,12 @@ var (
 	}
 
 	methodsNargs = attrs{
-		"contains_all_of":           containsAllOf,
-		"contains_all_of_in_order":  containsAllOfInOrder,
-		"contains_any_of":           containsAnyOf,
-		"contains_exactly":          containsExactly,
-		"contains_exactly_in_order": containsExactlyInOrder,
-		"contains_none_of":          containsNoneOf,
-		"is_any_of":                 isAnyOf,
-		"is_none_of":                isNoneOf,
+		"contains_all_of":  containsAllOf,
+		"contains_any_of":  containsAnyOf,
+		"contains_exactly": containsExactly,
+		"contains_none_of": containsNoneOf,
+		"is_any_of":        isAnyOf,
+		"is_none_of":       isNoneOf,
 	}
 
 	methods = []attrs{
@@ -188,6 +184,10 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			return nil, err
 		}
 
+		providesInOrder := false ||
+			strings.HasPrefix(bName, "contains_all") ||
+			strings.HasPrefix(bName, "contains_exactly")
+
 		deferred := false
 		switch bName {
 		case "named":
@@ -201,8 +201,14 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		ret, err := method(t, argz...)
 		switch err {
 		case nil:
-			if deferred && ret != starlark.None {
-				panic("unreachable")
+			if providesInOrder {
+				if tt, ok := ret.(*T); !ok {
+					panic("unreachable: call should return t for .in_order()")
+				} else if tt.forOrdering == nil {
+					panic("unreachable: call should prepare for .in_order()")
+				}
+			} else if deferred && ret != starlark.None {
+				panic(fmt.Sprintf("unreachable: call should return None, not: %T", ret))
 			}
 			return ret, nil
 		case errUnhandled:

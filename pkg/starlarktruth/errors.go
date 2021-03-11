@@ -11,7 +11,7 @@ import (
 // such as comparing with None.
 type InvalidAssertion string
 
-var _ error = (InvalidAssertion)("")
+var _ error = InvalidAssertion("")
 
 func newInvalidAssertion(prop string) InvalidAssertion { return InvalidAssertion(prop) }
 func (e InvalidAssertion) Error() string               { return string(e) }
@@ -19,7 +19,7 @@ func (e InvalidAssertion) Error() string               { return string(e) }
 // TruthAssertion signifies an assertion predicate was invalidated.
 type TruthAssertion string
 
-var _ error = (TruthAssertion)("")
+var _ error = TruthAssertion("")
 
 func newTruthAssertion(msg string) TruthAssertion { return TruthAssertion(msg) }
 func (e TruthAssertion) Error() string            { return string(e) }
@@ -74,7 +74,7 @@ func (e UnhandledError) Error() string {
 // * `.is_not_within(tolerance)`
 type IntegrityError string
 
-var _ error = (IntegrityError)("")
+var _ error = IntegrityError("")
 
 func (e IntegrityError) Error() string {
 	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)
