@@ -1,7 +1,8 @@
 // Package starlarktruth defines builtins and methods to express
 // test assertions within Starlark programs in the fashion of https://truth.dev
 //
-// This package is a Starlark port of PyTruth https://github.com/google/pytruth (2c3717ddad 2021-03-10)
+// This package is a Starlark port of PyTruth (2c3717ddad 2021-03-10) https://github.com/google/pytruth
+//
 // The Starlark:
 //
 //      assert.that(a).is_equal_to(b)
@@ -19,7 +20,7 @@
 //      AssertThat(d).ContainsAllOf(a, b).InOrder()
 //      AssertThat(d).ContainsAnyOf(a, b, c)
 //
-//  Often, tests assert a relationship between a value produced by the test
+// Often, tests assert a relationship between a value produced by the test
 // (the "actual" value) and some reference value (the "expected" value). It is
 // strongly recommended that the actual value is made the subject of the assertion.
 // For example:

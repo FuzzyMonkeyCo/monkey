@@ -3,7 +3,9 @@ package starlarktruth // import "github.com/FuzzyMonkeyCo/monkey/pkg/starlarktru
 Package starlarktruth defines builtins and methods to express test
 assertions within Starlark programs in the fashion of https://truth.dev
 
-This package is a Starlark port of PyTruth https://github.com/google/pytruth
+This package is a Starlark port of PyTruth (2c3717ddad 2021-03-10)
+https://github.com/google/pytruth
+
 The Starlark:
 
     assert.that(a).is_equal_to(b)
@@ -20,6 +22,16 @@ is equivalent to the following Python:
     AssertThat(d).Contains(a)
     AssertThat(d).ContainsAllOf(a, b).InOrder()
     AssertThat(d).ContainsAnyOf(a, b, c)
+
+Often, tests assert a relationship between a value produced by the test (the
+"actual" value) and some reference value (the "expected" value). It is
+strongly recommended that the actual value is made the subject of the
+assertion. For example:
+
+    assert.that(actual).is_equal_to(expected)    # Recommended.
+    assert.that(expected).is_equal_to(actual)    # Not recommended.
+    assert.that(actual).is_in(expected_possibilities)     # Recommended.
+    assert.that(expected_possibilities).contains(actual)  # Not recommended.
 
 Some assertions
 
@@ -125,15 +137,22 @@ Asserting order
         assert.that([2, 4, 6]).contains_all_of(6, 2)
         assert.that([2, 4, 6]).contains_all_of(6, 2).in_order()     # fails
         assert.that([2, 4, 6]).contains_all_of(2, 6).in_order()
+        assert.that((1, 2, 3)).contains_all_in((1, 3)).in_order()
         assert.that([2, 4, 6]).contains_exactly(2, 6, 4)
         assert.that([2, 4, 6]).contains_exactly(2, 6, 4).in_order() # fails
         assert.that([2, 4, 6]).contains_exactly(2, 4, 6).in_order()
+        assert.that((1, 2, 3)).contains_exactly_elements_in([1, 2, 3]).in_order()
 
      When using `.in_order()`, ensure that both the subject under test and the expected
-    value have a predictable order, otherwise the result is undefined.
+    value have a defined order, otherwise the result is undefined.
     For example, `assert.that(aList).contains_exactly_elements_in(aSet).in_order()`
     may or may not succeed, depending on how the `set` implements ordering.
     The builtin set datatype does not implement ordering.
+    These assertions *may or may not* succeed:
+
+        assert.that((1, 2, 3)).contains_all_in(set([1, 3])).in_order()
+        assert.that(set([3, 2, 1])).contains_exactly_elements_in((1, 2, 3)).in_order()
+        assert.that({1:2, 3:4}).contains_all_in((1, 3)).in_order()
 
 Dictionaries, in addition to the table above
 
@@ -157,7 +176,9 @@ Notes (in no particular order):
     `.is_zero()` and `.is_non_zero()` are provided for semantic convenience.
 
      Starlark strings are not iterable (unlike Python's) but are iterated on as
-    slices of utf-8 runes when needed in this implementation.
+    slices of utf-8 runes when needed in this implementation. This works:
+        assert.that("abcdefg").contains_all_of("a", "c", "e").in_order()
+        assert.that("abcdefg").is_strictly_ordered()
 
      In `.contains...()` assertions a "duplicate values counter" is used that
     relies on the `(starlark.Value).String() string` reprensentation of values
@@ -185,19 +206,20 @@ Notes (in no particular order):
         assert.that(x).is_not_within(y)
         assert.that(x).is_not_within(y).of(z)
      This is why each call to `.that(...)` first checks that no non-terminated
-    assertions were executed in the current thread. A `Close(*starlark.Thread) error`
-    function is also provided to ensure this property holds after the interpreter
-    returns.
+    assertions were previously executed in the current thread.
+     A `Close(*starlark.Thread) error` function is also provided to ensure
+    this property holds after the interpreter returns.
 
      This library is threadsafe; you may execute multiple assertions in parallel.
 
 const Default = "assert"
+var LocalThreadKeyForClose = Default
 func Asserted(th *starlark.Thread) bool
 func Close(th *starlark.Thread) (err error)
 func NewModule(predeclared starlark.StringDict)
 func That(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, ...) (starlark.Value, error)
-type IntegrityError string
 type InvalidAssertion string
 type T struct{ ... }
 type TruthAssertion string
 type UnhandledError struct{ ... }
+type UnresolvedError string
