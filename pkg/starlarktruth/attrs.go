@@ -202,6 +202,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		case "is_within":
 		case "is_not_within":
 		default:
+			// Marks the current subject as having been adequately asserted.
 			defer thread.SetLocal(LocalThreadKeyForClose, εCallFrame)
 			deferred = true
 		}

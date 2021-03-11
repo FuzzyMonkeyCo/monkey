@@ -19,6 +19,7 @@ var _ fmt.Stringer = (*duplicateCounter)(nil)
 // Order is preserved so that error messages containing expected values match.
 //
 // Supports counting values based on their (starlark.Value).String() representation.
+// TODO: track hashable objects in a hashmap. Use a slice and equality for non-hashables.
 type duplicateCounter struct {
 	m map[string]uint
 	s []string
