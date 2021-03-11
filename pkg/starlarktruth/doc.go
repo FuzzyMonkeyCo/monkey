@@ -130,15 +130,22 @@
 //      assert.that([2, 4, 6]).contains_all_of(6, 2)
 //      assert.that([2, 4, 6]).contains_all_of(6, 2).in_order()     # fails
 //      assert.that([2, 4, 6]).contains_all_of(2, 6).in_order()
+//      assert.that((1, 2, 3)).contains_all_in((1, 3)).in_order()
 //      assert.that([2, 4, 6]).contains_exactly(2, 6, 4)
 //      assert.that([2, 4, 6]).contains_exactly(2, 6, 4).in_order() # fails
 //      assert.that([2, 4, 6]).contains_exactly(2, 4, 6).in_order()
+//      assert.that((1, 2, 3)).contains_exactly_elements_in([1, 2, 3]).in_order()
 //
 //   When using `.in_order()`, ensure that both the subject under test and the expected
-//  value have a predictable order, otherwise the result is undefined.
+//  value have a defined order, otherwise the result is undefined.
 //  For example, `assert.that(aList).contains_exactly_elements_in(aSet).in_order()`
 //  may or may not succeed, depending on how the `set` implements ordering.
 //  The builtin set datatype does not implement ordering.
+//  These assertions *may or may not* succeed:
+//
+//      assert.that((1, 2, 3)).contains_all_in(set([1, 3])).in_order()
+//      assert.that(set([3, 2, 1])).contains_exactly_elements_in((1, 2, 3)).in_order()
+//      assert.that({1:2, 3:4}).contains_all_in((1, 3)).in_order()
 //
 // Dictionaries, in addition to the table above
 //

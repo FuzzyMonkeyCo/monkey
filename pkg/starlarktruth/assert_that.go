@@ -707,6 +707,18 @@ func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.containsAll("contains all of", starlark.Tuple(args))
 }
 
+func (t *T) actualAsSlice() ([]starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Iterable:
+		return collect(actual), nil
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		return []starlark.Value(t.actual.(starlark.Tuple)), nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
 func collect(iterable starlark.Iterable) []starlark.Value {
 	var xs []starlark.Value
 	iter := iterable.Iterate()
@@ -733,15 +745,9 @@ func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
 
 // Determines if the subject contains all the expected elements.
 func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	var actualSlice []starlark.Value
-	switch actual := t.actual.(type) {
-	case starlark.Iterable:
-		actualSlice = collect(actual)
-	case starlark.String:
-		t.turnActualIntoIterableFromString()
-		actualSlice = []starlark.Value(t.actual.(starlark.Tuple))
-	default:
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
 	missing := newDuplicateCounter()
 	var actualNotInOrder []starlark.Value // = Tuple
@@ -803,11 +809,10 @@ func containsAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 
 // Determines if the subject contains any of the expected elements.
 func (t *T) containsAny(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
-	actualSlice := collect(actual)
 
 	iterExpected := expected.Iterate()
 	defer iterExpected.Done()
@@ -837,11 +842,10 @@ func containsNoneOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 
 // Determines if the subject contains none of the excluded elements.
 func (t *T) containsNone(failVerb string, excluded starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
-	actualSlice := collect(actual)
 
 	iterExcluded := excluded.Iterate()
 	defer iterExcluded.Done()
