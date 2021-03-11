@@ -8,9 +8,9 @@ import (
 )
 
 const warnContainsExactlySingleIterable = "" +
-	" Passing a single iterable to .containsExactly(*expected) is often" +
+	" Passing a single iterable to .contains_exactly(*expected) is often" +
 	" not the correct thing to do. Did you mean to call" +
-	" .containsExactlyElementsIn(Iterable) instead?"
+	" .contains_exactly_elements_in(some_iterable) instead?"
 
 func errMustBeEqualNumberOfKVPairs(count int) error {
 	return newInvalidAssertion(
