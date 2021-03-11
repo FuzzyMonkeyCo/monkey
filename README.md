@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p feedb065 go1.15.8 linux amd64
+monkey M.m.p feedb065 go1.16 linux amd64
 
 Usage:
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
