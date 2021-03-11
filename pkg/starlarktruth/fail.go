@@ -8,9 +8,9 @@ import (
 )
 
 const warnContainsExactlySingleIterable = "" +
-	" Passing a single iterable to .containsExactly(*expected) is often" +
+	" Passing a single iterable to .contains_exactly(*expected) is often" +
 	" not the correct thing to do. Did you mean to call" +
-	" .containsExactlyElementsIn(Iterable) instead?"
+	" .contains_exactly_elements_in(some_iterable) instead?"
 
 func errMustBeEqualNumberOfKVPairs(count int) error {
 	return newInvalidAssertion(
@@ -63,7 +63,7 @@ func (t *T) failWithBadResults(
 }
 
 func (t *T) failWithSubject(verb string) error {
-	msg := fmt.Sprintf("%s %s", t.subject(), verb)
+	msg := fmt.Sprintf("%s %s.", t.subject(), verb)
 	return newTruthAssertion(msg)
 }
 
@@ -80,11 +80,14 @@ func (t *T) subject() string {
 	case starlark.Callable:
 		str = t.actual.String()
 	case starlark.Tuple:
-		if t.actualIsIterableFromString && len(actual) == 0 {
-			// When printing an empty string that was turned into a tuple
-			// it makes more sense to turn it back into a string
-			// just to display it.
-			str = `<"">`
+		if t.actualIsIterableFromString {
+			var b strings.Builder
+			b.WriteString(`<"`)
+			for _, v := range actual {
+				b.WriteString(v.(starlark.String).GoString())
+			}
+			b.WriteString(`">`)
+			str = b.String()
 		}
 	default:
 	}

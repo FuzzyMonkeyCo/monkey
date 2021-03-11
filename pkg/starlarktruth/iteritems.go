@@ -1,7 +1,7 @@
 package starlarktruth
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 
 	"go.starlark.net/starlark"
@@ -22,12 +22,10 @@ func (ts tupleSlice) String() string {
 	var b strings.Builder
 	b.WriteString(tupleSliceType)
 	b.WriteString("([")
-	first := true
-	for _, v := range ts {
-		if !first {
+	for i, v := range ts {
+		if i != 0 {
 			b.WriteString(", ")
 		}
-		first = false
 		b.WriteString(v.String())
 	}
 	b.WriteString("])")
@@ -41,7 +39,7 @@ func (ts tupleSlice) Freeze() {
 }
 func (ts tupleSlice) Truth() starlark.Bool { return len(ts) > 0 }
 func (ts tupleSlice) Hash() (uint32, error) {
-	return 0, errors.New("unhashable type: " + tupleSliceType)
+	return 0, fmt.Errorf("unhashable type: %s", tupleSliceType)
 }
 
 func (ts tupleSlice) Values() []starlark.Value {

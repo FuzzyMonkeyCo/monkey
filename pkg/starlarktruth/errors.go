@@ -2,6 +2,7 @@ package starlarktruth
 
 import (
 	"fmt"
+	"strings"
 
 	"go.starlark.net/starlark"
 )
@@ -10,20 +11,18 @@ import (
 // such as comparing with None.
 type InvalidAssertion string
 
-var _ error = (InvalidAssertion)("")
+var _ error = InvalidAssertion("")
 
 func newInvalidAssertion(prop string) InvalidAssertion { return InvalidAssertion(prop) }
 func (e InvalidAssertion) Error() string               { return string(e) }
 
 // TruthAssertion signifies an assertion predicate was invalidated.
-type TruthAssertion struct {
-	e string
-}
+type TruthAssertion string
 
-var _ error = (*TruthAssertion)(nil)
+var _ error = TruthAssertion("")
 
-func newTruthAssertion(msg string) *TruthAssertion { return &TruthAssertion{e: msg} }
-func (a *TruthAssertion) Error() string            { return a.e }
+func newTruthAssertion(msg string) TruthAssertion { return TruthAssertion(msg) }
+func (e TruthAssertion) Error() string            { return string(e) }
 
 // unhandled internal & public errors
 
@@ -31,10 +30,11 @@ const errUnhandled = unhandledError(0)
 
 type unhandledError int
 
-var _ error = (unhandledError)(0)
+var _ error = errUnhandled
 
 func (e unhandledError) Error() string { return "unhandled" }
 
+// UnhandledError appears when an operation on an incompatible type is attempted.
 type UnhandledError struct {
 	name   string
 	actual starlark.Value
@@ -50,16 +50,32 @@ func (t *T) unhandled(name string, args ...starlark.Value) *UnhandledError {
 		args:   args,
 	}
 }
+
 func (e UnhandledError) Error() string {
-	return fmt.Sprintf("unhandled .%s with %s for %s", e.name, e.actual.String(), e.args.String())
+	var b strings.Builder
+	b.WriteString("Invalid assertion .")
+	b.WriteString(e.name)
+	b.WriteByte('(')
+	for i, arg := range e.args {
+		if i != 0 {
+			b.WriteString(", ")
+		}
+		b.WriteString(arg.String())
+	}
+	b.WriteString(") on value of type ")
+	b.WriteString(e.actual.Type())
+	return b.String()
 }
 
-var _ error = (*IntegrityError)(nil)
+// UnresolvedError describes that an `assert.that(actual)` was called but never any of its `.truth_methods(subject)`.
+// At the exception of (as each by themselves this still require an assertion):
+// * `.named(name)`
+// * `.is_within(tolerance)`
+// * `.is_not_within(tolerance)`
+type UnresolvedError string
 
-// IntegrityError describes that an `assert.that(actual)` was called but never any of its `.truth_methods(subject)`.
-// At the exception of `.named(name)` as by itself this still requires an assertion.
-type IntegrityError string
+var _ error = UnresolvedError("")
 
-func (e IntegrityError) Error() string {
+func (e UnresolvedError) Error() string {
 	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)
 }

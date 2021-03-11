@@ -27,12 +27,12 @@ func (m *module) Attr(name string) (starlark.Value, error) {
 	if name != "that" {
 		return nil, nil // no such method
 	}
-	b := starlark.NewBuiltin(Default, that)
+	b := starlark.NewBuiltin(Default, That)
 	return b.BindReceiver(m), nil
 }
 
-// Implements the `.that(target)` builtin
-func that(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+// That implements the `.that(target)` builtin
+func That(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var target starlark.Value
 	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &target); err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func that(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwa
 	if err := Close(thread); err != nil {
 		return nil, err
 	}
-	thread.SetLocal(Default, thread.CallFrame(1))
+	thread.SetLocal(LocalThreadKeyForClose, thread.CallFrame(1))
 
 	return newT(target), nil
 }
@@ -51,10 +51,10 @@ var _ starlark.HasAttrs = (*T)(nil)
 
 func newT(target starlark.Value) *T { return &T{actual: target} }
 
-func (t *T) String() string                           { return fmt.Sprintf("%s.that(_)", Default) }
+func (t *T) String() string                           { return fmt.Sprintf("%s.that(%s)", Default, t.actual.String()) }
 func (t *T) Type() string                             { return Default }
 func (t *T) Freeze()                                  { t.actual.Freeze() }
-func (t *T) Truth() starlark.Bool                     { return t.actual.Truth() }
-func (t *T) Hash() (uint32, error)                    { return t.actual.Hash() }
+func (t *T) Truth() starlark.Bool                     { return true }
+func (t *T) Hash() (uint32, error)                    { return 0, fmt.Errorf("unhashable: %s", t.Type()) }
 func (t *T) Attr(name string) (starlark.Value, error) { return builtinAttr(t, name) }
 func (t *T) AttrNames() []string                      { return attrNames }

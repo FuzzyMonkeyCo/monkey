@@ -3,6 +3,8 @@ package starlarktruth
 import (
 	"errors"
 	"fmt"
+	"math"
+	"math/big"
 	"regexp"
 	"strings"
 
@@ -11,12 +13,9 @@ import (
 	"go.starlark.net/syntax"
 )
 
-// Maximum nesting browsed when comparing values
-const maxdepth = 10
-
 func isNotEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 	other := args[0]
-	ok, err := starlark.CompareDepth(syntax.EQL, t.actual, other, maxdepth)
+	ok, err := starlark.Compare(syntax.EQL, t.actual, other)
 	if err != nil {
 		return nil, err
 	}
@@ -58,16 +57,25 @@ func isEqualTo(t *T, args ...starlark.Value) (starlark.Value, error) {
 		if t.actual.Type() == arg1.Type() {
 			switch other := arg1.(type) {
 			case starlark.IterableMapping: // e.g. dict
-				return containsExactlyItemsIn(t, other)
+				if _, err := containsExactlyItemsIn(t, other); err != nil {
+					return nil, err
+				}
+				return starlark.None, nil
 			case starlark.Indexable: // e.g. tuple, list
-				return containsExactlyElementsInOrderIn(t, other)
+				if _, err := containsExactlyElementsIn(t, other); err != nil {
+					return nil, err
+				}
+				return inOrder(t)
 			default: // e.g. set (any other Iterable)
-				return containsExactlyElementsIn(t, other)
+				if _, err := containsExactlyElementsIn(t, other); err != nil {
+					return nil, err
+				}
+				return starlark.None, nil
 			}
 		}
 	default:
 	}
-	ok, err := starlark.CompareDepth(syntax.NEQ, t.actual, arg1, maxdepth)
+	ok, err := starlark.Compare(syntax.NEQ, t.actual, arg1)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +102,10 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 	case starlark.IterableMapping:
 		if argc == 0 {
 			if iterEmpty(actual) {
-				return starlark.None, nil
+				if t.forOrdering == nil {
+					t.forOrdering = &forOrdering{}
+				}
+				return t, nil
 			}
 			return nil, t.failWithProposition("is empty", "")
 		}
@@ -111,7 +122,10 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 	case starlark.Iterable:
 		if argc == 0 {
 			if iterEmpty(actual) {
-				return starlark.None, nil
+				if t.forOrdering == nil {
+					t.forOrdering = &forOrdering{}
+				}
+				return t, nil
 			}
 			return nil, t.failWithProposition("is empty", "")
 		}
@@ -122,11 +136,7 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 			_, isString := args[0].(starlark.String)
 			expectingSingleIterable = isIterable && !isString
 		}
-		opts := []containsOption{}
-		if expectingSingleIterable {
-			opts = append(opts, warnElementsIn())
-		}
-		return t.containsExactlyElementsIn(tup, opts...)
+		return t.containsExactlyElementsIn(tup, expectingSingleIterable)
 	case starlark.String:
 		t.turnActualIntoIterableFromString()
 		return containsExactly(t, args...)
@@ -135,50 +145,36 @@ func containsExactly(t *T, args ...starlark.Value) (starlark.Value, error) {
 	}
 }
 
-func containsExactlyInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
-	t.askedInOrder = true
-	return containsExactly(t, args...)
-}
-
-func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	if t.askedInOrder {
-		// TODO: error about how in_order is invalid with dicts
+func inOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if t.forOrdering == nil {
 		return nil, errUnhandled
 	}
+	if err := t.forOrdering.inOrderError; err != nil {
+		return nil, err
+	}
+	return starlark.None, nil
+}
+
+var errDictOrdering = newInvalidAssertion("values of type dict are not ordered")
+
+func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	arg1 := args[0] // TODO: what when passed **kwargs?
 	if imActual, ok := t.actual.(starlark.IterableMapping); ok {
 		if imExpected, ok := arg1.(starlark.IterableMapping); ok {
-			return containsExactly(newT(newTupleSlice(imActual.Items())),
-				newTupleSlice(imExpected.Items()).Values()...)
+			tt := newT(newTupleSlice(imActual.Items()))
+			tt.forOrdering = &forOrdering{inOrderError: errDictOrdering}
+			return containsExactly(tt, newTupleSlice(imExpected.Items()).Values()...)
 		}
 	}
 	return nil, errUnhandled
 }
 
-func containsExactlyElementsInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	t.askedInOrder = true
-	return t.containsExactlyElementsIn(args[0])
-}
-
 func containsExactlyElementsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	return t.containsExactlyElementsIn(args[0])
+	return t.containsExactlyElementsIn(args[0], false)
 }
-
-type containsOptions struct {
-	warnElementsIn bool
-}
-
-type containsOption func(*containsOptions)
-
-func warnElementsIn() containsOption { return func(o *containsOptions) { o.warnElementsIn = true } }
 
 // Determines if the subject contains exactly the expected elements.
-func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOption) (starlark.Value, error) {
-	opts := &containsOptions{}
-	for _, o := range os {
-		o(opts)
-	}
-
+func (t *T) containsExactlyElementsIn(expected starlark.Value, warnElementsIn bool) (starlark.Value, error) {
 	iterableActual, err := t.failIterable()
 	if err != nil {
 		return nil, err
@@ -196,9 +192,11 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 	defer iterExpected.Done()
 
 	warning := ""
-	if opts.warnElementsIn {
+	if warnElementsIn {
 		warning = warnContainsExactlySingleIterable
 	}
+
+	forOrderingSet := t.forOrdering != nil
 
 	var elemActual, elemExpected starlark.Value
 	iterations := 0
@@ -217,7 +215,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 		// in_order cannot succeed, so we can check the rest of the elements
 		// more normally. Since any previous pairs of elements we iterated
 		// over were equal, they have no effect on the result now.
-		ok, err := starlark.CompareDepth(syntax.NEQ, elemActual, elemExpected, maxdepth)
+		ok, err := starlark.Compare(syntax.NEQ, elemActual, elemExpected)
 		if err != nil {
 			return nil, err
 		}
@@ -267,9 +265,12 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			}
 
 			// The iterables were not in the same order.
-			if t.askedInOrder {
-				return nil, t.failComparingValues(
-					"contains exactly these elements in order", expected, "")
+			if !forOrderingSet {
+				forOrderingSet = true
+				t.forOrdering = &forOrdering{
+					inOrderError: t.failComparingValues(
+						"contains exactly these elements in order", expected, ""),
+				}
 			}
 		}
 	}
@@ -298,16 +299,19 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, os ...containsOpt
 			"is missing", missing, warning)
 	}
 
+	if !forOrderingSet {
+		t.forOrdering = &forOrdering{}
+	}
+
 	// If neither iterator has elements, we reached the end and the elements
 	// were in order.
-	return starlark.None, nil
+	return t, nil
 }
 
 // Adds a prefix to the subject, when it is displayed in error messages.
 //
 // This is especially useful in the context of types that have no helpful
-// string representation (e.g., boolean). Writing
-// assert.that(foo).named('foo').is_true()
+// string representation (e.g., bool). Writing `assert.that(foo).named("foo").is_true()`
 // then results in a more reasonable error.
 func named(t *T, args ...starlark.Value) (starlark.Value, error) {
 	str, ok := args[0].(starlark.String)
@@ -372,7 +376,7 @@ func (t *T) comparable(bName, verb string, op syntax.Token, other starlark.Value
 	if err := t.failNone(bName, other); err != nil {
 		return nil, err
 	}
-	ok, err := starlark.CompareDepth(op, t.actual, other, maxdepth)
+	ok, err := starlark.Compare(op, t.actual, other)
 	if err != nil {
 		return nil, err
 	}
@@ -406,7 +410,7 @@ func isIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -443,7 +447,7 @@ func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	case starlark.Indexable:
 		for ix := 0; ix < iterable.Len(); ix++ {
 			e := iterable.Index(ix)
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -460,7 +464,7 @@ func isNotIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, t.actual, e, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, t.actual, e)
 			if err != nil {
 				return nil, err
 			}
@@ -613,7 +617,7 @@ func contains(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, e, arg1)
 			if err != nil {
 				return nil, err
 			}
@@ -643,7 +647,7 @@ func doesNotContain(t *T, args ...starlark.Value) (starlark.Value, error) {
 		defer it.Done()
 		var e starlark.Value
 		for it.Next(&e) {
-			ok, err := starlark.CompareDepth(syntax.EQL, e, arg1, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, e, arg1)
 			if err != nil {
 				return nil, err
 			}
@@ -692,11 +696,6 @@ func containsNoDuplicates(t *T, args ...starlark.Value) (starlark.Value, error) 
 	return starlark.None, nil
 }
 
-func containsAllInOrderIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	t.askedInOrder = true
-	return containsAllIn(t, args...)
-}
-
 func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	if arg1, ok := args[0].(starlark.Iterable); ok {
 		return t.containsAll("contains all elements in", arg1)
@@ -704,13 +703,20 @@ func containsAllIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return nil, errUnhandled
 }
 
-func containsAllOfInOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
-	t.askedInOrder = true
-	return containsAllOf(t, args...)
-}
-
 func containsAllOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return t.containsAll("contains all of", starlark.Tuple(args))
+}
+
+func (t *T) actualAsSlice() ([]starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Iterable:
+		return collect(actual), nil
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		return []starlark.Value(t.actual.(starlark.Tuple)), nil
+	default:
+		return nil, errUnhandled
+	}
 }
 
 func collect(iterable starlark.Iterable) []starlark.Value {
@@ -726,7 +732,7 @@ func collect(iterable starlark.Iterable) []starlark.Value {
 
 func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
 	for i, x := range xs {
-		ok, err := starlark.CompareDepth(syntax.EQL, v, x, maxdepth)
+		ok, err := starlark.Compare(syntax.EQL, v, x)
 		if err != nil {
 			return -2, err
 		}
@@ -739,11 +745,10 @@ func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
 
 // Determines if the subject contains all the expected elements.
 func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
-	actualSlice := collect(actual)
 	missing := newDuplicateCounter()
 	var actualNotInOrder []starlark.Value // = Tuple
 	ordered := true
@@ -758,7 +763,7 @@ func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value
 			return nil, err
 		}
 		if index != -1 {
-			// Drain all the elements before that element into actual_not_in_order.
+			// Drain all the elements before that element into actualNotInOrder.
 			actualNotInOrder = append(actualNotInOrder, actualSlice[0:index]...)
 			// And remove the element from the actual_list.
 			actualSlice = actualSlice[1:]
@@ -771,10 +776,10 @@ func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value
 		}
 		if index != -1 {
 			actualNotInOrder = append(actualNotInOrder[:index], actualNotInOrder[index+1:]...)
-			// If it was in actual_not_in_order, we're not in order.
+			// If it was in actualNotInOrder, we're not in order.
 			ordered = false
 		} else {
-			// It is not in actual_not_in_order, we're missing an expected element.
+			// It is not in actualNotInOrder, we're missing an expected element.
 			missing.Increment(i)
 		}
 	}
@@ -784,10 +789,11 @@ func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value
 		return nil, t.failWithBadResults(verb, expected, "is missing", missing, "")
 	}
 
-	if t.askedInOrder && !ordered {
-		return nil, t.failComparingValues("contains all elements in order", expected, "")
+	t.forOrdering = &forOrdering{}
+	if !ordered {
+		t.forOrdering.inOrderError = t.failComparingValues("contains all elements in order", expected, "")
 	}
-	return starlark.None, nil
+	return t, nil
 }
 
 func containsAnyIn(t *T, args ...starlark.Value) (starlark.Value, error) {
@@ -803,11 +809,10 @@ func containsAnyOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 
 // Determines if the subject contains any of the expected elements.
 func (t *T) containsAny(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
-	actualSlice := collect(actual)
 
 	iterExpected := expected.Iterate()
 	defer iterExpected.Done()
@@ -837,11 +842,10 @@ func containsNoneOf(t *T, args ...starlark.Value) (starlark.Value, error) {
 
 // Determines if the subject contains none of the excluded elements.
 func (t *T) containsNone(failVerb string, excluded starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
-		return nil, errUnhandled
+	actualSlice, err := t.actualAsSlice()
+	if err != nil {
+		return nil, err
 	}
-	actualSlice := collect(actual)
 
 	iterExcluded := excluded.Iterate()
 	defer iterExcluded.Done()
@@ -887,10 +891,20 @@ func isStrictlyOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value,
 
 // Iterates over this subject and compares adjacent elements.
 func (t *T) pairwiseCheck(pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
+	switch actual := t.actual.(type) {
+	case starlark.IterableMapping:
+		return nil, errDictOrdering
+	case starlark.Iterable:
+		return t.doPairwiseCheck(actual, pairComparator, strict)
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		return t.doPairwiseCheck(t.actual.(starlark.Iterable), pairComparator, strict)
+	default:
 		return nil, errUnhandled
 	}
+}
+
+func (t *T) doPairwiseCheck(actual starlark.Iterable, pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
 	iterActual := actual.Iterate()
 	defer iterActual.Done()
 
@@ -967,7 +981,7 @@ func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 			return nil, err
 		}
 		if found {
-			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, value, val)
 			if err != nil {
 				return nil, err
 			}
@@ -989,7 +1003,7 @@ func containsItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 				if len(kv) != 2 {
 					break
 				}
-				ok, err := starlark.CompareDepth(syntax.EQL, value, kv[1], maxdepth)
+				ok, err := starlark.Compare(syntax.EQL, value, kv[1])
 				if err != nil {
 					return nil, err
 				}
@@ -1022,7 +1036,7 @@ func doesNotContainItem(t *T, args ...starlark.Value) (starlark.Value, error) {
 			return nil, err
 		}
 		if found {
-			ok, err := starlark.CompareDepth(syntax.EQL, value, val, maxdepth)
+			ok, err := starlark.Compare(syntax.EQL, value, val)
 			if err != nil {
 				return nil, err
 			}
@@ -1153,4 +1167,238 @@ func doesNotContainMatch(t *T, args ...starlark.Value) (starlark.Value, error) {
 		}
 	}
 	return nil, errUnhandled
+}
+
+func isOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if expected, ok := args[0].(starlark.String); ok {
+		actualType := t.actual.Type()
+		if expected.GoString() == actualType {
+			return starlark.None, nil
+		}
+		msg := fmt.Sprintf("is of type <%s>", expected)
+		suffix := fmt.Sprintf(" However, it is of type <%q>", actualType)
+		return nil, t.failWithProposition(msg, suffix)
+	}
+	return nil, errUnhandled
+}
+
+func isNotOfType(t *T, args ...starlark.Value) (starlark.Value, error) {
+	if expected, ok := args[0].(starlark.String); ok {
+		actualType := t.actual.Type()
+		if expected.GoString() != actualType {
+			return starlark.None, nil
+		}
+		msg := fmt.Sprintf("is not of type <%s>", expected)
+		suffix := fmt.Sprintf(" However, it is of type <%q>", actualType)
+		return nil, t.failWithProposition(msg, suffix)
+	}
+	return nil, errUnhandled
+}
+
+func isZero(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if actual != 0 {
+			return nil, t.failWithProposition("is zero", "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		if actual.Truth() {
+			return nil, t.failWithProposition("is zero", "")
+		}
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNonZero(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if actual == 0 {
+			return nil, t.failWithProposition("is non-zero", "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		if !actual.Truth() {
+			return nil, t.failWithProposition("is non-zero", "")
+		}
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isFloatNotFinite(f float64) bool { return math.IsInf(f, 0) || math.IsNaN(f) }
+
+func isFinite(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if isFloatNotFinite(float64(actual)) {
+			return nil, t.failWithSubject("should have been finite")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNotFinite(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if !isFloatNotFinite(float64(actual)) {
+			return nil, t.failWithSubject("should not have been finite")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return nil, t.failWithSubject("should not have been finite")
+	default:
+		return nil, errUnhandled
+	}
+}
+
+var (
+	pInf = starlark.Float(math.Inf(+1))
+	nInf = starlark.Float(math.Inf(-1))
+)
+
+func isPositiveInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isEqualTo(t, pInf)
+}
+
+func isNegativeInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isEqualTo(t, nInf)
+}
+
+func isNotPositiveInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isNotEqualTo(t, pInf)
+}
+
+func isNotNegativeInfinity(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return isNotEqualTo(t, nInf)
+}
+
+var nan = starlark.Float(math.NaN())
+
+func isNaN(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if !math.IsNaN(float64(actual)) {
+			return nil, t.failComparingValues("is equal to", nan, "")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return nil, t.failComparingValues("is equal to", nan, "")
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func isNotNaN(t *T, args ...starlark.Value) (starlark.Value, error) {
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		if math.IsNaN(float64(actual)) {
+			return nil, t.failWithSubject("should not have been <nan>")
+		}
+		return starlark.None, nil
+	case starlark.Int:
+		return starlark.None, nil
+	default:
+		return nil, errUnhandled
+	}
+}
+
+func (t *T) setWithinTolerance(tolerance starlark.Value, within bool) (starlark.Value, error) {
+	wt := withinTolerance{
+		within:           within,
+		toleranceAsValue: tolerance,
+	}
+
+	switch delta := tolerance.(type) {
+	case starlark.Float:
+		f := float64(delta)
+		if math.IsNaN(f) {
+			return nil, newInvalidAssertion("tolerance cannot be <nan>")
+		}
+		if f < 0 {
+			return nil, newInvalidAssertion("tolerance cannot be negative")
+		}
+		if math.IsInf(f, +1) {
+			return nil, newInvalidAssertion("tolerance cannot be positive infinity")
+		}
+		wt.tolerance = new(big.Rat).SetFloat64(f)
+	case starlark.Int:
+		if delta.Sign() < 0 {
+			return nil, newInvalidAssertion("tolerance cannot be negative")
+		}
+		wt.tolerance = new(big.Rat).SetInt(delta.BigInt())
+	default:
+		return nil, errUnhandled
+	}
+
+	switch actual := t.actual.(type) {
+	case starlark.Float:
+		wt.actual = new(big.Rat).SetFloat64(float64(actual))
+	case starlark.Int:
+		wt.actual = new(big.Rat).SetInt(actual.BigInt())
+	default:
+		return nil, errUnhandled
+	}
+
+	if t.withinTolerance != nil {
+		return nil, newInvalidAssertion("tolerance cannot be overwritten")
+	}
+	t.withinTolerance = &wt
+	return t, nil
+}
+
+func isWithin(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.setWithinTolerance(args[0], true)
+}
+
+func isNotWithin(t *T, args ...starlark.Value) (starlark.Value, error) {
+	return t.setWithinTolerance(args[0], false)
+}
+
+func (t *T) withinToleranceOf(expected *big.Rat, expectedAsValue starlark.Value) (starlark.Value, error) {
+	if t.withinTolerance == nil {
+		// .of() called, .is_within()/.is_not_within() not called
+		return nil, errUnhandled
+	}
+
+	tolerablyEqual := false
+	if expected != nil && t.withinTolerance.actual != nil {
+		// tolerably_equal = abs(self._actual - expected) <= self._tolerance
+		diff := new(big.Rat).Sub(t.withinTolerance.actual, expected)
+		tolerablyEqual = new(big.Rat).Abs(diff).Cmp(t.withinTolerance.tolerance) < 1
+	}
+	// Otherwise, (*big.Rat).SetFloat64(float64) was given non-finite
+	// in which case Cmp must fail (i.e tolerablyEqual=false)
+
+	notWithin := ""
+	if !t.withinTolerance.within {
+		notWithin = "not "
+	}
+	if t.withinTolerance.within != tolerablyEqual {
+		msg := fmt.Sprintf("and <%s> should %shave been within <%s> of each other",
+			expectedAsValue, notWithin, t.withinTolerance.toleranceAsValue)
+		return nil, t.failWithSubject(msg)
+	}
+	return starlark.None, nil
+}
+
+func of(t *T, args ...starlark.Value) (starlark.Value, error) {
+	expected := args[0]
+	switch x := expected.(type) {
+	case starlark.Float:
+		r := new(big.Rat).SetFloat64(float64(x))
+		return t.withinToleranceOf(r, expected)
+	case starlark.Int:
+		r := new(big.Rat).SetInt(x.BigInt())
+		return t.withinToleranceOf(r, expected)
+	default:
+		return nil, errUnhandled
+	}
 }
