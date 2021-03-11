@@ -1,7 +1,7 @@
 // Package starlarktruth defines builtins and methods to express
 // test assertions within Starlark programs in the fashion of https://truth.dev
 //
-// This package is a Starlark port of PyTruth https://github.com/google/pytruth
+// This package is a Starlark port of PyTruth https://github.com/google/pytruth (2c3717ddad 2021-03-10)
 // The Starlark:
 //
 //      assert.that(a).is_equal_to(b)
@@ -19,6 +19,15 @@
 //      AssertThat(d).ContainsAllOf(a, b).InOrder()
 //      AssertThat(d).ContainsAnyOf(a, b, c)
 //
+// Often, tests assert a relationship between a value produced by the test
+// (the "actual" value) and some reference value (the "expected" value). It is
+// strongly recommended that the actual value is made the subject of the assertion.
+// For example:
+//
+//      assert.that(actual).is_equal_to(expected)    # Recommended.
+//      assert.that(expected).is_equal_to(actual)    # Not recommended.
+//      assert.that(actual).is_in(expected_possibilities)     # Recommended.
+//      assert.that(expected_possibilities).contains(actual)  # Not recommended.
 //
 // Some assertions
 //
@@ -154,7 +163,9 @@
 //  `.is_zero()` and `.is_non_zero()` are provided for semantic convenience.
 //
 //   Starlark strings are not iterable (unlike Python's) but are iterated on as
-//  slices of utf-8 runes when needed in this implementation.
+//  slices of utf-8 runes when needed in this implementation. This works:
+//      assert.that("abcdefg").contains_all_of("a", "c", "e").in_order()
+//      assert.that("abcdefg").is_strictly_ordered()
 //
 //   In `.contains...()` assertions a "duplicate values counter" is used that
 //  relies on the `(starlark.Value).String() string` reprensentation of values

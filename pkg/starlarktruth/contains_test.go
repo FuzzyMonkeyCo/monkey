@@ -244,6 +244,8 @@ func TestContainsAllOf(t *testing.T) {
 			`contains all elements in order <([], 3, 5)>`),
 		s(`2, 3`):    fail(ss, "contains all of <(2, 3)>. It is missing <2>"),
 		s(`2, 3, 6`): fail(ss, "contains all of <(2, 3, 6)>. It is missing <2, 6>"),
+
+		`that("abcdefg").contains_all_of("a", "c", "e").in_order()`: nil,
 	})
 }
 

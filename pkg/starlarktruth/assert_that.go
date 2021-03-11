@@ -734,11 +734,16 @@ func indexOf(v starlark.Value, xs []starlark.Value) (int, error) {
 
 // Determines if the subject contains all the expected elements.
 func (t *T) containsAll(verb string, expected starlark.Iterable) (starlark.Value, error) {
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
+	var actualSlice []starlark.Value
+	switch actual := t.actual.(type) {
+	case starlark.Iterable:
+		actualSlice = collect(actual)
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		actualSlice = []starlark.Value(t.actual.(starlark.Tuple))
+	default:
 		return nil, errUnhandled
 	}
-	actualSlice := collect(actual)
 	missing := newDuplicateCounter()
 	var actualNotInOrder []starlark.Value // = Tuple
 	ordered := true
