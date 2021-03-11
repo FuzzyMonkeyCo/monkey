@@ -883,14 +883,20 @@ func isStrictlyOrderedAccordingTo(t *T, args ...starlark.Value) (starlark.Value,
 
 // Iterates over this subject and compares adjacent elements.
 func (t *T) pairwiseCheck(pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
-	if _, ok := t.actual.(starlark.IterableMapping); ok {
+	switch actual := t.actual.(type) {
+	case starlark.IterableMapping:
 		return nil, errDictOrdering
-	}
-
-	actual, ok := t.actual.(starlark.Iterable)
-	if !ok {
+	case starlark.Iterable:
+		return t.doPairwiseCheck(actual, pairComparator, strict)
+	case starlark.String:
+		t.turnActualIntoIterableFromString()
+		return t.doPairwiseCheck(t.actual.(starlark.Iterable), pairComparator, strict)
+	default:
 		return nil, errUnhandled
 	}
+}
+
+func (t *T) doPairwiseCheck(actual starlark.Iterable, pairComparator *starlark.Function, strict bool) (starlark.Value, error) {
 	iterActual := actual.Iterate()
 	defer iterActual.Done()
 

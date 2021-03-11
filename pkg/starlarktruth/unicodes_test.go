@@ -9,11 +9,9 @@ func TestContainsExactlyHandlesStringsAsCodepoints(t *testing.T) {
 		// more multiple bytes codepoint
 		u2 = `😿`
 		// concats
-		full      = `"abc` + u1 + u2 + `"`
-		fullTuple = `("a", "b", "c", "` + u1 + `", "` + u2 + `")`
-		tuple     = `("a", "` + u1 + `", "c")`
-		elput     = `("c", "` + u1 + `", "a")`
-		abc       = `("a", "b", "c")`
+		full  = `"abc` + u1 + u2 + `"`
+		tuple = `("a", "` + u1 + `", "c")`
+		elput = `("c", "` + u1 + `", "a")`
 	)
 	testEach(t, map[string]error{
 		`that("abc").contains_exactly("abc")`: fail(abc,
@@ -34,10 +32,10 @@ func TestContainsExactlyHandlesStringsAsCodepoints(t *testing.T) {
 		`that(` + tuple + `).contains_exactly` + elput + `.in_order()`: fail(tuple,
 			`contains exactly these elements in order <`+elput+`>`),
 
-		`that(` + full + `).contains_exactly("a", "` + u1 + `")`: fail(fullTuple,
+		`that(` + full + `).contains_exactly("a", "` + u1 + `")`: fail(full,
 			`contains exactly <("a", "`+u1+`")>. It has unexpected items <"b", "c", "`+u2+`">`),
 
-		`that(` + full + `).contains_exactly("a` + u1 + `")`: fail(fullTuple,
+		`that(` + full + `).contains_exactly("a` + u1 + `")`: fail(full,
 			`contains exactly <("a`+u1+`",)>. It is missing <"a`+u1+`"> and has unexpected items <"a", "b", "c", "`+u1+`", "`+u2+`">`),
 	})
 }

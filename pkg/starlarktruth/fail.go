@@ -80,11 +80,14 @@ func (t *T) subject() string {
 	case starlark.Callable:
 		str = t.actual.String()
 	case starlark.Tuple:
-		if t.actualIsIterableFromString && len(actual) == 0 {
-			// When printing an empty string that was turned into a tuple
-			// it makes more sense to turn it back into a string
-			// just to display it.
-			str = `<"">`
+		if t.actualIsIterableFromString {
+			var b strings.Builder
+			b.WriteString(`<"`)
+			for _, v := range actual {
+				b.WriteString(v.(starlark.String).GoString())
+			}
+			b.WriteString(`">`)
+			str = b.String()
 		}
 	default:
 	}
