@@ -41,7 +41,7 @@ func That(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwa
 	if err := Close(thread); err != nil {
 		return nil, err
 	}
-	thread.SetLocal(Default, thread.CallFrame(1))
+	thread.SetLocal(LocalThreadKeyForClose, thread.CallFrame(1))
 
 	return newT(target), nil
 }

@@ -19,7 +19,7 @@
 //      AssertThat(d).ContainsAllOf(a, b).InOrder()
 //      AssertThat(d).ContainsAnyOf(a, b, c)
 //
-// Often, tests assert a relationship between a value produced by the test
+//  Often, tests assert a relationship between a value produced by the test
 // (the "actual" value) and some reference value (the "expected" value). It is
 // strongly recommended that the actual value is made the subject of the assertion.
 // For example:
@@ -193,9 +193,9 @@
 //      assert.that(x).is_not_within(y)
 //      assert.that(x).is_not_within(y).of(z)
 //   This is why each call to `.that(...)` first checks that no non-terminated
-//  assertions were executed in the current thread. A `Close(*starlark.Thread) error`
-//  function is also provided to ensure this property holds after the interpreter
-//  returns.
+//  assertions were previously executed in the current thread.
+//   A `Close(*starlark.Thread) error` function is also provided to ensure
+//  this property holds after the interpreter returns.
 //
 //   This library is threadsafe; you may execute multiple assertions in parallel.
 //

@@ -311,8 +311,7 @@ func (t *T) containsExactlyElementsIn(expected starlark.Value, warnElementsIn bo
 // Adds a prefix to the subject, when it is displayed in error messages.
 //
 // This is especially useful in the context of types that have no helpful
-// string representation (e.g., boolean). Writing
-// assert.that(foo).named('foo').is_true()
+// string representation (e.g., bool). Writing `assert.that(foo).named("foo").is_true()`
 // then results in a more reasonable error.
 func named(t *T, args ...starlark.Value) (starlark.Value, error) {
 	str, ok := args[0].(starlark.String)

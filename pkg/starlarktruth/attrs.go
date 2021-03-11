@@ -129,19 +129,27 @@ func findAttr(name string) (attr, int) {
 	return nil, 0
 }
 
+// LocalThreadKeyForClose is used by Close() and internally to check subjects
+// are eventually resolved.
+var LocalThreadKeyForClose = Default
+
 var εCallFrame = starlark.CallFrame{Pos: syntax.Position{Line: -1, Col: -1}}
 
-// Close possibly returns an IntegrityError.
+// Close ensures that all created subjects were eventually resolved.
+// Otherwise it returns an error pinpointing the UnresolvedError position.
+// A subject is considered resolved what at least one proposition has been
+// executed on it. An unresolved or dangling assertion is almost certainly a
+// test author error.
 func Close(th *starlark.Thread) (err error) {
-	if c, ok := th.Local(Default).(starlark.CallFrame); ok && c != εCallFrame {
-		err = IntegrityError(c.Pos.String())
+	if c, ok := th.Local(LocalThreadKeyForClose).(starlark.CallFrame); ok && c != εCallFrame {
+		err = UnresolvedError(c.Pos.String())
 	}
 	return
 }
 
 // Asserted returns whether all assert.that(x)... call chains were properly terminated
 func Asserted(th *starlark.Thread) bool {
-	_, ok := th.Local(Default).(starlark.CallFrame)
+	_, ok := th.Local(LocalThreadKeyForClose).(starlark.CallFrame)
 	return ok
 }
 
@@ -194,7 +202,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 		case "is_within":
 		case "is_not_within":
 		default:
-			defer thread.SetLocal(Default, εCallFrame)
+			defer thread.SetLocal(LocalThreadKeyForClose, εCallFrame)
 			deferred = true
 		}
 

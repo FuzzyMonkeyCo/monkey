@@ -104,7 +104,7 @@ func TestClosedness(t *testing.T) {
 		`
 fortytwo = that(True)
 that(False).is_false()
-`: IntegrityError("TestClosedness/_fortytwo_=_that(True)_that(False).is_false()_.star:4:16"),
+`: UnresolvedError("TestClosedness/_fortytwo_=_that(True)_that(False).is_false()_.star:4:16"),
 		`
 fortytwo = that(True)
 fortytwo.is_true()
@@ -112,15 +112,15 @@ that(False).is_false()
 `: nil,
 	})
 	testEach(t, map[string]error{
-		`assert.that(True)`:           IntegrityError("TestClosedness/assert.that(True).star:3:12"),
+		`assert.that(True)`:           UnresolvedError("TestClosedness/assert.that(True).star:3:12"),
 		`assert.that(True).is_true()`: nil,
 
-		`assert.that(True).named("eh")`:           IntegrityError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
+		`assert.that(True).named("eh")`:           UnresolvedError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
 		`assert.that(True).named("eh").is_true()`: nil,
 
-		`assert.that(10).is_within(0.1)`:            IntegrityError("TestClosedness/assert.that(10).is_within(0.1).star:3:12"),
+		`assert.that(10).is_within(0.1)`:            UnresolvedError("TestClosedness/assert.that(10).is_within(0.1).star:3:12"),
 		`assert.that(10).is_within(0.1).of(10)`:     nil,
-		`assert.that(10).is_not_within(0.1)`:        IntegrityError("TestClosedness/assert.that(10).is_not_within(0.1).star:3:12"),
+		`assert.that(10).is_not_within(0.1)`:        UnresolvedError("TestClosedness/assert.that(10).is_not_within(0.1).star:3:12"),
 		`assert.that(10).is_not_within(0.1).of(42)`: nil,
 	}, asModule)
 }

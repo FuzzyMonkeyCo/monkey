@@ -67,15 +67,15 @@ func (e UnhandledError) Error() string {
 	return b.String()
 }
 
-// IntegrityError describes that an `assert.that(actual)` was called but never any of its `.truth_methods(subject)`.
+// UnresolvedError describes that an `assert.that(actual)` was called but never any of its `.truth_methods(subject)`.
 // At the exception of (as each by themselves this still require an assertion):
 // * `.named(name)`
 // * `.is_within(tolerance)`
 // * `.is_not_within(tolerance)`
-type IntegrityError string
+type UnresolvedError string
 
-var _ error = IntegrityError("")
+var _ error = UnresolvedError("")
 
-func (e IntegrityError) Error() string {
+func (e UnresolvedError) Error() string {
 	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)
 }
