@@ -69,6 +69,8 @@ or the equivalent:
 curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownloader.sh | BINDIR=/usr/local/bin sh
 ```
 
+With a recent enough Docker: `DOCKER_BUILDKIT=1 docker build --platform=local -o . git://github.com/FuzzyMonkeyCo/monkey`
+
 Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
 
 ### Configuration
