@@ -2,7 +2,6 @@ name: pr
 
 on:
   pull_request:
-  push:
 
 # PR to master => build + require changes to Tagfile + grep -F . Tagfile => merge
 #   on: {push: {branches: [master]}}
@@ -14,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with: {fetch-depth: 0} #= not shallow
 
     - name: Ensure Tagfile is usable
       run: grep -F . Tagfile
@@ -57,8 +55,13 @@ jobs:
         ./monkey --version | grep $SHORT_COMMIT
         rm ./monkey
 
+    - name: Checkout master Tagfile
+      uses: actions/checkout@v2
+      with:
+        ref: master
+        path: ./dist/master-Tagfile
     - name: Ensure Tagfile has changes
-      run: git diff master... -- Tagfile | grep -q .
+      run: '! diff -q Tagfile ./dist/master-Tagfile/Tagfile'
 
   #   - name: Publish
   #     uses: goreleaser/goreleaser-action@v1
