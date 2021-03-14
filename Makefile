@@ -36,7 +36,6 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	mv github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go $@
 	git clean -xdff -- ./github.com
 
-lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./golint.sh
@@ -58,9 +57,12 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	richgo test -tags fakefs -count 10 ./...
+	richgo test -tags fakefs -race ./...
 test.ci: all
-	go test -tags fakefs -v -race ./...
+	go test -tags fakefs -count 10 ./...
+
+ci:
+	DOCKER_BUILDKIT=1 docker build --target=ci-checks .
 
 ape: $(EXE).test
 	./ape.sh --version

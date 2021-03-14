@@ -17,24 +17,6 @@ jobs:
     - name: Ensure Tagfile is usable
       run: grep -F . Tagfile
 
-    # - name: Lint
-    #   run: |
-    #     sudo apt-get install -y silversearcher-ag  # For golint.sh
-    #     ag --version
-    #     [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
-    #     make lint
-
-    # - name: Mod
-    #   run: |
-    #     go mod tidy
-    #     go mod verify
-    #     git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
-
-    # - name: Test
-    #   run: |
-    #     make test.ci
-    #     git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
-
     - name: Build with goreleaser
       run: mkdir dist && DOCKER_BUILDKIT=1 docker build --target=goreleaser-dist -o dist/ .
 

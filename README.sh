@@ -2,9 +2,6 @@
 
 # Generate README.md
 
-set -o errtrace
-set -o pipefail
-
 [[ 1 -ne $(git status --porcelain -- README.md | grep -Ec '^.[^ ]') ]] || exit 0
 
 beg_usage=$(grep -n '```' -- README.md | head -n1 | cut -d: -f1)
