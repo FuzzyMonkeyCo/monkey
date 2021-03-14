@@ -4,14 +4,11 @@
 # locked goreleaser/goreleaser:latest @ 2021/03/14 on linux/amd64
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
 
-
-## CI checks
-
-FROM go-releaser AS ci-checks
+FROM go-releaser AS base
 COPY go.??? .
 RUN \
-  --mount=target=/root/.cache,type=cache \
-  --mount=target=/go/pkg/mod,type=cache \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
     set -ux \
  && apk add the_silver_searcher \
  && ag --version \
@@ -20,18 +17,25 @@ RUN \
  && export CGO_ENABLED=0 \
  && go mod download
 COPY . .
+
+
+## CI checks
+
+FROM base AS ci-check--lint
 RUN \
-  --mount=target=/root/.cache,type=cache \
-  --mount=target=/go/pkg/mod,type=cache \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
     set -ux \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && export CGO_ENABLED=0 \
  && make lint \
  && git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+
+FROM base AS ci-check--mod
 RUN \
-  --mount=target=/root/.cache,type=cache \
-  --mount=target=/go/pkg/mod,type=cache \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
     set -ux \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
@@ -39,9 +43,11 @@ RUN \
  && go mod tidy \
  && go mod verify \
  && git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+
+FROM base AS ci-check--test
 RUN \
-  --mount=target=/root/.cache,type=cache \
-  --mount=target=/go/pkg/mod,type=cache \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
     set -ux \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
@@ -52,11 +58,10 @@ RUN \
 
 ## Build all platforms/OS
 
-FROM go-releaser AS monkey-build
-COPY . .
+FROM base AS monkey-build
 RUN \
-  --mount=target=/root/.cache,type=cache \
-  --mount=target=/go/pkg/mod,type=cache \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/go/pkg/mod \
     set -ux \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
@@ -77,7 +82,6 @@ COPY --from=monkey-build /go/dist/monkey-*.zip /
 FROM monkey-build AS monkey-build-darwin
 RUN set -ux \
  && tar zxvf ./dist/monkey-Darwin-x86_64.tar.gz -C .
-
 FROM scratch AS binaries-darwin
 COPY --from=monkey-build-darwin /go/monkey /
 

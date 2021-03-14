@@ -63,7 +63,7 @@ test.ci: all
 	go test -tags fakefs -count 10 ./...
 
 ci:
-	DOCKER_BUILDKIT=1 docker build --target=ci-checks .
+	docker buildx bake ci-checks
 
 ape: $(EXE).test
 	./ape.sh --version
