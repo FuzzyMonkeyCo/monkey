@@ -1,10 +1,12 @@
 # syntax=docker/dockerfile:1.2
 
+# locked goreleaser/goreleaser:latest @ 2021/03/14 on linux/amd64
+FROM --platform=$BUILDPLATFORM goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
+
 
 ## Build all platforms/OS
 
-# locked goreleaser/goreleaser:latest @ 2021/03/14
-FROM --platform=$BUILDPLATFORM goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS monkey-build
+FROM go-releaser
 COPY . .
 RUN \
   --mount=target=/root/.cache,type=cache \

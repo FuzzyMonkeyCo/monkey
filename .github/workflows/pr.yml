@@ -24,10 +24,6 @@ jobs:
     #     [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
     #     make lint
 
-    # - name: Vet
-    #   run: |
-    #     go vet ./...
-
     # - name: Mod
     #   run: |
     #     go mod tidy
