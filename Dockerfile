@@ -13,7 +13,7 @@ RUN \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && grep -F . Tagfile \
- && CURRENT_TAG=$(cat Tagfile) goreleaser release --parallelism=$(nproc) --skip-publish
+ && CURRENT_TAG=$(cat Tagfile) goreleaser release --snapshot --parallelism=$(nproc)
 
 
 ## Goreleaser's dist/ for GitHub release

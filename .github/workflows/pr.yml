@@ -5,6 +5,7 @@ on:
   push:
 
 # PR to master => build + require changes to Tagfile + grep -F . Tagfile => merge
+# on: {push: {branches: [master]}}
 #   => builds master => Publish tag+release w/ --target=goreleaser-dist
 #   => builds tag => check monkey action
 
@@ -13,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with: {fetch-depth: 0}
+      with: {fetch-depth: 0} #= not shallow
 
     - name: Ensure Tagfile is usable
       run: grep -F . Tagfile
@@ -43,29 +44,21 @@ jobs:
     - name: Build with goreleaser
       run: mkdir dist && DOCKER_BUILDKIT=1 docker build --target=goreleaser-dist -o dist/ .
 
+    - name: Test CLI
+      run: |
+        tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
+        SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
+        ./monkey -h | grep $SHORT_COMMIT
+        ./monkey help | grep monkey
+        ./monkey version
+        ./monkey fmt
+        [[ $(./monkey version | wc -l) = 1 ]]
+        ./monkey version | grep $CURRENT_TAG
+        ./monkey --version | grep $SHORT_COMMIT
+        rm ./monkey
+
     - name: Ensure Tagfile has changes
-      run: git status --porcelain -- Tagfile | grep -q .
-
-  #   - name: Build
-  #     uses: goreleaser/goreleaser-action@v1
-  #     env:
-  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     with:
-  #       version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
-  #       args: release --rm-dist --snapshot --skip-publish
-
-  #   - name: Test CLI
-  #     run: |
-  #       tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-  #       SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
-  #       ./monkey -h | grep $SHORT_COMMIT
-  #       ./monkey help | grep monkey
-  #       ./monkey version
-  #       ./monkey fmt
-  #       [[ $(./monkey version | wc -l) = 1 ]]
-  #       ./monkey version | grep $CURRENT_TAG
-  #       ./monkey --version | grep $SHORT_COMMIT
-  #       rm ./monkey
+      run: git diff master... -- Tagfile | grep -q .
 
   #   - name: Publish
   #     uses: goreleaser/goreleaser-action@v1
