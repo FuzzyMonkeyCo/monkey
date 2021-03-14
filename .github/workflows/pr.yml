@@ -5,7 +5,7 @@ on:
   push:
 
 # PR to master => build + require changes to Tagfile + grep -F . Tagfile => merge
-# on: {push: {branches: [master]}}
+#   on: {push: {branches: [master]}}
 #   => builds master => Publish tag+release w/ --target=goreleaser-dist
 #   => builds tag => check monkey action
 
@@ -53,7 +53,7 @@ jobs:
         ./monkey version
         ./monkey fmt
         [[ $(./monkey version | wc -l) = 1 ]]
-        ./monkey version | grep $CURRENT_TAG
+        ./monkey version | grep $(cat Tagfile)
         ./monkey --version | grep $SHORT_COMMIT
         rm ./monkey
 
