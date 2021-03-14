@@ -4,6 +4,10 @@ on:
   pull_request:
   push:
 
+# PR to master => build + require changes to Tagfile + grep -F . Tagfile => merge
+#   => builds master => Publish tag+release w/ --target=goreleaser-dist
+#   => builds tag => check monkey action
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest

@@ -1,4 +1,4 @@
-name: goreleaser
+name: pr
 
 on:
   pull_request:
@@ -9,104 +9,104 @@ on:
 #   => builds tag => check monkey action
 
 jobs:
-  goreleaser:
+  pr:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with: {fetch-depth: 0}
 
-    - name: Unshallow (for CHANGELOG)
-      run: git fetch --prune --unshallow
+    - name: Ensure Tagfile is usable
+      run: grep -F . Tagfile
 
-    - uses: actions/setup-go@v2
-      with:
-        go-version: 1.x
+    # - name: Lint
+    #   run: |
+    #     sudo apt-get install -y silversearcher-ag  # For golint.sh
+    #     ag --version
+    #     [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
+    #     make lint
 
-    - name: Lint
-      run: |
-        sudo apt-get install -y silversearcher-ag  # For golint.sh
-        ag --version
-        [[ $(git grep -l pwdID | wc -l) = 2 ]]  # lint: pwdID fiddling happens only in one place
-        make lint
-    - name: Vet
-      run: |
-        go vet ./...
-    - name: Mod
-      run: |
-        go mod tidy
-        go mod verify
-        git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
-    - name: Test
-      run: |
-        make test.ci
-        git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+    # - name: Vet
+    #   run: |
+    #     go vet ./...
 
-    - name: Set CURRENT_TAG
-      run: |
-        CURRENT_TAG=M.m.p
-        if [[ "$GITHUB_REF" =~ ^refs/tags/ ]]; then CURRENT_TAG=${GITHUB_REF#refs/tags/}; fi
-        echo CURRENT_TAG="$CURRENT_TAG" >>$GITHUB_ENV
+    # - name: Mod
+    #   run: |
+    #     go mod tidy
+    #     go mod verify
+    #     git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
 
-    - name: Build
-      uses: goreleaser/goreleaser-action@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
-        args: release --rm-dist --snapshot --skip-publish
+    # - name: Test
+    #   run: |
+    #     make test.ci
+    #     git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
 
-    - name: Test CLI
-      run: |
-        tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-        SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
-        ./monkey -h | grep $SHORT_COMMIT
-        ./monkey help | grep monkey
-        ./monkey version
-        ./monkey fmt
-        [[ $(./monkey version | wc -l) = 1 ]]
-        ./monkey version | grep $CURRENT_TAG
-        ./monkey --version | grep $SHORT_COMMIT
-        rm ./monkey
+    - name: Build with goreleaser
+      run: mkdir dist && DOCKER_BUILDKIT=1 docker build --target=goreleaser-dist -o dist/ .
 
-    - name: Publish
-      uses: goreleaser/goreleaser-action@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
-        args: release --rm-dist
-      if: startsWith(github.ref, 'refs/tags/')
+    - name: Ensure Tagfile has changes
+      run: git status --porcelain -- Tagfile | grep -q .
+
+  #   - name: Build
+  #     uses: goreleaser/goreleaser-action@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
+  #       args: release --rm-dist --snapshot --skip-publish
+
+  #   - name: Test CLI
+  #     run: |
+  #       tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
+  #       SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
+  #       ./monkey -h | grep $SHORT_COMMIT
+  #       ./monkey help | grep monkey
+  #       ./monkey version
+  #       ./monkey fmt
+  #       [[ $(./monkey version | wc -l) = 1 ]]
+  #       ./monkey version | grep $CURRENT_TAG
+  #       ./monkey --version | grep $SHORT_COMMIT
+  #       rm ./monkey
+
+  #   - name: Publish
+  #     uses: goreleaser/goreleaser-action@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       version: latest # FIXME: https://github.com/goreleaser/goreleaser-action/issues/157
+  #       args: release --rm-dist
+  #     if: startsWith(github.ref, 'refs/tags/')
 
 
-  install-on-ubuntu:
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: goreleaser
-    steps:
-    - run: '! which monkey'
-    - uses: FuzzyMonkeyCo/action-monkey@v1
-      with:
-        command: version
-        github_token: ${{ secrets.github_token }}
+  # install-on-ubuntu:
+  #   runs-on: ubuntu-latest
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   needs: goreleaser
+  #   steps:
+  #   - run: '! which monkey'
+  #   - uses: FuzzyMonkeyCo/action-monkey@v1
+  #     with:
+  #       command: version
+  #       github_token: ${{ secrets.github_token }}
 
-  install-on-macos:
-    runs-on: macos-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: goreleaser
-    steps:
-    - run: '! which monkey'
-    - uses: FuzzyMonkeyCo/action-monkey@v1
-      with:
-        command: version
-        github_token: ${{ secrets.github_token }}
+  # install-on-macos:
+  #   runs-on: macos-latest
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   needs: goreleaser
+  #   steps:
+  #   - run: '! which monkey'
+  #   - uses: FuzzyMonkeyCo/action-monkey@v1
+  #     with:
+  #       command: version
+  #       github_token: ${{ secrets.github_token }}
 
-  install-on-windows:
-    runs-on: windows-latest
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: goreleaser
-    steps:
-    - run: '! which monkey'
-      shell: bash
-    - uses: FuzzyMonkeyCo/action-monkey@v1
-      with:
-        command: version
-        github_token: ${{ secrets.github_token }}
+  # install-on-windows:
+  #   runs-on: windows-latest
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   needs: goreleaser
+  #   steps:
+  #   - run: '! which monkey'
+  #     shell: bash
+  #   - uses: FuzzyMonkeyCo/action-monkey@v1
+  #     with:
+  #       command: version
+  #       github_token: ${{ secrets.github_token }}
