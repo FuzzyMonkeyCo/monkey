@@ -11,7 +11,7 @@ PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
 all: pkg/internal/fm/fuzzymonkey.pb.go README.sh README.md lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
-# 	cat .gitignore >.dockerignore && echo /.git >>.dockerignore
+	cat .gitignore >.dockerignore #&& echo /.git >>.dockerignore
 	./$(EXE) fmt -w && ./README.sh
 
 update: SHELL := /bin/bash

@@ -52,7 +52,7 @@ RUN \
 
 ## Build all platforms/OS
 
-FROM go-releaser
+FROM go-releaser AS monkey-build
 COPY . .
 RUN \
   --mount=target=/root/.cache,type=cache \
@@ -67,31 +67,31 @@ RUN \
 ## Goreleaser's dist/ for GitHub release
 
 FROM scratch AS goreleaser-dist
-COPY --from=go-releaser /go/dist/checksums.sha256.txt /
-COPY --from=go-releaser /go/dist/monkey-*.tar.gz /
-COPY --from=go-releaser /go/dist/monkey-*.zip /
+COPY --from=monkey-build /go/dist/checksums.sha256.txt /
+COPY --from=monkey-build /go/dist/monkey-*.tar.gz /
+COPY --from=monkey-build /go/dist/monkey-*.zip /
 
 
 ## Binaries for each OS
 
-FROM go-releaser AS go-releaser-darwin
+FROM monkey-build AS monkey-build-darwin
 RUN set -ux \
  && tar zxvf ./dist/monkey-Darwin-x86_64.tar.gz -C .
 
 FROM scratch AS binaries-darwin
-COPY --from=go-releaser-darwin /go/monkey /
+COPY --from=monkey-build-darwin /go/monkey /
 
-FROM go-releaser AS go-releaser-linux
+FROM monkey-build AS monkey-build-linux
 RUN set -ux \
  && tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
 FROM scratch AS binaries-linux
-COPY --from=go-releaser-linux /go/monkey /
+COPY --from=monkey-build-linux /go/monkey /
 
-FROM go-releaser AS go-releaser-windows
+FROM monkey-build AS monkey-build-windows
 RUN set -ux \
  && tar zxvf ./dist/monkey-Windows-x86_64.tar.gz -C .
 FROM scratch AS binaries-windows
-COPY --from=go-releaser-windows /go/monkey.exe /
+COPY --from=monkey-build-windows /go/monkey.exe /
 
 FROM binaries-$TARGETOS AS binaries
 
