@@ -6,8 +6,6 @@ on:
 jobs:
   master:
     runs-on: ubuntu-latest
-    env:
-      TARGET: goreleaser-dist
     steps:
     - uses: actions/checkout@v2
 
@@ -20,25 +18,15 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - uses: actions/cache@v2
-      with:
-        path: /tmp/.buildx-cache/${{ env.TARGET }}
-        key: ${{ runner.os }}-buildx-${{ env.TARGET }}-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ env.TARGET }}-
-
     - uses: docker/bake-action@v1.2.0
       with:
         files: ./docker-bake.hcl
         targets: ${{ env.TARGET }}
         set: |
-          *.cache-from=type=local,src=/tmp/.buildx-cache/${{ env.TARGET }}
-          *.cache-to=type=local,dest=/tmp/.buildx-cache/${{ env.TARGET }}-new
-
-    # TODO: remove. Cf: https://github.com/moby/buildkit/issues/1850
-    - run: |
-        rm -rf /tmp/.buildx-cache/${{ env.TARGET }}
-        mv /tmp/.buildx-cache/${{ env.TARGET }}-new /tmp/.buildx-cache/${{ env.TARGET }}
+          *.cache-from=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }}
+          *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
+      env:
+        TARGET: goreleaser-dist
 
     - name: Test CLI
       run: |
