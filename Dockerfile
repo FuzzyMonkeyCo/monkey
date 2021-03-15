@@ -5,6 +5,8 @@
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
 
 FROM go-releaser AS base
+WORKDIR /w
+ENV CGO_ENABLED=0
 COPY go.??? .
 RUN \
   --mount=type=cache,target=/root/.cache \
@@ -12,9 +14,6 @@ RUN \
     set -ux \
  && apk add the_silver_searcher \
  && ag --version \
-    # Prevents: $GOPATH/go.mod exists but should not
- && unset GOPATH \
- && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod download \
  && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
@@ -28,9 +27,6 @@ RUN \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
     set -ux \
-    # Prevents: $GOPATH/go.mod exists but should not
- && unset GOPATH \
- && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make lint \
  && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
@@ -40,9 +36,6 @@ RUN \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
     set -ux \
-    # Prevents: $GOPATH/go.mod exists but should not
- && unset GOPATH \
- && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod tidy \
  && go mod verify \
@@ -53,9 +46,6 @@ RUN \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
     set -ux \
-    # Prevents: $GOPATH/go.mod exists but should not
- && unset GOPATH \
- && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go test -tags fakefs -count 10 ./... \
  && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
@@ -68,8 +58,6 @@ RUN \
   --mount=type=cache,target=/root/.cache \
   --mount=type=cache,target=/go/pkg/mod \
     set -ux \
-    # Prevents: $GOPATH/go.mod exists but should not
- && unset GOPATH \
  && grep -F . Tagfile \
  && CURRENT_TAG=$(cat Tagfile) goreleaser release --snapshot --parallelism=$(nproc)
 
@@ -77,9 +65,9 @@ RUN \
 ## Goreleaser's dist/ for GitHub release
 
 FROM scratch AS goreleaser-dist
-COPY --from=monkey-build /go/dist/checksums.sha256.txt /
-COPY --from=monkey-build /go/dist/monkey-*.tar.gz /
-COPY --from=monkey-build /go/dist/monkey-*.zip /
+COPY --from=monkey-build /w/dist/checksums.sha256.txt /
+COPY --from=monkey-build /w/dist/monkey-*.tar.gz /
+COPY --from=monkey-build /w/dist/monkey-*.zip /
 
 
 ## Binaries for each OS
@@ -88,19 +76,19 @@ FROM monkey-build AS monkey-build-darwin
 RUN set -ux \
  && tar zxvf ./dist/monkey-Darwin-x86_64.tar.gz -C .
 FROM scratch AS binaries-darwin
-COPY --from=monkey-build-darwin /go/monkey /
+COPY --from=monkey-build-darwin /w/monkey /
 
 FROM monkey-build AS monkey-build-linux
 RUN set -ux \
  && tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
 FROM scratch AS binaries-linux
-COPY --from=monkey-build-linux /go/monkey /
+COPY --from=monkey-build-linux /w/monkey /
 
 FROM monkey-build AS monkey-build-windows
 RUN set -ux \
  && tar zxvf ./dist/monkey-Windows-x86_64.tar.gz -C .
 FROM scratch AS binaries-windows
-COPY --from=monkey-build-windows /go/monkey.exe /
+COPY --from=monkey-build-windows /w/monkey.exe /
 
 FROM binaries-$TARGETOS AS binaries
 
