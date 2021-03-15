@@ -15,7 +15,9 @@ RUN \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && export CGO_ENABLED=0 \
- && go mod download
+ && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
+ && go mod download \
+ && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
 COPY . .
 
 
@@ -29,8 +31,9 @@ RUN \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && export CGO_ENABLED=0 \
+ && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make lint \
- && git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+ && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
 
 FROM base AS ci-check--mod
 RUN \
@@ -40,9 +43,10 @@ RUN \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && export CGO_ENABLED=0 \
+ && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod tidy \
  && go mod verify \
- && git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+ && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
 
 FROM base AS ci-check--test
 RUN \
@@ -52,8 +56,9 @@ RUN \
     # Prevents: $GOPATH/go.mod exists but should not
  && unset GOPATH \
  && export CGO_ENABLED=0 \
+ && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make test.ci \
- && git --no-pager diff && [[ $(git --no-pager diff --name-only | wc -l) = 0 ]]
+ && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
 
 
 ## Build all platforms/OS
