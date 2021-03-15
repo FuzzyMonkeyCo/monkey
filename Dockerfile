@@ -17,7 +17,7 @@ RUN \
  && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod download \
- && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
+ && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
 COPY . .
 
 
@@ -33,7 +33,7 @@ RUN \
  && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make lint \
- && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
+ && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
 
 FROM base AS ci-check--mod
 RUN \
@@ -46,7 +46,7 @@ RUN \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod tidy \
  && go mod verify \
- && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
+ && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
 
 FROM base AS ci-check--test
 RUN \
@@ -58,7 +58,7 @@ RUN \
  && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make test.ci \
- && [[ "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" = "$H" ]]
+ && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
 
 
 ## Build all platforms/OS
