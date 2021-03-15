@@ -31,9 +31,8 @@ const (
 )
 
 var (
-	binSHA     = "feedb065"
 	binVersion = "M.m.p"
-	binTitle   = strings.Join([]string{binName, binVersion, binSHA,
+	binTitle   = strings.Join([]string{binName, binVersion,
 		runtime.Version(), runtime.GOOS, runtime.GOARCH}, " ")
 )
 

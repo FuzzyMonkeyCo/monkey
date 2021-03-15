@@ -57,11 +57,10 @@ jobs:
     - name: Test CLI
       run: |
         tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-        SHORT_COMMIT=$(cut -c-7 <<<$GITHUB_SHA)
-        ./monkey -h | grep $SHORT_COMMIT
+        ./monkey -h | grep monkey
         ./monkey help | grep monkey
         ./monkey version
         ./monkey fmt
         [[ $(./monkey version | wc -l) = 1 ]]
         ./monkey version | grep -F $(cat Tagfile)
-        ./monkey --version | grep $SHORT_COMMIT
+        ./monkey --version | grep -F $(cat Tagfile)
