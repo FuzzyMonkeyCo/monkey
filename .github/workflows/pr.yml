@@ -1,7 +1,6 @@
 name: pr
 
 on:
-  push:
   pull_request:
 
 #   on: {push: {branches: [master]}}
