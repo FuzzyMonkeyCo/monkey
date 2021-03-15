@@ -12,8 +12,6 @@ group "ci-checks" {
     "ci-check--mod",
     "ci-check--test",
   ]
-  cache-from = ["type=registry,ref=fenollp/monkey:ci-checks"]
-  cache-to = ["type=registry,ref=fenollp/monkey:ci-checks,mode=max"]
 }
 
 ## Targets
@@ -41,14 +39,20 @@ target "goreleaser-dist" {
 target "ci-check--lint" {
   inherits = ["dockerfile"]
   target = "ci-check--lint"
+  cache-from = ["type=registry,ref=fenollp/monkey:ci-check--lint"]
+  cache-to = ["type=registry,ref=fenollp/monkey:ci-check--lint,mode=max"]
 }
 
 target "ci-check--mod" {
   inherits = ["dockerfile"]
   target = "ci-check--mod"
+  cache-from = ["type=registry,ref=fenollp/monkey:ci-check--mod"]
+  cache-to = ["type=registry,ref=fenollp/monkey:ci-check--mod,mode=max"]
 }
 
 target "ci-check--test" {
   inherits = ["dockerfile"]
   target = "ci-check--test"
+  cache-from = ["type=registry,ref=fenollp/monkey:ci-check--test"]
+  cache-to = ["type=registry,ref=fenollp/monkey:ci-check--test,mode=max"]
 }
