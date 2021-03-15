@@ -57,7 +57,7 @@ RUN \
  && unset GOPATH \
  && export CGO_ENABLED=0 \
  && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
- && make test.ci \
+ && go test -tags fakefs -count 10 ./... \
  && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
 
 
