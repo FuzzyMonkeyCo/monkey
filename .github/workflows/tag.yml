@@ -1,15 +1,21 @@
-name: testaction
+name: tag
 
 on:
-  create: # runs on branch or tag creation but want only tag
+  push:
+    tags: ['*']
+    branches: ['!*']
 
 jobs:
 
-  on_ubuntu:
-    name: ubuntu
+  ubuntu-latest:
+    name: ubuntu-latest
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
+    - run: '! which monkey'
+    - uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: version
+        github_token: ${{ secrets.github_token }}
     - uses: actions/checkout@v1
     - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
@@ -17,11 +23,15 @@ jobs:
         command: lint
         github_token: ${{ secrets.github_token }}
 
-  on_macos:
-    name: macos
+  macos-latest:
+    name: macos-latest
     runs-on: macos-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
+    - run: '! which monkey'
+    - uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: version
+        github_token: ${{ secrets.github_token }}
     - uses: actions/checkout@v1
     - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
@@ -29,11 +39,15 @@ jobs:
         command: lint
         github_token: ${{ secrets.github_token }}
 
-  on_windows:
-    name: windows
+  windows-latest:
+    name: windows-latest
     runs-on: windows-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
+    - run: '! which monkey'
+    - uses: FuzzyMonkeyCo/action-monkey@v1
+      with:
+        command: version
+        github_token: ${{ secrets.github_token }}
     - uses: actions/checkout@v1
     - name: lint
       uses: FuzzyMonkeyCo/action-monkey@v1
