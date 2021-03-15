@@ -1,3 +1,4 @@
+project_name: monkey
 builds:
 - env:
   - CGO_ENABLED=0
@@ -17,7 +18,6 @@ builds:
     -s
     -w
     -extldflags "-static"
-    -X main.binSHA={{.ShortCommit}}
     -X main.binVersion={{.Env.CURRENT_TAG}}
     -X github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm.grpcHost={{.Env.GRPCHOST}}
 
@@ -41,6 +41,9 @@ archives:
     format: zip
 # name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}'
   name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}'
+  files:
+  - LICENSE
+  - README.md
 
 checksum:
   name_template: checksums.sha256.txt

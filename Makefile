@@ -11,6 +11,7 @@ PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
 all: pkg/internal/fm/fuzzymonkey.pb.go README.sh README.md lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
+	cat .gitignore >.dockerignore && echo /.git >>.dockerignore
 	./$(EXE) fmt -w && ./README.sh
 
 update: SHELL := /bin/bash
@@ -36,7 +37,6 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	mv github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go $@
 	git clean -xdff -- ./github.com
 
-lint: SHELL = /bin/bash
 lint:
 	go fmt ./...
 	./golint.sh
@@ -58,9 +58,10 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	richgo test -tags fakefs -count 10 ./...
-test.ci: all
-	go test -tags fakefs -v -race ./...
+	richgo test -tags fakefs -race ./...
+
+ci:
+	docker buildx bake ci-checks
 
 ape: $(EXE).test
 	./ape.sh --version

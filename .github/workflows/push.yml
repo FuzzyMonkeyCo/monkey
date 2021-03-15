@@ -1,0 +1,34 @@
+name: push
+
+on:
+  push: {}
+
+jobs:
+  buildkit--ubuntu-latest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: DOCKER_BUILDKIT=1 docker build --platform=local -o . .
+    - run: ./monkey version
+
+  # buildkit--macos-latest: No docker on macos
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - run: docker build --platform=local -o . .
+  #     env:
+  #       DOCKER_BUILDKIT: 1
+  #   - run: ./monkey version
+
+  # buildkit--windows-latest: invalid windows mount type: 'bind'
+  #   runs-on: windows-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - run: docker build --platform=local -o . .
+  #     env:
+  #       DOCKER_BUILDKIT: 1
+  #   - run: ./monkey.exe version

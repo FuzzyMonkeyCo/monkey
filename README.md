@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p feedb065 go1.16 linux amd64
+monkey M.m.p go1.15.5 linux amd64
 
 Usage:
   monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
@@ -68,6 +68,8 @@ or the equivalent:
 ```shell
 curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownloader.sh | BINDIR=/usr/local/bin sh
 ```
+
+With a recent enough Docker: `DOCKER_BUILDKIT=1 docker build --platform=local -o . git://github.com/FuzzyMonkeyCo/monkey`
 
 Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
 
