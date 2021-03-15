@@ -23,6 +23,8 @@ jobs:
 
   ci-checks:
     runs-on: ubuntu-latest
+    env:
+      TARGET: ci-checks
     steps:
     - uses: actions/checkout@v2
 
@@ -31,16 +33,32 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache/${{ env.TARGET }}
+        key: ${{ runner.os }}-buildx-${{ env.TARGET }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ env.TARGET }}-
 
     - uses: docker/bake-action@v1.2.0
       with:
         files: ./docker-bake.hcl
-        targets: |
-          ci-checks
+        targets: ${{ env.TARGET }}
+        set: |
+          *.cache-from=type=local,src=/tmp/.buildx-cache/${{ env.TARGET }}
+          *.cache-to=type=local,dest=/tmp/.buildx-cache/${{ env.TARGET }}-new
+
+    # TODO: remove. Cf: https://github.com/moby/buildkit/issues/1850
+    - run: |
+        rm -rf /tmp/.buildx-cache/${{ env.TARGET }}
+        mv /tmp/.buildx-cache/${{ env.TARGET }}-new /tmp/.buildx-cache/${{ env.TARGET }}
 
   goreleaser-dist:
     needs: [ci-checks]
     runs-on: ubuntu-latest
+    env:
+      TARGET: goreleaser-dist
     steps:
     - uses: actions/checkout@v2
 
@@ -50,15 +68,25 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - uses: docker/build-push-action@v2
+    - uses: actions/cache@v2
       with:
-        context: .
-        # push: true
-        # tags: ${{ secrets.DOCKERHUB_USERNAME }}/monkey:cache
-        cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:cache
-        cache-to: type=inline
-        target: goreleaser-dist
-        outputs: ./dist
+        path: /tmp/.buildx-cache/${{ env.TARGET }}
+        key: ${{ runner.os }}-buildx-${{ env.TARGET }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ env.TARGET }}-
+
+    - uses: docker/bake-action@v1.2.0
+      with:
+        files: ./docker-bake.hcl
+        targets: ${{ env.TARGET }}
+        set: |
+          *.cache-from=type=local,src=/tmp/.buildx-cache/${{ env.TARGET }}
+          *.cache-to=type=local,dest=/tmp/.buildx-cache/${{ env.TARGET }}-new
+
+    # TODO: remove. Cf: https://github.com/moby/buildkit/issues/1850
+    - run: |
+        rm -rf /tmp/.buildx-cache/${{ env.TARGET }}
+        mv /tmp/.buildx-cache/${{ env.TARGET }}-new /tmp/.buildx-cache/${{ env.TARGET }}
 
     - name: Test CLI
       run: |

@@ -1,3 +1,5 @@
+## Groups
+
 group "default" {
   targets = [
     "binaries",
@@ -11,6 +13,8 @@ group "ci-checks" {
     "ci-check--test",
   ]
 }
+
+## Targets
 
 target "dockerfile" {
   dockerfile = "Dockerfile"
