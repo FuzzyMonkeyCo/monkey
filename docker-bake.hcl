@@ -18,6 +18,9 @@ group "ci-checks" {
 
 target "dockerfile" {
   dockerfile = "Dockerfile"
+  cache-from = ["type=registry,ref=fenollp/monkey:cache"]
+  cache-to = ["type=registry,ref=fenollp/monkey:cache,mode=max"]
+  push = true
 }
 
 target "binaries" {
