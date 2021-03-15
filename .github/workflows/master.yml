@@ -21,12 +21,7 @@ jobs:
     - uses: docker/bake-action@v1.2.0
       with:
         files: ./docker-bake.hcl
-        targets: ${{ env.TARGET }}
-        set: |
-          *.cache-from=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }}
-          *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
-      env:
-        TARGET: goreleaser-dist
+        targets: goreleaser-dist
 
     - name: Test CLI
       run: |
