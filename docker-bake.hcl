@@ -5,7 +5,6 @@ group "default" {
 }
 
 group "ci-checks" {
-  inherits = ["dockerfile"]
   targets = [
     "ci-check--lint",
     "ci-check--mod",
