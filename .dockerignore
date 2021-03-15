@@ -27,3 +27,4 @@ vendor/
 /monkey-*
 /*.cov
 /cov.out
+/.git
