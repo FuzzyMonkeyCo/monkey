@@ -71,23 +71,25 @@ COPY --from=monkey-build /w/dist/monkey-*.zip /
 
 ## Binaries for each OS
 
-FROM monkey-build AS monkey-build-darwin
-RUN set -ux \
- && tar zxvf ./dist/monkey-Darwin-x86_64.tar.gz -C .
-FROM scratch AS binaries-darwin
-COPY --from=monkey-build-darwin /w/monkey /
+FROM alpine AS archmap-darwin-amd64-
+RUN        echo monkey-Darwin-x86_64.tar.gz >archmap
+FROM alpine AS archmap-linux-386-
+RUN        echo monkey-Linux-i386.tar.gz    >archmap
+FROM alpine AS archmap-linux-amd64-
+RUN        echo monkey-Linux-x86_64.tar.gz  >archmap
+FROM alpine AS archmap-windows-386-
+RUN        echo monkey-Windows-i386.zip     >archmap
+FROM alpine AS archmap-windows-amd64-
+RUN        echo monkey-Windows-x86_64.zip   >archmap
 
-FROM monkey-build AS monkey-build-linux
-RUN set -ux \
- && tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-FROM scratch AS binaries-linux
-COPY --from=monkey-build-linux /w/monkey /
+FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT AS archmap
 
-FROM monkey-build AS monkey-build-windows
+FROM monkey-build AS zxf
+COPY --from=archmap /archmap .
 RUN set -ux \
- && tar zxvf ./dist/monkey-Windows-x86_64.tar.gz -C .
-FROM scratch AS binaries-windows
-COPY --from=monkey-build-windows /w/monkey.exe /
+ && tar zxvf ./dist/$(cat archmap) -C .
+FROM scratch AS binaries-
+COPY --from=zxf /w/monkey* /
 
 FROM alpine AS monkey-prebuilt
 WORKDIR /w
@@ -96,30 +98,21 @@ RUN \
     set -ux \
  && apk update \
  && apk add curl ca-certificates
+COPY --from=archmap /archmap .
 COPY Tagfile .
-ARG TARGETOS
-ARG TARGETARCH
 RUN set -ux \
  && TAG=$(cat Tagfile) \
- && ARCHIVE=UNHANDLED \
- && if [ $TARGETOS = darwin  ] && [ $TARGETARCH = amd64 ]; then ARCHIVE=monkey-Darwin-x86_64.tar.gz; fi \
- && if [ $TARGETOS = linux   ] && [ $TARGETARCH = 386 ]; then ARCHIVE=monkey-Linux-i386.tar.gz; fi \
- && if [ $TARGETOS = linux   ] && [ $TARGETARCH = amd64 ]; then ARCHIVE=monkey-Linux-x86_64.tar.gz; fi \
- && if [ $TARGETOS = windows ] && [ $TARGETARCH = 386 ]; then ARCHIVE=monkey-Windows-i386.zip; fi \
- && if [ $TARGETOS = windows ] && [ $TARGETARCH = amd64 ]; then ARCHIVE=monkey-Windows-x86_64.zip; fi \
+ && ARCHIVE=$(cat archmap) \
  && curl -fsSL -o $ARCHIVE https://github.com/FuzzyMonkeyCo/monkey/releases/download/$TAG/$ARCHIVE \
  && curl -fsSL -o checksums.sha256.txt https://github.com/FuzzyMonkeyCo/monkey/releases/download/$TAG/checksums.sha256.txt \
  && grep $ARCHIVE checksums.sha256.txt >only \
  && sha256sum -s -c only \
- && tar zxvf $ARCHIVE -C .
-FROM scratch AS binaries-darwin1
-COPY --from=monkey-prebuilt /w/monkey /
-FROM scratch AS binaries-linux1
-COPY --from=monkey-prebuilt /w/monkey /
-FROM scratch AS binaries-windows1
-COPY --from=monkey-prebuilt /w/monkey.exe /
+ && tar zxvf $ARCHIVE -C . \
+ && rm $ARCHIVE
+FROM scratch AS binaries-1
+COPY --from=monkey-prebuilt /w/monkey* /
 
-FROM binaries-${TARGETOS}${PREBUILT} AS binaries
+FROM binaries-$PREBUILT AS binaries
 
 
 ## Default target
