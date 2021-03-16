@@ -58,18 +58,21 @@ Try:
 **Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/action-monkey).
 
 Quick install:
-
 ```shell
 curl -#fL https://git.io/FuzzyMonkey | BINDIR=/usr/local/bin sh
-```
 
-or the equivalent:
-
-```shell
+# or the equivalent:
 curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownloader.sh | BINDIR=/usr/local/bin sh
 ```
 
-With a recent enough Docker: `DOCKER_BUILDKIT=1 docker build --platform=local -o . git://github.com/FuzzyMonkeyCo/monkey`
+With Docker:
+```shell
+export DOCKER_BUILDKIT=1
+docker build -o . git://github.com/FuzzyMonkeyCo/monkey
+
+# or the faster:
+docker build -o . --build-arg PREBUILT=1 git://github.com/FuzzyMonkeyCo/monkey
+```
 
 Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
 
