@@ -8,6 +8,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	pbar "github.com/superhawk610/bar"
 	// See also: https://github.com/reconquest/barely
+	// See also: https://github.com/snapcore/snapd/tree/3178a5499f2605329ebd25c7293ae1a0fb9fbd3b/progress
 )
 
 const tickEvery = 333 * time.Millisecond
