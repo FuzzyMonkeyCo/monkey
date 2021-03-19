@@ -14,7 +14,7 @@ const iters = 5
 func TestCheckNameIsPresent(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
-	hook = lambda ctx: None,
+	after_response = lambda ctx: None,
 )`)
 	require.EqualError(t, err, `Check: missing argument for name`)
 	require.Nil(t, rt)
@@ -24,7 +24,7 @@ func TestCheckNameIsLegal(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "bla bla",
-	hook = lambda ctx: None,
+	after_response = lambda ctx: None,
 )`)
 	require.EqualError(t, err, `bad name for Check: string contains spacing characters: "bla bla"`)
 	require.Nil(t, rt)
@@ -34,9 +34,9 @@ func TestCheckHookHasArityOf1(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "hook_has_arity_of_1",
-	hook = lambda a, b, c: None,
+	after_response = lambda a, b, c: None,
 )`)
-	require.EqualError(t, err, `hook for Check "hook_has_arity_of_1" must have only one param: ctx`)
+	require.EqualError(t, err, `after_response for Check "hook_has_arity_of_1" must have only one param: ctx`)
 	require.Nil(t, rt)
 }
 
@@ -44,7 +44,7 @@ func TestCheckStateMustBeDict(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "state_must_be_dict",
-	hook = lambda ctx: None,
+	after_response = lambda ctx: None,
 	state = 42,
 )`)
 	require.EqualError(t, err, `Check: for parameter "state": got int, want dict`)
@@ -56,7 +56,7 @@ func TestCheckDoesNothing(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "` + name + `",
-	hook = lambda ctx: None,
+	after_response = lambda ctx: None,
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -65,7 +65,7 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_skipped, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Empty(t, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(2), v.ExecutionSteps)
@@ -80,7 +80,7 @@ def set_state(ctx):
 
 Check(
 	name = "` + name + `",
-	hook = set_state,
+	after_response = set_state,
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -93,7 +93,7 @@ Check(
 		} else {
 			require.Equal(t, fm.Clt_CallVerifProgress_skipped, v.Status)
 		}
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Empty(t, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(9), v.ExecutionSteps)
@@ -108,7 +108,7 @@ def set_state(ctx):
 
 Check(
 	name = "` + name + `",
-	hook = set_state,
+	after_response = set_state,
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -117,8 +117,11 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
-		require.Equal(t, true, v.UserProperty)
-		require.Equal(t, []string{`state for Check "good_error" must be dict`}, v.Reason)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
+		require.Equal(t, []string{
+			"runtime.userError",
+			`state for Check "good_error" must be dict`,
+		}, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(4), v.ExecutionSteps)
 	}
@@ -132,7 +135,7 @@ def set_state(ctx):
 
 Check(
 	name = "` + name + `",
-	hook = set_state,
+	after_response = set_state,
 	state = {"key": "value"},
 )`)
 	require.NoError(t, err)
@@ -142,7 +145,7 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_skipped, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Empty(t, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(9), v.ExecutionSteps)
@@ -158,7 +161,7 @@ def hook(ctx):
 
 Check(
 	name = "` + name + `",
-	hook = hook,
+	after_response = hook,
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -167,8 +170,9 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Equal(t, []string{
+			"*starlark.EvalError",
 			"Traceback (most recent call last):",
 			"  fuzzymonkey.star:10:17: in hook",
 			"Error: cannot access ctx.request after accessing ctx.state",
@@ -188,7 +192,7 @@ def hook(ctx):
 
 Check(
 	name = "` + name + `",
-	hook = hook,
+	after_response = hook,
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -197,7 +201,7 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_success, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Empty(t, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(26), v.ExecutionSteps)
@@ -209,7 +213,7 @@ func TestCheckJustAssertsTheTruth(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "` + name + `",
-	hook = lambda ctx: assert.that(ctx.request.method).is_equal_to("GET"),
+	after_response = lambda ctx: assert.that(ctx.request.method).is_equal_to("GET"),
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -218,7 +222,7 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_success, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Empty(t, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(13), v.ExecutionSteps)
@@ -230,7 +234,7 @@ func TestCheckJustAssertsWrong(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "` + name + `",
-	hook = lambda ctx: assert.that(ctx.request.method).is_not_equal_to("GET"),
+	after_response = lambda ctx: assert.that(ctx.request.method).is_not_equal_to("GET"),
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -239,10 +243,11 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Equal(t, []string{
+			"*starlark.EvalError",
 			"Traceback (most recent call last):",
-			"  fuzzymonkey.star:10:68: in lambda",
+			"  fuzzymonkey.star:10:78: in lambda",
 			`Error in is_not_equal_to: Not true that <"GET"> is not equal to <"GET">.`,
 		}, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
@@ -255,7 +260,7 @@ func TestCheckIncorrectAssert(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "` + name + `",
-	hook = lambda ctx: assert.that(ctx.request.method),
+	after_response = lambda ctx: assert.that(ctx.request.method),
 )`)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
@@ -264,9 +269,10 @@ Check(
 		v := rt.runFakeUserCheck(t, name)
 		require.Equal(t, name, v.Name)
 		require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
-		require.Equal(t, true, v.UserProperty)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
 		require.Equal(t, []string{
-			"fuzzymonkey.star:10:32: assert.that(...) is missing an assertion",
+			"starlarktruth.UnresolvedError",
+			"fuzzymonkey.star:10:42: assert.that(...) is missing an assertion",
 		}, v.Reason)
 		require.NotEmpty(t, v.ElapsedNs)
 		require.Equal(t, uint64(7), v.ExecutionSteps)

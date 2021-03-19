@@ -31,14 +31,14 @@ func (chk *check) reset(chkname string) (err error) {
 
 func errStateDict(chkname string, err error) error {
 	if strings.Contains(err.Error(), `can't assign to .state field of `) {
-		return fmt.Errorf("state for Check %q must be dict", chkname)
+		return newUserError("state for Check %q must be dict", chkname)
 	}
 	return err
 }
 
 func ensureStateDict(chkname string, v starlark.Value) (err error) {
 	if _, ok := v.(*starlark.Dict); !ok {
-		err = fmt.Errorf("state for Check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
+		err = newUserError("state for Check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
 	}
 	return
 }

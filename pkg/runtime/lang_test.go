@@ -72,5 +72,5 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 		},
 	})
 
-	return rt.runUserCheckWrapper(chkname, chk, tagsFilter, ctxer1)
+	return rt.runUserCheckWrapper(chkname, chk, tagsFilter, ctxer1, 42)
 }
