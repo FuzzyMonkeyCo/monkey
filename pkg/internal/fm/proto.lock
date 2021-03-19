@@ -746,6 +746,11 @@
                     "id": 3,
                     "name": "token",
                     "type": "string"
+                  },
+                  {
+                    "id": 4,
+                    "name": "max_execution_steps_per_check",
+                    "type": "uint64"
                   }
                 ]
               },
