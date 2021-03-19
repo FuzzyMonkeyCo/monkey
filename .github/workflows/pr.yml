@@ -21,7 +21,7 @@ jobs:
     - name: Ensure Tagfile has changes
       run: '! diff -q Tagfile ./master-Tagfile/Tagfile'
 
-  ci-checks--lint:
+  ci-check--lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -38,9 +38,9 @@ jobs:
         set: |
           *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
       env:
-        TARGET: ci-checks--lint
+        TARGET: ci-check--lint
 
-  ci-checks--mod:
+  ci-check--mod:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -57,9 +57,9 @@ jobs:
         set: |
           *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
       env:
-        TARGET: ci-checks--mod
+        TARGET: ci-check--mod
 
-  ci-checks--test:
+  ci-check--test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -76,7 +76,7 @@ jobs:
         set: |
           *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
       env:
-        TARGET: ci-checks--test
+        TARGET: ci-check--test
 
   goreleaser-dist:
     runs-on: ubuntu-latest
