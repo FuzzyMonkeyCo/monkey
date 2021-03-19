@@ -14,17 +14,63 @@ import (
 )
 
 func initExec() {
-	resolve.AllowNestedDef = false     // def statements within def
-	resolve.AllowLambda = true         // lambda x, y: (x,y)
 	resolve.AllowSet = true            // set([]) (no proto representation)
 	resolve.AllowGlobalReassign = true // reassignment to top-level names
 	//> Starlark programs cannot be Turing complete
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
 
-	starlarktruth.NewModule(starlark.Universe) // Adds assert.that()
+	// TODO: set maxdepth https://github.com/google/starlark-go/issues/360
 
-	delete(starlark.Universe, "fail") // Drops fail()
+	allow := map[string]struct{}{
+		"None":      {},
+		"True":      {},
+		"False":     {},
+		"any":       {},
+		"all":       {},
+		"bool":      {},
+		"bytes":     {},
+		"chr":       {},
+		"dict":      {},
+		"dir":       {},
+		"enumerate": {},
+		"float":     {},
+		"getattr":   {},
+		"hasattr":   {},
+		"hash":      {},
+		"int":       {},
+		"len":       {},
+		"list":      {},
+		"max":       {},
+		"min":       {},
+		"ord":       {},
+		"print":     {},
+		"range":     {},
+		"repr":      {},
+		"reversed":  {},
+		"set":       {},
+		"sorted":    {},
+		"str":       {},
+		"tuple":     {},
+		"type":      {},
+		"zip":       {},
+	}
+	deny := map[string]struct{}{
+		"fail": {},
+	}
+	starlarktruth.NewModule(starlark.Universe) // Adds assert.that()
+	for f := range starlark.Universe {
+		_, allowed := allow[f]
+		_, denied := deny[f]
+		switch {
+		case allowed:
+		case denied:
+			delete(starlark.Universe, f)
+		case f == starlarktruth.Default: // For check tests
+		default:
+			panic(fmt.Sprintf("unexpected builting %q", f))
+		}
+	}
 }
 
 func loadDisabled(_ *starlark.Thread, module string) (starlark.StringDict, error) {

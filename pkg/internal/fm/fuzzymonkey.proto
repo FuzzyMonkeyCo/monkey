@@ -122,7 +122,12 @@ message Clt {
       done = 4;
     }
     Status status = 2;
-    bool user_property = 3;
+    enum Origin {
+      NO_ORIGIN = 0;
+      built_in = 1;
+      after_response = 2;
+    }
+    Origin origin = 3;
     repeated string reason = 4;
     int64 elapsed_ns = 5;
     uint64 execution_steps = 6;
@@ -161,6 +166,7 @@ message Srv {
     uint32 max_tests_count = 1; // Maximum amount of tests that will be performed
     bytes seed = 2; // Seed in use for the campaign
     string token = 3;
+    uint64 max_execution_steps_per_check = 4; // for Starlark SetMaxExecutionSteps
   }
 
   message Call {

@@ -16,11 +16,14 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-
     - uses: docker/bake-action@v1.2.0
       with:
         files: ./docker-bake.hcl
-        targets: goreleaser-dist
+        targets: ${{ env.TARGET }}
+        set: |
+          *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
+      env:
+        TARGET: goreleaser-dist
 
     - name: Test CLI
       run: |

@@ -49,6 +49,22 @@
             ]
           },
           {
+            "name": "CallVerifProgress.Origin",
+            "enum_fields": [
+              {
+                "name": "NO_ORIGIN"
+              },
+              {
+                "name": "built_in",
+                "integer": 1
+              },
+              {
+                "name": "after_response",
+                "integer": 2
+              }
+            ]
+          },
+          {
             "name": "EndpointJSON.Method",
             "enum_fields": [
               {
@@ -605,8 +621,8 @@
                   },
                   {
                     "id": 3,
-                    "name": "user_property",
-                    "type": "bool"
+                    "name": "origin",
+                    "type": "Origin"
                   },
                   {
                     "id": 4,
@@ -730,6 +746,11 @@
                     "id": 3,
                     "name": "token",
                     "type": "string"
+                  },
+                  {
+                    "id": 4,
+                    "name": "max_execution_steps_per_check",
+                    "type": "uint64"
                   }
                 ]
               },

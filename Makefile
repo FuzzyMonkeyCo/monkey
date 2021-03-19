@@ -9,10 +9,10 @@ RUN ?= docker run --rm --user $$(id -u):$$(id -g)
 PROTOC = $(RUN) -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
 PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
 
-all: pkg/internal/fm/fuzzymonkey.pb.go README.sh README.md lint
+all: pkg/internal/fm/fuzzymonkey.pb.go make_README.sh README.md lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
 	cat .gitignore >.dockerignore && echo /.git >>.dockerignore
-	./$(EXE) fmt -w && ./README.sh
+	./$(EXE) fmt -w && ./make_README.sh
 
 update: SHELL := /bin/bash
 update:

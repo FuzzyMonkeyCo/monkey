@@ -6,6 +6,10 @@ ARG PREBUILT
 
 # locked goreleaser/goreleaser:latest @ 2021/03/14 on linux/amd64
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
+# On this image:
+#  go env GOCACHE    => /root/.cache/go-build
+#  go env GOMODCACHE => /go/pkg/mod
+
 
 FROM go-releaser AS base
 WORKDIR /w
@@ -13,13 +17,17 @@ ENV CGO_ENABLED=0
 COPY go.??? .
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
   --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
     set -ux \
  && apk add the_silver_searcher \
  && ag --version \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
+ && apk add git \
+ && git version \
+ && git init \
+ && git add -A . \
  && go mod download \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 COPY . .
 
 
@@ -28,27 +36,27 @@ COPY . .
 FROM base AS ci-check--lint
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make lint \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 FROM base AS ci-check--mod
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod tidy \
  && go mod verify \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 FROM base AS ci-check--test
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go test -tags fakefs -count 10 ./... \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 
 ## Build all platforms/OS
@@ -56,6 +64,7 @@ RUN \
 FROM base AS monkey-build
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
+  --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
  && grep -F . Tagfile \
  && CURRENT_TAG=$(cat Tagfile) goreleaser release --snapshot --parallelism=$(nproc)

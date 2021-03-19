@@ -17,11 +17,6 @@ func (ceI *Srv_FuzzingResult_CounterexampleItem) CLIString() (s string) {
 		b.WriteString("curl -#fsSL -X ")
 		b.WriteString(req.GetMethod())
 		indent()
-		if body := req.GetBody(); len(body) != 0 {
-			b.WriteString("-d ")
-			b.WriteString(shellEscape(string(body)))
-			indent()
-		}
 		for key, vs := range req.GetHeaders() {
 			values := strings.Join(vs.GetValues(), ",")
 			switch key {
@@ -32,6 +27,11 @@ func (ceI *Srv_FuzzingResult_CounterexampleItem) CLIString() (s string) {
 				b.WriteString("-H ")
 				b.WriteString(shellEscape(fmt.Sprintf("%s: %s", key, values)))
 			}
+			indent()
+		}
+		if body := req.GetBody(); len(body) != 0 {
+			b.WriteString("-d ")
+			b.WriteString(shellEscape(string(body)))
 			indent()
 		}
 		b.WriteString(shellEscape(req.GetUrl()))
