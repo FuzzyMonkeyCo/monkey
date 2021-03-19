@@ -251,13 +251,14 @@ func (rt *Runtime) runUserCheckWrapper(
 	errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1)
 	v.ElapsedNs = time.Since(start).Nanoseconds()
 	if errL != nil {
+		v.Reason = []string{fmt.Sprintf("%T", errL)}
 		var reason string
 		if e, ok := errL.(*starlark.EvalError); ok {
 			reason = e.Backtrace()
 		} else {
 			reason = errL.Error()
 		}
-		v.Reason = strings.Split(reason, "\n")
+		v.Reason = append(v.Reason, strings.Split(reason, "\n")...)
 	}
 	return v
 }
