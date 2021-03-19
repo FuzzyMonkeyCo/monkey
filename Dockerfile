@@ -22,9 +22,12 @@ RUN \
     set -ux \
  && apk add the_silver_searcher \
  && ag --version \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
+ && apk add git \
+ && git version \
+ && git init \
+ && git add -A . \
  && go mod download \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 COPY . .
 
 
@@ -35,28 +38,25 @@ RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && make lint \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 FROM base AS ci-check--mod
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go mod tidy \
  && go mod verify \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 FROM base AS ci-check--test
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && H=$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum) \
  && go test -tags fakefs -count 10 ./... \
- && [[ "$H" = "$(find -type f -not -path './.git/*' | sort | tar cf - -T- | sha256sum)" ]]
+ && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 
 ## Build all platforms/OS
