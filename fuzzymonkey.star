@@ -35,7 +35,7 @@ OpenAPIv3(
 
 Check(
     name = "responds_in_a_timely_manner",
-    hook = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
+    after_response = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
     tags = ["timing"],
 )
 
@@ -78,7 +78,7 @@ def stateful_model_of_posts(ctx):
 
 Check(
     name = "some_props",
-    hook = stateful_model_of_posts,
+    after_response = stateful_model_of_posts,
 )
 
 ## Encapsulation: ensure each Check owns its own ctx.state.
@@ -89,13 +89,13 @@ def encapsulation_1_of_2(ctx):
 
 Check(
     name = "encapsulation_1_of_2",
-    hook = encapsulation_1_of_2,
+    after_response = encapsulation_1_of_2,
     tags = ["encapsulation"],
 )
 
 Check(
     name = "encapsulation_2_of_2",
-    hook = lambda ctx: None,
+    after_response = lambda ctx: None,
     state = {"data": 42},
     tags = ["encapsulation"],
 )
@@ -104,6 +104,6 @@ Check(
 
 Check(
     name = "always_fails",
-    hook = lambda ctx: assert.that(None).is_not_none(),
+    after_response = lambda ctx: assert.that(None).is_not_none(),
     tags = ["failing"],
 )

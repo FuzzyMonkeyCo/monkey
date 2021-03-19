@@ -122,7 +122,12 @@ message Clt {
       done = 4;
     }
     Status status = 2;
-    bool user_property = 3;
+    enum Origin {
+      NO_ORIGIN = 0;
+      built_in = 1;
+      after_response = 2;
+    }
+    Origin origin = 3;
     repeated string reason = 4;
     int64 elapsed_ns = 5;
     uint64 execution_steps = 6;

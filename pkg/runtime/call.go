@@ -82,6 +82,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 
 	// Through all checks
 	if errT := rt.client.Send(ctx, cvp(&fm.Clt_CallVerifProgress{
+		Origin: fm.Clt_CallVerifProgress_built_in,
 		Status: fm.Clt_CallVerifProgress_done,
 	})); errT != nil {
 		log.Println("[ERR]", errT)
@@ -104,7 +105,7 @@ func cvp(msg *fm.Clt_CallVerifProgress) *fm.Clt {
 func (rt *Runtime) callerChecks(ctx context.Context, cllr modeler.Caller) (bool, error) {
 	for {
 		var lambda modeler.CheckerFunc
-		v := &fm.Clt_CallVerifProgress{}
+		v := &fm.Clt_CallVerifProgress{Origin: fm.Clt_CallVerifProgress_built_in}
 		if v.Name, lambda = cllr.NextCallerCheck(); lambda == nil {
 			// No more caller checks to run
 			return true, nil
@@ -219,7 +220,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 			v := rt.runUserCheckWrapper(name, chk, tagsFilter, ctxer1)
 			switch v.Status {
 			case fm.Clt_CallVerifProgress_success:
-				rt.progress.CheckPassed(v.Name, chk.hook.String())
+				rt.progress.CheckPassed(v.Name, chk.afterResponse.String())
 			case fm.Clt_CallVerifProgress_skipped:
 				rt.progress.CheckSkipped(v.Name, "")
 			case fm.Clt_CallVerifProgress_failure:
@@ -243,7 +244,7 @@ func (rt *Runtime) runUserCheckWrapper(
 	tagsFilter *tags.Filter,
 	ctxer1 ctxctor1,
 ) *fm.Clt_CallVerifProgress {
-	v := &fm.Clt_CallVerifProgress{Name: name, UserProperty: true}
+	v := &fm.Clt_CallVerifProgress{Name: name, Origin: fm.Clt_CallVerifProgress_after_response}
 	log.Println("[NFO] checking user property:", v.Name)
 
 	start := time.Now()
@@ -288,7 +289,7 @@ func (rt *Runtime) runUserCheck(
 	defer func() { v.ExecutionSteps = th.ExecutionSteps() }()
 
 	var hookRet starlark.Value
-	if hookRet, err = starlark.Call(th, chk.hook, args, nil); err != nil {
+	if hookRet, err = starlark.Call(th, chk.afterResponse, args, nil); err != nil {
 		err = errStateDict(v.Name, err)
 		log.Println("[ERR]", err)
 		// Check failed or an error happened

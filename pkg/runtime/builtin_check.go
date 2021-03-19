@@ -12,7 +12,7 @@ import (
 )
 
 type check struct {
-	hook          *starlark.Function
+	afterResponse *starlark.Function
 	tags          tags.Tags
 	state, state0 *starlark.Dict
 }
@@ -44,12 +44,12 @@ func ensureStateDict(chkname string, v starlark.Value) (err error) {
 }
 
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	var hook *starlark.Function
+	var afterResponse *starlark.Function
 	var name starlark.String
 	var taglist tags.StarlarkStringList
 	var state0 *starlark.Dict
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"hook", &hook,
+		"after_response", &afterResponse,
 		"name", &name,
 		"tags?", &taglist,
 		"state?", &state0,
@@ -61,11 +61,11 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	if err := tags.LegalName(chkname); err != nil {
 		return nil, fmt.Errorf("bad name for Check: %v", err)
 	}
-	if hook.HasVarargs() || hook.HasKwargs() || hook.NumParams() != 1 {
-		return nil, fmt.Errorf("hook for Check %s must have only one param: ctx", name.String())
+	if afterResponse.HasVarargs() || afterResponse.HasKwargs() || afterResponse.NumParams() != 1 {
+		return nil, fmt.Errorf("after_response for Check %s must have only one param: ctx", name.String())
 	}
-	if pname, _ := hook.Param(0); pname != "ctx" {
-		return nil, fmt.Errorf("hook for Check %s must have only one param: ctx", name.String())
+	if pname, _ := afterResponse.Param(0); pname != "ctx" {
+		return nil, fmt.Errorf("after_response for Check %s must have only one param: ctx", name.String())
 	}
 
 	if state0 == nil {
@@ -79,9 +79,9 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	}
 	state0.Freeze()
 	chk := &check{
-		hook:   hook,
-		tags:   taglist.Uniques,
-		state0: state0,
+		afterResponse: afterResponse,
+		tags:          taglist.Uniques,
+		state0:        state0,
 	}
 	if err := chk.reset(chkname); err != nil {
 		return nil, err
