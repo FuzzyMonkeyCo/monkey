@@ -91,6 +91,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 		return nil, fmt.Errorf("a Check named %s already exists", name.String())
 	}
 	rt.checks[chkname] = chk
+	rt.checksNames = append(rt.checksNames, chkname)
 	log.Printf("[NFO] registered %s: %+v", b.Name(), chk)
 
 	return starlark.None, nil

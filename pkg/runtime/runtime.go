@@ -31,7 +31,9 @@ type Runtime struct {
 	envRead map[string]string // holds all the envs looked up on initial run
 	models  map[string]modeler.Interface
 	files   map[string]string
-	checks  map[string]*check
+
+	checks      map[string]*check
+	checksNames []string
 
 	client    *fm.ChBiDi
 	eIds      []uint32
