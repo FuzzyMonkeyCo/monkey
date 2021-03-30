@@ -8,9 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # For $ git tag
 
     - name: Ensure Tagfile is usable
-      run: grep -F . Tagfile
+      run: grep -E '^[0-9]+[.][0-9]+[.][0-9]+$' Tagfile
 
     - name: Checkout master Tagfile
       uses: actions/checkout@v2
@@ -20,6 +22,9 @@ jobs:
 
     - name: Ensure Tagfile has changes
       run: '! diff -q Tagfile ./master-Tagfile/Tagfile'
+
+    - name: Ensure tag wasn't published already
+      run: git tag | grep -vF $(cat Tagfile)
 
   ci-check--lint:
     runs-on: ubuntu-latest
