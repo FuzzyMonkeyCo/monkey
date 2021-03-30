@@ -67,15 +67,17 @@ RUN \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
  && grep -F . Tagfile \
- && CURRENT_TAG=$(cat Tagfile) goreleaser release --snapshot --parallelism=$(nproc)
+ && CURRENT_TAG=$(cat Tagfile) goreleaser release --snapshot
 
 
 ## Goreleaser's dist/ for GitHub release
 
-FROM scratch AS goreleaser-dist
+FROM scratch AS goreleaser-dist-many
 COPY --from=monkey-build /w/dist/checksums.sha256.txt /
 COPY --from=monkey-build /w/dist/monkey-*.tar.gz /
 COPY --from=monkey-build /w/dist/monkey-*.zip /
+FROM scratch AS goreleaser-dist
+COPY --from=goreleaser-dist-many / /
 
 
 ## Binaries for each OS
@@ -94,9 +96,10 @@ RUN        echo monkey-Windows-x86_64.zip   >archmap
 FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT AS archmap
 
 FROM monkey-build AS zxf
-COPY --from=archmap /archmap .
-RUN set -ux \
- && tar zxvf ./dist/$(cat archmap) -C .
+RUN \
+    --mount=from=archmap,source=/archmap,target=/archmap \
+    set -ux \
+ && tar zxvf ./dist/$(cat /archmap) -C .
 FROM scratch AS binaries-
 COPY --from=zxf /w/monkey* /
 
@@ -107,11 +110,12 @@ RUN \
     set -ux \
  && apk update \
  && apk add curl ca-certificates
-COPY --from=archmap /archmap .
-COPY Tagfile .
-RUN set -ux \
+RUN \
+    --mount=source=Tagfile,target=Tagfile \
+    --mount=from=archmap,source=/archmap,target=/archmap \
+    set -ux \
  && TAG=$(cat Tagfile) \
- && ARCHIVE=$(cat archmap) \
+ && ARCHIVE=$(cat /archmap) \
  && curl -fsSL -o $ARCHIVE https://github.com/FuzzyMonkeyCo/monkey/releases/download/$TAG/$ARCHIVE \
  && curl -fsSL -o checksums.sha256.txt https://github.com/FuzzyMonkeyCo/monkey/releases/download/$TAG/checksums.sha256.txt \
  && grep $ARCHIVE checksums.sha256.txt >only \
