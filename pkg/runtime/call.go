@@ -213,8 +213,8 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		return
 	})
 
-	for name, chk := range rt.checks {
-		name, chk := name, chk
+	for _, name := range rt.checksNames {
+		name, chk := name, rt.checks[name]
 
 		g.Go(func() error {
 			v := rt.runUserCheckWrapper(name, chk, tagsFilter, ctxer1, maxSteps)
