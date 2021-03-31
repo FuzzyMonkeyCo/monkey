@@ -83,7 +83,7 @@ jobs:
       env:
         TARGET: ci-check--test
 
-  goreleaser-dist:
+  goreleaser-dist-:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -104,11 +104,15 @@ jobs:
 
     - name: Test CLI
       run: |
-        tar zxvf ./dist/monkey-Linux-x86_64.tar.gz -C .
-        ./monkey -h | grep monkey
-        ./monkey help | grep monkey
-        ./monkey version
-        ./monkey fmt
-        [[ $(./monkey version | wc -l) = 1 ]]
-        ./monkey version | grep -F $(cat Tagfile)
-        ./monkey --version | grep -F $(cat Tagfile)
+        ext=tar.gz ; exe=monkey ; arch=$(uname -m)
+        if [[ "$arch" = Windows ]]; then
+          ext=zip ; exe=monkey.exe
+        fi
+        tar zxvf ./dist/monkey-$(uname -s)-$arch.$ext -C .
+        ./$exe -h | grep monkey
+        ./$exe help | grep monkey
+        ./$exe version
+        ./$exe fmt
+        [[ $(./$exe version | wc -l) = 1 ]]
+        ./$exe version | grep -F $(cat Tagfile)
+        ./$exe --version | grep -F $(cat Tagfile)
