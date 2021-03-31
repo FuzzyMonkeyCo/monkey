@@ -42,6 +42,7 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 		grpc.WithTimeout(dialTimeout),
 		grpc.WithDefaultCallOptions(
 			grpc.UseCompressor(gzip.Name),
+			grpc.MaxCallRecvMsgSize(10*4194304),
 		),
 	}
 	if !strings.HasSuffix(grpcHost, ":443") {
