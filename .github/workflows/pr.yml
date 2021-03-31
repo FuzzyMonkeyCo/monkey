@@ -83,8 +83,76 @@ jobs:
       env:
         TARGET: ci-check--test
 
-  goreleaser-dist-:
+  goreleaser-dist-ubuntu:
     runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: docker/setup-buildx-action@v1
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - uses: docker/bake-action@v1.2.0
+      with:
+        files: ./docker-bake.hcl
+        targets: ${{ env.TARGET }}
+        set: |
+          *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
+      env:
+        TARGET: goreleaser-dist
+
+    - name: Test CLI
+      run: |
+        ext=tar.gz ; exe=monkey ; arch=$(uname -m)
+        if [[ "$arch" = Windows ]]; then
+          ext=zip ; exe=monkey.exe
+        fi
+        tar zxvf ./dist/monkey-$(uname -s)-$arch.$ext -C .
+        ./$exe -h | grep monkey
+        ./$exe help | grep monkey
+        ./$exe version
+        ./$exe fmt
+        [[ $(./$exe version | wc -l) = 1 ]]
+        ./$exe version | grep -F $(cat Tagfile)
+        ./$exe --version | grep -F $(cat Tagfile)
+
+  goreleaser-dist-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: docker/setup-buildx-action@v1
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - uses: docker/bake-action@v1.2.0
+      with:
+        files: ./docker-bake.hcl
+        targets: ${{ env.TARGET }}
+        set: |
+          *.cache-to=type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/monkey:${{ env.TARGET }},mode=max
+      env:
+        TARGET: goreleaser-dist
+
+    - name: Test CLI
+      run: |
+        ext=tar.gz ; exe=monkey ; arch=$(uname -m)
+        if [[ "$arch" = Windows ]]; then
+          ext=zip ; exe=monkey.exe
+        fi
+        tar zxvf ./dist/monkey-$(uname -s)-$arch.$ext -C .
+        ./$exe -h | grep monkey
+        ./$exe help | grep monkey
+        ./$exe version
+        ./$exe fmt
+        [[ $(./$exe version | wc -l) = 1 ]]
+        ./$exe version | grep -F $(cat Tagfile)
+        ./$exe --version | grep -F $(cat Tagfile)
+
+  goreleaser-dist-windows:
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
 
