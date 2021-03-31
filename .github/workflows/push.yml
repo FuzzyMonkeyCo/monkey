@@ -4,11 +4,11 @@ on:
   push: {}
 
 jobs:
-  buildkit:
+  buildkit-ubuntu:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: docker/setup-qemu-action@v1
+    # - uses: docker/setup-qemu-action@v1
     - uses: docker/login-action@v1
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -18,13 +18,37 @@ jobs:
     - run: ./monkey version
     - run: echo LINUX=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
 
-    # No docker on macos
-    - run: DOCKER_BUILDKIT=1 docker build --platform=darwin/amd64 -o . .
-    - run: echo DARWIN=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
-    - run: [[ "$DARWIN" != "$LINUX" ]]
+    # # No docker on macos
+    # - run: DOCKER_BUILDKIT=1 docker build --platform=darwin/amd64 -o . .
+    # - run: ./monkey version
+    # - run: echo DARWIN=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
+    # - run: [[ "$DARWIN" != "$LINUX" ]]
 
-    # invalid windows mount type: 'bind'
-    - run: DOCKER_BUILDKIT=1 docker build --platform=windows/amd64 -o . .
-    - run: echo WINDOWS=$(sha256sum ./monkey.exe | awk '{print $1}') >>$GITHUB_ENV
-    - run: [[ "$WINDOWS" != "$LINUX" ]]
-    - run: [[ "$WINDOWS" != "$DARWIN" ]]
+    # # invalid windows mount type: 'bind'
+    # - run: DOCKER_BUILDKIT=1 docker build --platform=windows/amd64 -o . .
+    # - run: ./monkey.exe version
+    # - run: echo WINDOWS=$(sha256sum ./monkey.exe | awk '{print $1}') >>$GITHUB_ENV
+    # - run: [[ "$WINDOWS" != "$LINUX" ]]
+    # - run: [[ "$WINDOWS" != "$DARWIN" ]]
+
+  buildkit-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: DOCKER_BUILDKIT=1 docker build -o . .
+    - run: ./monkey version
+
+  buildkit-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - run: DOCKER_BUILDKIT=1 docker build -o . .
+    - run: ./monkey.exe version
