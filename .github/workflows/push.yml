@@ -31,16 +31,17 @@ jobs:
     # - run: [[ "$WINDOWS" != "$LINUX" ]]
     # - run: [[ "$WINDOWS" != "$DARWIN" ]]
 
-  buildkit-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v2
-    # - uses: docker/login-action@v1
-    #   with:
-    #     username: ${{ secrets.DOCKERHUB_USERNAME }}
-    #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - run: DOCKER_BUILDKIT=1 docker build -o . .
-    - run: ./monkey version
+    #### no docker-for-mac in GAs. Try QEMU?
+  # buildkit-macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   # - uses: docker/login-action@v1
+  #   #   with:
+  #   #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #   #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+  #   - run: DOCKER_BUILDKIT=1 docker build -o . .
+  #   - run: ./monkey version
 
   buildkit-windows:
     runs-on: windows-latest
@@ -50,5 +51,7 @@ jobs:
     #   with:
     #     username: ${{ secrets.DOCKERHUB_USERNAME }}
     #     password: ${{ secrets.DOCKERHUB_TOKEN }}
-    - run: DOCKER_BUILDKIT=1 docker build -o . .
+    - run: docker build -o . .
+      env:
+        DOCKER_BUILDKIT: 1
     - run: ./monkey.exe version
