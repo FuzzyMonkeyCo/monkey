@@ -16,15 +16,15 @@ jobs:
 
     - run: DOCKER_BUILDKIT=1 docker build -o . .
     - run: ./monkey version
-    - run: echo LINUX=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
+    # - run: echo LINUX=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
 
-    # No docker on macos
-    - run: DOCKER_BUILDKIT=1 docker build --platform=darwin/amd64 -o . .
-    - run: echo DARWIN=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
-    - run: [[ "$DARWIN" != "$LINUX" ]]
+    # # No docker on macos
+    # - run: DOCKER_BUILDKIT=1 docker build --platform=darwin/amd64 -o . .
+    # - run: echo DARWIN=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
+    # - run: [[ "$DARWIN" != "$LINUX" ]]
 
-    # invalid windows mount type: 'bind'
-    - run: DOCKER_BUILDKIT=1 docker build --platform=windows/amd64 -o . .
-    - run: echo WINDOWS=$(sha256sum ./monkey.exe | awk '{print $1}') >>$GITHUB_ENV
-    - run: [[ "$WINDOWS" != "$LINUX" ]]
-    - run: [[ "$WINDOWS" != "$DARWIN" ]]
+    # # invalid windows mount type: 'bind'
+    # - run: DOCKER_BUILDKIT=1 docker build --platform=windows/amd64 -o . .
+    # - run: echo WINDOWS=$(sha256sum ./monkey.exe | awk '{print $1}') >>$GITHUB_ENV
+    # - run: [[ "$WINDOWS" != "$LINUX" ]]
+    # - run: [[ "$WINDOWS" != "$DARWIN" ]]
