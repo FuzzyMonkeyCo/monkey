@@ -308,7 +308,7 @@ func doEnv(vars []string) int {
 		}
 		return code.OK
 	}
-
+	penv = func(key string) { fmt.Println(os.Getenv(key)) }
 	for _, key := range vars {
 		if printed, ok := all[key]; !ok || printed {
 			return code.Failed
