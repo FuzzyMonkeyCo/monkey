@@ -67,10 +67,10 @@ curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownl
 
 With Docker:
 ```shell
-DOCKER_BUILDKIT=1 docker build -o . --build-arg OS="$(uname -s)" --build-arg ARCH="$(uname -m)" git://github.com/FuzzyMonkeyCo/monkey
+DOCKER_BUILDKIT=1 docker build -o=. --platform=local git://github.com/FuzzyMonkeyCo/monkey
 
 # or the faster:
-DOCKER_BUILDKIT=1 docker build -o . --build-arg OS="$(uname -s)" --build-arg ARCH="$(uname -m)" --build-arg PREBUILT=1 git://github.com/FuzzyMonkeyCo/monkey
+DOCKER_BUILDKIT=1 docker build -o=. --platform=local --build-arg PREBUILT=1 git://github.com/FuzzyMonkeyCo/monkey
 ```
 
 Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).

@@ -14,7 +14,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - run: DOCKER_BUILDKIT=1 docker build -o . .
+    - run: DOCKER_BUILDKIT=1 docker build -o=. --platform=local .
     - run: ./monkey version
     # - run: echo LINUX=$(sha256sum ./monkey | awk '{print $1}') >>$GITHUB_ENV
 
