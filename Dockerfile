@@ -4,9 +4,6 @@
 # Use --build-arg PREBUILT=1 with default target to fetch binaries from GitHub releases
 ARG PREBUILT
 
-ARG OS=Linux
-ARG ARCH=x86_64
-
 # locked goreleaser/goreleaser:latest @ 2021/03/14 on linux/amd64
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
 # On this image:
@@ -85,28 +82,18 @@ COPY --from=goreleaser-dist-many / /
 
 ## Binaries for each OS
 
-FROM alpine AS archmap-builder
-ARG OS
-ARG ARCH
-RUN \
-    set -ux \
- && ext=tar.gz \
- # More at https://stackoverflow.com/a/27776822/1418165
- && case "$OS" in \
-      Linux) os=Linux ;; \
-      Darwin) os=Darwin ;; \
-      CYGWIN*|MINGW32*|MSYS*|MINGW*) os=Windows ; ext=zip ;; \
-      *) echo "Unhandled OS '$OS'" && exit 1 ;; \
-    esac \
- && case "$ARCH" in \
-      i386) arch=i386 ;; \
-      x86_64) arch=x86_64 ;; \
-      *) echo "Unhandled ARCH '$ARCH'" && exit 1 ;; \
-    esac \
- && echo monkey-$os-$arch.$ext >/archmap
+FROM --platform=$BUILDPLATFORM alpine AS archmap-darwin-amd64-
+RUN        echo monkey-Darwin-x86_64.tar.gz >/archmap
+FROM --platform=$BUILDPLATFORM alpine AS archmap-linux-386-
+RUN        echo monkey-Linux-i386.tar.gz    >/archmap
+FROM --platform=$BUILDPLATFORM alpine AS archmap-linux-amd64-
+RUN        echo monkey-Linux-x86_64.tar.gz  >/archmap
+FROM --platform=$BUILDPLATFORM alpine AS archmap-windows-386-
+RUN        echo monkey-Windows-i386.zip     >/archmap
+FROM --platform=$BUILDPLATFORM alpine AS archmap-windows-amd64-
+RUN        echo monkey-Windows-x86_64.zip   >/archmap
 
-FROM scratch AS archmap
-COPY --from=archmap-builder /archmap /
+FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT AS archmap
 
 
 FROM monkey-build AS zxf
@@ -117,7 +104,7 @@ RUN \
 FROM scratch AS binaries-
 COPY --from=zxf /w/monkey* /
 
-FROM alpine AS monkey-prebuilt
+FROM --platform=$BUILDPLATFORM alpine AS monkey-prebuilt
 WORKDIR /w
 RUN \
   --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
