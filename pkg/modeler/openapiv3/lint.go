@@ -32,12 +32,12 @@ func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 		return
 	}
 
-	loader := &openapi3.SwaggerLoader{
-		Context:                ctx,
-		IsExternalRefsAllowed:  true,
-		LoadSwaggerFromURIFunc: m.loadSwaggerFromURI,
+	loader := &openapi3.Loader{
+		Context:               ctx,
+		IsExternalRefsAllowed: true,
+		ReadFromURIFunc:       m.readFromURI,
 	}
-	doc, err := loader.LoadSwaggerFromData(blob)
+	doc, err := loader.LoadFromData(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -93,7 +93,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	return
 }
 
-func (m *oa3) loadSwaggerFromURI(loader *openapi3.SwaggerLoader, uri *url.URL) (*openapi3.Swagger, error) {
+func (m *oa3) readFromURI(loader *openapi3.Loader, uri *url.URL) ([]byte, error) {
 	// TODO: support local & remote URIs
 	return nil, fmt.Errorf("unsupported URI: %q", uri.String())
 }

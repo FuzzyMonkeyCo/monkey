@@ -95,7 +95,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	}
 }
 
-func toOA3(m *oa3) (doc openapi3.Swagger) {
+func toOA3(m *oa3) (doc openapi3.T) {
 	doc.OpenAPI = "3.0.0"
 	doc.Info = &openapi3.Info{
 		Title:   someDescription,
@@ -113,7 +113,7 @@ func validateSomeSchemas(t *testing.T, m *oa3) {
 	require.Empty(t, m.Validate(4, protovalue.FromGo(float64(42))))
 }
 
-func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
+func (sm schemap) schemasToOA3(doc *openapi3.T) {
 	seededSchemas := make(map[string]*openapi3.SchemaRef, len(sm))
 	for _, refOrSchema := range sm {
 		if schemaPtr := refOrSchema.GetPtr(); schemaPtr != nil {
@@ -126,7 +126,7 @@ func (sm schemap) schemasToOA3(doc *openapi3.Swagger) {
 	doc.Components.Schemas = seededSchemas
 }
 
-func (sm schemap) endpointsToOA3(doc *openapi3.Swagger, es map[eid]*fm.Endpoint) {
+func (sm schemap) endpointsToOA3(doc *openapi3.T, es map[eid]*fm.Endpoint) {
 	doc.Paths = make(openapi3.Paths, len(es))
 	for _, e := range es {
 		endpoint := e.GetJson()

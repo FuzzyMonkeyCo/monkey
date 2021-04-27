@@ -18,7 +18,7 @@ const (
 	oa3ComponentsSchemas = "#/components/schemas/"
 )
 
-func newSpecFromOA3(doc *openapi3.Swagger) (vald *validator, err error) {
+func newSpecFromOA3(doc *openapi3.T) (vald *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
