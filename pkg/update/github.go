@@ -144,7 +144,7 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 		}
 
 		if header.Typeflag == tar.TypeReg && header.Name == rel.Name {
-			if _, err = io.Copy(bin, tr); err != nil {
+			if _, err = io.CopyN(bin, tr, header.Size); err != nil {
 				log.Println("[ERR]", err)
 				return
 			}
