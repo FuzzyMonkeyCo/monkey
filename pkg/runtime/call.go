@@ -164,14 +164,14 @@ func (rt *Runtime) runCallerCheck(
 		v.Status = fm.Clt_CallVerifProgress_failure
 		v.Reason = failure
 		log.Printf("[NFO] check failed: %v", failure)
-		rt.progress.CheckFailed(v.Name, v.Reason[1:len(v.Reason)-1])
+		rt.progress.CheckFailed(v.Name, v.Reason)
 		return
 	default: // unreachable
 		v.Status = fm.Clt_CallVerifProgress_failure
 		v.Reason = []string{"unexpected check result"}
 		log.Printf("[ERR] %s: success:%q skipped:%q failure:%+v",
 			v.Reason[0], success, skipped, failure)
-		rt.progress.CheckFailed(v.Name, v.Reason[1:len(v.Reason)-1])
+		rt.progress.CheckFailed(v.Name, v.Reason)
 		return
 	}
 }
@@ -224,7 +224,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 			case fm.Clt_CallVerifProgress_skipped:
 				rt.progress.CheckSkipped(v.Name, "")
 			case fm.Clt_CallVerifProgress_failure:
-				rt.progress.CheckFailed(v.Name, v.Reason[1:len(v.Reason)-1])
+				rt.progress.CheckFailed(v.Name, v.Reason)
 			}
 
 			vs <- v

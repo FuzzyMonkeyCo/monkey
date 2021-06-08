@@ -93,7 +93,9 @@ func (p *Progresser) CheckFailed(name string, ss []string) {
 	as.ColorERR.Println("x")
 	as.ColorNFO.Printf("Check failed: ")
 	fmt.Println(name)
-	for _, s := range ss {
-		as.ColorERR.Println(s)
+	for i, s := range ss {
+		if i != 0 {
+			as.ColorERR.Println(s)
+		}
 	}
 }
