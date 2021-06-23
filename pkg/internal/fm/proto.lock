@@ -726,6 +726,11 @@
                     "id": 10,
                     "name": "call_checks_count",
                     "type": "uint32"
+                  },
+                  {
+                    "id": 11,
+                    "name": "call_checks_skipped",
+                    "type": "uint32"
                   }
                 ]
               },
