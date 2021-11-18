@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	openapi_v3 "github.com/googleapis/gnostic/openapiv3"
+	openapi_v3 "github.com/google/gnostic/openapiv3"
 )
 
 var errLinting = func() error {
