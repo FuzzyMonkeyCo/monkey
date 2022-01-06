@@ -46,7 +46,7 @@ Options:
   --validate-against=REF          Schema $ref to validate STDIN against
 
 Try:
-     export FUZZYMONKEY_API_KEY=42
+     export FUZZYMONKEY_API_KEY=fm_42
   monkey update
   monkey exec reset
   monkey fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
