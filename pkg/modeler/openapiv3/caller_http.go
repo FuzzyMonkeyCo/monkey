@@ -120,7 +120,7 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		r.Header.Add(headerAuthorization, authz)
 	}
 
-	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.UserAgent).(string))
+	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.XUserAgent).(string))
 
 	if host := m.Host; host != "" {
 		var configured *url.URL

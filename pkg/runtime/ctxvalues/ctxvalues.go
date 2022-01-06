@@ -1,12 +1,9 @@
-// Values set by runtime to be accessible through context
-// in other packages
+// Values set by monkey's runtime to be accessible through
+// context in other packages
 
 package ctxvalues
 
-// T is an integer type for context.Context keys
-type T int32
+type xUserAgent struct{}
 
-const (
-	// UserAgent key's associated value contains monkey version and platform information
-	UserAgent T = iota
-)
+// XUserAgent key's associated value contains monkey version and platform information
+var XUserAgent = xUserAgent{}

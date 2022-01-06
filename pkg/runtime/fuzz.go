@@ -35,10 +35,10 @@ func (rt *Runtime) Fuzz(
 
 	if apiKey != "" {
 		// Pass user agent down to caller
-		ctx = context.WithValue(ctx, ctxvalues.UserAgent, rt.binTitle)
+		ctx = context.WithValue(ctx, ctxvalues.XUserAgent, rt.binTitle)
 		ctx = metadata.AppendToOutgoingContext(ctx,
-			"ua", rt.binTitle,
-			"apiKey", apiKey,
+			"x-ua", rt.binTitle,
+			"x-api-key", apiKey,
 		)
 	}
 	if rt.client, err = fm.NewChBiDi(ctx); err != nil {

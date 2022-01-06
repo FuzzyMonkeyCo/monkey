@@ -1,18 +1,20 @@
 package code
 
 const (
-	OK     = 0
+	// OK is the success code
+	OK = 0
+	// Failed represents any non-specific failure
 	Failed = 1
-	// Something happened during linting
+	// FailedLint means something happened during linting
 	FailedLint = 2
-	// `binName` executable could not be upgraded
+	// FailedUpdate means `binName` executable could not be upgraded
 	FailedUpdate = 3
-	// fmt failed
+	// FailedFmt means the formatting operation failed
 	FailedFmt = 4
-	// Fuzzing found a bug!
+	// FailedFuzz means the fuzzing process found a bug with the system under test (SUT)
 	FailedFuzz = 6
-	// A user command (start, reset, stop) failed
+	// FailedExec means a user command (start, reset, stop) experienced failure
 	FailedExec = 7
-	// Validating payload against schema failed
+	// FailedSchema means the given payload does not validate provided schema
 	FailedSchema = 9
 )
