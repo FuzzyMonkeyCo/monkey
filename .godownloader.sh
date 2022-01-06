@@ -348,6 +348,7 @@ EOF
 PROJECT_NAME="monkey"
 OWNER=FuzzyMonkeyCo
 REPO="monkey"
+# shellcheck disable=SC2034  # Unused variables left for readability
 BINARY=monkey
 FORMAT=tar.gz
 OS=$(uname_os)
