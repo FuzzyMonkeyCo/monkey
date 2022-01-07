@@ -1,17 +1,16 @@
-# syntax=docker.io/docker/dockerfile:1.2@sha256:e2a8561e419ab1ba6b2fe6cbdf49fd92b95912df1cf7d313c3e2230a333fdbcc
-# locked docker/dockerfile:1.2 ^ @ 2021/03/14 on linux/amd64
+# syntax=docker.io/docker/dockerfile:1@sha256:42399d4635eddd7a9b8a24be879d2f9a930d0ed040a61324cfdf59ef1357b3b2
 
 # Use --build-arg PREBUILT=1 with default target to fetch binaries from GitHub releases
 ARG PREBUILT
 
-# locked goreleaser/goreleaser:latest @ 2021/03/14 on linux/amd64
-FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:fa75344740e66e5bb55ad46426eb8e6c8dedbd3dcfa15ec1c41897b143214ae2 AS go-releaser
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:202577e3d05c717171c79be926e7b8ba97aac4c7c0bb3fc0fe5a112508b2651c AS goreleaser
 # On this image:
 #  go env GOCACHE    => /root/.cache/go-build
 #  go env GOMODCACHE => /go/pkg/mod
 
 
-FROM go-releaser AS base
+FROM goreleaser AS base
 WORKDIR /w
 ENV CGO_ENABLED=0
 COPY go.??? .
@@ -82,15 +81,15 @@ COPY --from=goreleaser-dist-many / /
 
 ## Binaries for each OS
 
-FROM --platform=$BUILDPLATFORM alpine AS archmap-darwin-amd64-
+FROM alpine AS archmap-darwin-amd64-
 RUN        echo monkey-Darwin-x86_64.tar.gz >/archmap
-FROM --platform=$BUILDPLATFORM alpine AS archmap-linux-386-
+FROM alpine AS archmap-linux-386-
 RUN        echo monkey-Linux-i386.tar.gz    >/archmap
-FROM --platform=$BUILDPLATFORM alpine AS archmap-linux-amd64-
+FROM alpine AS archmap-linux-amd64-
 RUN        echo monkey-Linux-x86_64.tar.gz  >/archmap
-FROM --platform=$BUILDPLATFORM alpine AS archmap-windows-386-
+FROM alpine AS archmap-windows-386-
 RUN        echo monkey-Windows-i386.zip     >/archmap
-FROM --platform=$BUILDPLATFORM alpine AS archmap-windows-amd64-
+FROM alpine AS archmap-windows-amd64-
 RUN        echo monkey-Windows-x86_64.zip   >/archmap
 
 FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT AS archmap
@@ -104,7 +103,7 @@ RUN \
 FROM scratch AS binaries-
 COPY --from=zxf /w/monkey* /
 
-FROM --platform=$BUILDPLATFORM alpine AS monkey-prebuilt
+FROM alpine AS monkey-prebuilt
 WORKDIR /w
 RUN \
   --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
