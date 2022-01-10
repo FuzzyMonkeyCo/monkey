@@ -5,6 +5,10 @@ on:
     tags: ['*']
     branches: ['!*']
 
+# defaults:
+#   run:
+#     shell: bash
+
 jobs:
 
   ubuntu-latest:
@@ -22,6 +26,9 @@ jobs:
       with:
         command: lint
         github_token: ${{ secrets.github_token }}
+    - run: |
+        monkey fmt -w
+        git --no-pager diff --exit-code
 
   macos-latest:
     name: macos-latest
@@ -38,6 +45,9 @@ jobs:
       with:
         command: lint
         github_token: ${{ secrets.github_token }}
+    - run: |
+        monkey fmt -w
+        git --no-pager diff --exit-code
 
   windows-latest:
     name: windows-latest
@@ -54,3 +64,6 @@ jobs:
       with:
         command: lint
         github_token: ${{ secrets.github_token }}
+    - run: |
+        monkey fmt -w
+        git --no-pager diff --exit-code
