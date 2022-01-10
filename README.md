@@ -55,7 +55,7 @@ Try:
 
 ### Getting started
 
-**Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/action-monkey).
+**Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/setup-monkey).
 
 Quick install:
 ```shell
