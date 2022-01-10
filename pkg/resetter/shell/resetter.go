@@ -84,15 +84,16 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
 		if err = s.ExecStop(ctx, stdout, stderr, true); err != nil {
 			log.Println("[ERR]", err)
-			// Keep going
+			return
 		}
 	}
 
-	if errR := os.Remove(cwid.EnvFile()); errR != nil && !os.IsNotExist(errR) {
-		log.Println("[ERR]", errR)
-		if err == nil {
-			err = errR
+	if err = os.Remove(cwid.EnvFile()); err != nil {
+		if !os.IsNotExist(err) {
+			log.Println("[ERR]", err)
+			return
 		}
+		err = nil
 	}
 	return
 }
@@ -176,7 +177,11 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 		defer script.Close()
 
 		Y := io.MultiWriter(script, &scriptListing)
-		s.setReadonlyEnvs(Y)
+		if f := s.setReadonlyEnvs; f != nil {
+			f(Y)
+		} else {
+			log.Println("[NFO] setReadonlyEnvs was nil")
+		}
 		fmt.Fprintln(Y, "source", envFile, ">/dev/null 2>&1")
 		fmt.Fprintln(Y, "set -o errexit")
 		fmt.Fprintln(Y, "set -o errtrace")

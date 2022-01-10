@@ -2,6 +2,7 @@ package fm
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -50,6 +51,9 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 	}
 	conn, err := grpc.DialContext(ctx, grpcHost, options...)
 	if err != nil {
+		if err == context.DeadlineExceeded {
+			err = errors.New("unreachable fuzzymonkey.co server")
+		}
 		log.Println("[ERR]", err)
 		return nil, err
 	}
