@@ -35,8 +35,8 @@ OpenAPIv3(
 
 Check(
     name = "responds_in_a_timely_manner",
-    after_response = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
-    tags = ["timing"],
+    after_response = lambda ctx: assert.that(ctx.response.elapsed_ms).is_at_most(500),
+    tags = ["timings"],
 )
 
 ## Express stateful properties

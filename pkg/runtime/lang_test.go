@@ -65,7 +65,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 				},
 				Body:        []byte("{}"),
 				BodyDecoded: &types.Value{Kind: &types.Value_StructValue{StructValue: &types.Struct{}}},
-				ElapsedNs:   776674,
+				ElapsedNs:   37 * 1000 * 1000,
 			},
 		},
 	})

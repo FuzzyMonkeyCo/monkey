@@ -16,6 +16,7 @@ def ctxchecks(ctx):
 
 	assert.that(type(ctx.response)).is_equal_to("ctx_response")
 	assert.that(ctx.response).has_attribute("body")
+	assert.that(ctx.response.elapsed_ms).is_within(50).of(1)
 
 	assert.that(ctx.state).is_of_type("dict")
 

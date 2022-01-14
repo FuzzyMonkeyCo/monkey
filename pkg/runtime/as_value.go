@@ -53,7 +53,10 @@ func outputAsValue(o *fm.Clt_CallResponseRaw_Output) *ctxResponse {
 		s["status_code"] = starlark.MakeUint(uint(repProto.StatusCode))
 		s["reason"] = starlark.String(repProto.Reason)
 		s["content"] = starlark.String(repProto.Body)
+
 		s["elapsed_ns"] = starlark.MakeInt64(repProto.ElapsedNs)
+		s["elapsed_ms"] = starlark.MakeInt64(repProto.ElapsedNs / 1.e6)
+
 		// "error": repProto.Error Checks make this unreachable
 		// "history" :: []Rep (redirects)?
 
