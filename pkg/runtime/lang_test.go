@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"testing"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
@@ -58,7 +59,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 					"Connection":                       {Values: []string{"keep-alive"}},
 					"Content-Length":                   {Values: []string{"2"}},
 					"Content-Type":                     {Values: []string{"application/json; charset=utf-8"}},
-					"Date":                             {Values: []string{"Mon, 15 Feb 2021 17:58:05 GMT"}},
+					"Date":                             {Values: []string{time.Now().Format(time.RFC1123)}},
 					"Etag":                             {Values: []string{`W/"2-vyGp6PvFo4RvsFtPoIWeCReyIC8"`}},
 					"Expect-Ct":                        {Values: []string{`max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"`}},
 					"Expires":                          {Values: []string{"-1"}},
