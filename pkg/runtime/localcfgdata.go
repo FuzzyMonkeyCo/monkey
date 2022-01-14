@@ -1,8 +1,14 @@
-//go:build !fakefs
-// +build !fakefs
-
 package runtime
 
-import "io/ioutil"
+import "os"
 
-func localcfgdata() ([]byte, error) { return ioutil.ReadFile(localCfg) }
+var localCfgData []byte
+
+func localcfgdata() ([]byte, error) {
+	if localCfgData != nil {
+		// When mocking
+		return localCfgData, nil
+	}
+
+	return os.ReadFile(localCfg)
+}

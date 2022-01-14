@@ -1,6 +1,3 @@
-//go:build fakefs
-// +build fakefs
-
 package runtime
 
 import (

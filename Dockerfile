@@ -54,7 +54,7 @@ RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && go test -tags fakefs -count 10 ./... \
+ && go test -count 10 ./... \
  && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
 
 

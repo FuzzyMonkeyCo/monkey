@@ -58,7 +58,7 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	richgo test -tags fakefs -race ./...
+	richgo test -race ./...
 
 ci:
 	docker buildx bake ci-checks
