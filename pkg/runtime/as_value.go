@@ -11,8 +11,7 @@ import (
 
 // Request/Response fields loosely follow Python's `requests` API
 
-// inputAsValue exposes request data as a Starlark value for user assertions.
-func inputAsValue(i *fm.Clt_CallRequestRaw_Input) starlark.Value {
+func inputAsValue(i *fm.Clt_CallRequestRaw_Input) *ctxRequest {
 	s := make(starlark.StringDict, 5)
 	switch x := i.GetInput().(type) {
 
@@ -35,21 +34,17 @@ func inputAsValue(i *fm.Clt_CallRequestRaw_Input) starlark.Value {
 			Members: headers,
 		}
 
-		if len(reqProto.Body) != 0 {
+		if reqProto.Body != nil {
 			s["body"] = starlarkvalue.FromProtoValue(reqProto.BodyDecoded)
 		}
 
 	default:
 		panic(fmt.Errorf("unhandled output %T: %+v", x, i))
 	}
-	return &starlarkstruct.Module{
-		Name:    "request",
-		Members: s,
-	}
+	return &ctxRequest{s}
 }
 
-// outputAsValue exposes response data as a Starlark value for user assertions.
-func outputAsValue(o *fm.Clt_CallResponseRaw_Output) starlark.Value {
+func outputAsValue(o *fm.Clt_CallResponseRaw_Output) *ctxResponse {
 	s := make(starlark.StringDict, 6)
 	switch x := o.GetOutput().(type) {
 
@@ -75,15 +70,12 @@ func outputAsValue(o *fm.Clt_CallResponseRaw_Output) starlark.Value {
 			Members: headers,
 		}
 
-		if len(repProto.Body) != 0 {
+		if repProto.Body != nil {
 			s["body"] = starlarkvalue.FromProtoValue(repProto.BodyDecoded)
 		}
 
 	default:
 		panic(fmt.Errorf("unhandled output %T: %+v", x, o))
 	}
-	return &starlarkstruct.Module{
-		Name:    "response",
-		Members: s,
-	}
+	return &ctxResponse{s}
 }
