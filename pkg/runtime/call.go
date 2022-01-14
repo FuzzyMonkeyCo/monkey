@@ -213,11 +213,12 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		return
 	})
 
+	print := func(msg string) { rt.progress.Printf("%s", msg) }
 	for _, name := range rt.checksNames {
 		name, chk := name, rt.checks[name]
 
 		g.Go(func() error {
-			v := rt.runUserCheckWrapper(name, chk, tagsFilter, ctxer1, maxSteps)
+			v := rt.runUserCheckWrapper(name, chk, print, tagsFilter, ctxer1, maxSteps)
 			switch v.Status {
 			case fm.Clt_CallVerifProgress_success:
 				rt.progress.CheckPassed(v.Name, chk.afterResponse.String())
@@ -241,6 +242,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 func (rt *Runtime) runUserCheckWrapper(
 	name string,
 	chk *check,
+	print func(string),
 	tagsFilter *tags.Filter,
 	ctxer1 ctxctor1,
 	maxSteps uint64,
@@ -249,7 +251,7 @@ func (rt *Runtime) runUserCheckWrapper(
 	log.Println("[NFO] checking user property:", v.Name)
 
 	start := time.Now()
-	errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1, maxSteps)
+	errL := rt.runUserCheck(v, chk, print, tagsFilter, ctxer1, maxSteps)
 	v.ElapsedNs = time.Since(start).Nanoseconds()
 	if errL != nil {
 		v.Reason = []string{fmt.Sprintf("%T", errL)}
@@ -267,6 +269,7 @@ func (rt *Runtime) runUserCheckWrapper(
 func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
 	chk *check,
+	print func(string),
 	tagsFilter *tags.Filter,
 	ctxer1 ctxctor1,
 	maxSteps uint64,
@@ -282,7 +285,7 @@ func (rt *Runtime) runUserCheck(
 	th := &starlark.Thread{
 		Name:  v.Name,
 		Load:  loadDisabled,
-		Print: func(_ *starlark.Thread, msg string) { rt.progress.Printf("%s", msg) },
+		Print: func(_ *starlark.Thread, msg string) { print(msg) },
 	}
 	th.SetMaxExecutionSteps(maxSteps) // Upper bound on computation
 
