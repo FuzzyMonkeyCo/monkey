@@ -3,8 +3,11 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
+	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
 )
 
@@ -80,30 +83,184 @@ func (m *ctxModule) Attr(name string) (starlark.Value, error) {
 
 // ctxRequest represents request data as a Starlark value for user assertions.
 type ctxRequest struct {
-	attrs starlark.StringDict
+	attrs     starlark.StringDict
+	attrnames []string
+
+	protoBodyDecoded *types.Value
+	body             starlark.Value
+
+	protoHeaders map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues
+	headers      starlark.Value
 }
 
 var _ starlark.HasAttrs = (*ctxRequest)(nil)
 
-func (m *ctxRequest) Hash() (uint32, error)                    { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
-func (m *ctxRequest) String() string                           { return "ctx_request" }
-func (m *ctxRequest) Truth() starlark.Bool                     { return true }
-func (m *ctxRequest) Type() string                             { return "ctx_request" }
-func (m *ctxRequest) AttrNames() []string                      { return m.attrs.Keys() }
-func (m *ctxRequest) Freeze()                                  { m.attrs.Freeze() }
-func (m *ctxRequest) Attr(name string) (starlark.Value, error) { return m.attrs[name], nil }
+func (m *ctxRequest) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
+func (m *ctxRequest) String() string        { return "ctx_request" }
+func (m *ctxRequest) Truth() starlark.Bool  { return true }
+func (m *ctxRequest) Type() string          { return "ctx_request" }
+
+func (m *ctxRequest) Freeze() {
+	m.attrs.Freeze()
+	// NOTE: m.body.Freeze() in Attr()
+	// NOTE: m.headers.Freeze() in Attr()
+}
+
+func (m *ctxRequest) AttrNames() []string {
+	if m.attrnames == nil {
+		names := append(m.attrs.Keys(), "headers")
+		if m.protoBodyDecoded != nil {
+			names = append(names, "body")
+		}
+		sort.Strings(names)
+		m.attrnames = names
+	}
+	return m.attrnames
+}
+
+func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
+	switch {
+	case m.protoBodyDecoded != nil && name == "body":
+		if m.body == nil {
+			m.body = starlarkvalue.FromProtoValue(m.protoBodyDecoded)
+			m.body.Freeze()
+		}
+		return m.body, nil
+
+	case name == "headers":
+		if m.headers == nil {
+			d := starlark.NewDict(len(m.protoHeaders))
+			for key, values := range m.protoHeaders {
+				vs := make([]starlark.Value, 0, len(values.GetValues()))
+				for _, value := range values.GetValues() {
+					vs = append(vs, starlark.String(value))
+				}
+				if err := d.SetKey(starlark.String(key), starlark.NewList(vs)); err != nil {
+					return nil, err
+				}
+			}
+			m.headers = d
+			m.headers.Freeze()
+		}
+		return m.headers, nil
+
+	default:
+		return m.attrs[name], nil
+	}
+}
+
+func inputAsValue(i *fm.Clt_CallRequestRaw_Input) (cr *ctxRequest) {
+	cr = &ctxRequest{
+		attrs: make(starlark.StringDict, 3),
+	}
+	switch x := i.GetInput().(type) {
+
+	case *fm.Clt_CallRequestRaw_Input_HttpRequest_:
+		reqProto := i.GetHttpRequest()
+		cr.attrs["method"] = starlark.String(reqProto.Method)
+		cr.attrs["url"] = starlark.String(reqProto.Url)
+		cr.attrs["content"] = starlark.String(reqProto.Body)
+		cr.protoHeaders = reqProto.Headers
+		if reqProto.Body != nil {
+			cr.protoBodyDecoded = reqProto.BodyDecoded
+		}
+
+	default:
+		panic(fmt.Errorf("unhandled output %T: %+v", x, i))
+	}
+	return
+}
 
 // ctxResponse represents response data as a Starlark value for user assertions.
 type ctxResponse struct {
-	attrs starlark.StringDict
+	attrs     starlark.StringDict
+	attrnames []string
+
+	protoBodyDecoded *types.Value
+	body             starlark.Value
+
+	protoHeaders map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues
+	headers      starlark.Value
 }
 
 var _ starlark.HasAttrs = (*ctxResponse)(nil)
 
-func (m *ctxResponse) Hash() (uint32, error)                    { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
-func (m *ctxResponse) String() string                           { return "ctx_response" }
-func (m *ctxResponse) Truth() starlark.Bool                     { return true }
-func (m *ctxResponse) Type() string                             { return "ctx_response" }
-func (m *ctxResponse) AttrNames() []string                      { return m.attrs.Keys() }
-func (m *ctxResponse) Freeze()                                  { m.attrs.Freeze() }
-func (m *ctxResponse) Attr(name string) (starlark.Value, error) { return m.attrs[name], nil }
+func (m *ctxResponse) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
+func (m *ctxResponse) String() string        { return "ctx_response" }
+func (m *ctxResponse) Truth() starlark.Bool  { return true }
+func (m *ctxResponse) Type() string          { return "ctx_response" }
+
+func (m *ctxResponse) Freeze() {
+	m.attrs.Freeze()
+	// NOTE: m.body.Freeze() in Attr()
+	// NOTE: m.headers.Freeze() in Attr()
+}
+
+func (m *ctxResponse) AttrNames() []string {
+	if m.attrnames == nil {
+		names := append(m.attrs.Keys(), "headers")
+		if m.protoBodyDecoded != nil {
+			names = append(names, "body")
+		}
+		sort.Strings(names)
+		m.attrnames = names
+	}
+	return m.attrnames
+}
+
+func (m *ctxResponse) Attr(name string) (starlark.Value, error) {
+	switch {
+	case m.protoBodyDecoded != nil && name == "body":
+		if m.body == nil {
+			m.body = starlarkvalue.FromProtoValue(m.protoBodyDecoded)
+			m.body.Freeze()
+		}
+		return m.body, nil
+
+	case name == "headers":
+		if m.headers == nil {
+			d := starlark.NewDict(len(m.protoHeaders))
+			for key, values := range m.protoHeaders {
+				vs := make([]starlark.Value, 0, len(values.GetValues()))
+				for _, value := range values.GetValues() {
+					vs = append(vs, starlark.String(value))
+				}
+				if err := d.SetKey(starlark.String(key), starlark.NewList(vs)); err != nil {
+					return nil, err
+				}
+			}
+			m.headers = d
+			m.headers.Freeze()
+		}
+		return m.headers, nil
+
+	default:
+		return m.attrs[name], nil
+	}
+}
+
+func outputAsValue(o *fm.Clt_CallResponseRaw_Output) (cr *ctxResponse) {
+	cr = &ctxResponse{
+		attrs: make(starlark.StringDict, 5),
+	}
+	switch x := o.GetOutput().(type) {
+
+	case *fm.Clt_CallResponseRaw_Output_HttpResponse_:
+		repProto := o.GetHttpResponse()
+		cr.attrs["status_code"] = starlark.MakeUint(uint(repProto.StatusCode))
+		cr.attrs["reason"] = starlark.String(repProto.Reason)
+		cr.attrs["content"] = starlark.String(repProto.Body)
+		cr.attrs["elapsed_ns"] = starlark.MakeInt64(repProto.ElapsedNs)
+		cr.attrs["elapsed_ms"] = starlark.MakeInt64(repProto.ElapsedNs / 1.e6)
+		// "error": repProto.Error Checks make this unreachable
+		// "history" :: []Rep (redirects)?
+		cr.protoHeaders = repProto.Headers
+		if repProto.Body != nil {
+			cr.protoBodyDecoded = repProto.BodyDecoded
+		}
+
+	default:
+		panic(fmt.Errorf("unhandled output %T: %+v", x, o))
+	}
+	return
+}
