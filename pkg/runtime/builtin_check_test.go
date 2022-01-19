@@ -1,9 +1,11 @@
 package runtime
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,13 +20,44 @@ Check(
 	require.Nil(t, rt)
 }
 
-func TestCheckNameIsLegal(t *testing.T) {
+func TestCheckNameIsIllegalWithSpaces(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 Check(
 	name = "bla bla",
 	after_response = lambda ctx: None,
 )`)
-	require.EqualError(t, err, `bad name for Check: string contains spacing characters: "bla bla"`)
+	require.EqualError(t, err, `bad name for Check: string should only contain characters from `+tags.Alphabet+`: "bla bla"`)
+	require.Nil(t, rt)
+}
+
+func TestCheckNameIsIllegalWhenEmpty(t *testing.T) {
+	rt, err := newFakeMonkey(simplestPrelude + `
+Check(
+	name = "",
+	after_response = lambda ctx: None,
+)`)
+	require.EqualError(t, err, `bad name for Check: string is empty`)
+	require.Nil(t, rt)
+}
+
+func TestCheckNameIsIllegalWithNonASCIIChars(t *testing.T) {
+	rt, err := newFakeMonkey(simplestPrelude + `
+Check(
+	name = "ééé",
+	after_response = lambda ctx: None,
+)`)
+	require.EqualError(t, err, `bad name for Check: string should only contain characters from `+tags.Alphabet+`: "ééé"`)
+	require.Nil(t, rt)
+}
+
+func TestCheckNameIsIllegalWhenTooLong(t *testing.T) {
+	name := strings.Repeat("blipblop", 32)
+	rt, err := newFakeMonkey(simplestPrelude + `
+Check(
+	name = "` + name + `",
+	after_response = lambda ctx: None,
+)`)
+	require.EqualError(t, err, `bad name for Check: string is too long: "`+name+`"`)
 	require.Nil(t, rt)
 }
 

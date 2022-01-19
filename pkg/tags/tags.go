@@ -3,8 +3,11 @@ package tags
 import (
 	"errors"
 	"fmt"
-	"unicode"
+	"strings"
 )
+
+// Alphabet lists the only characters allowed in LegalName
+const Alphabet = "abcdefghijklmnopqrstuvwxyz_1234567890"
 
 // Tags represent a set of legal (per LegalName) tags.
 type Tags = map[string]struct{}
@@ -71,28 +74,17 @@ func fromSlice(xs []string) (r Tags, err error) {
 }
 
 // LegalName fails when string isn't the right format.
-func LegalName(s string) error {
-	l := 0
-	for _, c := range s {
-		switch {
-		case c > unicode.MaxASCII:
-			return fmt.Errorf("string contains non-ASCII characters: %q", s)
-		case !unicode.IsPrint(c):
-			return fmt.Errorf("string contains non-printable characters: %q", s)
-		case unicode.IsUpper(c):
-			return fmt.Errorf("string contains upper case characters: %q", s)
-		case unicode.IsSpace(c):
-			return fmt.Errorf("string contains spacing characters: %q", s)
-		case !(c == '_' || unicode.IsLetter(c) || unicode.IsDigit(c)):
-			return fmt.Errorf("string contains non alpha-numeric characters: %q", s)
-		}
-		l++
+func LegalName(name string) error {
+	if len(name) == 0 {
+		return errors.New("string is empty")
 	}
-	switch {
-	case l == 0:
-		return errors.New("empty strings are illegal")
-	case l > 255:
-		return fmt.Errorf("string must be shorter than 256 characters: %q", s)
+	if len(name) > 255 {
+		return fmt.Errorf("string is too long: %q", name)
+	}
+	for _, c := range name {
+		if !strings.ContainsRune(Alphabet, c) {
+			return fmt.Errorf("string should only contain characters from %s: %q", Alphabet, name)
+		}
 	}
 	return nil
 }
