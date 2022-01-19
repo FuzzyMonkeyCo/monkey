@@ -74,7 +74,7 @@ func initExec() {
 	}
 }
 
-func loadDisabled(_ *starlark.Thread, module string) (starlark.StringDict, error) {
+func loadDisabled(_th *starlark.Thread, _module string) (starlark.StringDict, error) {
 	return nil, errors.New("load() disabled")
 }
 
