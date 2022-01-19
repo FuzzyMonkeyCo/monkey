@@ -51,7 +51,7 @@ func ProtoCompatible(value starlark.Value) (err error) {
 		}
 		return
 	default:
-		err = fmt.Errorf("incompatible value %T: %s", value, value.String())
+		err = fmt.Errorf("incompatible value (%s): %s", value.Type(), value.String())
 		return
 	}
 }

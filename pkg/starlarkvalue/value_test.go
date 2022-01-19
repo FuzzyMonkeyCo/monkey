@@ -8,13 +8,25 @@ import (
 )
 
 func TestNonJSONLikeFails(t *testing.T) {
-	require.NoError(t, ProtoCompatible(starlark.None))
-	d := starlark.NewDict(1)
-	k := starlark.MakeInt(42)
-	require.NoError(t, ProtoCompatible(k))
-	v := starlark.String("bla")
-	require.NoError(t, ProtoCompatible(v))
-	err := d.SetKey(k, v)
+	err := ProtoCompatible(starlark.None)
 	require.NoError(t, err)
-	require.EqualError(t, ProtoCompatible(d), `want string key, got: (dict) {42: "bla"}`)
+
+	k := starlark.MakeInt(42)
+	err = ProtoCompatible(k)
+	require.NoError(t, err)
+
+	v := starlark.String("bla")
+	err = ProtoCompatible(v)
+	require.NoError(t, err)
+
+	d := starlark.NewDict(1)
+	err = d.SetKey(k, v)
+	require.NoError(t, err)
+
+	err = ProtoCompatible(d)
+	require.EqualError(t, err, `want string key, got: (dict) {42: "bla"}`)
+
+	s := starlark.NewSet(1)
+	err = ProtoCompatible(s)
+	require.EqualError(t, err, `incompatible value (set): set([])`)
 }

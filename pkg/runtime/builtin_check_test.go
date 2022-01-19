@@ -125,6 +125,30 @@ Check(
 	}
 }
 
+func TestCheckErrorWhenNonProtoCompatibleStateAssignment(t *testing.T) {
+	name := "check_error_when_non_proto_compatible_state_assignment"
+	rt, err := newFakeMonkey(simplestPrelude + `
+def thing(ctx):
+	ctx.state["some_key"] = {"some_other_key": set([4, 2])}
+
+Check(
+	name = "` + name + `",
+	after_response = thing,
+)`)
+	require.NoError(t, err)
+	require.Len(t, rt.checks, 1)
+	v := rt.runFakeUserCheck(t, name)
+	require.Equal(t, name, v.Name)
+	require.Equal(t, fm.Clt_CallVerifProgress_failure, v.Status)
+	require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
+	require.Equal(t, []string{
+		"runtime.userError",
+		"incompatible value (set): set([4, 2])",
+	}, v.Reason)
+	require.NotEmpty(t, v.ElapsedNs)
+	require.NotEmpty(t, v.ExecutionSteps)
+}
+
 func TestCheckMutatesNever(t *testing.T) {
 	name := "mutates_never"
 	rt, err := newFakeMonkey(simplestPrelude + `
