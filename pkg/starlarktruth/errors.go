@@ -77,5 +77,5 @@ type UnresolvedError string
 var _ error = UnresolvedError("")
 
 func (e UnresolvedError) Error() string {
-	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)
+	return fmt.Sprintf("%s: %s.%s(...) is missing an assertion", string(e), Module, Method)
 }

@@ -131,7 +131,7 @@ func findAttr(name string) (attr, int) {
 
 // LocalThreadKeyForClose is used by Close() and internally to check subjects
 // are eventually resolved.
-var LocalThreadKeyForClose = Default
+var LocalThreadKeyForClose = Module
 
 var εCallFrame = starlark.CallFrame{Pos: syntax.Position{Line: -1, Col: -1}}
 
@@ -188,7 +188,7 @@ func builtinAttr(t *T, name string) (starlark.Value, error) {
 			}
 			argz = []starlark.Value{arg1, arg2}
 		default:
-			err := fmt.Errorf("unexpected #args for %s.that(%s).%q(): %d", Default, t.actual.String(), name, nArgs)
+			err := fmt.Errorf("unexpected #args for %s.%s(%s).%q(): %d", Module, Method, t.actual.String(), name, nArgs)
 			return nil, err
 		}
 

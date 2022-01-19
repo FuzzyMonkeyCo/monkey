@@ -67,7 +67,7 @@ func initExec() {
 		case allowed:
 		case denied:
 			delete(starlark.Universe, f)
-		case f == starlarktruth.Default: // For check tests
+		case f == starlarktruth.Module: // For check tests
 		default:
 			panic(fmt.Sprintf("unexpected builting %q", f))
 		}
