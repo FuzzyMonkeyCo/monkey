@@ -74,7 +74,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	if err := ensureStateDict(chkname, state0); err != nil {
 		return nil, err
 	}
-	if err := starlarkvalue.ProtoCompatible(state0); err != nil { // TODO: ensure through preempting SetKey,...
+	if err := starlarkvalue.ProtoCompatible(state0); err != nil {
 		return nil, err
 	}
 	state0.Freeze()

@@ -43,7 +43,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			t.Logf("lint spec from OpenAPIv3 file")
 			m0 := &oa3{}
 			m0.File = docPath
-			err := m0.Lint(context.TODO(), false)
+			err := m0.Lint(context.Background(), false)
 			require.NoError(t, err)
 			t.Logf("validate some schemas")
 			validateSomeSchemas(t, m0)

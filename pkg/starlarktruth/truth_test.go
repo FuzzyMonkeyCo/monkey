@@ -21,7 +21,7 @@ const (
 const abc = `"abc"` // Please linter
 
 func helper(t *testing.T, as asWhat, program string) (starlark.StringDict, error) {
-	t.Helper() // TODO: make this work (for failed test reports)
+	t.Helper()
 
 	// Enabled so they can be tested
 	resolve.AllowFloat = true

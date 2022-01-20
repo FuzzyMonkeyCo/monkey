@@ -1,16 +1,18 @@
 name: shellcheck
 
 on:
+  push:
   pull_request:
 
 jobs:
   shellcheck:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: reviewdog/action-shellcheck@v1
+    - name: Checkout
+      uses: actions/checkout@v2
+# TODO - godownloader -r FuzzyMonkeyCo/monkey -o .godownloader.sh .goreleaser.yml
+    - name: Run shellcheck
+      uses: ludeeus/action-shellcheck@1.1.0
       with:
-        github_token: ${{ secrets.github_token }}
-        reporter: github-pr-review
-# - godownloader -r FuzzyMonkeyCo/monkey -o .godownloader.sh .goreleaser.yml
-# - shellcheck $(git ls-files | grep '.sh$' | grep -vF .godownloader.sh) #TODO: fix godownloader warnings upstream
+        check_together: 'yes'
+        severity: error

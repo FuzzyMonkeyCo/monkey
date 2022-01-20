@@ -18,7 +18,6 @@ import (
 
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64) error {
 	showf := func(format string, s ...interface{}) {
-		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Printf(format, s...)
 	}
 
@@ -316,9 +315,7 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	wasMutated := snapshot != chk.state.String()
-
-	if wasMutated {
+	if wasMutated := snapshot != chk.state.String(); wasMutated {
 		if err = ensureStateDict(v.Name, chk.state); err != nil {
 			log.Println("[ERR]", err)
 			v.Status = fm.Clt_CallVerifProgress_failure

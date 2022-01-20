@@ -10,7 +10,6 @@ tags:
 - name: comments
 - name: albums
 - name: photos
-- name: todos
 - name: users
 paths:
   /posts:
@@ -248,56 +247,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundError'
-  /todos:
-    get:
-      tags: [todos]
-      summary: Get all available todos
-      operationId: getTodos
-      parameters:
-      - name: id
-        in: query
-        description: Filter by todo ID
-        schema:
-          type: integer
-      - name: userId
-        in: query
-        description: Filter by user ID
-        schema:
-          type: integer
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Todo'
-  /todos/{id}:
-    get:
-      tags: [todos]
-      summary: Get specific todo
-      operationId: getTodo
-      parameters:
-      - name: id
-        in: path
-        description: The ID of the todo to retrieve
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Todo'
-        404:
-          description: not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundError'
   /users:
     get:
       tags: [users]
@@ -373,19 +322,6 @@ components:
         body:
           type: string
 
-    Todo:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        userId:
-          type: integer
-          format: int64
-        title:
-          type: string
-        completed:
-          type: boolean
     User:
       type: object
       properties:

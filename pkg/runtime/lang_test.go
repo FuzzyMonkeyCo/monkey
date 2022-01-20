@@ -38,7 +38,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 	var ctxer1 ctxctor1
 	switch {
 	case strings.HasPrefix(chkname, "ctx_request_body_frozen"): // NOTE: request does not match model
-		reqbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"todos"}}`)
+		reqbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
 		var reqdecoded types.Value
 		err = jsonpb.UnmarshalString(string(reqbody), &reqdecoded)
 		require.NoError(t, err)
@@ -46,7 +46,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
 				HttpRequest: &fm.Clt_CallRequestRaw_Input_HttpRequest{
 					Method: "POST",
-					Url:    "https://jsonplaceholder.typicode.com/todos",
+					Url:    "https://jsonplaceholder.typicode.com/albums",
 					Headers: map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 						"Accept": {Values: []string{"application/json"}},
 					},
@@ -74,7 +74,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
 				HttpRequest: &fm.Clt_CallRequestRaw_Input_HttpRequest{
 					Method: "GET",
-					Url:    "https://jsonplaceholder.typicode.com/todos/0",
+					Url:    "https://jsonplaceholder.typicode.com/albums/0",
 					Headers: map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
 						"Accept": {Values: []string{"application/json"}},
 					},
@@ -82,7 +82,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 			},
 		})
 
-		repbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"todos"}}`)
+		repbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
 		var repdecoded types.Value
 		err = jsonpb.UnmarshalString(string(repbody), &repdecoded)
 		require.NoError(t, err)

@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -146,7 +147,7 @@ func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *ut
 		go func(i int) {
 			for j := i; j < len(files); j += nworker {
 				file := files[j]
-				data, err := ioutil.ReadFile(file)
+				data, err := os.ReadFile(file)
 				ch[i] <- result{file, data, err}
 			}
 		}(i)
@@ -230,11 +231,31 @@ func fmtFile(inputType, mode, lint, filename string, data []byte, warningsList [
 		if bytes.Equal(data, ndata) {
 			return
 		}
-		if err = ioutil.WriteFile(filename, ndata, 0666); err != nil { // TODO: use same perms as filename
+		if err = overwriteFile(filename, bytes.NewReader(ndata)); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
 		as.ColorNFO.Printf("fixed %s\n", f.DisplayPath())
 	}
 	return
+}
+
+func overwriteFile(filename string, r io.Reader) error {
+	f, err := os.OpenFile(filename, os.O_RDWR, 0) // already exists
+	if err != nil {
+		return err
+	}
+	if err := f.Truncate(0); err != nil {
+		return err
+	}
+	if _, err := f.Seek(0, 0); err != nil {
+		return err
+	}
+	if _, err := io.Copy(f, r); err != nil {
+		return err
+	}
+	if err := f.Close(); err != nil {
+		return err
+	}
+	return nil
 }

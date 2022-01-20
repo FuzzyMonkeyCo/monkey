@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -22,7 +21,7 @@ var errLinting = func() error {
 // Lint goes through OpenAPIv3 specs and unsures they're valid
 func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
-	if blob, err = ioutil.ReadFile(m.File); err != nil {
+	if blob, err = os.ReadFile(m.File); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
