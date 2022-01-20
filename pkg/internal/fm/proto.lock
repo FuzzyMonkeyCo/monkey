@@ -481,6 +481,12 @@
                             "type": "string"
                           },
                           {
+                            "id": 3,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 4,
                             "name": "body",
                             "type": "bytes"
@@ -489,29 +495,6 @@
                             "id": 5,
                             "name": "body_decoded",
                             "type": "google.protobuf.Value"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 3,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -563,6 +546,12 @@
                             "type": "string"
                           },
                           {
+                            "id": 4,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 5,
                             "name": "body",
                             "type": "bytes"
@@ -576,29 +565,6 @@
                             "id": 7,
                             "name": "elapsed_ns",
                             "type": "int64"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 4,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -798,32 +764,15 @@
                             "type": "string"
                           },
                           {
+                            "id": 3,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 4,
                             "name": "body",
                             "type": "google.protobuf.Value"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 3,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -886,6 +835,22 @@
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "name": "HeaderPair",
+            "fields": [
+              {
+                "id": 1,
+                "name": "key",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "values",
+                "type": "string",
+                "is_repeated": true
               }
             ]
           },

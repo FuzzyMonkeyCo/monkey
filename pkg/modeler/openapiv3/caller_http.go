@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -50,7 +51,7 @@ type tCapHTTP struct {
 	repProto         *fm.Clt_CallResponseRaw_Output_HttpResponse
 	repBodyDecodeErr error
 
-	// TODO: pick from these
+	// TODO: pick from these and timings
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
 	// %{filename_effective} shows the ultimate filename that curl writes out to. This is only meaningful if curl is told to write to a file with the --remote-name or --output option. It's most useful in combination with the --remote-header-name option.
 	// %{ftp_entry_path} shows the initial path curl ended up in when logging on to the remote FTP server.
@@ -110,8 +111,9 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		return
 	}
 
-	for key, values := range input.GetHeaders() {
-		for _, value := range values.GetValues() {
+	for _, kvs := range input.GetHeaders() {
+		key := kvs.GetKey()
+		for _, value := range kvs.GetValues() {
 			r.Header.Add(key, value)
 		}
 	}
@@ -168,25 +170,32 @@ func requestToProto(r *http.Request) (
 		Url:    r.URL.String(),
 	}
 
-	reqProto.Headers = make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(r.Header))
-	for key, headers := range r.Header {
-		if len(headers) == 0 {
-			continue
-		}
-		var values []string
+	headerNames := make([]string, 0, len(r.Header))
+	for key := range r.Header {
+		headerNames = append(headerNames, key)
+	}
+	sort.Strings(headerNames)
+	reqProto.Headers = make([]*fm.HeaderPair, 0, len(headerNames))
+	for _, key := range headerNames {
+		values := r.Header[key]
 		switch key {
 		case headerContentLength:
-			values = []string{strconv.FormatInt(r.ContentLength, 10)}
+			newvalues := []string{strconv.FormatInt(r.ContentLength, 10)}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerTransferEncoding:
-			values = r.TransferEncoding
+			newvalues := r.TransferEncoding
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerHost:
-			values = []string{r.Host}
-		default:
-			values = headers
+			newvalues := []string{r.Host}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		}
-		reqProto.Headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
+		reqProto.Headers = append(reqProto.Headers, &fm.HeaderPair{
+			Key:    key,
 			Values: values,
-		}
+		})
 	}
 
 	if r.Body != nil {
@@ -288,23 +297,28 @@ func (c *tCapHTTP) responseToProto(r *http.Response) (err error) {
 	c.repProto.StatusCode = uint32(r.StatusCode)
 	c.repProto.Reason = r.Status
 
-	c.repProto.Headers = make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(r.Header))
-	for key, headers := range r.Header {
-		if len(headers) == 0 {
-			continue
-		}
-		var values []string
+	headerNames := make([]string, 0, len(r.Header))
+	for key := range r.Header {
+		headerNames = append(headerNames, key)
+	}
+	sort.Strings(headerNames)
+	c.repProto.Headers = make([]*fm.HeaderPair, 0, len(headerNames))
+	for _, key := range headerNames {
+		values := r.Header[key]
 		switch key {
 		case headerContentLength:
-			values = []string{strconv.FormatInt(r.ContentLength, 10)}
+			newvalues := []string{strconv.FormatInt(r.ContentLength, 10)}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerTransferEncoding:
-			values = r.TransferEncoding
-		default:
-			values = headers
+			newvalues := r.TransferEncoding
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		}
-		c.repProto.Headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
+		c.repProto.Headers = append(c.repProto.Headers, &fm.HeaderPair{
+			Key:    key,
 			Values: values,
-		}
+		})
 	}
 
 	if r.Body != nil {

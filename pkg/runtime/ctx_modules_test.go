@@ -147,20 +147,20 @@ func TestCtxResponseHeadersFrozen(t *testing.T) {
 	rt, err := newFakeMonkey(simplestPrelude + `
 def ctx_response_headers_frozen(ctx):
 	assert.that(ctx.response.headers).has_size(11)
-	# HEADERS = [ TODO
-	# 	"Date",
-	# 	"Content-Type",
-	# 	"Content-Length",
-	# 	"Access-Control-Allow-Credentials",
-	# 	"Cache-Control",
-	# 	"Expires",
-	# 	"Etag",
-	# 	"Cf-Cache-Status",
-	# 	"Age",
-	# 	"Expect-Ct",
-	# 	"Cf-Ray",
-	# ]
-	# assert.that(ctx.response.headers).contains_all_in(HEADERS).in_order()
+	HEADERS = [
+		"Access-Control-Allow-Credentials",
+		"Age",
+		"Cache-Control",
+		"Cf-Cache-Status",
+		"Cf-Ray",
+		"Content-Length",
+		"Content-Type",
+		"Date",
+		"Etag",
+		"Expect-Ct",
+		"Expires",
+	]
+	assert.that(ctx.response.headers).contains_all_in(HEADERS).in_order()
 	assert.that(ctx.response.headers["Age"]).is_equal_to(["0"])
 	ctx.response.headers["set"] = ["some", "values"]
 	# assert.that(ctx.response.headers).does_not_contain_key("set")

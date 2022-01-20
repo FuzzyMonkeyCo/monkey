@@ -47,8 +47,8 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 				HttpRequest: &fm.Clt_CallRequestRaw_Input_HttpRequest{
 					Method: "POST",
 					Url:    "https://jsonplaceholder.typicode.com/albums",
-					Headers: map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-						"Accept": {Values: []string{"application/json"}},
+					Headers: []*fm.HeaderPair{
+						{Key: "Accept", Values: []string{"application/json"}},
 					},
 					Body:        reqbody,
 					BodyDecoded: &reqdecoded,
@@ -61,8 +61,8 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 				HttpResponse: &fm.Clt_CallResponseRaw_Output_HttpResponse{
 					StatusCode: 404,
 					Reason:     "404 Not Found",
-					Headers: map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-						"Content-Length": {Values: []string{"0"}},
+					Headers: []*fm.HeaderPair{
+						{Key: "Content-Length", Values: []string{"0"}},
 					},
 					ElapsedNs: 37 * 1000 * 1000,
 				},
@@ -75,8 +75,8 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 				HttpRequest: &fm.Clt_CallRequestRaw_Input_HttpRequest{
 					Method: "GET",
 					Url:    "https://jsonplaceholder.typicode.com/albums/0",
-					Headers: map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
-						"Accept": {Values: []string{"application/json"}},
+					Headers: []*fm.HeaderPair{
+						{Key: "Accept", Values: []string{"application/json"}},
 					},
 				},
 			},
@@ -91,18 +91,18 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 				HttpResponse: &fm.Clt_CallResponseRaw_Output_HttpResponse{
 					StatusCode: 404,
 					Reason:     "404 Not Found",
-					Headers: map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
-						"Access-Control-Allow-Credentials": {Values: []string{"true"}},
-						"Age":                              {Values: []string{"0"}},
-						"Cache-Control":                    {Values: []string{"max-age=43200"}},
-						"Cf-Cache-Status":                  {Values: []string{"HIT"}},
-						"Cf-Ray":                           {Values: []string{"6220ea3cdda30686-LHR"}},
-						"Content-Length":                   {Values: []string{strconv.Itoa(len(repbody))}},
-						"Content-Type":                     {Values: []string{"application/json; charset=utf-8"}},
-						"Date":                             {Values: []string{"Mon, 15 Feb 2021 17:58:05 GMT"}},
-						"Etag":                             {Values: []string{`W/"2-vyGp6PvFo4RvsFtPoIWeCReyIC8"`}},
-						"Expect-Ct":                        {Values: []string{`max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"`}},
-						"Expires":                          {Values: []string{"-1"}},
+					Headers: []*fm.HeaderPair{
+						{Key: "Access-Control-Allow-Credentials", Values: []string{"true"}},
+						{Key: "Age", Values: []string{"0"}},
+						{Key: "Cache-Control", Values: []string{"max-age=43200"}},
+						{Key: "Cf-Cache-Status", Values: []string{"HIT"}},
+						{Key: "Cf-Ray", Values: []string{"6220ea3cdda30686-LHR"}},
+						{Key: "Content-Length", Values: []string{strconv.Itoa(len(repbody))}},
+						{Key: "Content-Type", Values: []string{"application/json; charset=utf-8"}},
+						{Key: "Date", Values: []string{"Mon, 15 Feb 2021 17:58:05 GMT"}},
+						{Key: "Etag", Values: []string{`W/"2-vyGp6PvFo4RvsFtPoIWeCReyIC8"`}},
+						{Key: "Expect-Ct", Values: []string{`max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"`}},
+						{Key: "Expires", Values: []string{"-1"}},
 					},
 					Body:        repbody,
 					BodyDecoded: &repdecoded,

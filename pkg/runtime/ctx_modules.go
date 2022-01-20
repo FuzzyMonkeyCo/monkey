@@ -89,7 +89,7 @@ type ctxRequest struct {
 	protoBodyDecoded *types.Value
 	body             starlark.Value
 
-	protoHeaders map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues
+	protoHeaders []*fm.HeaderPair
 	headers      starlark.Value
 }
 
@@ -129,17 +129,10 @@ func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 
 	case name == "headers":
 		if m.headers == nil {
-			d := starlark.NewDict(len(m.protoHeaders))
-			for key, values := range m.protoHeaders {
-				vs := make([]starlark.Value, 0, len(values.GetValues()))
-				for _, value := range values.GetValues() {
-					vs = append(vs, starlark.String(value))
-				}
-				if err := d.SetKey(starlark.String(key), starlark.NewList(vs)); err != nil {
-					return nil, err
-				}
+			var err error
+			if m.headers, err = headerPairs(m.protoHeaders); err != nil {
+				return nil, err
 			}
-			m.headers = d
 			m.headers.Freeze()
 		}
 		return m.headers, nil
@@ -147,6 +140,22 @@ func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 	default:
 		return m.attrs[name], nil
 	}
+}
+
+func headerPairs(protoHeaders []*fm.HeaderPair) (starlark.Value, error) {
+	d := starlark.NewDict(len(protoHeaders))
+
+	for _, kvs := range protoHeaders {
+		values := kvs.GetValues()
+		vs := make([]starlark.Value, 0, len(values))
+		for _, value := range values {
+			vs = append(vs, starlark.String(value))
+		}
+		if err := d.SetKey(starlark.String(kvs.GetKey()), starlark.NewList(vs)); err != nil {
+			return nil, err
+		}
+	}
+	return d, nil
 }
 
 func inputAsValue(i *fm.Clt_CallRequestRaw_Input) (cr *ctxRequest) {
@@ -179,7 +188,7 @@ type ctxResponse struct {
 	protoBodyDecoded *types.Value
 	body             starlark.Value
 
-	protoHeaders map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues
+	protoHeaders []*fm.HeaderPair
 	headers      starlark.Value
 }
 
@@ -219,17 +228,10 @@ func (m *ctxResponse) Attr(name string) (starlark.Value, error) {
 
 	case name == "headers":
 		if m.headers == nil {
-			d := starlark.NewDict(len(m.protoHeaders))
-			for key, values := range m.protoHeaders {
-				vs := make([]starlark.Value, 0, len(values.GetValues()))
-				for _, value := range values.GetValues() {
-					vs = append(vs, starlark.String(value))
-				}
-				if err := d.SetKey(starlark.String(key), starlark.NewList(vs)); err != nil {
-					return nil, err
-				}
+			var err error
+			if m.headers, err = headerPairs(m.protoHeaders); err != nil {
+				return nil, err
 			}
-			m.headers = d
 			m.headers.Freeze()
 		}
 		return m.headers, nil

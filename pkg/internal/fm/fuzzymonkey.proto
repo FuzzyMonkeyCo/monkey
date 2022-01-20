@@ -73,10 +73,7 @@ message Clt {
       message HttpRequest {
         string method = 1;
         string url = 2;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 3;
+        repeated HeaderPair headers = 3;
         bytes body = 4;
         google.protobuf.Value body_decoded = 5;
       }
@@ -94,10 +91,7 @@ message Clt {
         string error = 1;
         uint32 status_code = 2;
         string reason = 3;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 4;
+        repeated HeaderPair headers = 4;
         bytes body = 5;
         google.protobuf.Value body_decoded = 6;
         int64 elapsed_ns = 7;  // TODO: finer timings (name lookup, connection, ...)
@@ -175,10 +169,7 @@ message Srv {
       message HttpRequest {
         string method = 1;
         string url = 2;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 3;
+        repeated HeaderPair headers = 3;
         google.protobuf.Value body = 4;
       }
       oneof input {
@@ -214,6 +205,11 @@ message Srv {
     // Result of testing campaign
     FuzzingResult fuzzing_result = 5;
   }
+}
+
+message HeaderPair {
+  string key = 1;
+  repeated string values = 2;
 }
 
 message SpecIR {
