@@ -131,6 +131,27 @@ Check(
 	}
 }
 
+func TestCheckJustPrints(t *testing.T) {
+	name := "just_prints"
+	rt, err := newFakeMonkey(simplestPrelude + `
+Check(
+	name = "` + name + `",
+	after_response = lambda ctx: print("bla"),
+)`)
+	require.NoError(t, err)
+	require.Len(t, rt.checks, 1)
+
+	for range make([]struct{}, iters) {
+		v := rt.runFakeUserCheck(t, name)
+		require.Equal(t, name, v.Name)
+		require.Equal(t, fm.Clt_CallVerifProgress_success, v.Status)
+		require.Equal(t, fm.Clt_CallVerifProgress_after_response, v.Origin)
+		require.Empty(t, v.Reason)
+		require.NotEmpty(t, v.ElapsedNs)
+		require.Equal(t, uint64(4), v.ExecutionSteps)
+	}
+}
+
 func TestCheckErrorWhenNonDictStateAssignment(t *testing.T) {
 	name := "good_error"
 	rt, err := newFakeMonkey(simplestPrelude + `

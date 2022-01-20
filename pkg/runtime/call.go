@@ -281,10 +281,14 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
+	didPrint := false
 	th := &starlark.Thread{
-		Name:  v.Name,
-		Load:  loadDisabled,
-		Print: func(_ *starlark.Thread, msg string) { print(msg) },
+		Name: v.Name,
+		Load: loadDisabled,
+		Print: func(_ *starlark.Thread, msg string) {
+			didPrint = true
+			print(msg)
+		},
 	}
 	th.SetMaxExecutionSteps(maxSteps) // Upper bound on computation
 
@@ -328,7 +332,7 @@ func (rt *Runtime) runUserCheck(
 			v.Status = fm.Clt_CallVerifProgress_failure
 			return
 		}
-	} else if !starlarktruth.Asserted(th) {
+	} else if !didPrint && !starlarktruth.Asserted(th) {
 		// Predicate did not trigger
 		v.Status = fm.Clt_CallVerifProgress_skipped
 		return
