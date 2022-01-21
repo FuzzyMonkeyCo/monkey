@@ -155,7 +155,8 @@ func (cbd *ChBiDi) Send(ctx context.Context, msg *Clt) (err error) {
 	select {
 	case <-time.After(sndTimeout):
 		err = os.ErrDeadlineExceeded
-	case err = <-cbd.sndErr:
+	case err = <-cbd.rcvErr:
+	case err = <-cbd.sndErr: // Also look for remote hangups
 	}
 	return
 }

@@ -227,6 +227,8 @@ func actualMain() int {
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
 		as.ColorERR.Printf("Testing interrupted (given: --time-budget-overall=%s).\n", args.OverallBudgetTime)
 		return code.OK
+	case strings.Contains(err.Error(), "unexpected client version, please update"):
+		return pleaseUpdate()
 	default:
 		log.Println("[ERR]", err)
 	}
@@ -337,15 +339,27 @@ func newTagsFilter(args *params, osargs []string) (*tags.Filter, error) {
 	return tags.NewFilter(hasInclude, hasExclude, included, excluded)
 }
 
-func retryOrReport() int {
+func pleaseUpdate() int {
+	w := os.Stderr
+	fmt.Fprintln(w, "\nThis program appears to be out of date. To update it, please run:")
+	fmt.Fprintf(w, "\n\tmonkey update\n")
+	maybeReport(w)
+	return code.FailedConnecting
+}
+
+func maybeReport(w io.Writer) {
 	const issues = "https://github.com/" + githubSlug + "/issues"
 	const email = "ook@fuzzymonkey.co"
-	w := os.Stderr
-	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
-	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
 	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
+}
+
+func retryOrReport() int {
+	w := os.Stderr
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
+	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
+	maybeReport(w)
 	return code.Failed
 }

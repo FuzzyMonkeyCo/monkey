@@ -34,7 +34,6 @@ func usage() (args *params, ret int) {
 	B := as.ColorNFO.Sprintf(binName)
 	// TODO: B [-vvv] init [--with-magic] Auto fill-in schemas from random API calls
 	// TODO: B [-vvv] login [--user=USER] Authenticate on fuzzymonkey.co as USER
-	// TODO:          fuzz [--shrink=ID] Which failed test to minimize
 	usage := binTitle + `
 
 Usage:
