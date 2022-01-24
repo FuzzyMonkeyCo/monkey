@@ -69,7 +69,7 @@ func initExec() {
 			delete(starlark.Universe, f)
 		case f == starlarktruth.Module: // For check tests
 		default:
-			panic(fmt.Sprintf("unexpected builting %q", f))
+			panic(fmt.Sprintf("unexpected builtin %q", f))
 		}
 	}
 }

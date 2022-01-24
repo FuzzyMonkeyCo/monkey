@@ -23,7 +23,7 @@ def ctxchecks(ctx):
 
 	assert.that(ctx.state).is_of_type("dict")
 
-Check(
+monkey.check(
 	name = "ctx_usage",
 	after_response = ctxchecks,
 )`[1:])
@@ -41,7 +41,7 @@ def ctx_request_headers_frozen(ctx):
 	ctx.request.headers["set"] = ["some", "values"]
 	# assert.that(ctx.request.headers).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_request_headers_frozen",
 	after_response = ctx_request_headers_frozen,
 )`[1:])
@@ -68,7 +68,7 @@ def ctx_request_body_frozen(ctx):
 	ctx.request.body["set"] = ["some", "values"]
 	# assert.that(ctx.request.body).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_request_body_frozen",
 	after_response = ctx_request_body_frozen,
 )`[1:])
@@ -97,7 +97,7 @@ def ctx_request_body_frozen_bis(ctx):
 	# assert.that(rep).does_not_contain_key("set")
 	# assert.that(ctx.request.body).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_request_body_frozen_bis",
 	after_response = ctx_request_body_frozen_bis,
 )`[1:])
@@ -124,7 +124,7 @@ def ctx_response_body_frozen(ctx):
 	ctx.response.body["set"] = ["some", "values"]
 	# assert.that(ctx.response.body).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_response_body_frozen",
 	after_response = ctx_response_body_frozen,
 )`[1:])
@@ -165,7 +165,7 @@ def ctx_response_headers_frozen(ctx):
 	ctx.response.headers["set"] = ["some", "values"]
 	# assert.that(ctx.response.headers).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_response_headers_frozen",
 	after_response = ctx_response_headers_frozen,
 )`[1:])
@@ -194,7 +194,7 @@ def ctx_response_body_frozen_bis(ctx):
 	# assert.that(rep).does_not_contain_key("set")
 	# assert.that(ctx.response.body).does_not_contain_key("set")
 
-Check(
+monkey.check(
 	name = "ctx_response_body_frozen_bis",
 	after_response = ctx_response_body_frozen_bis,
 )`[1:])

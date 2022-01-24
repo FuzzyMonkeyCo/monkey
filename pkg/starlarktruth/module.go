@@ -24,7 +24,7 @@ func NewModule(predeclared starlark.StringDict) { predeclared[Module] = &module{
 func (m *module) String() string        { return Module }
 func (m *module) Type() string          { return Module }
 func (m *module) Freeze()               {}
-func (m *module) Truth() starlark.Bool  { return false }
+func (m *module) Truth() starlark.Bool  { return true }
 func (m *module) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable type: %s", Module) }
 func (m *module) AttrNames() []string   { return []string{Method} }
 func (m *module) Attr(name string) (starlark.Value, error) {

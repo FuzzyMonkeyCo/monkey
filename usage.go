@@ -64,7 +64,7 @@ Options:
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --label=KV                      Labels that can help classification (format: key=value)
-  --tags=TAGS                     Only run Check.s whose tags match at least one of these (comma separated)
+  --tags=TAGS                     Only run checks whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls

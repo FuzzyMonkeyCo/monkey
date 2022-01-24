@@ -94,17 +94,7 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 		envRead: make(map[string]string),
 		checks:  make(map[string]*check),
 	}
-	r.globals = make(starlark.StringDict, len(r.builtins())+len(registeredModelers))
-
-	log.Println("[NFO] registered modelers:", len(registeredModelers))
-	for modelName, mdl := range registeredModelers {
-		log.Printf("[DBG] registered modeler: %q", modelName)
-		builtin := r.modelMaker(modelName, mdl.NewFromKwargs)
-		r.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
-	}
-	for t, b := range r.builtins() {
-		r.globals[t] = starlark.NewBuiltin(t, b)
-	}
+	r.globals = starlark.StringDict{"monkey": r.newModule()}
 
 	log.Println("[NFO] loading starlark config from", localCfg)
 	start := time.Now()
@@ -153,9 +143,7 @@ func (rt *Runtime) loadCfg() (err error) {
 		log.Printf("[NFO] defined check %q: %+v", k, v)
 	}
 
-	for t := range rt.builtins() {
-		delete(rt.globals, t)
-	}
+	delete(rt.globals, "monkey")
 	for key := range rt.globals {
 		if err = tags.LegalName(key); err != nil {
 			err = fmt.Errorf("illegal value name: %v", err)

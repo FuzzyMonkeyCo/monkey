@@ -13,7 +13,7 @@ import (
 )
 
 const simplestPrelude = `
-OpenAPIv3(
+monkey.OpenAPIv3(
     name = "some_model",
     file = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml",
     host = "https://jsonplaceholder.typicode.com",

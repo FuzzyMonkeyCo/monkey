@@ -31,14 +31,14 @@ func (chk *check) reset(chkname string) (err error) {
 
 func errStateDict(chkname string, err error) error {
 	if strings.Contains(err.Error(), `can't assign to .state field of `) {
-		return newUserError("state for Check %q must be dict", chkname)
+		return newUserError("state for check %q must be dict", chkname)
 	}
 	return err
 }
 
 func ensureStateDict(chkname string, v starlark.Value) (err error) {
 	if _, ok := v.(*starlark.Dict); !ok {
-		err = newUserError("state for Check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
+		err = newUserError("state for check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
 	}
 	return
 }
@@ -59,13 +59,13 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 
 	chkname := name.GoString()
 	if err := tags.LegalName(chkname); err != nil {
-		return nil, fmt.Errorf("bad name for Check: %v", err)
+		return nil, fmt.Errorf("bad name for check: %v", err)
 	}
 	if afterResponse.HasVarargs() || afterResponse.HasKwargs() || afterResponse.NumParams() != 1 {
-		return nil, fmt.Errorf("after_response for Check %s must have only one param: ctx", name.String())
+		return nil, fmt.Errorf("after_response for check %s must have only one param: ctx", name.String())
 	}
 	if pname, _ := afterResponse.Param(0); pname != "ctx" {
-		return nil, fmt.Errorf("after_response for Check %s must have only one param: ctx", name.String())
+		return nil, fmt.Errorf("after_response for check %s must have only one param: ctx", name.String())
 	}
 
 	if state0 == nil {
@@ -88,7 +88,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	}
 
 	if _, ok := rt.checks[chkname]; ok {
-		return nil, fmt.Errorf("a Check named %s already exists", name.String())
+		return nil, fmt.Errorf("a check named %s already exists", name.String())
 	}
 	rt.checks[chkname] = chk
 	rt.checksNames = append(rt.checksNames, chkname)

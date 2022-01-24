@@ -12,7 +12,7 @@ const Alphabet = "abcdefghijklmnopqrstuvwxyz_1234567890"
 // Tags represent a set of legal (per LegalName) tags.
 type Tags = map[string]struct{}
 
-// Filter is used to activate or deactivate a Check during Fuzz.
+// Filter is used to activate or deactivate a monkey.check during Fuzz.
 type Filter struct {
 	excludeAll, includeAll bool
 	include, exclude       Tags
@@ -38,7 +38,7 @@ func NewFilter(includeSetButZero, excludeSetButZero bool, i, o []string) (r *Fil
 	return
 }
 
-// Excludes applies the filter to a Check's tags.
+// Excludes applies the filter to a monkey.check's tags.
 func (f *Filter) Excludes(checking Tags) bool {
 	if f.includeAll {
 		return false
