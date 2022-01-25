@@ -19,7 +19,7 @@ var errLinting = func() error {
 }()
 
 // Lint goes through OpenAPIv3 specs and unsures they're valid
-func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
+func (m *OA3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
 	if blob, err = os.ReadFile(m.File); err != nil {
 		log.Println("[ERR]", err)
@@ -92,7 +92,7 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	return
 }
 
-func (m *oa3) readFromURI(loader *openapi3.Loader, uri *url.URL) ([]byte, error) {
+func (m *OA3) readFromURI(loader *openapi3.Loader, uri *url.URL) ([]byte, error) {
 	// TODO: support local & remote URIs
 	return nil, fmt.Errorf("unsupported URI: %q", uri.String())
 }

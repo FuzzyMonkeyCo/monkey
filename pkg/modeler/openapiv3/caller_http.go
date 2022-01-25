@@ -82,7 +82,7 @@ type tCapHTTP struct {
 }
 
 // NewCaller creates a single-use modeler.Caller from a modeler.Interface instance.
-func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
+func (m *OA3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
 	m.tcap = &tCapHTTP{
 		showf:    showf,
 		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
@@ -92,7 +92,7 @@ func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.Sho
 	return m.tcap
 }
 
-func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http.Request, err error) {
+func (m *OA3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http.Request, err error) {
 	input := msg.GetInput().GetHttpRequest()
 	var r *http.Request
 

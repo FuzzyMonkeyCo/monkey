@@ -41,7 +41,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	for _, docPath := range matches {
 		t.Run(docPath, func(t *testing.T) {
 			t.Logf("lint spec from OpenAPIv3 file")
-			m0 := &oa3{}
+			m0 := &OA3{}
 			m0.File = docPath
 			err := m0.Lint(context.Background(), false)
 			require.NoError(t, err)
@@ -61,7 +61,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			err = proto.Unmarshal(bin0, &m1Prime)
 			require.NoError(t, err)
 			require.NotNil(t, &m1Prime)
-			m1 := &oa3{}
+			m1 := &OA3{}
 			err = m1.FromProto(&m1Prime)
 			require.NoError(t, err)
 			require.NotNil(t, m1.Clt_Fuzz_Model_OpenAPIv3)
@@ -95,7 +95,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	}
 }
 
-func toOA3(m *oa3) (doc openapi3.T) {
+func toOA3(m *OA3) (doc openapi3.T) {
 	doc.OpenAPI = "3.0.0"
 	doc.Info = &openapi3.Info{
 		Title:   someDescription,
@@ -108,7 +108,7 @@ func toOA3(m *oa3) (doc openapi3.T) {
 	return
 }
 
-func validateSomeSchemas(t *testing.T, m *oa3) {
+func validateSomeSchemas(t *testing.T, m *OA3) {
 	require.NotEmpty(t, m.Validate(1, protovalue.FromGo(schemaJSON{})))
 	require.Empty(t, m.Validate(4, protovalue.FromGo(float64(42))))
 }

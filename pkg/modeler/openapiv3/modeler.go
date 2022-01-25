@@ -11,11 +11,9 @@ import (
 	"go.starlark.net/starlark"
 )
 
-var _ modeler.Interface = (*oa3)(nil)
+var _ modeler.Interface = (*OA3)(nil)
 
-type T = oa3 // TODO: remove, move modelers registry to own package
-
-type oa3 struct {
+type OA3 struct {
 	fm.Clt_Fuzz_Model_OpenAPIv3
 
 	resetter resetter.Interface
@@ -26,7 +24,7 @@ type oa3 struct {
 }
 
 // ToProto TODO
-func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
+func (m *OA3) ToProto() *fm.Clt_Fuzz_Model {
 	m.Spec = m.vald.Spec
 	return &fm.Clt_Fuzz_Model{
 		Model: &fm.Clt_Fuzz_Model_Openapiv3{
@@ -36,7 +34,7 @@ func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 }
 
 // FromProto TODO
-func (m *oa3) FromProto(p *fm.Clt_Fuzz_Model) error {
+func (m *OA3) FromProto(p *fm.Clt_Fuzz_Model) error {
 	if mm := p.GetOpenapiv3(); mm != nil {
 		m.Clt_Fuzz_Model_OpenAPIv3 = *mm
 		m.vald = &validator{Spec: mm.Spec}
@@ -46,13 +44,13 @@ func (m *oa3) FromProto(p *fm.Clt_Fuzz_Model) error {
 }
 
 // SetResetter TODO
-func (m *oa3) SetResetter(sr resetter.Interface) { m.resetter = sr }
+func (m *OA3) SetResetter(sr resetter.Interface) { m.resetter = sr }
 
 // GetResetter TODO
-func (m *oa3) GetResetter() resetter.Interface { return m.resetter }
+func (m *OA3) GetResetter() resetter.Interface { return m.resetter }
 
-func (m *oa3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
-	m = &oa3{}
+func (m *OA3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
+	m = &OA3{}
 	var err *modeler.Error
 
 	if m.File, err = slGetString(d, "file"); err != nil {
@@ -83,22 +81,22 @@ func slGetString(d starlark.StringDict, field string) (str string, err *modeler.
 	return
 }
 
-func (m *oa3) InputsCount() int {
+func (m *OA3) InputsCount() int {
 	return m.vald.InputsCount()
 }
 
-func (m *oa3) FilterEndpoints(args []string) ([]eid, error) {
+func (m *OA3) FilterEndpoints(args []string) ([]eid, error) {
 	return m.vald.FilterEndpoints(args)
 }
 
-func (m *oa3) Validate(SID sid, data *types.Value) []string {
+func (m *OA3) Validate(SID sid, data *types.Value) []string {
 	return m.vald.Validate(SID, data)
 }
 
-func (m *oa3) ValidateAgainstSchema(absRef string, data []byte) error {
+func (m *OA3) ValidateAgainstSchema(absRef string, data []byte) error {
 	return m.vald.ValidateAgainstSchema(absRef, data)
 }
 
-func (m *oa3) WriteAbsoluteReferences(w io.Writer) {
+func (m *OA3) WriteAbsoluteReferences(w io.Writer) {
 	m.vald.WriteAbsoluteReferences(w)
 }
