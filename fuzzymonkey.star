@@ -12,7 +12,7 @@ else:
     assert.that(mode).is_equal_to("unhandled testing mode")
 print("Now testing {}.".format(spec))
 
-monkey.OpenAPIv3(
+monkey.openapi3(
     name = "my_model",
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,

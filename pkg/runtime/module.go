@@ -30,9 +30,9 @@ func (rt *Runtime) newModule() (m *module) {
 	}
 
 	var mdlr modeler.Interface
-	mdlr = (*openapiv3.T)(nil)
-	log.Printf("[DBG] registering modeler: %q", "OpenAPIv3")
-	m.bOpenAPIv3 = rt.modelMaker("OpenAPIv3", mdlr.NewFromKwargs)
+	mdlr = (*openapiv3.OA3)(nil)
+	log.Printf("[DBG] registering modeler: %q", "openapi3")
+	m.bOpenAPIv3 = rt.modelMaker("openapi3", mdlr.NewFromKwargs)
 	return
 }
 
@@ -46,7 +46,7 @@ func (m *module) AttrNames() []string {
 	return []string{
 		"check",
 		"env",
-		"OpenAPIv3",
+		"openapi3",
 	}
 }
 
@@ -58,7 +58,7 @@ func (m *module) Attr(name string) (starlark.Value, error) {
 	case "env":
 		b := starlark.NewBuiltin(name, m.rt.bEnv)
 		return b.BindReceiver(m), nil
-	case "OpenAPIv3":
+	case "openapi3":
 		b := starlark.NewBuiltin(name, m.bOpenAPIv3)
 		return b.BindReceiver(m), nil
 	default:
