@@ -20,17 +20,20 @@ service FuzzyMonkey {
 message Clt {
   message Fuzz {
     message Resetter {
+      string name = 1;
+      repeated string provides = 2;
       message Shell {
         string start = 1;
         string rst = 2;
         string stop = 3;
       }
       oneof resetter {
-        Shell shell = 1;
+        Shell shell = 3;
       }
     }
-    Resetter resetter = 1;
+    repeated Resetter resetters = 1;
     message Model {
+      string name = 1;
       message OpenAPIv3 {
         // File path within current directory pointing to a YAML/JSON spec
         string file = 1;
@@ -42,14 +45,14 @@ message Clt {
         SpecIR spec = 4;
       }
       oneof model {
-        OpenAPIv3 openapiv3 = 1;
+        OpenAPIv3 openapiv3 = 2;
       }
     }
-    Model model = 2;
+    repeated Model models = 2;
     repeated string usage = 3;
     bytes seed = 4;
     uint32 ntensity = 5;
-    repeated uint32 EIDs = 6;
+    map<string, Uint32s> EIDs = 6;
     map<string, string> labels = 7;
     map<string, string> env_read = 8;
     repeated string UUIDs = 9;
@@ -178,6 +181,7 @@ message Srv {
     }
     Input input = 1;
     uint32 EID = 2;
+    string model_name = 3;
   }
 
   message Reset {}
@@ -205,6 +209,10 @@ message Srv {
     // Result of testing campaign
     FuzzingResult fuzzing_result = 5;
   }
+}
+
+message Uint32s {
+  repeated uint32 values = 1;
 }
 
 message HeaderPair {

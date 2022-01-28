@@ -7,10 +7,23 @@ import (
 	"strings"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"go.starlark.net/starlark"
 )
 
+// Maker types the New func that instanciates new resetters
+type Maker func(kwargs []starlark.Tuple) (Interface, error)
+
 // Interface describes ways to reset the system under test to a known initial state
-type Interface interface {
+// A package defining a type that implements Interface also has to define:
+// * a non-empty const Name that names the Starlark builtin
+// * a func of type Maker named New that instanciates a new resetter
+type Interface interface { // TODO: initers.Initer
+	// Name uniquely identifies this instance
+	Name() string
+
+	// Provides lists the models a resetter resets
+	Provides() []string
+
 	// ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
 	ToProto() *fm.Clt_Fuzz_Resetter
 

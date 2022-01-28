@@ -6,12 +6,9 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
-// Lint goes through specs and unsures they're valid
+// Lint goes through specs and unsures they are valid
 func (rt *Runtime) Lint(ctx context.Context, showSpec bool) error {
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
-	return mdl.Lint(ctx, showSpec)
+	return rt.forEachModel(func(name string, mdl modeler.Interface) error {
+		return mdl.Lint(ctx, showSpec)
+	})
 }

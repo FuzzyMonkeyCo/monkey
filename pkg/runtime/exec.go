@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
@@ -89,39 +89,27 @@ func (rt *Runtime) JustExecREPL() error {
 
 // JustExecStart only executes SUT 'start'
 func (rt *Runtime) JustExecStart() error {
-	// FIXME: require a model name
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
-	resetter := mdl.GetResetter()
-	resetter.Env(rt.envRead)
-	return resetter.ExecStart(context.Background(), os.Stdout, os.Stderr, true)
+	ctx := context.Background()
+	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
+		return rsttr.ExecStart(ctx, os.Stdout, os.Stderr, true)
+	})
 }
 
 // JustExecReset only executes SUT 'reset' which may be 'stop' followed by 'start'
 func (rt *Runtime) JustExecReset() error {
-	// FIXME: require a model name
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
-	resetter := mdl.GetResetter()
-	resetter.Env(rt.envRead)
-	return resetter.ExecReset(context.Background(), os.Stdout, os.Stderr, true)
+	ctx := context.Background()
+	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
+		return rsttr.ExecReset(ctx, os.Stdout, os.Stderr, true)
+	})
 }
 
 // JustExecStop only executes SUT 'stop'
 func (rt *Runtime) JustExecStop() error {
-	// FIXME: require a model name
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
-	resetter := mdl.GetResetter()
-	resetter.Env(rt.envRead)
-	return resetter.ExecStop(context.Background(), os.Stdout, os.Stderr, true)
+	ctx := context.Background()
+	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
+		return rsttr.ExecStop(ctx, os.Stdout, os.Stderr, true)
+	})
 }

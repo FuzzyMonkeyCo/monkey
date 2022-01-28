@@ -83,7 +83,7 @@ func LegalName(name string) error {
 	}
 	for _, c := range name {
 		if !strings.ContainsRune(Alphabet, c) {
-			return fmt.Errorf("string should only contain characters from %s: %q", Alphabet, name)
+			return fmt.Errorf("only characters from %s should be in %q", Alphabet, name)
 		}
 	}
 	return nil

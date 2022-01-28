@@ -21,12 +21,8 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		rt.progress.Printf(format, s...)
 	}
 
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
+	mdl := rt.models[msg.GetModelName()]
 	cllr := mdl.NewCaller(ctx, msg, showf)
 
 	input := cllr.RequestProto()
@@ -186,7 +182,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 
 	passed := true
 	g.Go(func() (errT error) {
-		for i := 0; i < len(rt.checks); i++ {
+		for range make([]struct{}, len(rt.checks)) {
 			select {
 			case <-ctx.Done():
 				errT, passed = ctx.Err(), false
@@ -213,9 +209,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 	})
 
 	print := func(msg string) { rt.progress.Printf("%s", msg) }
-	for _, name := range rt.checksNames {
-		name, chk := name, rt.checks[name]
-
+	_ = rt.forEachCheck(func(name string, chk *check) error {
 		g.Go(func() error {
 			v := rt.runUserCheckWrapper(name, chk, print, tagsFilter, ctxer1, maxSteps)
 			switch v.Status {
@@ -230,7 +224,8 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 			vs <- v
 			return nil
 		})
-	}
+		return nil
+	})
 
 	if errT := g.Wait(); errT != nil {
 		return false, errT

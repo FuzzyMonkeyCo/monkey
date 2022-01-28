@@ -2,66 +2,137 @@ package runtime
 
 import (
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
+	openapi3 "github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
 
-type builtin func(
-	th *starlark.Thread,
-	b *starlark.Builtin,
-	args starlark.Tuple,
-	kwargs []starlark.Tuple,
-) (ret starlark.Value, err error)
+const (
+	moduleBuiltins  = 2
+	moduleModelers  = 1
+	moduleResetters = 1
+
+	moduleAttrs = moduleBuiltins + moduleModelers + moduleResetters
+)
 
 type module struct {
-	rt *Runtime
-
-	bOpenAPIv3 builtin
+	attrs map[string]*starlark.Builtin
 }
 
 var _ starlark.HasAttrs = (*module)(nil)
 
 func (rt *Runtime) newModule() (m *module) {
 	m = &module{
-		rt: rt,
+		attrs: make(map[string]*starlark.Builtin, moduleAttrs),
 	}
 
-	var mdlr modeler.Interface
-	mdlr = (*openapiv3.OA3)(nil)
-	log.Printf("[DBG] registering modeler: %q", "openapi3")
-	m.bOpenAPIv3 = rt.modelMaker("openapi3", mdlr.NewFromKwargs)
+	m.attrs["check"] = starlark.NewBuiltin("check", rt.bCheck).BindReceiver(m)
+	m.attrs["env"] = starlark.NewBuiltin("env", rt.bEnv).BindReceiver(m)
+
+	modelMaker := func(modelerName string, maker modeler.Maker) *starlark.Builtin {
+		f := func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
+			log.Printf("[DBG] registering new %s model", modelerName)
+			ret = starlark.None
+
+			if len(args) != 0 {
+				err = fmt.Errorf("%s(...) does not take positional arguments, only named ones", b.Name())
+				log.Println("[ERR]", err)
+				return
+			}
+
+			var model modeler.Interface
+			if model, err = maker(kwargs); err != nil {
+				log.Println("[ERR]", b.Name(), err)
+				return
+			}
+
+			modelName := model.Name()
+
+			if err = tags.LegalName(modelName); err != nil {
+				log.Println("[ERR]", b.Name(), err)
+				return
+			}
+
+			if _, ok := rt.models[modelName]; ok {
+				err = fmt.Errorf("a model named %s already exists", modelName)
+				log.Println("[ERR]", err)
+				return
+			}
+			rt.models[modelName] = model
+			if len(rt.modelsNames) == 1 { // TODO: support >1 models
+				err = fmt.Errorf("cannot define model %s as another (%s) already exists", modelName, rt.modelsNames[0])
+				log.Println("[ERR]", err)
+				return
+			}
+			rt.modelsNames = append(rt.modelsNames, modelName)
+			return
+		}
+		b := starlark.NewBuiltin(modelerName, f)
+		return b.BindReceiver(m)
+	}
+
+	m.attrs["openapi3"] = modelMaker(openapi3.Name, openapi3.New)
+
+	resetterMaker := func(resetterName string, maker resetter.Maker) *starlark.Builtin {
+		f := func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error) {
+			log.Printf("[DBG] registering new %s resetter", resetterName)
+			ret = starlark.None
+
+			if len(args) != 0 {
+				err = fmt.Errorf("%s(...) does not take positional arguments, only named ones", b.Name())
+				log.Println("[ERR]", err)
+				return
+			}
+
+			var rsttr resetter.Interface
+			if rsttr, err = maker(kwargs); err != nil {
+				log.Println("[ERR]", b.Name(), err)
+				return
+			}
+
+			rsttrName := rsttr.Name()
+
+			if err = tags.LegalName(rsttrName); err != nil {
+				log.Println("[ERR]", b.Name(), err)
+				return
+			}
+
+			if _, ok := rt.resetters[rsttrName]; ok {
+				err = fmt.Errorf("a resetter named %s already exists", rsttrName)
+				log.Println("[ERR]", err)
+				return
+			}
+			rt.resetters[rsttrName] = rsttr
+			rt.resettersNames = append(rt.resettersNames, rsttrName)
+			return
+		}
+		b := starlark.NewBuiltin(resetterName, f)
+		return b.BindReceiver(m)
+	}
+
+	m.attrs["shell"] = resetterMaker(shell.Name, shell.New)
+
 	return
 }
-
-func (m *module) String() string        { return "monkey" }
-func (m *module) Type() string          { return "monkey" }
-func (m *module) Freeze()               {}
-func (m *module) Truth() starlark.Bool  { return true }
-func (m *module) Hash() (uint32, error) { return 0, errors.New("unhashable type: monkey") }
 
 func (m *module) AttrNames() []string {
 	return []string{
 		"check",
 		"env",
 		"openapi3",
+		"shell",
 	}
 }
 
-func (m *module) Attr(name string) (starlark.Value, error) {
-	switch name {
-	case "check":
-		b := starlark.NewBuiltin(name, m.rt.bCheck)
-		return b.BindReceiver(m), nil
-	case "env":
-		b := starlark.NewBuiltin(name, m.rt.bEnv)
-		return b.BindReceiver(m), nil
-	case "openapi3":
-		b := starlark.NewBuiltin(name, m.bOpenAPIv3)
-		return b.BindReceiver(m), nil
-	default:
-		return nil, nil // no such method
-	}
-}
+func (m *module) Attr(name string) (starlark.Value, error) { return m.attrs[name], nil }
+func (m *module) String() string                           { return "monkey" }
+func (m *module) Type() string                             { return "monkey" }
+func (m *module) Freeze()                                  {}
+func (m *module) Truth() starlark.Bool                     { return true }
+func (m *module) Hash() (uint32, error)                    { return 0, errors.New("unhashable type: monkey") }

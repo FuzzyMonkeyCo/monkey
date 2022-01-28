@@ -10,6 +10,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/google/uuid"
@@ -46,25 +47,31 @@ func (rt *Runtime) Fuzz(
 	}
 	defer rt.client.Close()
 
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-	rsttr := mdl.GetResetter()
-	rsttr.Env(rt.envRead)
+	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(selectedResetters))
+	_ = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
+		protoResetters = append(protoResetters, rsttr.ToProto())
+		return nil
+	})
+
+	protoModels := make([]*fm.Clt_Fuzz_Model, 0, len(rt.selectedEIDs))
+	_ = rt.forEachSelectedModel(func(name string, mdl modeler.Interface) error {
+		protoModels = append(protoModels, mdl.ToProto())
+		return nil
+	})
 
 	log.Printf("[DBG] sending initial msg")
 	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
-		EIDs:     rt.eIds,
-		EnvRead:  rt.envRead,
-		Model:    mdl.ToProto(),
-		Ntensity: ntensity,
-		Resetter: rsttr.ToProto(),
-		Seed:     seed,
-		Labels:   rt.labels,
-		Files:    rt.files,
-		Usage:    os.Args,
-		UUIDs:    []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
+		EIDs:      rt.selectedEIDs,
+		EnvRead:   rt.envRead,
+		Models:    protoModels,
+		Ntensity:  ntensity,
+		Resetters: protoResetters,
+		Seed:      seed,
+		Labels:    rt.labels,
+		Files:     rt.files,
+		Usage:     os.Args,
+		UUIDs:     []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
 	}}}); err != nil {
 		log.Println("[ERR]", err)
 		return

@@ -11,6 +11,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
@@ -29,16 +30,21 @@ type Runtime struct {
 	globals starlark.StringDict
 
 	envRead map[string]string // holds all the envs looked up on initial run
-	models  map[string]modeler.Interface
 	files   map[string]string
+
+	models      map[string]modeler.Interface
+	modelsNames []string
+
+	resetters      map[string]resetter.Interface // FIXME: rename: inits initers zeroers
+	resettersNames []string
 
 	checks      map[string]*check
 	checksNames []string
 
-	client    *fm.ChBiDi
-	eIds      []uint32
-	labels    map[string]string
-	cleanedup bool
+	client       *fm.ChBiDi
+	selectedEIDs map[string]*fm.Uint32S
+	labels       map[string]string
+	cleanedup    bool
 
 	progress            progresser.Interface
 	lastFuzzingProgress *fm.Srv_FuzzingProgress
@@ -82,9 +88,10 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 	}
 
 	r := &Runtime{
-		binTitle: name,
-		files:    map[string]string{localCfg: string(localCfgContents)},
-		models:   make(map[string]modeler.Interface, 1),
+		binTitle:  name,
+		files:     map[string]string{localCfg: string(localCfgContents)},
+		models:    make(map[string]modeler.Interface, moduleModelers),
+		resetters: make(map[string]resetter.Interface, moduleResetters),
 		thread: &starlark.Thread{
 			Name:  "cfg",
 			Load:  loadDisabled,
@@ -124,36 +131,51 @@ func (rt *Runtime) loadCfg() (err error) {
 	}
 
 	log.Printf("[DBG] models defined: %d", len(rt.models))
-	for k, v := range rt.models {
-		log.Printf("[DBG] defined model %q: %+v", k, v)
-	}
+	_ = rt.forEachModel(func(name string, mdl modeler.Interface) error {
+		log.Printf("[DBG] defined model %q: %+v", name, mdl)
+		return nil
+	})
 	if len(rt.models) == 0 {
 		err = errors.New("no models registered")
 		log.Println("[ERR]", err)
 		return
 	}
 
+	log.Printf("[DBG] resetters defined: %d", len(rt.resetters))
+	if err = rt.forEachResetter(func(name string, rsttr resetter.Interface) error {
+		log.Printf("[DBG] defined resetter %q: %+v", name, rsttr)
+		for _, mdl := range rsttr.Provides() {
+			if _, ok := rt.models[mdl]; !ok {
+				err := fmt.Errorf("resetter %q provides undefined %q", name, mdl)
+				log.Println("[ERR]", err)
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return
+	}
+
 	log.Printf("[NFO] frozen envs: %d", len(rt.envRead))
-	for k, v := range rt.envRead {
-		log.Printf("[NFO] env frozen %q: %+v", k, v)
+	for name, value := range rt.envRead {
+		log.Printf("[NFO] froze env %q: %+v", name, value)
 	}
 
 	log.Printf("[NFO] checks defined: %d", len(rt.checks))
-	for k, v := range rt.checks {
-		log.Printf("[NFO] defined check %q: %+v", k, v)
-	}
+	_ = rt.forEachCheck(func(name string, chk *check) error {
+		log.Printf("[NFO] defined check %q: %+v", name, chk)
+		return nil
+	})
 
 	delete(rt.globals, "monkey")
-	for key := range rt.globals {
-		if err = tags.LegalName(key); err != nil {
-			err = fmt.Errorf("illegal value name: %v", err)
+	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
+	for name, value := range rt.globals {
+		if err = tags.LegalName(name); err != nil {
+			err = fmt.Errorf("illegal name %q: %v", name, err)
 			log.Println("[ERR]", err)
 			return
 		}
-	}
-	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
-	for k, v := range rt.globals {
-		log.Printf("[DBG] starlark global %q: %+v", k, v)
+		log.Printf("[DBG] starlark global %q: %+v", name, value)
 	}
 	return
 }

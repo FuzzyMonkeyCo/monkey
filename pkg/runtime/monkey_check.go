@@ -46,7 +46,7 @@ func ensureStateDict(chkname string, v starlark.Value) (err error) {
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
 	var afterResponse *starlark.Function
 	var name starlark.String
-	var taglist tags.StarlarkStringList
+	var taglist tags.UniqueStrings
 	var state0 *starlark.Dict
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
 		"after_response", &afterResponse,
@@ -59,7 +59,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 
 	chkname := name.GoString()
 	if err := tags.LegalName(chkname); err != nil {
-		return nil, fmt.Errorf("bad name for check: %v", err)
+		return nil, err
 	}
 	if afterResponse.HasVarargs() || afterResponse.HasKwargs() || afterResponse.NumParams() != 1 {
 		return nil, fmt.Errorf("after_response for check %s must have only one param: ctx", name.String())
@@ -80,7 +80,7 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 	state0.Freeze()
 	chk := &check{
 		afterResponse: afterResponse,
-		tags:          taglist.Uniques,
+		tags:          taglist.GoStringsMap(),
 		state0:        state0,
 	}
 	if err := chk.reset(chkname); err != nil {

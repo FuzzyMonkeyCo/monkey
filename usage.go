@@ -34,6 +34,8 @@ func usage() (args *params, ret int) {
 	B := as.ColorNFO.Sprintf(binName)
 	// TODO: B [-vvv] init [--with-magic] Auto fill-in schemas from random API calls
 	// TODO: B [-vvv] login [--user=USER] Authenticate on fuzzymonkey.co as USER
+	// TODO: B [-vvv] exec (start | reset | stop) [RESETTER]
+	// TODO: B [-vvv] schema [--validate-against=REF] [MODELER]
 	usage := binTitle + `
 
 Usage:

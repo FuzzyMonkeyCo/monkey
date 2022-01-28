@@ -62,7 +62,7 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, &m1Prime)
 			m1 := &OA3{}
-			err = m1.FromProto(&m1Prime)
+			err = m1.fromProto(&m1Prime)
 			require.NoError(t, err)
 			require.NotNil(t, m1.Clt_Fuzz_Model_OpenAPIv3)
 			require.NotNil(t, m1.vald)

@@ -466,7 +466,7 @@ func formatToGo(format fm.Schema_JSON_Format) string {
 	}
 }
 
-func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
+func (vald *validator) filterEndpoints(args []string) (eids []eid, err error) {
 	// TODO? filter on 2nd, 3rd, ... -level schemas
 	// instead of just first level (ref A references B & C)
 
@@ -587,16 +587,16 @@ func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) 
 	return
 }
 
-func (vald *validator) InputsCount() int {
+func (vald *validator) inputsCount() int {
 	return len(vald.Refs)
 }
 
-func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
-	if vald.InputsCount() != 0 {
+func (vald *validator) writeAbsoluteReferences(w io.Writer) {
+	if vald.inputsCount() != 0 {
 		as.ColorNFO.Fprintln(w, "Available types:")
 	}
 
-	all := make([]string, 0, vald.InputsCount())
+	all := make([]string, 0, vald.inputsCount())
 	for absRef := range vald.Refs {
 		all = append(all, absRef)
 	}
@@ -608,7 +608,7 @@ func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
 	}
 }
 
-func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err error) {
+func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
 		err = modeler.ErrNoSuchRef
 		return

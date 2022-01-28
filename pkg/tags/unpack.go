@@ -1,41 +1,85 @@
 package tags
 
 import (
+	"errors"
 	"fmt"
 
 	"go.starlark.net/starlark"
 )
 
-var _ starlark.Unpacker = (*StarlarkStringList)(nil)
+var _ starlark.Unpacker = (*UniqueStrings)(nil)
 
-// StarlarkStringList implements starlark.Unpacker
-type StarlarkStringList struct {
-	Uniques Tags
+// UniqueStrings implements starlark.Unpacker
+type UniqueStrings struct {
+	strings []string
 }
 
-// Unpack unmarshals StarlarkStringList from a starlark.Value
-func (sl *StarlarkStringList) Unpack(v starlark.Value) error {
+// Unpack unmarshals UniqueStrings from a starlark.Value
+func (us *UniqueStrings) Unpack(v starlark.Value) (err error) {
+	us.strings, err = unpack(v)
+	return
+}
+
+// GoStringsMap returns the unique strings as a Go map
+func (us *UniqueStrings) GoStringsMap() (m Tags) {
+	m = make(Tags, len(us.strings))
+	for _, s := range us.strings {
+		m[s] = struct{}{}
+	}
+	return
+}
+
+// GoStrings returns the list of unique strings as a Go slice
+func (us *UniqueStrings) GoStrings() []string { return us.strings }
+
+var _ starlark.Unpacker = (*UniqueStringsNonEmpty)(nil)
+
+// UniqueStringsNonEmpty implements starlark.Unpacker
+type UniqueStringsNonEmpty struct {
+	strings []string
+}
+
+// Unpack unmarshals UniqueStringsNonEmpty from a starlark.Value
+func (us *UniqueStringsNonEmpty) Unpack(v starlark.Value) (err error) {
+	if us.strings, err = unpack(v); err != nil {
+		return
+	}
+	if len(us.strings) == 0 {
+		err = errors.New("must not be empty")
+	}
+	return
+}
+
+// GoStrings returns the list of unique strings as a Go slice
+func (us *UniqueStringsNonEmpty) GoStrings() []string { return us.strings }
+
+func unpack(v starlark.Value) ([]string, error) {
 	list, ok := v.(*starlark.List)
 	if !ok {
-		return fmt.Errorf("got %s, want list", v.Type())
+		return nil, fmt.Errorf("got %s, want list", v.Type())
 	}
 
-	sl.Uniques = make(Tags, list.Len())
-	it := list.Iterate()
-	defer it.Done()
-	var x starlark.Value
-	for it.Next(&x) {
-		str, ok := starlark.AsString(x)
-		if !ok {
-			return fmt.Errorf("got %s, want string", x.Type())
+	l := list.Len()
+	m := make(map[uint32]struct{}, l)
+	strs := make([]string, 0, l)
+	for i := 0; i < l; i++ {
+		x := list.Index(i)
+
+		s, isString := x.(starlark.String)
+		if !isString {
+			return nil, fmt.Errorf("got %s, want string", x.Type())
 		}
-		if err := LegalName(str); err != nil {
-			return err
+
+		h, err := s.Hash()
+		if err != nil {
+			panic("unreachable")
 		}
-		if _, ok := sl.Uniques[str]; ok {
-			return fmt.Errorf("string %s appears at least twice in list", x.String())
+		if _, isDupe := m[h]; isDupe {
+			return nil, fmt.Errorf("%s appears more than once", s)
 		}
-		sl.Uniques[str] = struct{}{}
+		m[h] = struct{}{}
+
+		strs = append(strs, s.GoString())
 	}
-	return nil
+	return strs, nil
 }

@@ -15,17 +15,48 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
+	"go.starlark.net/starlark"
 )
+
+// Name names the Starlark builtin
+const Name = "shell"
 
 const (
 	timeoutShort = 200 * time.Millisecond
 	timeoutLong  = 2 * time.Minute
 )
 
+// New instanciates a new resetter
+func New(kwargs []starlark.Tuple) (resetter.Interface, error) {
+	var name, start, reset, stop starlark.String
+	var provides tags.UniqueStringsNonEmpty
+	if err := starlark.UnpackArgs(Name, nil, kwargs,
+		"name", &name,
+		"provides", &provides,
+		// TODO: waiton = "tcp/4000", various recipes => 1 rsttr / service
+		"start??", &start,
+		"reset??", &reset,
+		"stop??", &stop,
+	); err != nil {
+		return nil, err
+	}
+	s := &Resetter{
+		name:     name.GoString(),
+		provides: provides.GoStrings(),
+	}
+	s.Start = start.GoString()
+	s.Rst = reset.GoString()
+	s.Stop = stop.GoString()
+	return s, nil
+}
+
 var _ resetter.Interface = (*Resetter)(nil)
 
 // Resetter implements resetter.Interface
 type Resetter struct {
+	name     string
+	provides []string
 	fm.Clt_Fuzz_Resetter_Shell
 
 	isNotFirstRun bool
@@ -33,9 +64,17 @@ type Resetter struct {
 	setReadonlyEnvs func(Y io.Writer)
 }
 
+// Name uniquely identifies this instance
+func (s *Resetter) Name() string { return s.name }
+
+// Provides lists the models a resetter resets
+func (s *Resetter) Provides() []string { return s.provides }
+
 // ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
 func (s *Resetter) ToProto() *fm.Clt_Fuzz_Resetter {
 	return &fm.Clt_Fuzz_Resetter{
+		Name:     s.name,
+		Provides: s.provides,
 		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
 			Shell: &s.Clt_Fuzz_Resetter_Shell,
 		}}

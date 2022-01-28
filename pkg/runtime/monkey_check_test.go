@@ -26,7 +26,7 @@ monkey.check(
 	name = "bla bla",
 	after_response = lambda ctx: None,
 )`)
-	require.EqualError(t, err, `bad name for check: string should only contain characters from `+tags.Alphabet+`: "bla bla"`)
+	require.EqualError(t, err, `only characters from `+tags.Alphabet+` should be in "bla bla"`)
 	require.Nil(t, rt)
 }
 
@@ -36,7 +36,7 @@ monkey.check(
 	name = "",
 	after_response = lambda ctx: None,
 )`)
-	require.EqualError(t, err, `bad name for check: string is empty`)
+	require.EqualError(t, err, `string is empty`)
 	require.Nil(t, rt)
 }
 
@@ -46,7 +46,7 @@ monkey.check(
 	name = "ééé",
 	after_response = lambda ctx: None,
 )`)
-	require.EqualError(t, err, `bad name for check: string should only contain characters from `+tags.Alphabet+`: "ééé"`)
+	require.EqualError(t, err, `only characters from `+tags.Alphabet+` should be in "ééé"`)
 	require.Nil(t, rt)
 }
 
@@ -57,7 +57,7 @@ monkey.check(
 	name = "` + name + `",
 	after_response = lambda ctx: None,
 )`)
-	require.EqualError(t, err, `bad name for check: string is too long: "`+name+`"`)
+	require.EqualError(t, err, `string is too long: "`+name+`"`)
 	require.Nil(t, rt)
 }
 

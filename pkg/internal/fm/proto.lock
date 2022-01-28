@@ -285,13 +285,15 @@
                 "fields": [
                   {
                     "id": 1,
-                    "name": "resetter",
-                    "type": "Resetter"
+                    "name": "resetters",
+                    "type": "Resetter",
+                    "is_repeated": true
                   },
                   {
                     "id": 2,
-                    "name": "model",
-                    "type": "Model"
+                    "name": "models",
+                    "type": "Model",
+                    "is_repeated": true
                   },
                   {
                     "id": 3,
@@ -310,12 +312,6 @@
                     "type": "uint32"
                   },
                   {
-                    "id": 6,
-                    "name": "EIDs",
-                    "type": "uint32",
-                    "is_repeated": true
-                  },
-                  {
                     "id": 9,
                     "name": "UUIDs",
                     "type": "string",
@@ -323,6 +319,14 @@
                   }
                 ],
                 "maps": [
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 6,
+                      "name": "EIDs",
+                      "type": "Uint32s"
+                    }
+                  },
                   {
                     "key_type": "string",
                     "field": {
@@ -354,6 +358,17 @@
                     "fields": [
                       {
                         "id": 1,
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "id": 2,
+                        "name": "provides",
+                        "type": "string",
+                        "is_repeated": true
+                      },
+                      {
+                        "id": 3,
                         "name": "shell",
                         "type": "Shell"
                       }
@@ -386,6 +401,11 @@
                     "fields": [
                       {
                         "id": 1,
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "id": 2,
                         "name": "openapiv3",
                         "type": "OpenAPIv3"
                       }
@@ -737,6 +757,11 @@
                     "id": 2,
                     "name": "EID",
                     "type": "uint32"
+                  },
+                  {
+                    "id": 3,
+                    "name": "model_name",
+                    "type": "string"
                   }
                 ],
                 "messages": [
@@ -835,6 +860,17 @@
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "name": "Uint32s",
+            "fields": [
+              {
+                "id": 1,
+                "name": "values",
+                "type": "uint32",
+                "is_repeated": true
               }
             ]
           },

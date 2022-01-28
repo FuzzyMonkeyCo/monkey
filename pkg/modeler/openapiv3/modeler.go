@@ -6,35 +6,59 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
 )
 
-var _ modeler.Interface = (*OA3)(nil)
+// Name names the Starlark builtin
+const Name = "openapi3"
 
+// New instanciates a new model
+func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
+	var name, file, host, headerAuthorization starlark.String
+	if err := starlark.UnpackArgs(Name, nil, kwargs,
+		"name", &name,
+		"file", &file,
+		"host??", &host,
+		"header_authorization??", &headerAuthorization,
+	); err != nil {
+		return nil, err
+	}
+	m := &OA3{name: name.GoString()}
+	m.File = file.GoString()
+	m.Host = host.GoString()
+	m.HeaderAuthorization = headerAuthorization.GoString()
+	return m, nil
+}
+
+var _ modeler.Interface = (*OA3)(nil) // TODO: *oa3
+
+// OA3 implements a modeler.Interface for use by `monkey`.
 type OA3 struct {
+	name string
 	fm.Clt_Fuzz_Model_OpenAPIv3
-
-	resetter resetter.Interface
 
 	vald *validator
 
 	tcap *tCapHTTP
 }
 
-// ToProto TODO
+// Name uniquely identifies this instance
+func (m *OA3) Name() string { return m.name }
+
+// ToProto marshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
 func (m *OA3) ToProto() *fm.Clt_Fuzz_Model {
 	m.Spec = m.vald.Spec
 	return &fm.Clt_Fuzz_Model{
+		Name: m.name,
 		Model: &fm.Clt_Fuzz_Model_Openapiv3{
 			Openapiv3: &m.Clt_Fuzz_Model_OpenAPIv3,
 		},
 	}
 }
 
-// FromProto TODO
-func (m *OA3) FromProto(p *fm.Clt_Fuzz_Model) error {
+////////////// FromProto unmarshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
+func (m *OA3) fromProto(p *fm.Clt_Fuzz_Model) error {
 	if mm := p.GetOpenapiv3(); mm != nil {
 		m.Clt_Fuzz_Model_OpenAPIv3 = *mm
 		m.vald = &validator{Spec: mm.Spec}
@@ -43,60 +67,26 @@ func (m *OA3) FromProto(p *fm.Clt_Fuzz_Model) error {
 	return fmt.Errorf("unexpected model type: %T", p.GetModel())
 }
 
-// SetResetter TODO
-func (m *OA3) SetResetter(sr resetter.Interface) { m.resetter = sr }
-
-// GetResetter TODO
-func (m *OA3) GetResetter() resetter.Interface { return m.resetter }
-
-func (m *OA3) NewFromKwargs(d starlark.StringDict) (modeler.Interface, *modeler.Error) {
-	m = &OA3{}
-	var err *modeler.Error
-
-	if m.File, err = slGetString(d, "file"); err != nil {
-		return nil, err
-	}
-	if m.Host, err = slGetString(d, "host"); err != nil {
-		return nil, err
-	}
-	if m.HeaderAuthorization, err = slGetString(d, "header_authorization"); err != nil {
-		return nil, err
-	}
-
-	return m, nil
-}
-
-func slGetString(d starlark.StringDict, field string) (str string, err *modeler.Error) {
-	var (
-		found bool
-		val   starlark.Value
-	)
-	if val, found = d[field]; found && val.Type() != "string" {
-		err = modeler.NewError(field, "a string", val.Type())
-		return
-	}
-	if found {
-		str = val.(starlark.String).GoString()
-	}
-	return
-}
-
+// InputsCount sums the amount of named schemas or types APIs define
 func (m *OA3) InputsCount() int {
-	return m.vald.InputsCount()
+	return m.vald.inputsCount()
 }
 
+// FilterEndpoints restricts which API endpoints are considered
 func (m *OA3) FilterEndpoints(args []string) ([]eid, error) {
-	return m.vald.FilterEndpoints(args)
+	return m.vald.filterEndpoints(args)
 }
 
 func (m *OA3) Validate(SID sid, data *types.Value) []string {
 	return m.vald.Validate(SID, data)
 }
 
+// ValidateAgainstSchema tries to smash the data through the given keyhole
 func (m *OA3) ValidateAgainstSchema(absRef string, data []byte) error {
-	return m.vald.ValidateAgainstSchema(absRef, data)
+	return m.vald.validateAgainstSchema(absRef, data)
 }
 
+// WriteAbsoluteReferences pretty-prints the API's named types
 func (m *OA3) WriteAbsoluteReferences(w io.Writer) {
-	m.vald.WriteAbsoluteReferences(w)
+	m.vald.writeAbsoluteReferences(w)
 }

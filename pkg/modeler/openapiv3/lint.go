@@ -18,7 +18,7 @@ var errLinting = func() error {
 	return errors.New(msg) // Gets around golint
 }()
 
-// Lint goes through OpenAPIv3 specs and unsures they're valid
+// Lint goes through OpenAPIv3 specs and unsures they are valid
 func (m *OA3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
 	if blob, err = os.ReadFile(m.File); err != nil {

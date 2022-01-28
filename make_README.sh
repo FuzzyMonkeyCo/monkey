@@ -13,6 +13,7 @@ end_example=$(grep -n '```' -- README.md | tail -n2 | tail -n1 | cut -d: -f1)
 cat <(head -n "$beg_example" README.md) <(cat fuzzymonkey.star) <(tail -n +"$end_example" README.md) >_ && mv _ README.md
 
 if
+	[[ "${CI:-}" != 'true' ]] &&
 	git --no-pager diff -- README.md | grep '[-]monkey M.m.p go' >/dev/null &&
 	git --no-pager diff -- README.md | grep '[+]monkey M.m.p go' >/dev/null &&
 	[[ $(git --no-pager diff -- README.md | wc -l) -eq 13 ]]

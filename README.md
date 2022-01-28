@@ -101,34 +101,36 @@ OpenAPIv3(
 ```python
 # Invariants of our APIs expressed in a Python-like language
 
-print("$THIS_ENVIRONMENT_VARIABLE is", monkey.env("THIS_ENVIRONMENT_VARIABLE", "not set"))
-
-host, spec = "https://jsonplaceholder.typicode.com", None
-mode = monkey.env("TESTING_WHAT", "")
-if mode == "":
-    spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
-elif mode == "other-thing":
-    pass
-else:
-    assert.that(mode).is_equal_to("unhandled testing mode")
+assert.that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
+spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
 print("Now testing {}.".format(spec))
 
 monkey.openapi3(
-    name = "my_model",
+    name = "my_spec",
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
-    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
+    host = "https://jsonplaceholder.typicode.com",
     # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
+)
 
-    # Note: exec commands are executed in shells sharing the same environment variables,
-    # with `set -e` and `set -o pipefail` flags on.
+# Note: exec commands are executed in shells sharing the same environment variables,
+# with `set -e` and `set -o pipefail` flags on.
 
-    # The following get executed once per test
+# List here the commands to run so that the service providing "my_spec"
+# can be restored to its initial state.
+monkey.shell(
+    name = "example_resetter",
+
+    # Link to above defined spec.
+    provides = ["my_spec"],
+
+    # The following gets executed once per test
     #   so have these commands complete as fast as possible.
-    # Also, make sure that each test starts from a clean slate
-    #   otherwise results will be unreliable.
-    ExecReset = """
-    echo Resetting state...
+    # For best results, tests should start with a clean slate
+    #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
+    reset = """
+echo Resetting state...
+true
     """,
 )
 
