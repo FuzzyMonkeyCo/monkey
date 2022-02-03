@@ -142,7 +142,7 @@ var εCallFrame = starlark.CallFrame{Pos: syntax.Position{Line: -1, Col: -1}}
 // test author error.
 func Close(th *starlark.Thread) (err error) {
 	if c, ok := th.Local(LocalThreadKeyForClose).(starlark.CallFrame); ok && c != εCallFrame {
-		err = UnresolvedError(c.Pos.String())
+		err = newUnresolvedError(c.Pos.String())
 	}
 	return
 }

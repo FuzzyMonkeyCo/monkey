@@ -12,6 +12,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
@@ -122,11 +123,13 @@ func (rt *Runtime) loadCfg() (err error) {
 
 	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, rt.files[localCfg], rt.globals); err != nil {
 		log.Println("[ERR]", err)
-		if evalErr, ok := err.(*starlark.EvalError); ok {
-			bt := evalErr.Backtrace()
-			log.Println("[ERR]", bt)
-			as.ColorWRN.Println(bt)
-		}
+		err = starTrickError(err)
+		return
+	}
+	if err = starlarktruth.Close(rt.thread); err != nil {
+		log.Println("[ERR]", err)
+		// Incomplete `assert that()` call
+		err = starTrickError(err)
 		return
 	}
 

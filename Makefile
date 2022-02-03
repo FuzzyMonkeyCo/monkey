@@ -58,6 +58,8 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
+	./monkey exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
+	./monkey exec repl <<<'assert that("this").is_not_equal_to("that")'
 	richgo test -race ./...
 
 ci:

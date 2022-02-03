@@ -101,7 +101,7 @@ OpenAPIv3(
 ```python
 # Invariants of our APIs expressed in a Python-like language
 
-assert.that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
+assert that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
 spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
 print("Now testing {}.".format(spec))
 
@@ -136,9 +136,12 @@ true
 
 ## Ensure some general property
 
+def ensure_lowish_response_time(ctx):
+    assert that(ctx.response.elapsed_ms).is_at_most(500)
+
 monkey.check(
     name = "responds_in_a_timely_manner",
-    after_response = lambda ctx: assert.that(ctx.response.elapsed_ms).is_at_most(500),
+    after_response = ensure_lowish_response_time,
     tags = ["timings"],
 )
 
@@ -160,11 +163,11 @@ def stateful_model_of_posts(ctx):
         post = ctx.response.body
 
         # Ensure post ID in response matches ID in URL (an API contract):
-        assert.that(post["id"]).is_equal_to(post_id)
+        assert that(post["id"]).is_equal_to(post_id)
 
         # Verify that retrieved post matches local model
         if post_id in ctx.state:
-            assert.that(post).is_equal_to(ctx.state[post_id])
+            assert that(post).is_equal_to(ctx.state[post_id])
 
         return
 
@@ -188,7 +191,7 @@ monkey.check(
 
 def encapsulation_1_of_2(ctx):
     """Show that state is not shared with encapsulation_2_of_2"""
-    assert.that(ctx.state).is_empty()
+    assert that(ctx.state).is_empty()
 
 monkey.check(
     name = "encapsulation_1_of_2",
@@ -205,9 +208,12 @@ monkey.check(
 
 ## A test that always fails
 
+def this_always_fails(ctx):
+    assert that(None).is_not_none()
+
 monkey.check(
     name = "always_fails",
-    after_response = lambda ctx: assert.that(None).is_not_none(),
+    after_response = this_always_fails,
     tags = ["failing"],
 )
 ```

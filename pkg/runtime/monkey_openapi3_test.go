@@ -17,7 +17,10 @@ func TestModelMissingIsForbidden(t *testing.T) {
 
 func TestModelPositionalArgsAreForbidden(t *testing.T) {
 	rt, err := newFakeMonkey(`monkey.openapi3("hi", name="bla")`)
-	require.EqualError(t, err, `openapi3(...) does not take positional arguments, only named ones`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3(...) does not take positional arguments, only named ones`[1:])
 	require.Nil(t, rt)
 }
 
@@ -27,7 +30,10 @@ monkey.openapi3(
 	name = "blip blop",
     file = "some/api_spec.yml",
 )`[1:])
-	require.EqualError(t, err, `only characters from `+tags.Alphabet+` should be in "blip blop"`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: only characters from `[1:]+tags.Alphabet+` should be in "blip blop"`)
 	require.Nil(t, rt)
 }
 
@@ -41,7 +47,10 @@ monkey.openapi3(
 	name = "blip",
     file = "some/api_spec.yml",
 )`[1:])
-	require.EqualError(t, err, `a model named blip already exists`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:5:16: in <toplevel>
+Error in openapi3: a model named blip already exists`[1:])
 	require.Nil(t, rt)
 
 	rt, err = newFakeMonkey(`
@@ -53,7 +62,10 @@ monkey.openapi3(
 	name = "blop",
     file = "some/api_spec.yml",
 )`[1:])
-	require.EqualError(t, err, `cannot define model blop as another (blip) already exists`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:5:16: in <toplevel>
+Error in openapi3: cannot define model blop as another (blip) already exists`[1:])
 	require.Nil(t, rt)
 }
 
@@ -64,7 +76,10 @@ func TestOpenapi3NameIsRequired(t *testing.T) {
 monkey.openapi3(
     file = "some/api_spec.yml",
 )`[1:])
-	require.EqualError(t, err, `openapi3: missing argument for name`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: missing argument for name`[1:])
 	require.Nil(t, rt)
 }
 
@@ -73,7 +88,10 @@ func TestOpenapi3NameTyping(t *testing.T) {
 monkey.openapi3(
     name = 42.1337,
 )`[1:])
-	require.EqualError(t, err, `openapi3: for parameter "name": got float, want string`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: for parameter "name": got float, want string`[1:])
 	require.Nil(t, rt)
 }
 
@@ -85,7 +103,10 @@ monkey.openapi3(
     name = "mything",
     wef = "bla",
 )`[1:])
-	require.EqualError(t, err, `openapi3: unexpected keyword argument "wef"`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: unexpected keyword argument "wef"`[1:])
 	require.Nil(t, rt)
 }
 
@@ -96,7 +117,10 @@ func TestOpenapi3FileIsRequired(t *testing.T) {
 monkey.openapi3(
 	name = "some_name",
 )`[1:])
-	require.EqualError(t, err, `openapi3: missing argument for file`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: missing argument for file`[1:])
 	require.Nil(t, rt)
 }
 
@@ -106,7 +130,10 @@ monkey.openapi3(
 	name = "some_name",
     file = 42.1337,
 )`[1:])
-	require.EqualError(t, err, `openapi3: for parameter "file": got float, want string`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: for parameter "file": got float, want string`[1:])
 	require.Nil(t, rt)
 }
 
@@ -119,7 +146,10 @@ monkey.openapi3(
     file = "some/api_spec.yml",
     host = 42.1337,
 )`[1:])
-	require.EqualError(t, err, `openapi3: for parameter "host": got float, want string`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: for parameter "host": got float, want string`[1:])
 	require.Nil(t, rt)
 }
 
@@ -132,6 +162,9 @@ monkey.openapi3(
     file = "some/api_spec.yml",
     header_authorization = 42.1337,
 )`[1:])
-	require.EqualError(t, err, `openapi3: for parameter "header_authorization": got float, want string`)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:16: in <toplevel>
+Error in openapi3: openapi3: for parameter "header_authorization": got float, want string`[1:])
 	require.Nil(t, rt)
 }

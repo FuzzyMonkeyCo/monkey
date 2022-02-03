@@ -3,7 +3,9 @@ module github.com/FuzzyMonkeyCo/monkey
 go 1.15
 
 require (
+	github.com/alecthomas/chroma/v2 v2.0.0-alpha2
 	github.com/bazelbuild/buildtools v0.0.0-20211129135157-cdedcc0318b9
+	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.13.0
 	github.com/getkin/kin-openapi v0.88.0

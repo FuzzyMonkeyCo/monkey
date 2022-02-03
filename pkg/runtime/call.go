@@ -249,12 +249,7 @@ func (rt *Runtime) runUserCheckWrapper(
 	v.ElapsedNs = time.Since(start).Nanoseconds()
 	if errL != nil {
 		v.Reason = []string{fmt.Sprintf("%T", errL)}
-		var reason string
-		if e, ok := errL.(*starlark.EvalError); ok {
-			reason = e.Backtrace()
-		} else {
-			reason = errL.Error()
-		}
+		reason := starTrickError(errL).Error()
 		v.Reason = append(v.Reason, strings.Split(reason, "\n")...)
 	}
 	return v
@@ -303,7 +298,7 @@ func (rt *Runtime) runUserCheck(
 	}
 	if err = starlarktruth.Close(th); err != nil {
 		log.Println("[ERR]", err)
-		// Incomplete assert.that() call
+		// Incomplete `assert that()` call
 		v.Status = fm.Clt_CallVerifProgress_failure
 		return
 	}

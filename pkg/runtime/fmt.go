@@ -1,5 +1,7 @@
 package runtime
 
+// Heavily inspired from https://github.com/bazelbuild/buildtools/blob/174cbb4ba7d15a3ad029c2e4ee4f30ea4d76edce/buildifier/buildifier.go
+
 import (
 	"bytes"
 	"errors"
@@ -17,14 +19,6 @@ import (
 	"github.com/bazelbuild/buildtools/buildifier/utils"
 	"github.com/bazelbuild/buildtools/warn"
 	"github.com/bazelbuild/buildtools/wspace"
-)
-
-// Heavily inspired from https://github.com/bazelbuild/buildtools/blob/174cbb4ba7d15a3ad029c2e4ee4f30ea4d76edce/buildifier/buildifier.go
-
-var (
-// Pass down debug flags into build package
-// build.DisableRewrites = []string{}
-// build.AllowSort = []string{}
 )
 
 // Format standardizes Starlark codes
@@ -147,7 +141,10 @@ func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *ut
 		go func(i int) {
 			for j := i; j < len(files); j += nworker {
 				file := files[j]
-				data, err := os.ReadFile(file)
+				if file != localCfg { // TODO: allow -f,--file fuzzymonkey.star
+					panic("unhandled")
+				}
+				data, err := localcfgdata()
 				ch[i] <- result{file, data, err}
 			}
 		}(i)
@@ -231,9 +228,14 @@ func fmtFile(inputType, mode, lint, filename string, data []byte, warningsList [
 		if bytes.Equal(data, ndata) {
 			return
 		}
-		if err = overwriteFile(filename, bytes.NewReader(ndata)); err != nil {
-			log.Println("[ERR]", err)
-			return
+		ndata = starTrickDual(ndata)
+		if localCfgData != nil {
+			localCfgData = ndata
+		} else {
+			if err = overwriteFile(filename, bytes.NewReader(ndata)); err != nil {
+				log.Println("[ERR]", err)
+				return
+			}
 		}
 		as.ColorNFO.Printf("fixed %s\n", f.DisplayPath())
 	}

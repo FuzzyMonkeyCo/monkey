@@ -8,7 +8,6 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
-	"go.starlark.net/repl"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
@@ -59,7 +58,7 @@ func initExec() {
 	deny := map[string]struct{}{
 		"fail": {},
 	}
-	starlarktruth.NewModule(starlark.Universe) // Adds assert.that()
+	starlarktruth.NewModule(starlark.Universe) // Adds `assert that()`
 	for f := range starlark.Universe {
 		_, allowed := allow[f]
 		_, denied := deny[f]
@@ -78,18 +77,8 @@ func loadDisabled(_th *starlark.Thread, _module string) (starlark.StringDict, er
 	return nil, errors.New("load() disabled")
 }
 
-// JustExecREPL executes a Starlark Read-Eval-Print Loop
-func (rt *Runtime) JustExecREPL() error {
-	fmt.Println("# Welcome to Starlark https://go.starlark.net")
-	rt.thread.Name = "REPL"
-	rt.thread.Load = loadDisabled
-	repl.REPL(rt.thread, rt.globals)
-	return starlarktruth.Close(rt.thread)
-}
-
 // JustExecStart only executes SUT 'start'
-func (rt *Runtime) JustExecStart() error {
-	ctx := context.Background()
+func (rt *Runtime) JustExecStart(ctx context.Context) error {
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		rsttr.Env(rt.envRead)
 		return rsttr.ExecStart(ctx, os.Stdout, os.Stderr, true)
@@ -97,8 +86,7 @@ func (rt *Runtime) JustExecStart() error {
 }
 
 // JustExecReset only executes SUT 'reset' which may be 'stop' followed by 'start'
-func (rt *Runtime) JustExecReset() error {
-	ctx := context.Background()
+func (rt *Runtime) JustExecReset(ctx context.Context) error {
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		rsttr.Env(rt.envRead)
 		return rsttr.ExecReset(ctx, os.Stdout, os.Stderr, true)
@@ -106,8 +94,7 @@ func (rt *Runtime) JustExecReset() error {
 }
 
 // JustExecStop only executes SUT 'stop'
-func (rt *Runtime) JustExecStop() error {
-	ctx := context.Background()
+func (rt *Runtime) JustExecStop(ctx context.Context) error {
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		rsttr.Env(rt.envRead)
 		return rsttr.ExecStop(ctx, os.Stdout, os.Stderr, true)

@@ -1,6 +1,7 @@
 package runtime
 
 import (
+	"log"
 	"strconv"
 	"strings"
 	"testing"
@@ -12,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const simplestPrelude = `
+const someOpenAPI3Model = `
 monkey.openapi3(
     name = "some_model",
     file = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml",
@@ -21,6 +22,8 @@ monkey.openapi3(
 `
 
 func newFakeMonkey(code string) (*Runtime, error) {
+	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
+
 	initExec()
 
 	localCfgData = []byte(code) // Mocks fuzzymonkey.star contents

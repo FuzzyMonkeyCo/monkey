@@ -141,7 +141,7 @@ func actualMain() int {
 	}
 
 	if args.Exec {
-		var fn func() error
+		var fn func(context.Context) error
 		switch {
 		case args.Start:
 			fn = mrt.JustExecStart
@@ -152,8 +152,10 @@ func actualMain() int {
 		case args.Repl:
 			fn = mrt.JustExecREPL
 		}
-		if err := fn(); err != nil {
-			as.ColorERR.Println(err)
+		if err := fn(context.Background()); err != nil {
+			if e := err.Error(); e != "" {
+				as.ColorERR.Println(e)
+			}
 			return code.FailedExec
 		}
 		return code.OK

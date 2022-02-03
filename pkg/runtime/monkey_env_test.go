@@ -16,10 +16,10 @@ func TestEnvReadsVar(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	rt, err := newFakeMonkey(simplestPrelude + `
+	rt, err := newFakeMonkey(`
 value1 = monkey.env("SOME_VAR")
 value2 = monkey.env("SOME_VAR")
-`)
+`[1:] + someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Equal(t, rt.globals["value1"], starlark.String("42"))
 	require.Equal(t, rt.globals["value2"], starlark.String("42"))
@@ -33,8 +33,13 @@ func TestEnvReadsVarButIncorrectDefault(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	rt, err := newFakeMonkey(simplestPrelude + `value = monkey.env("SOME_VAR", None)`)
-	require.EqualError(t, err, `expected string, got NoneType: None`)
+	rt, err := newFakeMonkey(`
+value = monkey.env("SOME_VAR", None)
+`[1:] + someOpenAPI3Model)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:19: in <toplevel>
+Error in env: expected string, got NoneType: None`[1:])
 	require.Nil(t, rt)
 }
 
@@ -46,19 +51,28 @@ func TestEnvReadsVarGoodDefault(t *testing.T) {
 		require.NoError(t, err)
 	}()
 
-	rt, err := newFakeMonkey(simplestPrelude + `value = monkey.env("SOME_VAR", "")`)
+	rt, err := newFakeMonkey(`
+value = monkey.env("SOME_VAR", "")
+`[1:] + someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Equal(t, rt.globals["value"], starlark.String("42"))
 }
 
 func TestEnvUnsetVarNoDefault(t *testing.T) {
-	rt, err := newFakeMonkey(simplestPrelude + `value = monkey.env("SOME_VAR")`)
-	require.EqualError(t, err, `unset environment variable: "SOME_VAR"`)
+	rt, err := newFakeMonkey(`
+value = monkey.env("SOME_VAR")
+`[1:] + someOpenAPI3Model)
+	require.EqualError(t, err, `
+Traceback (most recent call last):
+  fuzzymonkey.star:1:19: in <toplevel>
+Error in env: unset environment variable: "SOME_VAR"`[1:])
 	require.Nil(t, rt)
 }
 
 func TestEnvUnsetVarWithDefault(t *testing.T) {
-	rt, err := newFakeMonkey(simplestPrelude + `value = monkey.env("SOME_VAR", "orelse")`)
+	rt, err := newFakeMonkey(`
+value = monkey.env("SOME_VAR", "orelse")
+`[1:] + someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Equal(t, rt.globals["value"], starlark.String("orelse"))
 }
