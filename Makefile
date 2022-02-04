@@ -43,10 +43,9 @@ lint:
 	go vet ./...
 
 debug: all
-	./$(EXE) fmt
 	./$(EXE) lint
 # 	./$(EXE) -vvv fuzz --exclude-tags=failing
-	./$(EXE) fuzz --exclude-tags=failing --progress=bar
+	./$(EXE) fuzz --exclude-tags=failing #--progress=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)
@@ -58,8 +57,9 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	./monkey exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
-	./monkey exec repl <<<'assert that("this").is_not_equal_to("that")'
+	./$(EXE) exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
+	./$(EXE) exec repl <<<'assert that("this").is_not_equal_to("that")'
+	./$(EXE) exec repl <<<'x = 1.0; print(str(x)); print(str(int(x)))'
 	richgo test -race ./...
 
 ci:

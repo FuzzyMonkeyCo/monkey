@@ -2,7 +2,7 @@
 
 assert that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
 spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
-print("Now testing {}.".format(spec))
+print("Using {}.".format(spec))
 
 monkey.openapi3(
     name = "my_spec",
@@ -29,7 +29,6 @@ monkey.shell(
     #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
     reset = """
 echo Resetting state...
-true
     """,
 )
 
@@ -61,11 +60,11 @@ def stateful_model_of_posts(ctx):
         "/posts/" in url and url[-1] in "1234567890",  # /posts/{post_id}
         ctx.response.status_code in range(200, 299),
     ]):
-        post_id = int(url.split("/")[-1])
+        post_id = url.split("/")[-1]
         post = ctx.response.body
 
         # Ensure post ID in response matches ID in URL (an API contract):
-        assert that(post["id"]).is_equal_to(post_id)
+        assert that(str(int(post["id"]))).is_equal_to(post_id)
 
         # Verify that retrieved post matches local model
         if post_id in ctx.state:
@@ -80,7 +79,7 @@ def stateful_model_of_posts(ctx):
     ]):
         # Store posts in state
         for post in ctx.response.body:
-            post_id = int(post["id"])
+            post_id = str(int(post["id"]))
             ctx.state[post_id] = post
         print("State contains {} posts".format(len(ctx.state)))
 

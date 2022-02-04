@@ -97,9 +97,9 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	}
 	log.Println("[NFO] re-initialized model state")
 
-	stdout := newProgressWriter(rt.progress.Printf)
-	stderr := newProgressWriter(rt.progress.Errorf)
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		stdout := newProgressWriter(rt.progress.Printf)
+		stderr := newProgressWriter(rt.progress.Errorf)
 		return rsttr.ExecReset(ctx, stdout, stderr, false)
 	})
 }
