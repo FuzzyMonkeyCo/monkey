@@ -35,12 +35,15 @@ true
 
 ## Ensure some general property
 
-def ensure_lowish_response_time(ctx):
-    assert that(ctx.response.elapsed_ms).is_at_most(500)
+def ensure_lowish_response_time(ms):
+    def responds_in_a_timely_manner(ctx):
+        assert that(ctx.response.elapsed_ms).is_at_most(ms)
+
+    return responds_in_a_timely_manner
 
 monkey.check(
     name = "responds_in_a_timely_manner",
-    after_response = ensure_lowish_response_time,
+    after_response = ensure_lowish_response_time(500),
     tags = ["timings"],
 )
 

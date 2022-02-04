@@ -19,7 +19,7 @@ func initExec() {
 	//> unless the -recursion flag is specified.
 	resolve.AllowRecursion = false
 
-	// TODO: set maxdepth https://github.com/google/starlark-go/issues/360
+	starlark.CompareLimit = 10 // Depth for (Equal|Compare)-ing things
 
 	allow := map[string]struct{}{
 		"abs":       {},
