@@ -18,15 +18,21 @@ func newProgressWriter(cb modeler.ShowFunc) *progressWriter {
 	return &progressWriter{printf: cb}
 }
 
-func (pw *progressWriter) Write(p []byte) (n int, err error) {
-	n = len(p)
-	for _, pp := range bytes.Split(p, []byte{'\r', '\n'}) {
-		for _, ppp := range bytes.Split(pp, []byte{'\n'}) {
-			if len(ppp) != 0 {
-				// TODO: mux stderr+stdout and fwd to server to track progress
-				pw.printf("%s", ppp)
-			}
+func (pw *progressWriter) Write(p []byte) (int, error) {
+	print := func(data []byte) {
+		if len(data) > 0 {
+			pw.printf("%s", data)
 		}
 	}
-	return
+
+	for i := 0; ; {
+		n := bytes.IndexAny(p[i:], "\n\r")
+		if n < 0 {
+			print(p[i:])
+			break
+		}
+		print(p[i : i+n])
+		i += n + 1
+	}
+	return len(p), nil
 }

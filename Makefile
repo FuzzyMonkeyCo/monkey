@@ -44,7 +44,6 @@ lint:
 
 debug: all
 	./$(EXE) lint
-# 	./$(EXE) -vvv fuzz --exclude-tags=failing
 	./$(EXE) fuzz --exclude-tags=failing #--progress=bar
 
 distclean: clean

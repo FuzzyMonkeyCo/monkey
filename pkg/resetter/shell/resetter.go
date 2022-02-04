@@ -178,7 +178,7 @@ func (s *Resetter) commands() (cmds string, err error) {
 	}
 }
 
-func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cmds string) (err error) {
+func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds string) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
 		return
@@ -239,7 +239,7 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 
 	// NOTE: if piping script to Bash and the script calls exec,
 	// even in a subshell, bash will stop execution.
-	var stdboth bytes.Buffer
+	var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
 	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
 	exe.Stdin = nil
 	exe.Stdout = io.MultiWriter(&stdboth, stdout)
@@ -257,6 +257,12 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 	}
 	go func() {
 		e := exe.Wait()
+		if e == io.ErrShortWrite { // TODO: drop this
+			// Reproduce with `make debug && make debug && ...`
+			// Surely happens on write to STDOUT/STDERR
+			// A mutex for both progress writers does not fix this
+			e = nil
+		}
 		ch <- e
 		log.Println("[ERR] shell script execution error:", e)
 		cancel()
