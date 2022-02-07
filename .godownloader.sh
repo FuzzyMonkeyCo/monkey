@@ -251,7 +251,7 @@ untar() {
       ;;
   esac
 }
-http_download_curl() { # FIXME: once https://github.com/client9/shlib/pull/34 is merged, https://github.com/goreleaser/godownloader/blob/v2/makeshellfn.sh
+http_download_curl() { # TODO: once https://github.com/client9/shlib/pull/34 is merged, https://github.com/goreleaser/godownloader/blob/v2/makeshellfn.sh
   local_file=$1
   source_url=$2
   header=$3

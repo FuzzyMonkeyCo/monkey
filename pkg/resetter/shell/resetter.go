@@ -184,7 +184,9 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds stri
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeoutLong)
+	ctx, cancel := context.WithTimeout(ctx, timeoutLong) // TODO: tune through kwargs
+	// TODO:{start,reset,strop}_file a la Bazel
+	// write files to /tmp once + chmodx + use mentioned shell
 	defer cancel()
 
 	envFile := cwid.EnvFile()

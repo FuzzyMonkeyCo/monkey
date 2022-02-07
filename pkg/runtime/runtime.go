@@ -36,7 +36,7 @@ type Runtime struct {
 	models      map[string]modeler.Interface
 	modelsNames []string
 
-	resetters      map[string]resetter.Interface // FIXME: rename: inits initers zeroers
+	resetters      map[string]resetter.Interface
 	resettersNames []string
 
 	checks      map[string]*check

@@ -17,7 +17,7 @@ func (m *OA3) callerChecks() []namedLambda {
 		{"code < 500", m.checkNot5XX},
 		//TODO: when decoupling modeler/caller move these to modeler
 		{"HTTP code", m.checkHTTPCode},
-		//TODO: check media type matches spec here (Content-Type: application/json)
+		//TODO: check media type matches spec here (Content-Type: application/json) https://pkg.go.dev/net/http#DetectContentType https://github.com/gabriel-vasile/mimetype
 		{"valid JSON response", m.checkValidJSONResponse},
 		{"response validates schema", m.checkValidatesJSONSchema},
 	}

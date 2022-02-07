@@ -100,6 +100,8 @@ message Clt {
         int64 elapsed_ns = 7;  // TODO: finer timings (name lookup, connection, ...)
                                // add http timings similar to
                                // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
+                               // https://pkg.go.dev/net/http/httptrace#ClientTrace
+                               //   http://www.inanzzz.com/index.php/post/pzas/tracing-and-debugging-http-client-requests-within-golang
       }
       oneof output {
         HttpResponse http_response = 1;

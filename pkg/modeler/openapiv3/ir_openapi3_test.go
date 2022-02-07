@@ -35,6 +35,7 @@ func TestMakeXXXFromOA3(t *testing.T) {
 func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 	jsoner := &jsonpb.Marshaler{Indent: "\t"}
 	pattern := filepath.Join("testdata", "specs", "openapi3", "*.*")
+	// TODO pattern := filepath.Join("testdata", "documents", "*.*")
 	matches, err := filepath.Glob(pattern)
 	require.NoError(t, err)
 	require.NotEmpty(t, matches)
