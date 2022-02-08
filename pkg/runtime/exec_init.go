@@ -148,8 +148,9 @@ var starlarkExtendedUniverse = map[string][]string{
 }
 
 const (
-	replPrompt    = ">>> "
-	replPromptSub = "... "
+	replPrompt     = ">>> "
+	replPromptSub  = "... "
+	replPromptFile = "<stdin>"
 )
 
 func newREPLConfig() (*readline.Config, error) {
@@ -160,16 +161,6 @@ func newREPLConfig() (*readline.Config, error) {
 
 	// TODO: completer for methods of types + taylored for Python (not for a CLI)
 	// (use starlarkExtendedUniverse)
-
-	// TODO:
-	// >>> def blop(x):
-	// ...     retur n x
-	// <stdin>:2:12: got identifier, want newline
-	// =>
-	// >>> def blop(x):
-	// ...     retur n x
-	//               ^
-	// got identifier, want newline
 
 	prefixes := make([]readline.PrefixCompleterInterface, 0, len(starlark.Universe))
 	prefixes = append(prefixes, readline.PcItem("assert"))

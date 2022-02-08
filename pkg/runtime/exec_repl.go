@@ -16,6 +16,7 @@ import (
 	"github.com/alecthomas/chroma/v2/lexers"
 	"github.com/alecthomas/chroma/v2/styles"
 	"github.com/chzyer/readline"
+	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 	"go.starlark.net/syntax"
 
@@ -124,7 +125,7 @@ func rep(
 	}
 
 	// parse
-	f, err := syntax.ParseCompoundStmt("<stdin>", readline)
+	f, err := syntax.ParseCompoundStmt(replPromptFile, readline)
 	if err != nil {
 		if eof {
 			return false, io.EOF
@@ -185,6 +186,47 @@ func replPrint(vs string) {
 }
 
 func replError(err error) {
+	w := os.Stderr
+
+	pinner := func(msg string, col int32) bool {
+		// Starlark syntax.Position:
+		//   1-based column (rune) number; 0 if column unknown
+		if col > 0 {
+			if col == 1 {
+				col++
+			}
+			// TODO: place pin at beginning instead of end of token
+			// >>> 11111111111        999999999999999
+			//                                      ^
+			// invalid syntax
+			//=>
+			// >>> 11111111111        999999999999999
+			//                        ^
+			// invalid syntax
+			ws := strings.Repeat(" ", len(replPrompt)+int(col-1)-len("^"))
+			as.ColorERR.Fprintf(w, "%s^\n", ws)
+			as.ColorERR.Fprintln(w, msg)
+			return true
+		}
+		return false
+	}
+
 	err = starTrickError(err)
-	as.ColorERR.Fprintln(os.Stderr, err)
+
+	switch err := err.(type) {
+	case syntax.Error:
+		if pinner(err.Msg, err.Pos.Col) {
+			return
+		}
+	case resolve.Error:
+		if pinner(err.Msg, err.Pos.Col) {
+			return
+		}
+	case resolve.ErrorList:
+		if pinner(err[0].Msg, err[0].Pos.Col) {
+			return
+		}
+	}
+
+	as.ColorERR.Fprintln(w, err)
 }
