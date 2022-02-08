@@ -2,80 +2,10 @@ package runtime
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"os"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
-	"go.starlark.net/resolve"
-	"go.starlark.net/starlark"
 )
-
-func initExec() {
-	resolve.AllowSet = true            // set([]) (no proto representation)
-	resolve.AllowGlobalReassign = true // reassignment to top-level names
-	//> Starlark programs cannot be Turing complete
-	//> unless the -recursion flag is specified.
-	resolve.AllowRecursion = false
-
-	starlark.CompareLimit = 10 // Depth for (Equal|Compare)-ing things
-
-	allow := map[string]struct{}{
-		"abs":       {},
-		"all":       {},
-		"any":       {},
-		"bool":      {},
-		"bytes":     {},
-		"chr":       {},
-		"dict":      {},
-		"dir":       {},
-		"enumerate": {},
-		"False":     {},
-		"float":     {},
-		"getattr":   {},
-		"hasattr":   {},
-		"hash":      {},
-		"int":       {},
-		"len":       {},
-		"list":      {},
-		"max":       {},
-		"min":       {},
-		"None":      {},
-		"ord":       {},
-		"print":     {},
-		"range":     {},
-		"repr":      {},
-		"reversed":  {},
-		"set":       {},
-		"sorted":    {},
-		"str":       {},
-		"True":      {},
-		"tuple":     {},
-		"type":      {},
-		"zip":       {},
-	}
-	deny := map[string]struct{}{
-		"fail": {},
-	}
-	starlarktruth.NewModule(starlark.Universe) // Adds `assert that()`
-	for f := range starlark.Universe {
-		_, allowed := allow[f]
-		_, denied := deny[f]
-		switch {
-		case allowed:
-		case denied:
-			delete(starlark.Universe, f)
-		case f == starlarktruth.Module: // For check tests
-		default:
-			panic(fmt.Sprintf("unexpected builtin %q", f))
-		}
-	}
-}
-
-func loadDisabled(_th *starlark.Thread, _module string) (starlark.StringDict, error) {
-	return nil, errors.New("load() disabled")
-}
 
 // JustExecStart only executes SUT 'start'
 func (rt *Runtime) JustExecStart(ctx context.Context) error {

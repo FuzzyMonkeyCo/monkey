@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/alecthomas/chroma/v2"
 	"github.com/alecthomas/chroma/v2/formatters"
@@ -22,31 +23,32 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 )
 
-var (
-	replPPlexer = chroma.Coalesce(lexers.Get("python"))
-	replPPfmter = formatters.TTY16m
-	replPPstyle = styles.Monokai
-)
-
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
 func (rt *Runtime) JustExecREPL(ctx context.Context) error {
-	fmt.Println("# Welcome to Starlark! See about the language at TODO")
+	fmt.Println("# Welcome to Starlark! Learn about the language at https://FIXME")
+	fmt.Printf("# To express assertions: ")
+	replPrint("assert that(x != 42).is_truthy()")
+	fmt.Printf("#         or better yet: ")
+	replPrint("assert that(x).is_not_equal_to(42)")
 	rt.thread.Name = "REPL"
 	rt.thread.Load = loadDisabled
 	return repl(ctx, rt.thread, rt.globals)
 }
 
 func repl(ctx context.Context, thread *starlark.Thread, globals starlark.StringDict) error {
-	interrupted := make(chan os.Signal, 1)
-	signal.Notify(interrupted, os.Interrupt)
-	defer signal.Stop(interrupted)
-
-	rl, err := readline.New(">>> ")
+	cfg, err := newREPLConfig()
 	if err != nil {
-		replError(err)
+		return err
+	}
+	rl, err := readline.NewEx(cfg)
+	if err != nil {
 		return err
 	}
 	defer rl.Close()
+
+	interrupted := make(chan os.Signal, 1)
+	signal.Notify(interrupted, os.Interrupt)
+	defer signal.Stop(interrupted)
 
 	prevBadExpr := false
 	for {
@@ -67,6 +69,15 @@ func repl(ctx context.Context, thread *starlark.Thread, globals starlark.StringD
 		}
 		prevBadExpr = badExpr
 	}
+}
+
+func filterInput(r rune) (rune, bool) {
+	switch r {
+	// block CtrlZ feature
+	case readline.CharCtrlZ:
+		return r, false
+	}
+	return r, true
 }
 
 // rep reads, evaluates, and prints one item.
@@ -98,11 +109,11 @@ func rep(
 	eof := false
 
 	// readline returns EOF, ErrInterrupted, or a line including "\n".
-	rl.SetPrompt(">>> ")
+	rl.SetPrompt(replPrompt)
 	readline := func() ([]byte, error) {
 		line, err := rl.Readline()
 		line = string(starTrick([]byte(line)))
-		rl.SetPrompt("... ")
+		rl.SetPrompt(replPromptSub)
 		if err != nil {
 			if err == io.EOF {
 				eof = true
@@ -132,14 +143,7 @@ func rep(
 
 		// print
 		if v != starlark.None {
-			it, err := replPPlexer.Tokenise(nil, v.String())
-			if err != nil {
-				panic(err)
-			}
-			if err := replPPfmter.Format(os.Stdout, replPPstyle, it); err != nil {
-				panic(err)
-			}
-			fmt.Println()
+			replPrint(v.String())
 		}
 	} else if err := starlark.ExecREPLChunk(f, thread, globals); err != nil {
 		replError(err)
@@ -156,6 +160,28 @@ func soleExpr(f *syntax.File) syntax.Expr {
 		}
 	}
 	return nil
+}
+
+var (
+	replPPlexer = chroma.Coalesce(lexers.Get("python"))
+	replPPfmter = formatters.TTY16m
+	replPPstyle = styles.Monokai
+)
+
+func replPrint(vs string) {
+	if strings.HasPrefix(vs, "<") { // "<built-in ...
+		fmt.Println(vs)
+		return
+	}
+
+	it, err := replPPlexer.Tokenise(nil, vs)
+	if err != nil {
+		panic(err)
+	}
+	if err := replPPfmter.Format(os.Stdout, replPPstyle, it); err != nil {
+		panic(err)
+	}
+	fmt.Println()
 }
 
 func replError(err error) {

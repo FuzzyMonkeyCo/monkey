@@ -72,3 +72,11 @@ x = lambda y: assert that(42)
 p[42] = lambda q: assert that(42)
 `[1:])
 }
+
+func TestAssertTrickNaked(t *testing.T) {
+	_, err := newFakeMonkey(`assert 42`)
+	require.EqualError(t, err, `fuzzymonkey.star:1:10: got int literal, want newline`)
+
+	_, err = newFakeMonkey(`assert  True`)
+	require.EqualError(t, err, `fuzzymonkey.star:1:13: got identifier, want newline`)
+}

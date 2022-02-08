@@ -59,6 +59,7 @@ test: all
 	./$(EXE) exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
 	./$(EXE) exec repl <<<'assert that("this").is_not_equal_to("that")'
 	./$(EXE) exec repl <<<'x = 1.0; print(str(x)); print(str(int(x)))'
+	! ./$(EXE) exec repl <<<'assert that(42).is_not_equal_to(42)'
 	richgo test -race ./...
 
 ci:
