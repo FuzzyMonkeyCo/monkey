@@ -138,7 +138,10 @@ func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 		return m.headers, nil
 
 	default:
-		return m.attrs[name], nil
+		if v := m.attrs[name]; v != nil {
+			return v, nil
+		}
+		return nil, nil // no such method
 	}
 }
 
@@ -237,7 +240,10 @@ func (m *ctxResponse) Attr(name string) (starlark.Value, error) {
 		return m.headers, nil
 
 	default:
-		return m.attrs[name], nil
+		if v := m.attrs[name]; v != nil {
+			return v, nil
+		}
+		return nil, nil // no such method
 	}
 }
 

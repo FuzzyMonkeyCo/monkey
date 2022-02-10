@@ -33,13 +33,15 @@ func (rt *Runtime) newModule() (m *module) {
 	}
 
 	modelMaker := func(modelerName string, maker modeler.Maker) *starlark.Builtin {
-		b := starlark.NewBuiltin(modelerName, rt.modelMakerBuiltin(modelerName, maker))
+		f := rt.modelMakerBuiltin(modelerName, maker)
+		b := starlark.NewBuiltin(modelerName, f)
 		return b.BindReceiver(m)
 	}
 	m.attrs["openapi3"] = modelMaker(openapi3.Name, openapi3.New)
 
 	resetterMaker := func(resetterName string, maker resetter.Maker) *starlark.Builtin {
-		b := starlark.NewBuiltin(resetterName, rt.resetterMakerBuiltin(resetterName, maker))
+		f := rt.resetterMakerBuiltin(resetterName, maker)
+		b := starlark.NewBuiltin(resetterName, f)
 		return b.BindReceiver(m)
 	}
 	m.attrs["shell"] = resetterMaker(shell.Name, shell.New)
@@ -58,12 +60,18 @@ func (m *module) AttrNames() []string {
 	}
 }
 
-func (m *module) Attr(name string) (starlark.Value, error) { return m.attrs[name], nil }
-func (m *module) String() string                           { return "monkey" }
-func (m *module) Type() string                             { return "monkey" }
-func (m *module) Freeze()                                  {}
-func (m *module) Truth() starlark.Bool                     { return true }
-func (m *module) Hash() (uint32, error)                    { return 0, errors.New("unhashable type: monkey") }
+func (m *module) Attr(name string) (starlark.Value, error) {
+	if v := m.attrs[name]; v != nil {
+		return v, nil
+	}
+	return nil, nil // no such method
+}
+
+func (m *module) String() string        { return "monkey" }
+func (m *module) Type() string          { return "monkey" }
+func (m *module) Freeze()               {}
+func (m *module) Truth() starlark.Bool  { return true }
+func (m *module) Hash() (uint32, error) { return 0, errors.New("unhashable type: monkey") }
 
 type builtin func(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (ret starlark.Value, err error)
 
