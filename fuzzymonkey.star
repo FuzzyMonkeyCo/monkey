@@ -9,7 +9,7 @@ monkey.openapi3(
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
     host = "https://jsonplaceholder.typicode.com",
-    # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
+    # header_authorization = "Bearer {}".format(monkey.env("DEV_API_TOKEN")),
 )
 
 # Note: exec commands are executed in shells sharing the same environment variables,
