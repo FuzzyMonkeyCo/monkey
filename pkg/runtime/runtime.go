@@ -19,10 +19,6 @@ import (
 
 const localCfg = "fuzzymonkey.star"
 
-func init() {
-	initExec()
-}
-
 // Runtime executes commands, resets and checks against the System Under Test
 type Runtime struct {
 	binTitle string
@@ -42,7 +38,7 @@ type Runtime struct {
 	checks      map[string]*check
 	checksNames []string
 
-	client       *fm.ChBiDi
+	client       fm.BiDier
 	selectedEIDs map[string]*fm.Uint32S
 	labels       map[string]string
 	cleanedup    bool
@@ -54,11 +50,7 @@ type Runtime struct {
 
 // NewMonkey parses and optionally pretty-prints configuration
 func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
-	if name == "" {
-		err = errors.New("unnamed NewMonkey")
-		log.Println("[ERR]", err)
-		return
-	}
+	initExec()
 
 	labels := make(map[string]string, len(arglabels))
 	for _, kv := range arglabels {

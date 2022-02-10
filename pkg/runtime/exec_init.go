@@ -62,15 +62,24 @@ func initExec() {
 	deny := map[string]struct{}{
 		"fail": {},
 	}
+
+	// Shortcut if already ran
+	for denied := range deny {
+		if _, ok := starlark.Universe[denied]; !ok {
+			return
+		}
+		break
+	}
+
 	starlarktruth.NewModule(starlark.Universe) // Adds `assert that()`
+
 	for f := range starlark.Universe {
 		_, allowed := allow[f]
 		_, denied := deny[f]
 		switch {
-		case allowed:
+		case allowed || f == starlarktruth.Module:
 		case denied:
 			delete(starlark.Universe, f)
-		case f == starlarktruth.Module: // For check tests
 		default:
 			panic(fmt.Sprintf("unexpected builtin %q", f))
 		}

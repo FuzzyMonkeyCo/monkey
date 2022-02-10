@@ -79,6 +79,7 @@ func (rt *Runtime) Fuzz(
 
 	var result *fm.Srv_FuzzingResult
 	var maxSteps uint64
+	var maxDuration time.Duration
 	suggestedSeed := seed
 	for {
 		log.Printf("[DBG] receiving msg...")
@@ -92,6 +93,7 @@ func (rt *Runtime) Fuzz(
 			if rt.progress == nil {
 				fuzzRep := srv.GetFuzzRep()
 				maxSteps = fuzzRep.GetMaxExecutionStepsPerCheck()
+				maxDuration = time.Duration(fuzzRep.GetMaxExecutionMsPerCheck()) * time.Millisecond
 				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount(), vvv, ptype); err != nil {
 					return
 				}
@@ -118,7 +120,7 @@ func (rt *Runtime) Fuzz(
 			case nil:
 				return
 			case *fm.Srv_Call_:
-				if err = rt.call(ctx, msg.Call, tagsFilter, maxSteps); err != nil {
+				if err = rt.call(ctx, msg.Call, tagsFilter, maxSteps, maxDuration); err != nil {
 					return
 				}
 			case *fm.Srv_Reset_:

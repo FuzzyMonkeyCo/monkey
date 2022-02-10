@@ -742,6 +742,11 @@
                     "id": 4,
                     "name": "max_execution_steps_per_check",
                     "type": "uint64"
+                  },
+                  {
+                    "id": 5,
+                    "name": "max_execution_ms_per_check",
+                    "type": "uint32"
                   }
                 ]
               },

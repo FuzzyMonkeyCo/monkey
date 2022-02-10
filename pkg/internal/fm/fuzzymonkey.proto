@@ -167,6 +167,7 @@ message Srv {
     bytes seed = 2; // Seed in use for the campaign
     string token = 3;
     uint64 max_execution_steps_per_check = 4; // for Starlark SetMaxExecutionSteps
+    uint32 max_execution_ms_per_check = 5;
   }
 
   message Call {

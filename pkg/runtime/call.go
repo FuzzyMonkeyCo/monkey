@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64) error {
+func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64, maxDuration time.Duration) error {
 	showf := func(format string, s ...interface{}) {
 		rt.progress.Printf(format, s...)
 	}
@@ -64,9 +64,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	}
 
 	{
+		print := func(msg string) { rt.progress.Printf("%s", msg) }
 		ctxer1 := ctxer2(output.GetOutput())
 		var passed2 bool
-		if passed2, errT = rt.userChecks(ctx, tagsFilter, ctxer1, maxSteps); errT != nil {
+		if passed2, errT = rt.userChecks(ctx, print, tagsFilter, ctxer1, maxSteps, maxDuration); errT != nil {
 			return errT
 		}
 		if !passed2 {
@@ -171,22 +172,37 @@ func (rt *Runtime) runCallerCheck(
 	}
 }
 
-func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxer1 ctxctor1, maxSteps uint64) (bool, error) {
+func (rt *Runtime) userChecks(
+	ctx context.Context,
+	print func(string),
+	tagsFilter *tags.Filter,
+	ctxer1 ctxctor1,
+	maxSteps uint64,
+	maxDuration time.Duration,
+) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.checks))
 
-	g, _ := errgroup.WithContext(ctx)
-	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
 	// Run all checks concurrently, send their results to vs.
 	// Concurrently, consume and send these one-by-one.
 	// Return early if ctx is canceled.
 
+	ctxG, cancel := context.WithTimeout(ctx, maxDuration)
+	defer cancel()
+
+	g, ctxG := errgroup.WithContext(ctxG)
+	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
+	threads := rt.makeThreads(ctxG)
+
 	passed := true
 	g.Go(func() (errT error) {
-		for range make([]struct{}, len(rt.checks)) {
+		for name := range rt.checks {
+			name := name
 			select {
-			case <-ctx.Done():
-				errT, passed = ctx.Err(), false
-				// TODO: (*starlark.Thread).Cancel(ctx.Err().Error()) for each userCheck
+			case <-ctxG.Done():
+				errT, passed = ctxG.Err(), false
+				if errT != nil {
+					threads[name].Cancel(errT.Error())
+				}
 				return
 			case v := <-vs:
 				if errT = rt.client.Send(ctx, cvp(v)); errT != nil {
@@ -208,10 +224,10 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		return
 	})
 
-	print := func(msg string) { rt.progress.Printf("%s", msg) }
 	_ = rt.forEachCheck(func(name string, chk *check) error {
 		g.Go(func() error {
-			v := rt.runUserCheckWrapper(name, chk, print, tagsFilter, ctxer1, maxSteps)
+			th := threads[name]
+			v := rt.runUserCheckWrapper(name, th, chk, print, tagsFilter, ctxer1, maxSteps)
 			switch v.Status {
 			case fm.Clt_CallVerifProgress_success:
 				rt.progress.CheckPassed(v.Name, chk.afterResponse.String())
@@ -235,6 +251,7 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 
 func (rt *Runtime) runUserCheckWrapper(
 	name string,
+	th *starlark.Thread,
 	chk *check,
 	print func(string),
 	tagsFilter *tags.Filter,
@@ -245,7 +262,7 @@ func (rt *Runtime) runUserCheckWrapper(
 	log.Println("[NFO] checking user property:", v.Name)
 
 	start := time.Now()
-	errL := rt.runUserCheck(v, chk, print, tagsFilter, ctxer1, maxSteps)
+	errL := rt.runUserCheck(v, th, chk, print, tagsFilter, ctxer1, maxSteps)
 	v.ElapsedNs = time.Since(start).Nanoseconds()
 	if errL != nil {
 		v.Reason = []string{fmt.Sprintf("%T", errL)}
@@ -255,8 +272,22 @@ func (rt *Runtime) runUserCheckWrapper(
 	return v
 }
 
+func (rt *Runtime) makeThreads(ctx context.Context) map[string]*starlark.Thread {
+	threads := make(map[string]*starlark.Thread, len(rt.checks))
+	for name := range rt.checks {
+		th := &starlark.Thread{
+			Name: name,
+			Load: loadDisabled,
+		}
+		th.SetLocal("ctx", ctx)
+		threads[name] = th
+	}
+	return threads
+}
+
 func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
+	th *starlark.Thread,
 	chk *check,
 	print func(string),
 	tagsFilter *tags.Filter,
@@ -272,13 +303,9 @@ func (rt *Runtime) runUserCheck(
 	}
 
 	didPrint := false
-	th := &starlark.Thread{
-		Name: v.Name,
-		Load: loadDisabled,
-		Print: func(_ *starlark.Thread, msg string) {
-			didPrint = true
-			print(msg)
-		},
+	th.Print = func(_ *starlark.Thread, msg string) {
+		didPrint = true
+		print(msg)
 	}
 	th.SetMaxExecutionSteps(maxSteps) // Upper bound on computation
 

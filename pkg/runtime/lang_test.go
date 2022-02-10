@@ -1,16 +1,22 @@
 package runtime
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
+
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
+	"go.starlark.net/starlark"
 )
 
 const someOpenAPI3Model = `
@@ -25,10 +31,28 @@ func newFakeMonkey(code string) (*Runtime, error) {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
 	initExec()
+	starlark.Universe["monkeh_sleep"] = starlark.NewBuiltin("monkeh_sleep", monkehSleep)
 
 	localCfgData = []byte(code) // Mocks fuzzymonkey.star contents
 
 	return NewMonkey("monkeh", nil)
+}
+
+func monkehSleep(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var ms starlark.Int
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &ms); err != nil {
+		return nil, err
+	}
+	d, ok := ms.Uint64()
+	if !ok {
+		return nil, fmt.Errorf("not milliseconds: %s", ms.String())
+	}
+	ctx := th.Local("ctx").(context.Context)
+	select {
+	case <-ctx.Done():
+	case <-time.After(time.Duration(d) * time.Millisecond):
+	}
+	return starlark.None, nil
 }
 
 func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVerifProgress {
@@ -38,12 +62,46 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 	tagsFilter, err := tags.NewFilter(false, false, nil, nil)
 	require.NoError(t, err)
 
-	var ctxer1 ctxctor1
+	ctxer1 := ctxer1Maker(t, chkname)
+
+	ctx := context.Background()
+	var th *starlark.Thread
+	for _, th = range rt.makeThreads(ctx) {
+		break
+	}
+
+	print := func(msg string) { t.Logf("PRINT%s", msg) }
+	return rt.runUserCheckWrapper(chkname, th, chk, print, tagsFilter, ctxer1, 1337)
+}
+
+func (rt *Runtime) fakeUserChecks(ctx context.Context, t *testing.T) (bool, error) {
+	tagsFilter, err := tags.NewFilter(false, false, nil, nil)
+	require.NoError(t, err)
+
+	ctxer1 := ctxer1Maker(t, "")
+
+	rt.progress = &ci.Progresser{}
+	rt.client = &fakeClient{}
+
+	print := func(msg string) { t.Logf("PRINT%s", msg) }
+	return rt.userChecks(ctx, print, tagsFilter, ctxer1, 1337, time.Second)
+}
+
+type fakeClient struct{}
+
+func (fc *fakeClient) Close()                                            {}
+func (fc *fakeClient) Send(ctx context.Context, msg *fm.Clt) (err error) { return }
+func (fc *fakeClient) Receive(ctx context.Context) (msg *fm.Srv, err error) {
+	msg = &fm.Srv{FuzzingProgress: &fm.Srv_FuzzingProgress{}}
+	return
+}
+
+func ctxer1Maker(t *testing.T, chkname string) ctxctor1 {
 	switch {
 	case strings.HasPrefix(chkname, "ctx_request_body_frozen"): // NOTE: request does not match model
 		reqbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
 		var reqdecoded types.Value
-		err = jsonpb.UnmarshalString(string(reqbody), &reqdecoded)
+		err := jsonpb.UnmarshalString(string(reqbody), &reqdecoded)
 		require.NoError(t, err)
 		ctxer2 := ctxCurry(&fm.Clt_CallRequestRaw_Input{
 			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
@@ -59,7 +117,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 			},
 		})
 
-		ctxer1 = ctxer2(&fm.Clt_CallResponseRaw_Output{
+		return ctxer2(&fm.Clt_CallResponseRaw_Output{
 			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
 				HttpResponse: &fm.Clt_CallResponseRaw_Output_HttpResponse{
 					StatusCode: 404,
@@ -87,9 +145,9 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 
 		repbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
 		var repdecoded types.Value
-		err = jsonpb.UnmarshalString(string(repbody), &repdecoded)
+		err := jsonpb.UnmarshalString(string(repbody), &repdecoded)
 		require.NoError(t, err)
-		ctxer1 = ctxer2(&fm.Clt_CallResponseRaw_Output{
+		return ctxer2(&fm.Clt_CallResponseRaw_Output{
 			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{
 				HttpResponse: &fm.Clt_CallResponseRaw_Output_HttpResponse{
 					StatusCode: 404,
@@ -114,7 +172,4 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 			},
 		})
 	}
-
-	print := func(msg string) { t.Logf("PRINT%s", msg) }
-	return rt.runUserCheckWrapper(chkname, chk, print, tagsFilter, ctxer1, 1337)
 }
