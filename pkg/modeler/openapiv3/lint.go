@@ -62,8 +62,13 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	doc, err := openapi_v3.ParseDocument(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
+		const topword = "$root."
 		for _, line := range strings.Split(err.Error(), "\n") {
-			es := strings.SplitAfterN(line, "$root.", 2) // TODO: handle line:col
+			if !strings.Contains(line, topword) {
+				fmt.Println(line)
+				continue
+			}
+			es := strings.SplitAfterN(line, topword, 2) // TODO: handle line:col
 			fmt.Println(es[1])
 		}
 		err = errLinting
