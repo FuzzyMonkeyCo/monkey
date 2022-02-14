@@ -20,38 +20,65 @@ func EnvFile() string    { return pwdID + ".env" }
 func LogFile() string    { return pwdID + ".log" }
 func ScriptFile() string { return pwdID + ".script" }
 
-func MakePwdID(name string, offset uint64) (err error) {
+func MakePwdID(name, starfile string, offset uint64) error {
+	fi, err := os.Lstat(starfile)
+	if err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
+		err = fmt.Errorf("is a symlink: %q", starfile)
+		log.Println("[ERR]", err)
+		return err
+	}
+
+	if path.Clean(starfile) != path.Base(starfile) {
+		err = fmt.Errorf("must be in current directory: %q", starfile)
+		log.Println("[ERR]", err)
+		return err
+	}
+
 	cwd, err := os.Getwd()
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
+		return err
 	}
 	realCwd, err := filepath.EvalSymlinks(cwd)
 	if err != nil {
 		log.Println("[ERR]", err)
-		return
+		return err
 	}
 
-	tmp := os.TempDir()
-	if err = os.MkdirAll(tmp, 0700); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
 	h := fnv.New64a()
-	if _, err = h.Write([]byte(realCwd)); err != nil {
+	if _, err := h.Write([]byte(realCwd)); err != nil {
 		log.Println("[ERR]", err)
-		return
+		return err
+	}
+	if _, err := h.Write([]byte("/")); err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+	if _, err := h.Write([]byte(path.Base(starfile))); err != nil {
+		log.Println("[ERR]", err)
+		return err
 	}
 	id := fmt.Sprintf("%d", h.Sum64())
+
+	tmp := os.TempDir()
+	if err := os.MkdirAll(tmp, 0700); err != nil {
+		log.Println("[ERR]", err)
+		return err
+	}
+
 	prefix := path.Join(tmp, "."+name+"_"+id)
 
 	slot, err := findIDSlot(prefix, offset)
 	if err != nil {
-		return
+		return err
 	}
 
 	pwdID = prefix + "_" + slot
-	return
+	return nil
 }
 
 func findIDSlot(prefix string, offset uint64) (slot string, err error) {

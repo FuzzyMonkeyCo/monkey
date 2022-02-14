@@ -23,6 +23,7 @@ type params struct {
 	N                                  uint32        `mapstructure:"--intensity"`
 	Verbosity                          uint8         `mapstructure:"-v"`
 	LogOffset                          uint64        `mapstructure:"--previous"`
+	File                               string        `mapstructure:"--file"`
 	Progress                           string        `mapstructure:"--progress"`
 	ValidateAgainst                    string        `mapstructure:"--validate-against"`
 	Tags                               *string       `mapstructure:"--tags"`
@@ -39,27 +40,37 @@ func usage() (args *params, ret int) {
 	usage := binTitle + `
 
 Usage:
-  ` + B + ` [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
-                     [--tags=TAGS | --exclude-tags=TAGS]
-                     [--no-shrinking]
-                     [--progress=PROGRESS]
-                     [--time-budget-overall=DURATION]
-                     [--only=REGEX]... [--except=REGEX]...
-                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
-                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  ` + B + ` [-vvv] lint [--show-spec]
-  ` + B + ` [-vvv] fmt [-w]
-  ` + B + ` [-vvv] schema [--validate-against=REF]
-  ` + B + ` [-vvv] exec (repl | start | reset | stop)
-  ` + B + ` [-vvv] env [VAR ...]
-  ` + B + `        logs [--previous=N]
-  ` + B + `        pastseed
-  ` + B + ` [-vvv] update
-  ` + B + `        version | --version
-  ` + B + `        help    | --help    | -h
+  ` + B + ` [-vvv] [-f STAR] fuzz [--intensity=N] [--seed=SEED]
+                               [--label=KV]...
+                               [--tags=TAGS | --exclude-tags=TAGS]
+                               [--no-shrinking]
+                               [--progress=PROGRESS]
+                               [--time-budget-overall=DURATION]
+                               [--only=REGEX]... [--except=REGEX]...
+                               [--calls-with-input=SCHEMA]...  [--calls-without-input=SCHEMA]...
+                               [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
+  ` + B + ` [-vvv] [-f STAR] lint [--show-spec]
+  ` + B + ` [-vvv] [-f STAR] fmt [-w]
+  ` + B + ` [-vvv] [-f STAR] schema [--validate-against=REF]
+  ` + B + ` [-vvv] [-f STAR] exec (repl | start | reset | stop)
+  ` + B + ` [-vvv]           env [VAR ...]
+  ` + B + `        [-f STAR] logs [--previous=N]
+  ` + B + `        [-f STAR] pastseed
+  ` + B + ` [-vvv]           update
+  ` + B + `                  version | --version
+  ` + B + `                  help    | --help    | -h
+` +
 
+		// From http://docopt.org/
+		// Note, writing --input ARG (as opposed to --input=ARG) is ambiguous, meaning it is not
+		// possible to tell whether ARG is option's argument or a positional argument. In usage patterns this
+		// will be interpreted as an option with argument only if a description (covered below) for that option
+		// is provided. Otherwise it will be interpreted as an option and separate positional argument.
+
+		`
 Options:
   -v, -vv, -vvv                   Debug verbosity level
+  -f STAR, --file=STAR            Name of the fuzzymonkey.star file
   version                         Show the version string
   update                          Ensures ` + B + ` is the latest version
   --intensity=N                   The higher the more complex the tests [default: 10]
@@ -67,21 +78,22 @@ Options:
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --label=KV                      Labels that can help classification (format: key=value)
   --tags=TAGS                     Only run checks whose tags match at least one of these (comma separated)
+  --exclude-tags=TAGS             Skip running checks whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
   --validate-against=REF          Schema $ref to validate STDIN against
+  --previous=N                    Select logs from Nth previous run [default: 1]
 
 Try:
      export FUZZYMONKEY_API_KEY=fm_42
   ` + B + ` update
-  ` + B + ` exec reset
+  ` + B + ` -f fm.star exec reset
   ` + B + ` fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
   echo '"kitty"' | ` + B + ` schema --validate-against=#/components/schemas/PetKind`
 
-	// https://github.com/docopt/docopt.go/issues/59
 	opts, err := docopt.ParseDoc(usage)
 	if err != nil {
 		// Usage shown: bad args
@@ -117,9 +129,9 @@ Try:
 	if opts["--version"].(bool) {
 		args.Version = true
 	}
-	if args.Fuzz && args.N == 0 {
-		// TODO: upstream docopt doesn't handle [default: 10]
-		args.N = 10
+
+	if args.File == "" {
+		args.File = "fuzzymonkey.star"
 	}
 
 	return

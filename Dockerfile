@@ -26,7 +26,7 @@ RUN \
  && git init \
  && git add -A . \
  && go mod download \
- && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
+ && git --no-pager diff --exit-code
 COPY . .
 
 
@@ -38,7 +38,7 @@ RUN \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
  && make lint \
- && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
+ && git --no-pager diff --exit-code
 
 FROM base AS ci-check--mod
 RUN \
@@ -47,7 +47,7 @@ RUN \
     set -ux \
  && go mod tidy \
  && go mod verify \
- && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
+ && git --no-pager diff --exit-code
 
 FROM base AS ci-check--test
 RUN \
@@ -55,7 +55,7 @@ RUN \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
  && go test -count 10 ./... \
- && git --no-pager diff && [[ 0 -eq $(git --no-pager diff --name-only | wc -l) ]]
+ && git --no-pager diff --exit-code
 
 
 ## Build all platforms/OS

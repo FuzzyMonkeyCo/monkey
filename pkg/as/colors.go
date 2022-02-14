@@ -1,16 +1,14 @@
 package as
 
-import (
-	"github.com/fatih/color"
-)
+import "github.com/fatih/color"
 
 var (
-	// ColorERR TODO
+	// ColorERR colors for errors and fatal messages
 	ColorERR = color.New(color.FgRed)
-	// ColorWRN TODO
+	// ColorWRN colors for warnings and special messages
 	ColorWRN = color.New(color.FgYellow)
-	// ColorNFO TODO
+	// ColorNFO colors for headlines and topical messages
 	ColorNFO = color.New(color.Bold)
-	// ColorOK TODO
+	// ColorOK colors for valid and successful messages
 	ColorOK = color.New(color.FgGreen)
 )

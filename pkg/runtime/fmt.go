@@ -22,7 +22,7 @@ import (
 )
 
 // Format standardizes Starlark codes
-func Format(W bool) error {
+func Format(starfile string, W bool) error {
 	inputType := "default" // generic Starlark files
 	mode := "check"
 	if W {
@@ -32,7 +32,7 @@ func Format(W bool) error {
 	warningsList := warn.AllWarnings // warn.DefaultWarnings
 	log.Println("[DBG] AllWarnings", warn.AllWarnings)
 	log.Println("[DBG] DefaultWarnings", warn.DefaultWarnings)
-	return runFormat(inputType, mode, lint, warningsList)
+	return runFormat(inputType, mode, lint, []string{starfile}, warningsList)
 }
 
 // FmtError contains fmt diagnostics
@@ -49,11 +49,10 @@ func (e FmtError) Error() string {
 	return s.String()
 }
 
-func runFormat(inputType, mode, lint string, warningsList []string) (err error) {
+func runFormat(inputType, mode, lint string, files, warningsList []string) (err error) {
 	tf := &utils.TempFile{}
 	defer tf.Clean()
 
-	files := []string{localCfg}
 	recursively := false
 	if recursively {
 		places := []string{"."}
@@ -141,10 +140,7 @@ func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *ut
 		go func(i int) {
 			for j := i; j < len(files); j += nworker {
 				file := files[j]
-				if file != localCfg { // TODO: allow -f,--file fuzzymonkey.star
-					panic("unhandled")
-				}
-				data, err := localcfgdata()
+				data, err := starfiledata(file)
 				ch[i] <- result{file, data, err}
 			}
 		}(i)
@@ -229,8 +225,8 @@ func fmtFile(inputType, mode, lint, filename string, data []byte, warningsList [
 			return
 		}
 		ndata = starTrickDual(ndata)
-		if localCfgData != nil {
-			localCfgData = ndata
+		if starfileData != nil {
+			starfileData = ndata
 		} else {
 			if err = overwriteFile(filename, bytes.NewReader(ndata)); err != nil {
 				log.Println("[ERR]", err)

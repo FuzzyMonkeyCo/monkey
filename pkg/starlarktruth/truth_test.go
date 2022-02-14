@@ -150,3 +150,14 @@ func TestImpossibleInOrder(t *testing.T) {
 		`that([1,2,3]).in_order()`:   fmt.Errorf(`Invalid assertion .in_order() on value of type list`),
 	})
 }
+
+func TestKwargsForbidden(t *testing.T) {
+	tests := make(map[string]error, len(methods))
+	for _, method := range methods {
+		for m := range method {
+			tests[`that([42]).`+m+`(a="blip", b="blap", c="blop")`] = fmt.Errorf("%s: unexpected keyword arguments", m)
+			break
+		}
+	}
+	testEach(t, tests)
+}

@@ -16,12 +16,12 @@ var rePastseed = regexp.MustCompile(rt.PastSeedMagic + `=([^\s]+)`)
 // Looks in the logs for the youngest seed that triggered a bug
 // Only ever prints best seed on a newline character
 // so it can be used as --seed=$(monkey pastseed)
-func doPastseed() int {
+func doPastseed(starfile string) int {
 	for offset := uint64(1); true; offset++ {
 		var seed string
 		ret := -1
 		func() {
-			if err := cwid.MakePwdID(binName, offset); err != nil {
+			if err := cwid.MakePwdID(binName, starfile, offset); err != nil {
 				ret = code.Failed
 				return
 			}

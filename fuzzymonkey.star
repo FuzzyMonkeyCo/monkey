@@ -110,7 +110,7 @@ monkey.check(
 ## A test that always fails
 
 def this_always_fails(ctx):
-    assert that(None).is_not_none()
+    assert that(ctx).is_none()
 
 monkey.check(
     name = "always_fails",

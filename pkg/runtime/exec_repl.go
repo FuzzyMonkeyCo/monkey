@@ -27,10 +27,15 @@ import (
 // JustExecREPL executes a Starlark Read-Eval-Print Loop
 func (rt *Runtime) JustExecREPL(ctx context.Context) error {
 	fmt.Println("# Welcome to Starlark! Learn about the language at https://FIXME")
-	fmt.Printf("# To express assertions: ")
+
+	fmt.Println(`# To express assertions, use "assert":`)
+	fmt.Printf(strings.Repeat(" ", len(replPrompt)))
 	replPrint("assert that(x != 42).is_truthy()")
-	fmt.Printf("#         or better yet: ")
+
+	fmt.Println("# or better yet, the more expressive:")
+	fmt.Printf(strings.Repeat(" ", len(replPrompt)))
 	replPrint("assert that(x).is_not_equal_to(42)")
+
 	rt.thread.Name = "REPL"
 	rt.thread.Load = loadDisabled
 	return repl(ctx, rt.thread, rt.globals)

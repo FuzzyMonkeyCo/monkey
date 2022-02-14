@@ -17,8 +17,6 @@ import (
 	"go.starlark.net/starlark"
 )
 
-const localCfg = "fuzzymonkey.star"
-
 // Runtime executes commands, resets and checks against the System Under Test
 type Runtime struct {
 	binTitle string
@@ -49,7 +47,7 @@ type Runtime struct {
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
+func NewMonkey(name, starfile string, arglabels []string) (rt *Runtime, err error) {
 	initExec()
 
 	labels := make(map[string]string, len(arglabels))
@@ -73,16 +71,16 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 		}
 	}
 
-	var localCfgContents []byte
-	if localCfgContents, err = localcfgdata(); err != nil {
+	var starfileContents []byte
+	if starfileContents, err = starfiledata(starfile); err != nil {
 		log.Println("[ERR]", err)
-		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
+		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", starfile)
 		return
 	}
 
 	r := &Runtime{
 		binTitle:  name,
-		files:     map[string]string{localCfg: string(localCfgContents)},
+		files:     map[string]string{starfile: string(starfileContents)},
 		models:    make(map[string]modeler.Interface, moduleModelers),
 		resetters: make(map[string]resetter.Interface, moduleResetters),
 		thread: &starlark.Thread{
@@ -96,24 +94,24 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 	}
 	r.globals = starlark.StringDict{"monkey": r.newModule()}
 
-	log.Println("[NFO] loading starlark config from", localCfg)
+	log.Println("[NFO] loading starlark config from", starfile)
 	start := time.Now()
-	if err = r.loadCfg(); err != nil {
+	if err = r.loadCfg(starfile); err != nil {
 		return
 	}
-	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
+	log.Println("[NFO] loaded", starfile, "in", time.Since(start))
 
 	rt = r
 	return
 }
 
-func (rt *Runtime) loadCfg() (err error) {
+func (rt *Runtime) loadCfg(starfile string) (err error) {
 	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
 	for k, v := range rt.globals {
 		log.Printf("[DBG] starlark global %q: %+v", k, v)
 	}
 
-	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, rt.files[localCfg], rt.globals); err != nil {
+	if rt.globals, err = starlark.ExecFile(rt.thread, starfile, rt.files[starfile], rt.globals); err != nil {
 		log.Println("[ERR]", err)
 		err = starTrickError(err)
 		return

@@ -158,7 +158,7 @@ func inOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
 var errDictOrdering = newInvalidAssertion("values of type dict are not ordered")
 
 func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
-	arg1 := args[0] // TODO: what when passed **kwargs?
+	arg1 := args[0]
 	if imActual, ok := t.actual.(starlark.IterableMapping); ok {
 		if imExpected, ok := arg1.(starlark.IterableMapping); ok {
 			tt := newT(newTupleSlice(imActual.Items()))

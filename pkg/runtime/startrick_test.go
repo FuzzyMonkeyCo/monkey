@@ -35,7 +35,7 @@ Error in is_equal_to: Not true that <"this"> is equal to <"that">.`[1:])
 func TestAssertTrick(t *testing.T) {
 	code := `
 def some_check(ctx):
-    assert that("this").is_not_equal_to("that")
+    assert that(ctx).is_not_none()
 
 monkey.check(
     name = "some_check",

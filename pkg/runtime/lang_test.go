@@ -27,15 +27,17 @@ monkey.openapi3(
 )
 `
 
+var starFile = "fuzzymonkey.star"
+
 func newFakeMonkey(code string) (*Runtime, error) {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
 	initExec()
 	starlark.Universe["monkeh_sleep"] = starlark.NewBuiltin("monkeh_sleep", monkehSleep)
 
-	localCfgData = []byte(code) // Mocks fuzzymonkey.star contents
+	starfileData = []byte(code) // Mocks fuzzymonkey.star contents
 
-	return NewMonkey("monkeh", nil)
+	return NewMonkey("monkeh", starFile, nil)
 }
 
 func monkehSleep(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {

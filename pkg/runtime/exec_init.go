@@ -24,6 +24,9 @@ func initExec() {
 	resolve.AllowRecursion = false
 
 	starlark.CompareLimit = 10 // Depth for (Equal|Compare)-ing things
+	if starlarkCompareLimit > 0 {
+		starlark.CompareLimit = starlarkCompareLimit // For tests
+	}
 
 	allow := map[string]struct{}{
 		"abs":       {},

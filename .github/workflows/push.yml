@@ -8,6 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
+    - name: Ensure download script is in the right path
+      run: test -f .godownloader.sh
+
     - uses: docker/setup-qemu-action@v1
     - uses: docker/login-action@v1
       with:

@@ -54,18 +54,18 @@ func actualMain() int {
 	}
 
 	if args.Logs {
-		offset := args.LogOffset
-		if offset == 0 {
-			offset = 1
-		}
-		return doLogs(offset)
+		return doLogs(args.File, args.LogOffset)
 	}
 
 	if args.Pastseed {
-		return doPastseed()
+		return doPastseed(args.File)
 	}
 
-	if err := cwid.MakePwdID(binName, 0); err != nil {
+	if args.Env {
+		return doEnv(args.EnvVars)
+	}
+
+	if err := cwid.MakePwdID(binName, args.File, 0); err != nil {
 		return retryOrReport()
 	}
 	logCatchall, err := os.OpenFile(cwid.LogFile(), os.O_WRONLY|os.O_CREATE, 0640)
@@ -87,12 +87,8 @@ func actualMain() int {
 		return doUpdate()
 	}
 
-	if args.Env {
-		return doEnv(args.EnvVars)
-	}
-
 	if args.Fmt {
-		if err := rt.Format(args.FmtW); err != nil {
+		if err := rt.Format(args.File, args.FmtW); err != nil {
 			if e, ok := err.(rt.FmtError); ok {
 				for i := 0; i < len(e); i += 3 {
 					as.ColorNFO.Printf("%s ", e[i])
@@ -107,7 +103,7 @@ func actualMain() int {
 		return code.OK
 	}
 
-	mrt, err := rt.NewMonkey(binTitle, args.Labels)
+	mrt, err := rt.NewMonkey(binTitle, args.File, args.Labels)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -257,8 +253,8 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 	return logutils.LogLevel(lvl)
 }
 
-func doLogs(offset uint64) int {
-	if err := cwid.MakePwdID(binName, offset); err != nil {
+func doLogs(starfile string, offset uint64) int {
+	if err := cwid.MakePwdID(binName, starfile, offset); err != nil {
 		return retryOrReport()
 	}
 

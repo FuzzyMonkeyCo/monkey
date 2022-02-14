@@ -9,9 +9,9 @@ import (
 func ensureFormattedAs(t *testing.T, pre, post string) {
 	t.Helper()
 
-	localCfgData = []byte(pre + " ") // trigger need for fmt
-	err := Format(true)
+	starfileData = []byte(pre + " ") // trigger need for fmt
+	err := Format("fm.star", true)
 	require.NoError(t, err)
 
-	require.Equal(t, post, string(localCfgData))
+	require.Equal(t, post, string(starfileData))
 }
