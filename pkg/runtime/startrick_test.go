@@ -12,7 +12,7 @@ assert that("this")
 assert    that("that")
 assert	that("too")
 `[1:]
-	_, err := newFakeMonkey(code)
+	_, err := newFakeMonkey(nil, code)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:2:15: in <toplevel>
@@ -23,7 +23,7 @@ assert that("that")
 assert that("too")
 `[1:])
 
-	_, err = newFakeMonkey(`
+	_, err = newFakeMonkey(t, `
 assert that("this").is_equal_to("that")
 `[1:])
 	require.EqualError(t, err, `
@@ -42,7 +42,7 @@ monkey.check(
     after_response = some_check,
 )
 `[1:] + someOpenAPI3Model
-	rt, err := newFakeMonkey(code)
+	rt, err := newFakeMonkey(t, code)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
 
@@ -74,9 +74,9 @@ p[42] = lambda q: assert that(42)
 }
 
 func TestAssertTrickNaked(t *testing.T) {
-	_, err := newFakeMonkey(`assert 42`)
+	_, err := newFakeMonkey(nil, `assert 42`)
 	require.EqualError(t, err, `fuzzymonkey.star:1:10: got int literal, want newline`)
 
-	_, err = newFakeMonkey(`assert  True`)
+	_, err = newFakeMonkey(nil, `assert  True`)
 	require.EqualError(t, err, `fuzzymonkey.star:1:13: got identifier, want newline`)
 }

@@ -10,7 +10,7 @@ func ensureFormattedAs(t *testing.T, pre, post string) {
 	t.Helper()
 
 	starfileData = []byte(pre + " ") // trigger need for fmt
-	err := Format("fm.star", true)
+	err := Format(starFile, true)
 	require.NoError(t, err)
 
 	require.Equal(t, post, string(starfileData))

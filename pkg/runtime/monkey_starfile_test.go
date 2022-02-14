@@ -12,7 +12,7 @@ func TestStarfileCanBeChanged(t *testing.T) {
 	starFile = "fm.star"
 
 	code := someOpenAPI3Model[1:]
-	rt, err := newFakeMonkey(code)
+	rt, err := newFakeMonkey(t, code)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -34,9 +34,7 @@ monkey.check(
 )
 `[1:] + someOpenAPI3Model
 
-	ensureFormattedAs(t, code, code)
-
-	_, err := newFakeMonkey(code)
+	_, err := newFakeMonkey(t, code)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   bla.star:1:13: in <toplevel>

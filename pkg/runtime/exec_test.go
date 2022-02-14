@@ -37,10 +37,10 @@ func TestCompareLimit(t *testing.T) {
 	defer func(prev int) { starlarkCompareLimit = prev }(starlarkCompareLimit)
 	starlarkCompareLimit = 1
 
-	_, err := newFakeMonkey(`
+	_, err := newFakeMonkey(t, `
 x = [[37]]
 assert that(x).is_equal_to(x)
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 
 	require.Equal(t, 1, starlark.CompareLimit)
 

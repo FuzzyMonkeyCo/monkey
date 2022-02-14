@@ -10,9 +10,9 @@ import (
 // generic over resetters
 
 func TestResetterPositionalArgsAreForbidden(t *testing.T) {
-	rt, err := newFakeMonkey(`
-monkey.shell("hi", name="bla")
-`[1:] + someOpenAPI3Model)
+	rt, err := newFakeMonkey(t, `
+monkey.shell("hi", name = "bla")
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -21,12 +21,12 @@ Error in shell: shell(...) does not take positional arguments, only named ones`[
 }
 
 func TestResetterNamesMustBeLegal(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blip blop",
-	provides = ["some_model"],
+    name = "blip blop",
+    provides = ["some_model"],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -35,32 +35,32 @@ Error in shell: only characters from `[1:]+tags.Alphabet+` should be in "blip bl
 }
 
 func TestResetterNamesMustBeUnique(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blip",
-	provides = ["some_model"],
+    name = "blip",
+    provides = ["some_model"],
 )
 monkey.shell(
-	name = "blip",
-	provides = ["some_model"],
+    name = "blip",
+    provides = ["some_model"],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:5:13: in <toplevel>
 Error in shell: a resetter named blip already exists`[1:])
 	require.Nil(t, rt)
 
-	rt, err = newFakeMonkey(`
+	rt, err = newFakeMonkey(t, `
 monkey.shell(
-	name = "blip",
-	provides = ["some_model"],
+    name = "blip",
+    provides = ["some_model"],
 )
 monkey.shell(
-	name = "blop",
-	provides = ["some_model"],
+    name = "blop",
+    provides = ["some_model"],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Len(t, rt.resetters, 2)
 }
@@ -68,12 +68,12 @@ monkey.shell(
 // name
 
 func TestShellNameIsRequired(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
     reset = "true",
-	provides = ["some_model"],
+    provides = ["some_model"],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -82,12 +82,12 @@ Error in shell: shell: missing argument for name`[1:])
 }
 
 func TestShellNameTyping(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
     name = 42.1337,
-	provides = ["some_model"],
+    provides = ["some_model"],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -98,12 +98,13 @@ Error in shell: shell: for parameter "name": got float, want string`[1:])
 // kwargs
 
 func TestShellAdditionalKwardsForbidden(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = ["some_model"],
+    name = "blop",
+    provides = ["some_model"],
     wef = "bla",
-)`[1:])
+)
+`[1:])
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -114,11 +115,11 @@ Error in shell: shell: unexpected keyword argument "wef"`[1:])
 // kwarg: provides
 
 func TestShellProvidesIsRequired(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
+    name = "blop",
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -127,12 +128,12 @@ Error in shell: shell: missing argument for provides`[1:])
 }
 
 func TestShellProvidesTyping(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = [42.1337],
+    name = "blop",
+    provides = [42.1337],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -141,12 +142,12 @@ Error in shell: shell: for parameter "provides": got float, want string`[1:])
 }
 
 func TestShellProvidesNonEmpty(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = [],
+    name = "blop",
+    provides = [],
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -157,12 +158,13 @@ Error in shell: shell: for parameter "provides": must not be empty`[1:])
 // kwarg: file
 
 func TestShellStartTyping(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = ["some_model"],
+    name = "blop",
+    provides = ["some_model"],
     start = 42.1337,
-)`[1:])
+)
+`[1:])
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -173,12 +175,13 @@ Error in shell: shell: for parameter "start": got float, want string`[1:])
 // kwarg: reset
 
 func TestShellResetTyping(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = ["some_model"],
+    name = "blop",
+    provides = ["some_model"],
     reset = 42.1337,
-)`[1:])
+)
+`[1:])
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -189,12 +192,13 @@ Error in shell: shell: for parameter "reset": got float, want string`[1:])
 // kwarg: stop
 
 func TestShellStopTyping(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.shell(
-	name = "blop",
-	provides = ["some_model"],
+    name = "blop",
+    provides = ["some_model"],
     stop = 42.1337,
-)`[1:])
+)
+`[1:])
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>

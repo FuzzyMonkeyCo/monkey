@@ -17,22 +17,56 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/bazelbuild/buildtools/build"
 	"github.com/bazelbuild/buildtools/buildifier/utils"
-	"github.com/bazelbuild/buildtools/warn"
 	"github.com/bazelbuild/buildtools/wspace"
 )
 
+const (
+	fmtModeCheck = iota
+	fmtModeFix
+)
+
+var fmtWarningsList = []string{
+	"build-args-kwargs",
+	"bzl-visibility",
+	"confusing-name",
+	"constant-glob",
+	"deprecated-function",
+	"depset-items",
+	"depset-iteration",
+	"depset-union",
+	"dict-concatenation",
+	"duplicated-name",
+	"function-docstring",
+	"function-docstring-args",
+	"function-docstring-header",
+	"function-docstring-return",
+	"integer-division",
+	"keyword-positional-params",
+	"list-append",
+	"name-conventions",
+	"no-effect",
+	"overly-nested-depset",
+	"positional-args",
+	"print",
+	"redefined-variable",
+	"return-value",
+	"skylark-comment",
+	"skylark-docstring",
+	"string-iteration",
+	"uninitialized",
+	"unnamed-macro",
+	"unreachable",
+	"unsorted-dict-items",
+	"unused-variable",
+}
+
 // Format standardizes Starlark codes
 func Format(starfile string, W bool) error {
-	inputType := "default" // generic Starlark files
-	mode := "check"
+	mode := fmtModeCheck
 	if W {
-		mode = "fix"
+		mode = fmtModeFix
 	}
-	lint := "warn"                   // "off" or "fix"
-	warningsList := warn.AllWarnings // warn.DefaultWarnings
-	log.Println("[DBG] AllWarnings", warn.AllWarnings)
-	log.Println("[DBG] DefaultWarnings", warn.DefaultWarnings)
-	return runFormat(inputType, mode, lint, []string{starfile}, warningsList)
+	return runFormat(mode, starfile)
 }
 
 // FmtError contains fmt diagnostics
@@ -49,12 +83,11 @@ func (e FmtError) Error() string {
 	return s.String()
 }
 
-func runFormat(inputType, mode, lint string, files, warningsList []string) (err error) {
+func runFormat(mode int, files ...string) (err error) {
 	tf := &utils.TempFile{}
 	defer tf.Clean()
 
-	recursively := false
-	if recursively {
+	if recursively := false; recursively {
 		places := []string{"."}
 		if files, err = utils.ExpandDirectories(&places); err != nil {
 			log.Println("[ERR]", err)
@@ -62,7 +95,7 @@ func runFormat(inputType, mode, lint string, files, warningsList []string) (err 
 		}
 	}
 	var diagnostics *utils.Diagnostics
-	if diagnostics, err = fmtFiles(inputType, mode, lint, warningsList, files, tf); err != nil {
+	if diagnostics, err = fmtFiles(mode, files, tf); err != nil {
 		return
 	}
 
@@ -78,8 +111,6 @@ func runFormat(inputType, mode, lint string, files, warningsList []string) (err 
 		for _, w := range f.Warnings {
 			msg := w.Message
 			switch w.Category {
-			case "module-docstring":
-				continue
 			case "function-docstring-args":
 				if strings.HasPrefix(msg, `Argument "ctx" is not documented.`) && strings.Contains(msg, "(ctx):\n") {
 					// Skip warning about our special ctx positional argument
@@ -88,7 +119,7 @@ func runFormat(inputType, mode, lint string, files, warningsList []string) (err 
 			case "name-conventions":
 				msg = strings.ReplaceAll(msg,
 					"be lower_snake_case (for variables), UPPER_SNAKE_CASE (for constants), or UpperCamelCase ending with 'Info' (for providers).",
-					"be lower_snake_case.",
+					"be lower_snake_case (for variables) or UPPER_SNAKE_CASE (for constants).",
 				)
 			}
 			msg = strings.ReplaceAll(msg, "Buildifier", "`fmt`")
@@ -112,7 +143,7 @@ func runFormat(inputType, mode, lint string, files, warningsList []string) (err 
 	return
 }
 
-func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *utils.TempFile) (
+func fmtFiles(mode int, files []string, tf *utils.TempFile) (
 	diags *utils.Diagnostics,
 	err error,
 ) {
@@ -170,7 +201,7 @@ func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *ut
 			errs.WriteString(res.err.Error())
 			continue
 		}
-		fd, e := fmtFile(inputType, mode, lint, file, res.data, warningsList, len(files) > 1, tf)
+		fd, e := fmtFile(mode, file, res.data, len(files) > 1, tf)
 		if fd != nil {
 			fileDiagnostics = append(fileDiagnostics, fd)
 		}
@@ -191,12 +222,12 @@ func fmtFiles(inputType, mode, lint string, warningsList, files []string, tf *ut
 	return
 }
 
-func fmtFile(inputType, mode, lint, filename string, data []byte, warningsList []string, displayFilenames bool, tf *utils.TempFile) (
+func fmtFile(mode int, filename string, data []byte, displayFilenames bool, tf *utils.TempFile) (
 	diags *utils.FileDiagnostics,
 	err error,
 ) {
 	displayFilename := filename
-	parser := utils.GetParser(inputType)
+	parser := utils.GetParser("default" /*generic Starlark files*/)
 
 	var f *build.File
 	if f, err = parser(displayFilename, data); err != nil {
@@ -210,17 +241,17 @@ func fmtFile(inputType, mode, lint, filename string, data []byte, warningsList [
 	}
 
 	verbose := true
-	warnings := utils.Lint(f, lint, &warningsList, verbose)
+	warnings := utils.Lint(f, "warn" /*"off" or "fix"*/, &fmtWarningsList, verbose)
 	diags = utils.NewFileDiagnostics(f.DisplayPath(), warnings)
 
 	ndata := build.Format(f)
 	switch mode {
-	case "check":
+	case fmtModeCheck:
 		if !bytes.Equal(data, ndata) {
 			diags.Formatted = false
 			return
 		}
-	case "fix":
+	case fmtModeFix:
 		if bytes.Equal(data, ndata) {
 			return
 		}

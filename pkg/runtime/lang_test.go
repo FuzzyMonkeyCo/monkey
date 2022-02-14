@@ -29,13 +29,17 @@ monkey.openapi3(
 
 var starFile = "fuzzymonkey.star"
 
-func newFakeMonkey(code string) (*Runtime, error) {
+func newFakeMonkey(t *testing.T, code string) (*Runtime, error) {
 	log.SetFlags(log.Lshortfile | log.Lmicroseconds | log.LUTC)
 
 	initExec()
 	starlark.Universe["monkeh_sleep"] = starlark.NewBuiltin("monkeh_sleep", monkehSleep)
 
 	starfileData = []byte(code) // Mocks fuzzymonkey.star contents
+
+	if t != nil {
+		ensureFormattedAs(t, code, code)
+	}
 
 	return NewMonkey("monkeh", starFile, nil)
 }

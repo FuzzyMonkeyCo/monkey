@@ -9,12 +9,12 @@ import (
 )
 
 func TestCheckCancellationLongtime(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.check(
-	name = "takes_a_very_long_time",
-	after_response = lambda ctx: monkeh_sleep(10),
+    name = "takes_a_very_long_time",
+    after_response = lambda ctx: monkeh_sleep(10),
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
 
@@ -29,12 +29,12 @@ monkey.check(
 }
 
 func TestCheckCancellationLongtimeOut(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.check(
-	name = "takes_a_very_long_time",
-	after_response = lambda ctx: monkeh_sleep(10),
+    name = "takes_a_very_long_time",
+    after_response = lambda ctx: monkeh_sleep(10),
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 1)
 
@@ -51,16 +51,16 @@ monkey.check(
 }
 
 func TestCheckCancellationRunsAllChecksToCompletion(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.check(
-	name = "always_fails",
-	after_response = lambda ctx: assert that(42).is_none(),
+    name = "always_fails",
+    after_response = lambda ctx: assert that(42).is_none(),
 )
 monkey.check(
-	name = "takes_a_very_long_time",
-	after_response = lambda ctx: monkeh_sleep(10),
+    name = "takes_a_very_long_time",
+    after_response = lambda ctx: monkeh_sleep(10),
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 2)
 
@@ -75,16 +75,16 @@ monkey.check(
 }
 
 func TestCheckCancellationToCompletionButWithinTimeout(t *testing.T) {
-	rt, err := newFakeMonkey(`
+	rt, err := newFakeMonkey(t, `
 monkey.check(
-	name = "always_fails",
-	after_response = lambda ctx: assert that(42).is_none(),
+    name = "always_fails",
+    after_response = lambda ctx: assert that(42).is_none(),
 )
 monkey.check(
-	name = "takes_a_very_long_time",
-	after_response = lambda ctx: monkeh_sleep(10),
+    name = "takes_a_very_long_time",
+    after_response = lambda ctx: monkeh_sleep(10),
 )
-`[1:] + someOpenAPI3Model)
+`[1:]+someOpenAPI3Model)
 	require.NoError(t, err)
 	require.Len(t, rt.checks, 2)
 
