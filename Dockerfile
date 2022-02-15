@@ -50,11 +50,13 @@ RUN \
  && git --no-pager diff --exit-code
 
 FROM base AS ci-check--test
+ENV TESTPWDID=1
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && TESTPWDID=1 go test -count 10 ./... \
+ && go test ./... \
+ && go test -count 10 ./... \
  && git --no-pager diff --exit-code
 
 
