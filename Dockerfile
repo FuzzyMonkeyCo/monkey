@@ -54,7 +54,7 @@ RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
     set -ux \
- && go test -count 10 ./... \
+ && TESTPWDID=1 go test -count 10 ./... \
  && git --no-pager diff --exit-code
 
 

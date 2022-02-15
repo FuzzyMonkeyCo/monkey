@@ -18,6 +18,10 @@ func filesContain(t *testing.T, pattern string) {
 }
 
 func TestPwdID(t *testing.T) {
+	if os.Getenv("TESTPWDID") != "1" {
+		t.Skipf("Run these tests under docker buildx")
+	}
+
 	err := copyFile("../../fuzzymonkey.star", "fuzzymonkey.star")
 	require.NoError(t, err)
 	defer os.Remove("fuzzymonkey.star")
@@ -30,7 +34,7 @@ func TestPwdID(t *testing.T) {
 	err = MakePwdID(name, starfile, offset)
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
-	filesContain(t, "_17092025516095318994_")
+	filesContain(t, "_12404825836092798244_")
 	filesContain(t, "_00000000000000000001.")
 
 	// PwdID changes with offset
@@ -46,7 +50,7 @@ func TestPwdID(t *testing.T) {
 		err = MakePwdID(name, starfile, 1)
 		require.NoError(t, err)
 		filesContain(t, ".monkeh_")
-		filesContain(t, "_17092025516095318994_")
+		filesContain(t, "_12404825836092798244_")
 		filesContain(t, "_00000000000000000002.")
 
 	}(LogFile())
@@ -57,7 +61,7 @@ func TestPwdID(t *testing.T) {
 	err = MakePwdID(name, "README.md", offset)
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
-	filesContain(t, "_17631375736208244672_")
+	filesContain(t, "_2078280350767222314_")
 	filesContain(t, "_00000000000000000001.")
 
 	// No symlinks allowed
