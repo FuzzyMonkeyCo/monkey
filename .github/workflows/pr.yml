@@ -35,6 +35,7 @@ jobs:
         - ci-check--lint
         - ci-check--mod
         - ci-check--test
+        - ci-check--protolock
     steps:
     - name: Set lowercase image name
       run: echo IMAGE=ghcr.io/${SLUG,,} >>$GITHUB_ENV

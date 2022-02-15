@@ -11,6 +11,7 @@ group "ci-checks" {
     "ci-check--lint",
     "ci-check--mod",
     "ci-check--test",
+    "ci-check--protolock",
   ]
 }
 
@@ -56,4 +57,22 @@ target "ci-check--test" {
   target = "ci-check--test"
   cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--test"]
   # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--test,mode=max"]
+}
+
+target "ci-check--protolock" {
+  inherits = ["dockerfile"]
+  target = "ci-check--protolock"
+  cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock"]
+  # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock,mode=max"]
+}
+
+target "ci-check--protolock-force" {
+  inherits = ["dockerfile"]
+  target = "ci-check--protolock"
+  args = {
+    "FORCE" = "1"
+  }
+  output = ["./pkg/internal/fm/"]
+  cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock"]
+  # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock,mode=max"]
 }

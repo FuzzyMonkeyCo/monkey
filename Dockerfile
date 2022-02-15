@@ -4,6 +4,7 @@
 ARG PREBUILT
 
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:21a3deaa0d32a8057914f36584b5288d2e5ecc984380bc0118285c70fa8c9300 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/nilslice/protolock@sha256:baf9bca8b7a28b945c557f36d562a34cf7ca85a63f6ba8cdadbe333e12ccea51 AS protolock
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:202577e3d05c717171c79be926e7b8ba97aac4c7c0bb3fc0fe5a112508b2651c AS goreleaser
 # On this image:
 #  go env GOCACHE    => /root/.cache/go-build
@@ -59,6 +60,27 @@ RUN \
  && go test -count 10 ./... \
  && git --no-pager diff --exit-code
 
+FROM alpine AS ci-check--protolock-
+WORKDIR /app
+RUN \
+  --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
+    set -ux \
+ && apk add git
+COPY pkg/internal/fm/proto.lock .
+COPY pkg/internal/fm/*.proto .
+ARG FORCE
+RUN \
+  --mount=from=protolock,source=/usr/bin/protolock,target=/usr/bin/protolock \
+    set -ux \
+ && if [ -n "${FORCE:-}" ]; then \
+      /usr/bin/protolock commit --force && exit ; \
+    fi \
+ && git init \
+ && git add -A . \
+ && /usr/bin/protolock commit \
+ && git --no-pager diff --exit-code
+FROM scratch AS ci-check--protolock
+COPY --from=ci-check--protolock- /app/proto.lock /
 
 ## Build all platforms/OS
 
