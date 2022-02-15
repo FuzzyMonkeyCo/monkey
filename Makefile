@@ -39,6 +39,7 @@ pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 lint:
 	go fmt ./...
 	./golint.sh
+	! git grep -F log. pkg/cwid/
 	go vet ./...
 
 debug: all

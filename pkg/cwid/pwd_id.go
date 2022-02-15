@@ -3,7 +3,6 @@ package cwid
 import (
 	"fmt"
 	"hash/fnv"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,77 +15,72 @@ const pwdIDDigits = 20
 
 var pwdID string
 
-func EnvFile() string    { return pwdID + ".env" }
-func LogFile() string    { return pwdID + ".log" }
+// EnvFile points to a usable regular file after a call to MakePwdID()
+func EnvFile() string { return pwdID + ".env" }
+
+// LogFile points to a usable regular file after a call to MakePwdID()
+func LogFile() string { return pwdID + ".log" }
+
+// ScriptFile points to a usable regular file after a call to MakePwdID()
 func ScriptFile() string { return pwdID + ".script" }
 
-func MakePwdID(name, starfile string, offset uint64) error {
-	fi, err := os.Lstat(starfile)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return err
+// MakePwdID looks for a usable temporary path for var run logfiles
+func MakePwdID(name, starfile string, offset uint64) (err error) {
+	var fi os.FileInfo
+	if fi, err = os.Lstat(starfile); err != nil {
+		return
 	}
 	if fi.Mode()&os.ModeSymlink == os.ModeSymlink {
 		err = fmt.Errorf("is a symlink: %q", starfile)
-		log.Println("[ERR]", err)
-		return err
+		return
 	}
 
 	if path.Clean(starfile) != path.Base(starfile) {
 		err = fmt.Errorf("must be in current directory: %q", starfile)
-		log.Println("[ERR]", err)
-		return err
+		return
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Println("[ERR]", err)
-		return err
+	var cwd string
+	if cwd, err = os.Getwd(); err != nil {
+		return
 	}
-	realCwd, err := filepath.EvalSymlinks(cwd)
-	if err != nil {
-		log.Println("[ERR]", err)
-		return err
+	if cwd, err = filepath.EvalSymlinks(cwd); err != nil {
+		return
 	}
 
 	h := fnv.New64a()
-	if _, err := h.Write([]byte(realCwd)); err != nil {
-		log.Println("[ERR]", err)
-		return err
+	if _, err = h.Write([]byte(cwd)); err != nil {
+		return
 	}
-	if _, err := h.Write([]byte("/")); err != nil {
-		log.Println("[ERR]", err)
-		return err
+	if _, err = h.Write([]byte("/")); err != nil {
+		return
 	}
-	if _, err := h.Write([]byte(path.Base(starfile))); err != nil {
-		log.Println("[ERR]", err)
-		return err
+	if _, err = h.Write([]byte(path.Base(starfile))); err != nil {
+		return
 	}
 	id := fmt.Sprintf("%d", h.Sum64())
 
 	tmp := os.TempDir()
-	if err := os.MkdirAll(tmp, 0700); err != nil {
-		log.Println("[ERR]", err)
-		return err
+	if err = os.MkdirAll(tmp, 0700); err != nil {
+		return
 	}
 
 	prefix := path.Join(tmp, "."+name+"_"+id)
 
-	slot, err := findIDSlot(prefix, offset)
-	if err != nil {
-		return err
+	var slot string
+	if slot, err = findIDSlot(prefix, offset); err != nil {
+		return
 	}
 
 	pwdID = prefix + "_" + slot
-	return nil
+	return
 }
 
 func findIDSlot(prefix string, offset uint64) (slot string, err error) {
 	prefixPattern := prefix + "_"
 	pattern := prefixPattern + strings.Repeat("?", pwdIDDigits) + ".*"
-	paths, err := filepath.Glob(pattern)
-	if err != nil {
-		log.Println("[ERR]", err)
+	var paths []string
+	if paths, err = filepath.Glob(pattern); err != nil {
 		return
 	}
 
@@ -102,9 +96,8 @@ func findIDSlot(prefix string, offset uint64) (slot string, err error) {
 	sort.Strings(nums)
 
 	biggest := nums[len(nums)-1]
-	big, err := strconv.ParseUint(biggest, 10, 32)
-	if err != nil {
-		log.Println("[ERR]", err)
+	var big uint64
+	if big, err = strconv.ParseUint(biggest, 10, 32); err != nil {
 		return
 	}
 

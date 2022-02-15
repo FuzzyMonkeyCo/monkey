@@ -66,7 +66,8 @@ func actualMain() int {
 	}
 
 	if err := cwid.MakePwdID(binName, args.File, 0); err != nil {
-		return retryOrReport()
+		as.ColorERR.Println(err) // Print as LogFile isn't set up yet
+		return code.Failed
 	}
 	logCatchall, err := os.OpenFile(cwid.LogFile(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
@@ -255,7 +256,8 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 
 func doLogs(starfile string, offset uint64) int {
 	if err := cwid.MakePwdID(binName, starfile, offset); err != nil {
-		return retryOrReport()
+		as.ColorERR.Println(err) // Print as LogFile isn't set up yet
+		return code.Failed
 	}
 
 	fn := cwid.LogFile()

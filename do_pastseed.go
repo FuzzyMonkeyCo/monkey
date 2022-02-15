@@ -22,6 +22,7 @@ func doPastseed(starfile string) int {
 		ret := -1
 		func() {
 			if err := cwid.MakePwdID(binName, starfile, offset); err != nil {
+				// Fails silently
 				ret = code.Failed
 				return
 			}
