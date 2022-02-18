@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
@@ -131,6 +132,12 @@ Try:
 	}
 
 	if args.File == "" {
+		for _, arg := range os.Args {
+			if arg == "--file" || arg == "-f" {
+				as.ColorERR.Println("Given argument --file is missing STAR path parameter")
+				return nil, code.Failed
+			}
+		}
 		args.File = "fuzzymonkey.star"
 	}
 
