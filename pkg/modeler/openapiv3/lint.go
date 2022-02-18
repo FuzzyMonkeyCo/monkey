@@ -11,6 +11,8 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	openapi_v3 "github.com/google/gnostic/openapiv3"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
 var errLinting = func() error {
@@ -25,8 +27,14 @@ func (m *OA3) Lint(ctx context.Context, showSpec bool) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
+	log.Printf("[NFO] read %dB", len(blob))
 
-	log.Printf("[NFO] reading info in %dB", len(blob))
+	if err = modeler.FindControlCharacters(string(blob)); err != nil {
+		log.Println("[ERR]", err)
+		fmt.Println(err.Error())
+		err = errLinting
+	}
+
 	if err = validateAndPretty(m.File, blob, showSpec); err != nil {
 		return
 	}
