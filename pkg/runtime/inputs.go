@@ -33,15 +33,15 @@ func (rt *Runtime) ValidateAgainstSchema(absRef string, data []byte) (err error)
 	err = rt.forEachModel(func(name string, mdl modeler.Interface) error {
 		err := mdl.ValidateAgainstSchema(absRef, data)
 		// TODO: support >1 models (MAY validate against schema of wrong mdl)
-		if err == modeler.ErrNoSuchRef {
+		if _, ok := err.(*modeler.NoSuchRefError); ok {
 			count++
 			err = nil
 		}
 		return err
 	})
 
-	if count == len(rt.selectedEIDs) {
-		err = modeler.ErrNoSuchRef
+	if count == len(rt.modelsNames) {
+		err = modeler.NewNoSuchRefError(absRef)
 	}
 	return
 }

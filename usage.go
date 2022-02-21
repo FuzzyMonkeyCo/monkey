@@ -85,7 +85,7 @@ Options:
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
-  --validate-against=REF          Schema $ref to validate STDIN against
+  --validate-against=REF          Validate STDIN payload against given schema $ref
   --previous=N                    Select logs from Nth previous run [default: 1]
 
 Try:

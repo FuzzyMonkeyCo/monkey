@@ -252,6 +252,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
+	// TODO: stricter/smaller timeouts https://pkg.go.dev/github.com/asecurityteam/transport#Option
 	t := &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
 			// TODO: snap the envs that ProxyFromEnvironment reads

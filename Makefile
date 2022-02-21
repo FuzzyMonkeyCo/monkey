@@ -56,6 +56,7 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
+	echo 42 | ./$(EXE) schema --validate-against=#/components/schemas/PostId
 	./$(EXE) exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
 	./$(EXE) exec repl <<<'assert that("this").is_not_equal_to("that")'
 	./$(EXE) exec repl <<<'x = 1.0; print(str(x)); print(str(int(x)))'

@@ -13,7 +13,6 @@ import (
 var (
 	ErrUnparsablePayload = errors.New("unparsable piped payload")
 	ErrNoSuchSchema      = errors.New("no such schema")
-	ErrNoSuchRef         = errors.New("no such ref")
 )
 
 // Maker types the New func that instanciates new models

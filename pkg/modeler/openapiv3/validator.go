@@ -610,7 +610,8 @@ func (vald *validator) writeAbsoluteReferences(w io.Writer) {
 
 func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
-		err = modeler.ErrNoSuchRef
+		err = modeler.NewNoSuchRefError(absRef)
+		log.Println("[ERR]", err)
 		return
 	}
 
@@ -621,7 +622,7 @@ func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err er
 	}
 
 	// TODO: Compile errs on bad refs only, MUST do this step in `lint`
-	log.Println("[NFO] compiling schema refs")
+	log.Printf("[NFO] compiling schema ref %q", absRef)
 	schema, err := vald.Refd.Compile(
 		gojsonschema.NewGoLoader(schemaJSON{"$ref": absRef}))
 	if err != nil {
@@ -642,6 +643,7 @@ func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err er
 		as.ColorERR.Println(e)
 	}
 	if len(errs) > 0 {
+		log.Println("[ERR]", err)
 		err = modeler.ErrUnparsablePayload
 	}
 	return
