@@ -149,7 +149,7 @@ func actualMain() int {
 		case args.Repl:
 			fn = mrt.JustExecREPL
 		}
-		if err := fn(context.Background()); err != nil {
+		if err := fn(ctx); err != nil {
 			if e := err.Error(); e != "" {
 				as.ColorERR.Println(e)
 			}
