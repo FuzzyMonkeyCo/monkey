@@ -51,11 +51,10 @@ func TestContainsExactlyEmptyContainer(t *testing.T) {
 		return `that(` + x + `).contains_exactly(3)`
 	}
 	testEach(t, map[string]error{
-		s(`()`): fail(`()`, `contains exactly <(3,)>. It is missing <3>`),
-		s(`[]`): fail(`[]`, `contains exactly <(3,)>. It is missing <3>`),
-		s(`{}`): errMustBeEqualNumberOfKVPairs(1),
-		s(`""`): fail(`""`, `contains exactly <(3,)>. It is missing <3>`),
-		//FIXME: Not true that <''> contains exactly <(3,)>. It is missing <[3]>. warnContainsExactlySingleIterable
+		s(`()`):      fail(`()`, `contains exactly <(3,)>. It is missing <3>`),
+		s(`[]`):      fail(`[]`, `contains exactly <(3,)>. It is missing <3>`),
+		s(`{}`):      errMustBeEqualNumberOfKVPairs(1),
+		s(`""`):      fail(`""`, `contains exactly <(3,)>. It is missing <3>`),
 		s(`set([])`): fail(`set([])`, `contains exactly <(3,)>. It is missing <3>`),
 	})
 }
@@ -140,9 +139,9 @@ func TestContainsExactlyItemsIn(t *testing.T) {
 
 		s(`{}`) + `.in_order()`: fail(ss, `is empty`),
 
-		s(`{4: "four", 2: "two"}`) + `.in_order()`: newInvalidAssertion("values of type dict are not ordered"),
+		s(`{4: "four", 2: "two"}`) + `.in_order()`: errDictOrdering,
 		// Starlark's dict is not ordered (uses insertion order)
-		s(`{2: "two", 4: "four"}`) + `.in_order()`: newInvalidAssertion("values of type dict are not ordered"),
+		s(`{2: "two", 4: "four"}`) + `.in_order()`: errDictOrdering,
 
 		s(`{2: "two"}`): fail(ss,
 			`contains exactly <((2, "two"),)>. It has unexpected items <(4, "four")>`,

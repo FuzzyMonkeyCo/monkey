@@ -155,7 +155,7 @@ func inOrder(t *T, args ...starlark.Value) (starlark.Value, error) {
 	return starlark.None, nil
 }
 
-var errDictOrdering = newInvalidAssertion("values of type dict are not ordered")
+var errDictOrdering = newInvalidAssertion("values of type dict are not considered ordered")
 
 func containsExactlyItemsIn(t *T, args ...starlark.Value) (starlark.Value, error) {
 	arg1 := args[0]
