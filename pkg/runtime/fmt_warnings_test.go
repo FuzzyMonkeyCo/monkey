@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"sort"
 	"testing"
 
 	"github.com/bazelbuild/buildtools/warn"
@@ -13,7 +12,7 @@ import (
 func TestFmtWarnings(t *testing.T) {
 	require.Subset(t, warn.AllWarnings, warn.DefaultWarnings)
 	require.Subset(t, warn.AllWarnings, fmtWarningsList)
-	isOrdered(t, fmtWarningsList)
+	require.IsIncreasing(t, fmtWarningsList)
 
 	deny := []string{
 		"attr-cfg",
@@ -46,7 +45,7 @@ func TestFmtWarnings(t *testing.T) {
 		"same-origin-load",
 	}
 	require.Subset(t, warn.AllWarnings, deny)
-	isOrdered(t, deny)
+	require.IsIncreasing(t, deny)
 
 	for _, w := range warn.AllWarnings {
 		for _, d := range deny {
@@ -56,11 +55,4 @@ func TestFmtWarnings(t *testing.T) {
 			}
 		}
 	}
-}
-
-func isOrdered(t *testing.T, xs []string) {
-	t.Helper()
-	ys := append(xs[:0:0], xs...)
-	sort.Strings(ys)
-	require.Equal(t, ys, xs)
 }
