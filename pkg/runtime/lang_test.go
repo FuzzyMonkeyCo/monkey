@@ -61,6 +61,10 @@ func monkehSleep(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, 
 	return starlark.None, nil
 }
 
+func checkPrint(t *testing.T) func(string) {
+	return func(msg string) { t.Logf("PRINT%s", msg) }
+}
+
 func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVerifProgress {
 	chk, ok := rt.checks[chkname]
 	require.True(t, ok)
@@ -76,8 +80,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 		break
 	}
 
-	print := func(msg string) { t.Logf("PRINT%s", msg) }
-	return rt.runUserCheckWrapper(chkname, th, chk, print, tagsFilter, ctxer1, 1337)
+	return rt.runUserCheckWrapper(chkname, th, chk, checkPrint(t), tagsFilter, ctxer1, 1337)
 }
 
 func (rt *Runtime) fakeUserChecks(ctx context.Context, t *testing.T) (bool, error) {
@@ -89,8 +92,7 @@ func (rt *Runtime) fakeUserChecks(ctx context.Context, t *testing.T) (bool, erro
 	rt.progress = &ci.Progresser{}
 	rt.client = &fakeClient{}
 
-	print := func(msg string) { t.Logf("PRINT%s", msg) }
-	return rt.userChecks(ctx, print, tagsFilter, ctxer1, 1337, time.Second)
+	return rt.userChecks(ctx, checkPrint(t), tagsFilter, ctxer1, 1337, time.Second)
 }
 
 type fakeClient struct{}
