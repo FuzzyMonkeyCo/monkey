@@ -24,7 +24,7 @@ func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
 	); err != nil {
 		return nil, err
 	}
-	m := &OA3{name: name.GoString()}
+	m := &oa3{name: name.GoString()}
 	m.pb = &fm.Clt_Fuzz_Model_OpenAPIv3{
 		File:                file.GoString(),
 		Host:                host.GoString(),
@@ -33,10 +33,10 @@ func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
 	return m, nil
 }
 
-var _ modeler.Interface = (*OA3)(nil) // TODO: *oa3
+var _ modeler.Interface = (*oa3)(nil)
 
-// OA3 implements a modeler.Interface for use by `monkey`.
-type OA3 struct {
+// oa3 implements a modeler.Interface for use by `monkey`.
+type oa3 struct {
 	name string
 
 	pb *fm.Clt_Fuzz_Model_OpenAPIv3
@@ -47,10 +47,10 @@ type OA3 struct {
 }
 
 // Name uniquely identifies this instance
-func (m *OA3) Name() string { return m.name }
+func (m *oa3) Name() string { return m.name }
 
 // ToProto marshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
-func (m *OA3) ToProto() *fm.Clt_Fuzz_Model {
+func (m *oa3) ToProto() *fm.Clt_Fuzz_Model {
 	m.pb.Spec = m.vald.Spec
 	return &fm.Clt_Fuzz_Model{
 		Name:  m.name,
@@ -59,25 +59,25 @@ func (m *OA3) ToProto() *fm.Clt_Fuzz_Model {
 }
 
 // InputsCount sums the amount of named schemas or types APIs define
-func (m *OA3) InputsCount() int {
+func (m *oa3) InputsCount() int {
 	return m.vald.inputsCount()
 }
 
 // FilterEndpoints restricts which API endpoints are considered
-func (m *OA3) FilterEndpoints(args []string) ([]eid, error) {
+func (m *oa3) FilterEndpoints(args []string) ([]eid, error) {
 	return m.vald.filterEndpoints(args)
 }
 
-func (m *OA3) Validate(SID sid, data *structpb.Value) []string {
+func (m *oa3) Validate(SID sid, data *structpb.Value) []string {
 	return m.vald.Validate(SID, data)
 }
 
 // ValidateAgainstSchema tries to smash the data through the given keyhole
-func (m *OA3) ValidateAgainstSchema(absRef string, data []byte) error {
+func (m *oa3) ValidateAgainstSchema(absRef string, data []byte) error {
 	return m.vald.validateAgainstSchema(absRef, data)
 }
 
 // WriteAbsoluteReferences pretty-prints the API's named types
-func (m *OA3) WriteAbsoluteReferences(w io.Writer) {
+func (m *oa3) WriteAbsoluteReferences(w io.Writer) {
 	m.vald.writeAbsoluteReferences(w)
 }

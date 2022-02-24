@@ -11,7 +11,7 @@ type namedLambda struct {
 	lambda modeler.CheckerFunc
 }
 
-func (m *OA3) callerChecks() []namedLambda {
+func (m *oa3) callerChecks() []namedLambda {
 	return []namedLambda{
 		{"connection to server", m.checkConn},
 		{"code < 500", m.checkNot5XX},
@@ -23,7 +23,7 @@ func (m *OA3) callerChecks() []namedLambda {
 	}
 }
 
-func (m *OA3) checkConn() (s, skipped string, f []string) {
+func (m *oa3) checkConn() (s, skipped string, f []string) {
 	if err := m.tcap.doErr; err != nil {
 		f = append(f, "communication with server could not be established")
 		f = append(f, err.Error())
@@ -33,7 +33,7 @@ func (m *OA3) checkConn() (s, skipped string, f []string) {
 	return
 }
 
-func (m *OA3) checkNot5XX() (s, skipped string, f []string) {
+func (m *oa3) checkNot5XX() (s, skipped string, f []string) {
 	if code := m.tcap.repProto.StatusCode; code >= 500 {
 		f = append(f, fmt.Sprintf("server error: '%d'", code))
 		return
@@ -42,7 +42,7 @@ func (m *OA3) checkNot5XX() (s, skipped string, f []string) {
 	return
 }
 
-func (m *OA3) checkHTTPCode() (s, skipped string, f []string) {
+func (m *oa3) checkHTTPCode() (s, skipped string, f []string) {
 	if m.tcap.matchedHTTPCode {
 		s = "HTTP code checked"
 	} else {
@@ -52,7 +52,7 @@ func (m *OA3) checkHTTPCode() (s, skipped string, f []string) {
 	return
 }
 
-func (m *OA3) checkValidJSONResponse() (s, skipped string, f []string) {
+func (m *oa3) checkValidJSONResponse() (s, skipped string, f []string) {
 	if len(m.tcap.repProto.Body) == 0 {
 		skipped = "response body is empty"
 		return
@@ -67,7 +67,7 @@ func (m *OA3) checkValidJSONResponse() (s, skipped string, f []string) {
 	return
 }
 
-func (m *OA3) checkValidatesJSONSchema() (s, skipped string, f []string) {
+func (m *oa3) checkValidatesJSONSchema() (s, skipped string, f []string) {
 	if m.tcap.matchedSID == 0 {
 		skipped = "no JSON Schema specified for response"
 		return
