@@ -10,6 +10,11 @@
 monkey M.m.p go1.17.5 linux amd64
 
 Usage:
+  monkey [-vvv]           env [VAR ...]
+  monkey [-vvv] [-f STAR] fmt [-w]
+  monkey [-vvv] [-f STAR] lint [--show-spec]
+  monkey [-vvv] [-f STAR] exec (repl | start | reset | stop)
+  monkey [-vvv] [-f STAR] schema [--validate-against=REF]
   monkey [-vvv] [-f STAR] fuzz [--intensity=N] [--seed=SEED]
                                [--label=KV]...
                                [--tags=TAGS | --exclude-tags=TAGS]
@@ -19,13 +24,8 @@ Usage:
                                [--only=REGEX]... [--except=REGEX]...
                                [--calls-with-input=SCHEMA]...  [--calls-without-input=SCHEMA]...
                                [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  monkey [-vvv] [-f STAR] lint [--show-spec]
-  monkey [-vvv] [-f STAR] fmt [-w]
-  monkey [-vvv] [-f STAR] schema [--validate-against=REF]
-  monkey [-vvv] [-f STAR] exec (repl | start | reset | stop)
-  monkey [-vvv]           env [VAR ...]
-  monkey        [-f STAR] logs [--previous=N]
   monkey        [-f STAR] pastseed
+  monkey        [-f STAR] logs [--previous=N]
   monkey [-vvv]           update
   monkey                  version | --version
   monkey                  help    | --help    | -h

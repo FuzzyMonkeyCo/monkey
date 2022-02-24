@@ -38,9 +38,15 @@ func usage() (args *params, ret int) {
 	// TODO: B [-vvv] login [--user=USER] Authenticate on fuzzymonkey.co as USER
 	// TODO: B [-vvv] exec (start | reset | stop) [RESETTER]
 	// TODO: B [-vvv] schema [--validate-against=REF] [MODELER]
+	// TODO: B [-vvv] docs
 	usage := binTitle + `
 
 Usage:
+  ` + B + ` [-vvv]           env [VAR ...]
+  ` + B + ` [-vvv] [-f STAR] fmt [-w]
+  ` + B + ` [-vvv] [-f STAR] lint [--show-spec]
+  ` + B + ` [-vvv] [-f STAR] exec (repl | start | reset | stop)
+  ` + B + ` [-vvv] [-f STAR] schema [--validate-against=REF]
   ` + B + ` [-vvv] [-f STAR] fuzz [--intensity=N] [--seed=SEED]
                                [--label=KV]...
                                [--tags=TAGS | --exclude-tags=TAGS]
@@ -50,13 +56,8 @@ Usage:
                                [--only=REGEX]... [--except=REGEX]...
                                [--calls-with-input=SCHEMA]...  [--calls-without-input=SCHEMA]...
                                [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  ` + B + ` [-vvv] [-f STAR] lint [--show-spec]
-  ` + B + ` [-vvv] [-f STAR] fmt [-w]
-  ` + B + ` [-vvv] [-f STAR] schema [--validate-against=REF]
-  ` + B + ` [-vvv] [-f STAR] exec (repl | start | reset | stop)
-  ` + B + ` [-vvv]           env [VAR ...]
-  ` + B + `        [-f STAR] logs [--previous=N]
   ` + B + `        [-f STAR] pastseed
+  ` + B + `        [-f STAR] logs [--previous=N]
   ` + B + ` [-vvv]           update
   ` + B + `                  version | --version
   ` + B + `                  help    | --help    | -h
