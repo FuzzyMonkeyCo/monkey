@@ -89,7 +89,7 @@ func initExec() {
 	}
 }
 
-// https://github.com/google/starlark-go/blob/bb14e151c28f3b5fc37e053cbe67bd70e9de5de0/doc/spec.md#built-in-methods
+// https://github.com/google/starlark-go/blob/243c74974e97462c5df21338e182470391748b04/doc/spec.md#built-in-methods
 
 var starlarkExtendedUniverse = map[string][]string{
 	"bytes": {

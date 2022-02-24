@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"go.starlark.net/starlark"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 )
 
 type (

@@ -3,8 +3,9 @@ package runtime
 import (
 	"testing"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/stretchr/testify/require"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 func TestCtxUsage(t *testing.T) {

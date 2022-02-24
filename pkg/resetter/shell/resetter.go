@@ -12,11 +12,12 @@ import (
 	"strings"
 	"time"
 
+	"go.starlark.net/starlark"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"go.starlark.net/starlark"
 )
 
 // Name names the Starlark builtin

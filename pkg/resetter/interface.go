@@ -6,8 +6,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"go.starlark.net/starlark"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 // Maker types the New func that instanciates new resetters

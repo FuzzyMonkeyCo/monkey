@@ -5,9 +5,10 @@ import (
 	"errors"
 	"io"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"go.starlark.net/starlark"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 var (
