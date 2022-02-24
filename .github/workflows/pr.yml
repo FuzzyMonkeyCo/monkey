@@ -36,6 +36,7 @@ jobs:
         - ci-check--mod
         - ci-check--test
         - ci-check--protolock
+        - ci-check--protoc
     steps:
     - name: Set lowercase image name
       run: echo IMAGE=ghcr.io/${SLUG,,} >>$GITHUB_ENV
@@ -59,6 +60,8 @@ jobs:
         targets: ${{ matrix.check }}
         set: |
           *.cache-to=type=registry,ref=${{ env.IMAGE }}:${{ matrix.check }},mode=max
+
+    - run: git --no-pager diff --exit-code
 
     - if: github.ref == 'refs/heads/master'
       name: If on master push image to GHCR
