@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/alecthomas/chroma/v2 v2.0.0-alpha2
-	github.com/bazelbuild/buildtools v0.0.0-20220215100907-23e2a9e4721a
+	github.com/bazelbuild/buildtools v0.0.0-20220224152527-5d33f3736e81
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.13.0
@@ -39,7 +39,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220223155357-96fed51e1446 // indirect
+	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
