@@ -4,13 +4,6 @@ package fm;
 option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
 
 import "google/protobuf/struct.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
-// cf. https://github.com/gogo/protobuf/blob/master/extensions.md
-option (gogoproto.sizer_all) = true;
-option (gogoproto.marshaler_all) = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.equal_all) = true;
 
 
 service FuzzyMonkey {

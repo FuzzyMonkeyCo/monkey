@@ -15,11 +15,12 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/types"
 )
 
 var (
@@ -97,12 +98,12 @@ func (m *OA3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 	var r *http.Request
 
 	if body := input.GetBody(); body != nil {
-		buf := &bytes.Buffer{}
-		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
+		var bodyBytes []byte
+		if bodyBytes, err = protojson.Marshal(body); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
+		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), bytes.NewReader(bodyBytes))
 	} else {
 		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}
@@ -118,13 +119,13 @@ func (m *OA3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		}
 	}
 
-	if authz := m.HeaderAuthorization; authz != "" {
+	if authz := m.pb.HeaderAuthorization; authz != "" {
 		r.Header.Add(headerAuthorization, authz)
 	}
 
 	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.XUserAgent).(string))
 
-	if host := m.Host; host != "" {
+	if host := m.pb.Host; host != "" {
 		var configured *url.URL
 		if configured, err = url.ParseRequestURI(host); err != nil {
 			log.Println("[ERR]", err)
@@ -209,8 +210,8 @@ func requestToProto(r *http.Request) (
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(reqProto.Body))
 
-		var x types.Value
-		if e := jsonpb.UnmarshalString(string(reqProto.Body), &x); e != nil {
+		var x structpb.Value
+		if e := protojson.Unmarshal(reqProto.Body, &x); e != nil {
 			log.Println("[NFO] request body could not be decoded:", e)
 		} else {
 			reqProto.BodyDecoded = &x
@@ -333,8 +334,8 @@ func (c *tCapHTTP) responseToProto(r *http.Response) (err error) {
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
 
-		var x types.Value
-		if e := jsonpb.UnmarshalString(string(c.repProto.Body), &x); e != nil {
+		var x structpb.Value
+		if e := protojson.Unmarshal(c.repProto.Body, &x); e != nil {
 			log.Println("[NFO] response body could not be decoded:", e)
 			c.repBodyDecodeErr = e
 		} else {

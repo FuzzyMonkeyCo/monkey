@@ -13,10 +13,10 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 const someOpenAPI3Model = `
@@ -106,8 +106,8 @@ func ctxer1Maker(t *testing.T, chkname string) ctxctor1 {
 	switch {
 	case strings.HasPrefix(chkname, "ctx_request_body_frozen"): // NOTE: request does not match model
 		reqbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
-		var reqdecoded types.Value
-		err := jsonpb.UnmarshalString(string(reqbody), &reqdecoded)
+		var reqdecoded structpb.Value
+		err := protojson.Unmarshal(reqbody, &reqdecoded)
 		require.NoError(t, err)
 		ctxer2 := ctxCurry(&fm.Clt_CallRequestRaw_Input{
 			Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
@@ -150,8 +150,8 @@ func ctxer1Maker(t *testing.T, chkname string) ctxctor1 {
 		})
 
 		repbody := []byte(`{"error": {"msg":"not found", "id":0, "category":"albums"}}`)
-		var repdecoded types.Value
-		err := jsonpb.UnmarshalString(string(repbody), &repdecoded)
+		var repdecoded structpb.Value
+		err := protojson.Unmarshal(repbody, &repdecoded)
 		require.NoError(t, err)
 		return ctxer2(&fm.Clt_CallResponseRaw_Output{
 			Output: &fm.Clt_CallResponseRaw_Output_HttpResponse_{

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // ProtoCompatible returns a non-nil error when the Starlark value
@@ -58,22 +58,22 @@ func ProtoCompatible(value starlark.Value) (err error) {
 
 // FromProtoValue converts a Google Well-Known-Type Value to a Starlark value.
 // Panics on unexpected proto value.
-func FromProtoValue(x *types.Value) starlark.Value {
+func FromProtoValue(x *structpb.Value) starlark.Value {
 	switch x.GetKind().(type) {
 
-	case *types.Value_NullValue:
+	case *structpb.Value_NullValue:
 		return starlark.None
 
-	case *types.Value_BoolValue:
+	case *structpb.Value_BoolValue:
 		return starlark.Bool(x.GetBoolValue())
 
-	case *types.Value_NumberValue:
+	case *structpb.Value_NumberValue:
 		return starlark.Float(x.GetNumberValue())
 
-	case *types.Value_StringValue:
+	case *structpb.Value_StringValue:
 		return starlark.String(x.GetStringValue())
 
-	case *types.Value_ListValue:
+	case *structpb.Value_ListValue:
 		xs := x.GetListValue().GetValues()
 		values := make([]starlark.Value, 0, len(xs))
 		for _, x := range xs {
@@ -82,7 +82,7 @@ func FromProtoValue(x *types.Value) starlark.Value {
 		}
 		return starlark.NewList(values)
 
-	case *types.Value_StructValue:
+	case *structpb.Value_StructValue:
 		kvs := x.GetStructValue().GetFields()
 		values := starlark.NewDict(len(kvs))
 		for k, v := range kvs {

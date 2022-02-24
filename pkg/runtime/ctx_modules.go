@@ -7,8 +7,8 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
-	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type (
@@ -86,7 +86,7 @@ type ctxRequest struct {
 	attrs     starlark.StringDict
 	attrnames []string
 
-	protoBodyDecoded *types.Value
+	protoBodyDecoded *structpb.Value
 	body             starlark.Value
 
 	protoHeaders []*fm.HeaderPair
@@ -188,7 +188,7 @@ type ctxResponse struct {
 	attrs     starlark.StringDict
 	attrnames []string
 
-	protoBodyDecoded *types.Value
+	protoBodyDecoded *structpb.Value
 	body             starlark.Value
 
 	protoHeaders []*fm.HeaderPair

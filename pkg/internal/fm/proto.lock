@@ -1247,9 +1247,6 @@
         "imports": [
           {
             "path": "google/protobuf/struct.proto"
-          },
-          {
-            "path": "github.com/gogo/protobuf/gogoproto/gogo.proto"
           }
         ],
         "package": {
@@ -1259,22 +1256,6 @@
           {
             "name": "go_package",
             "value": "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-          },
-          {
-            "name": "(gogoproto.sizer_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.marshaler_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.unmarshaler_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.equal_all)",
-            "value": "true"
           }
         ]
       }

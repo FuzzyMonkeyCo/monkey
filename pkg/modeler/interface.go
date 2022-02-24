@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 var (
@@ -28,8 +28,6 @@ type Interface interface { // TODO models.Modeler
 
 	// ToProto marshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
 	ToProto() *fm.Clt_Fuzz_Model
-	///// // FromProto unmarshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
-	///// FromProto(*fm.Clt_Fuzz_Model) error
 
 	// Lint goes through specs and unsures they are valid
 	Lint(ctx context.Context, showSpec bool) error
@@ -42,7 +40,7 @@ type Interface interface { // TODO models.Modeler
 	FilterEndpoints(criteria []string) ([]uint32, error)
 
 	ValidateAgainstSchema(ref string, data []byte) error
-	Validate(uint32, *types.Value) []string
+	Validate(uint32, *structpb.Value) []string
 
 	// NewCaller is called before making each call
 	NewCaller(ctx context.Context, call *fm.Srv_Call, showf ShowFunc) Caller

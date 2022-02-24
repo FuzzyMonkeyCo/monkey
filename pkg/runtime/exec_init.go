@@ -140,6 +140,8 @@ var starlarkExtendedUniverse = map[string][]string{
 		"lower",
 		"lstrip",
 		"partition",
+		"removeprefix",
+		"removesuffix",
 		"replace",
 		"rfind",
 		"rindex",

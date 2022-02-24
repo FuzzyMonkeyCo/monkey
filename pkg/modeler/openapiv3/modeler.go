@@ -1,13 +1,13 @@
 package openapiv3
 
 import (
-	"fmt"
 	"io"
+
+	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/gogo/protobuf/types"
-	"go.starlark.net/starlark"
 )
 
 // Name names the Starlark builtin
@@ -25,9 +25,11 @@ func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
 		return nil, err
 	}
 	m := &OA3{name: name.GoString()}
-	m.File = file.GoString()
-	m.Host = host.GoString()
-	m.HeaderAuthorization = headerAuthorization.GoString()
+	m.pb = &fm.Clt_Fuzz_Model_OpenAPIv3{
+		File:                file.GoString(),
+		Host:                host.GoString(),
+		HeaderAuthorization: headerAuthorization.GoString(),
+	}
 	return m, nil
 }
 
@@ -36,7 +38,8 @@ var _ modeler.Interface = (*OA3)(nil) // TODO: *oa3
 // OA3 implements a modeler.Interface for use by `monkey`.
 type OA3 struct {
 	name string
-	fm.Clt_Fuzz_Model_OpenAPIv3
+
+	pb *fm.Clt_Fuzz_Model_OpenAPIv3
 
 	vald *validator
 
@@ -48,23 +51,11 @@ func (m *OA3) Name() string { return m.name }
 
 // ToProto marshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
 func (m *OA3) ToProto() *fm.Clt_Fuzz_Model {
-	m.Spec = m.vald.Spec
+	m.pb.Spec = m.vald.Spec
 	return &fm.Clt_Fuzz_Model{
-		Name: m.name,
-		Model: &fm.Clt_Fuzz_Model_Openapiv3{
-			Openapiv3: &m.Clt_Fuzz_Model_OpenAPIv3,
-		},
+		Name:  m.name,
+		Model: &fm.Clt_Fuzz_Model_Openapiv3{Openapiv3: m.pb},
 	}
-}
-
-////////////// FromProto unmarshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
-func (m *OA3) fromProto(p *fm.Clt_Fuzz_Model) error {
-	if mm := p.GetOpenapiv3(); mm != nil {
-		m.Clt_Fuzz_Model_OpenAPIv3 = *mm
-		m.vald = &validator{Spec: mm.Spec}
-		return nil
-	}
-	return fmt.Errorf("unexpected model type: %T", p.GetModel())
 }
 
 // InputsCount sums the amount of named schemas or types APIs define
@@ -77,7 +68,7 @@ func (m *OA3) FilterEndpoints(args []string) ([]eid, error) {
 	return m.vald.filterEndpoints(args)
 }
 
-func (m *OA3) Validate(SID sid, data *types.Value) []string {
+func (m *OA3) Validate(SID sid, data *structpb.Value) []string {
 	return m.vald.Validate(SID, data)
 }
 

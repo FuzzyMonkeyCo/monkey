@@ -11,6 +11,7 @@ group "ci-checks" {
     "ci-check--lint",
     "ci-check--mod",
     "ci-check--test",
+    "ci-check--protoc",
     "ci-check--protolock",
   ]
 }
@@ -75,4 +76,12 @@ target "ci-check--protolock-force" {
   output = ["./pkg/internal/fm/"]
   cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock"]
   # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protolock,mode=max"]
+}
+
+target "ci-check--protoc" {
+  inherits = ["dockerfile"]
+  target = "ci-check--protoc"
+  output = ["./pkg/internal/fm/"]
+  cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protoc"]
+  # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:ci-check--protoc,mode=max"]
 }

@@ -23,7 +23,7 @@ var errLinting = func() error {
 // Lint goes through OpenAPIv3 specs and unsures they are valid
 func (m *OA3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
-	if blob, err = os.ReadFile(m.File); err != nil {
+	if blob, err = os.ReadFile(m.pb.File); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
@@ -35,7 +35,7 @@ func (m *OA3) Lint(ctx context.Context, showSpec bool) (err error) {
 		err = errLinting
 	}
 
-	if err = validateAndPretty(m.File, blob, showSpec); err != nil {
+	if err = validateAndPretty(m.pb.File, blob, showSpec); err != nil {
 		return
 	}
 

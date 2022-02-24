@@ -14,8 +14,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
-	"github.com/gogo/protobuf/types"
 	"github.com/xeipuuv/gojsonschema"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type validator struct {
@@ -122,7 +122,7 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
-		schema.Enum = make([]*types.Value, 0, len(enum))
+		schema.Enum = make([]*structpb.Value, 0, len(enum))
 		for _, vv := range enum {
 			schema.Enum = append(schema.Enum, protovalue.FromGo(vv))
 		}
@@ -649,7 +649,7 @@ func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err er
 	return
 }
 
-func (vald *validator) Validate(SID sid, data *types.Value) []string {
+func (vald *validator) Validate(SID sid, data *structpb.Value) []string {
 	var sm schemap
 	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)
