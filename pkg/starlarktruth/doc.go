@@ -141,11 +141,11 @@
 //  value have a defined order, otherwise the result is undefined.
 //  For example, `assert.that(aList).contains_exactly_elements_in(aSet).in_order()`
 //  may or may not succeed, depending on how the `set` implements ordering.
-//  The builtin set datatype does not implement ordering.
-//  These assertions *may or may not* succeed:
+//  The builtin set datatype implements insertion ordering.
+//  These assertions succeed:
 //
 //      assert.that((1, 2, 3)).contains_all_in(set([1, 3])).in_order()
-//      assert.that(set([3, 2, 1])).contains_exactly_elements_in((1, 2, 3)).in_order()
+//      assert.that(set([3, 2, 1])).contains_exactly_elements_in((3, 2, 1)).in_order()
 //      assert.that({1:2, 3:4}).contains_all_in((1, 3)).in_order()
 //
 // Dictionaries, in addition to the table above

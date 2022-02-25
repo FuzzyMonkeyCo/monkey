@@ -10,6 +10,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/google/uuid"
@@ -46,25 +47,31 @@ func (rt *Runtime) Fuzz(
 	}
 	defer rt.client.Close()
 
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-	rsttr := mdl.GetResetter()
-	rsttr.Env(rt.envRead)
+	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(selectedResetters))
+	_ = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
+		protoResetters = append(protoResetters, rsttr.ToProto())
+		return nil
+	})
+
+	protoModels := make([]*fm.Clt_Fuzz_Model, 0, len(rt.selectedEIDs))
+	_ = rt.forEachSelectedModel(func(name string, mdl modeler.Interface) error {
+		protoModels = append(protoModels, mdl.ToProto())
+		return nil
+	})
 
 	log.Printf("[DBG] sending initial msg")
 	if err = rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_Fuzz_{Fuzz: &fm.Clt_Fuzz{
-		EIDs:     rt.eIds,
-		EnvRead:  rt.envRead,
-		Model:    mdl.ToProto(),
-		Ntensity: ntensity,
-		Resetter: rsttr.ToProto(),
-		Seed:     seed,
-		Labels:   rt.labels,
-		Files:    rt.files,
-		Usage:    os.Args,
-		UUIDs:    []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
+		EIDs:      rt.selectedEIDs,
+		EnvRead:   rt.envRead,
+		Models:    protoModels,
+		Ntensity:  ntensity,
+		Resetters: protoResetters,
+		Seed:      seed,
+		Labels:    rt.labels,
+		Files:     rt.files,
+		Usage:     os.Args,
+		UUIDs:     []string{uuid.New().String(), uuid.New().String(), uuid.New().String(), uuid.New().String()},
 	}}}); err != nil {
 		log.Println("[ERR]", err)
 		return
@@ -72,6 +79,7 @@ func (rt *Runtime) Fuzz(
 
 	var result *fm.Srv_FuzzingResult
 	var maxSteps uint64
+	var maxDuration time.Duration
 	suggestedSeed := seed
 	for {
 		log.Printf("[DBG] receiving msg...")
@@ -85,6 +93,7 @@ func (rt *Runtime) Fuzz(
 			if rt.progress == nil {
 				fuzzRep := srv.GetFuzzRep()
 				maxSteps = fuzzRep.GetMaxExecutionStepsPerCheck()
+				maxDuration = time.Duration(fuzzRep.GetMaxExecutionMsPerCheck()) * time.Millisecond
 				if err = rt.newProgress(ctx, fuzzRep.GetMaxTestsCount(), vvv, ptype); err != nil {
 					return
 				}
@@ -111,7 +120,7 @@ func (rt *Runtime) Fuzz(
 			case nil:
 				return
 			case *fm.Srv_Call_:
-				if err = rt.call(ctx, msg.Call, tagsFilter, maxSteps); err != nil {
+				if err = rt.call(ctx, msg.Call, tagsFilter, maxSteps, maxDuration); err != nil {
 					return
 				}
 			case *fm.Srv_Reset_:

@@ -72,10 +72,17 @@ func (e UnhandledError) Error() string {
 // * `.named(name)`
 // * `.is_within(tolerance)`
 // * `.is_not_within(tolerance)`
-type UnresolvedError string
+type UnresolvedError struct {
+	// Msg is the error string
+	Msg string
+}
 
-var _ error = UnresolvedError("")
+var _ error = &UnresolvedError{}
 
-func (e UnresolvedError) Error() string {
-	return fmt.Sprintf("%s: %s.that(...) is missing an assertion", string(e), Default)
+func (e *UnresolvedError) Error() string { return e.Msg }
+
+func newUnresolvedError(e string) *UnresolvedError {
+	return &UnresolvedError{
+		Msg: fmt.Sprintf("%s: %s.%s(...) is missing an assertion", e, Module, Method),
+	}
 }

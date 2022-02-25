@@ -17,4 +17,6 @@ const (
 	FailedExec = 7
 	// FailedSchema means the given payload does not validate provided schema
 	FailedSchema = 9
+	// FailedConnecting means `binName` is too old, please update
+	FailedConnecting = 11
 )

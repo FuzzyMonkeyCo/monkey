@@ -1,13 +1,6 @@
 .PHONY: all update debug lint test ape
 
-EXE = monkey
-
-GPB ?= 3.6.1
-GPB_IMG ?= znly/protoc:0.4.0
-GOGO ?= v1.3.2
-RUN ?= docker run --rm --user $$(id -u):$$(id -g)
-PROTOC = $(RUN) -v "$$GOPATH:$$GOPATH":ro -v "$$PWD:$$PWD" -w "$$PWD" $(GPB_IMG) -I=. -I=$$GOPATH/pkg/mod/github.com/gogo/protobuf@$(GOGO)/protobuf
-PROTOLOCK ?= $(RUN) -v "$$PWD":/protolock -w /protolock nilslice/protolock
+EXE ?= monkey
 
 all: pkg/internal/fm/fuzzymonkey.pb.go make_README.sh README.md lint
 	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
@@ -19,8 +12,6 @@ update:
 	go get -u -a -v ./...
 	go mod tidy
 	go mod verify
-	[[ 'libprotoc $(GPB)' = "$$($(RUN) $(GPB_IMG) --version)" ]]
-	git grep -F 'github.com/gogo/protobuf $(GOGO)' -- go.mod
 
 latest: bindir ?= $$HOME/.local/bin
 latest:
@@ -32,21 +23,18 @@ devdeps:
 	go install -i github.com/kyoh86/richgo
 
 pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
-	cd pkg/internal/fm && $(PROTOLOCK) commit
-	$(PROTOC) --gogofast_out=plugins=grpc,Mgoogle/protobuf/struct.proto=github.com/gogo/protobuf/types:. $^
-	mv github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/fuzzymonkey.pb.go $@
-	git clean -xdff -- ./github.com
+	docker buildx bake ci-check--protolock ci-check--protoc #ci-check--protolock-force
+	touch $@
 
 lint:
 	go fmt ./...
 	./golint.sh
+	! git grep -F log. pkg/cwid/
 	go vet ./...
 
 debug: all
-	./$(EXE) fmt
 	./$(EXE) lint
-# 	./$(EXE) -vvv fuzz --exclude-tags=failing
-	./$(EXE) fuzz --exclude-tags=failing --progress=bar
+	./$(EXE) fuzz --exclude-tags=failing #--progress=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)
@@ -58,7 +46,12 @@ clean:
 
 test: SHELL = /bin/bash -o pipefail
 test: all
-	richgo test -tags fakefs -race ./...
+	echo 42 | ./$(EXE) schema --validate-against=#/components/schemas/PostId
+	./$(EXE) exec repl <<<'{"Hullo":41,"how\"":["do","0".isdigit(),{},[],set([13.37])],"you":"do"}'
+	./$(EXE) exec repl <<<'assert that("this").is_not_equal_to("that")'
+	./$(EXE) exec repl <<<'x = 1.0; print(str(x)); print(str(int(x)))'
+	! ./$(EXE) exec repl <<<'assert that(42).is_not_equal_to(42)'
+	richgo test -race ./...
 
 ci:
 	docker buildx bake ci-checks

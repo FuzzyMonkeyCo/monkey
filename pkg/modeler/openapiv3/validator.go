@@ -14,8 +14,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
-	"github.com/gogo/protobuf/types"
 	"github.com/xeipuuv/gojsonschema"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type validator struct {
@@ -122,7 +122,7 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 	// "enum"
 	if v, ok := s["enum"]; ok {
 		enum := v.([]interface{})
-		schema.Enum = make([]*types.Value, 0, len(enum))
+		schema.Enum = make([]*structpb.Value, 0, len(enum))
 		for _, vv := range enum {
 			schema.Enum = append(schema.Enum, protovalue.FromGo(vv))
 		}
@@ -466,7 +466,7 @@ func formatToGo(format fm.Schema_JSON_Format) string {
 	}
 }
 
-func (vald *validator) FilterEndpoints(args []string) (eids []eid, err error) {
+func (vald *validator) filterEndpoints(args []string) (eids []eid, err error) {
 	// TODO? filter on 2nd, 3rd, ... -level schemas
 	// instead of just first level (ref A references B & C)
 
@@ -587,16 +587,16 @@ func filterEndpoints(all map[eid]string, only bool, pattern string) (err error) 
 	return
 }
 
-func (vald *validator) InputsCount() int {
+func (vald *validator) inputsCount() int {
 	return len(vald.Refs)
 }
 
-func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
-	if vald.InputsCount() != 0 {
+func (vald *validator) writeAbsoluteReferences(w io.Writer) {
+	if vald.inputsCount() != 0 {
 		as.ColorNFO.Fprintln(w, "Available types:")
 	}
 
-	all := make([]string, 0, vald.InputsCount())
+	all := make([]string, 0, vald.inputsCount())
 	for absRef := range vald.Refs {
 		all = append(all, absRef)
 	}
@@ -608,9 +608,10 @@ func (vald *validator) WriteAbsoluteReferences(w io.Writer) {
 	}
 }
 
-func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err error) {
+func (vald *validator) validateAgainstSchema(absRef string, data []byte) (err error) {
 	if _, ok := vald.Refs[absRef]; !ok {
-		err = modeler.ErrNoSuchRef
+		err = modeler.NewNoSuchRefError(absRef)
+		log.Println("[ERR]", err)
 		return
 	}
 
@@ -621,7 +622,7 @@ func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err er
 	}
 
 	// TODO: Compile errs on bad refs only, MUST do this step in `lint`
-	log.Println("[NFO] compiling schema refs")
+	log.Printf("[NFO] compiling schema ref %q", absRef)
 	schema, err := vald.Refd.Compile(
 		gojsonschema.NewGoLoader(schemaJSON{"$ref": absRef}))
 	if err != nil {
@@ -642,12 +643,13 @@ func (vald *validator) ValidateAgainstSchema(absRef string, data []byte) (err er
 		as.ColorERR.Println(e)
 	}
 	if len(errs) > 0 {
+		log.Println("[ERR]", err)
 		err = modeler.ErrUnparsablePayload
 	}
 	return
 }
 
-func (vald *validator) Validate(SID sid, data *types.Value) []string {
+func (vald *validator) Validate(SID sid, data *structpb.Value) []string {
 	var sm schemap
 	sm = vald.Spec.Schemas.GetJson()
 	s := sm.toGo(SID)

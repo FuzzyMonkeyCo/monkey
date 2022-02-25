@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -12,6 +11,8 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	openapi_v3 "github.com/google/gnostic/openapiv3"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
 var errLinting = func() error {
@@ -19,16 +20,22 @@ var errLinting = func() error {
 	return errors.New(msg) // Gets around golint
 }()
 
-// Lint goes through OpenAPIv3 specs and unsures they're valid
+// Lint goes through OpenAPIv3 specs and unsures they are valid
 func (m *oa3) Lint(ctx context.Context, showSpec bool) (err error) {
 	var blob []byte
-	if blob, err = ioutil.ReadFile(m.File); err != nil {
+	if blob, err = os.ReadFile(m.pb.File); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
+	log.Printf("[NFO] read %dB", len(blob))
 
-	log.Printf("[NFO] reading info in %dB", len(blob))
-	if err = validateAndPretty(m.File, blob, showSpec); err != nil {
+	if err = modeler.FindControlCharacters(string(blob)); err != nil {
+		log.Println("[ERR]", err)
+		fmt.Println(err.Error())
+		err = errLinting
+	}
+
+	if err = validateAndPretty(m.pb.File, blob, showSpec); err != nil {
 		return
 	}
 
@@ -63,8 +70,13 @@ func validateAndPretty(docPath string, blob []byte, showSpec bool) (err error) {
 	doc, err := openapi_v3.ParseDocument(blob)
 	if err != nil {
 		log.Println("[ERR]", err)
+		const topword = "$root."
 		for _, line := range strings.Split(err.Error(), "\n") {
-			es := strings.SplitAfterN(line, "$root.", 2) // TODO: handle line:col
+			if !strings.Contains(line, topword) {
+				fmt.Println(line)
+				continue
+			}
+			es := strings.SplitAfterN(line, topword, 2) // TODO: handle line:col
 			fmt.Println(es[1])
 		}
 		err = errLinting

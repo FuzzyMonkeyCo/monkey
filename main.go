@@ -54,19 +54,20 @@ func actualMain() int {
 	}
 
 	if args.Logs {
-		offset := args.LogOffset
-		if offset == 0 {
-			offset = 1
-		}
-		return doLogs(offset)
+		return doLogs(args.File, args.LogOffset)
 	}
 
 	if args.Pastseed {
-		return doPastseed()
+		return doPastseed(args.File)
 	}
 
-	if err := cwid.MakePwdID(binName, 0); err != nil {
-		return retryOrReport()
+	if args.Env {
+		return doEnv(args.EnvVars)
+	}
+
+	if err := cwid.MakePwdID(binName, args.File, 0); err != nil {
+		as.ColorERR.Println(err) // Print as LogFile isn't set up yet
+		return code.Failed
 	}
 	logCatchall, err := os.OpenFile(cwid.LogFile(), os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
@@ -87,12 +88,8 @@ func actualMain() int {
 		return doUpdate()
 	}
 
-	if args.Env {
-		return doEnv(args.EnvVars)
-	}
-
 	if args.Fmt {
-		if err := rt.Format(args.FmtW); err != nil {
+		if err := rt.Format(args.File, args.FmtW); err != nil {
 			if e, ok := err.(rt.FmtError); ok {
 				for i := 0; i < len(e); i += 3 {
 					as.ColorNFO.Printf("%s ", e[i])
@@ -107,7 +104,7 @@ func actualMain() int {
 		return code.OK
 	}
 
-	mrt, err := rt.NewMonkey(binTitle, args.Labels)
+	mrt, err := rt.NewMonkey(binTitle, args.File, args.Labels)
 	if err != nil {
 		as.ColorERR.Println(err)
 		return code.Failed
@@ -141,7 +138,7 @@ func actualMain() int {
 	}
 
 	if args.Exec {
-		var fn func() error
+		var fn func(context.Context) error
 		switch {
 		case args.Start:
 			fn = mrt.JustExecStart
@@ -152,8 +149,10 @@ func actualMain() int {
 		case args.Repl:
 			fn = mrt.JustExecREPL
 		}
-		if err := fn(); err != nil {
-			as.ColorERR.Println(err)
+		if err := fn(ctx); err != nil {
+			if e := err.Error(); e != "" {
+				as.ColorERR.Println(e)
+			}
 			return code.FailedExec
 		}
 		return code.OK
@@ -227,6 +226,8 @@ func actualMain() int {
 	case strings.Contains(err.Error(), context.DeadlineExceeded.Error()):
 		as.ColorERR.Printf("Testing interrupted (given: --time-budget-overall=%s).\n", args.OverallBudgetTime)
 		return code.OK
+	case strings.Contains(err.Error(), "unexpected client version, please update"):
+		return pleaseUpdate()
 	default:
 		log.Println("[ERR]", err)
 	}
@@ -253,9 +254,10 @@ func logLevel(verbosity uint8) logutils.LogLevel {
 	return logutils.LogLevel(lvl)
 }
 
-func doLogs(offset uint64) int {
-	if err := cwid.MakePwdID(binName, offset); err != nil {
-		return retryOrReport()
+func doLogs(starfile string, offset uint64) int {
+	if err := cwid.MakePwdID(binName, starfile, offset); err != nil {
+		as.ColorERR.Println(err) // Print as LogFile isn't set up yet
+		return code.Failed
 	}
 
 	fn := cwid.LogFile()
@@ -337,15 +339,27 @@ func newTagsFilter(args *params, osargs []string) (*tags.Filter, error) {
 	return tags.NewFilter(hasInclude, hasExclude, included, excluded)
 }
 
-func retryOrReport() int {
+func pleaseUpdate() int {
+	w := os.Stderr
+	fmt.Fprintln(w, "\nThis program appears to be out of date. To update it, please run:")
+	fmt.Fprintf(w, "\n\tmonkey update\n")
+	maybeReport(w)
+	return code.FailedConnecting
+}
+
+func maybeReport(w io.Writer) {
 	const issues = "https://github.com/" + githubSlug + "/issues"
 	const email = "ook@fuzzymonkey.co"
-	w := os.Stderr
-	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
-	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
 	fmt.Fprintf(w, "\nIf that doesn't fix it, take a look at %s\n", cwid.LogFile())
 	fmt.Fprintf(w, "or come by %s\n", issues)
 	fmt.Fprintf(w, "or drop us a line at %s\n", email)
 	fmt.Fprintln(w, "\nThank you for your patience & sorry about this :)")
+}
+
+func retryOrReport() int {
+	w := os.Stderr
+	fmt.Fprintln(w, "\nLooks like something went wrong... Maybe try again with -vv?")
+	fmt.Fprintf(w, "\nYou may want to try `monkey update`.\n")
+	maybeReport(w)
 	return code.Failed
 }

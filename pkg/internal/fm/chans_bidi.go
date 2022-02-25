@@ -2,6 +2,7 @@ package fm
 
 import (
 	"context"
+	"errors"
 	"io"
 	"log"
 	"os"
@@ -21,10 +22,17 @@ const (
 // grpcHost is not const so its value can be set with -ldflags
 var grpcHost = "do.dev.fuzzymonkey.co:7077"
 
+// BiDier does bidirectional streaming gRPC
+type BiDier interface {
+	Send(ctx context.Context, msg *Clt) (err error)
+	Receive(ctx context.Context) (msg *Srv, err error)
+	Close()
+}
+
 // ChBiDi wraps a Clt<->Srv bidirectional gRPC channel
 type ChBiDi struct {
 	clt   FuzzyMonkey_DoClient
-	Close func()
+	close func()
 
 	rcvErr chan error
 	rcvMsg chan *Srv
@@ -32,6 +40,8 @@ type ChBiDi struct {
 	sndErr chan error
 	sndMsg chan *Clt
 }
+
+var _ BiDier = (*ChBiDi)(nil)
 
 // NewChBiDi dials server & returns a usable ChBiDi
 func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
@@ -50,6 +60,9 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 	}
 	conn, err := grpc.DialContext(ctx, grpcHost, options...)
 	if err != nil {
+		if err == context.DeadlineExceeded {
+			err = errors.New("unreachable fuzzymonkey.co server")
+		}
 		log.Println("[ERR]", err)
 		return nil, err
 	}
@@ -114,7 +127,7 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 		}
 	}()
 
-	cbd.Close = func() {
+	cbd.close = func() {
 		log.Println("[NFO] Close()-ing ChBiDi...")
 		cancel()
 		if err := conn.Close(); err != nil {
@@ -123,6 +136,11 @@ func NewChBiDi(ctx context.Context) (*ChBiDi, error) {
 	}
 
 	return cbd, nil
+}
+
+// Close ends the connection
+func (cbd *ChBiDi) Close() {
+	cbd.close()
 }
 
 // Receive returns a Srv message and an error
@@ -151,7 +169,8 @@ func (cbd *ChBiDi) Send(ctx context.Context, msg *Clt) (err error) {
 	select {
 	case <-time.After(sndTimeout):
 		err = os.ErrDeadlineExceeded
-	case err = <-cbd.sndErr:
+	case err = <-cbd.rcvErr:
+	case err = <-cbd.sndErr: // Also look for remote hangups
 	}
 	return
 }

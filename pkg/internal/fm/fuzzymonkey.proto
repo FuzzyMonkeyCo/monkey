@@ -4,13 +4,6 @@ package fm;
 option go_package = "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm";
 
 import "google/protobuf/struct.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
-// cf. https://github.com/gogo/protobuf/blob/master/extensions.md
-option (gogoproto.sizer_all) = true;
-option (gogoproto.marshaler_all) = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.equal_all) = true;
 
 
 service FuzzyMonkey {
@@ -20,17 +13,20 @@ service FuzzyMonkey {
 message Clt {
   message Fuzz {
     message Resetter {
+      string name = 1;
+      repeated string provides = 2;
       message Shell {
         string start = 1;
         string rst = 2;
         string stop = 3;
       }
       oneof resetter {
-        Shell shell = 1;
+        Shell shell = 3;
       }
     }
-    Resetter resetter = 1;
+    repeated Resetter resetters = 1;
     message Model {
+      string name = 1;
       message OpenAPIv3 {
         // File path within current directory pointing to a YAML/JSON spec
         string file = 1;
@@ -42,14 +38,14 @@ message Clt {
         SpecIR spec = 4;
       }
       oneof model {
-        OpenAPIv3 openapiv3 = 1;
+        OpenAPIv3 openapiv3 = 2;
       }
     }
-    Model model = 2;
+    repeated Model models = 2;
     repeated string usage = 3;
     bytes seed = 4;
     uint32 ntensity = 5;
-    repeated uint32 EIDs = 6;
+    map<string, Uint32s> EIDs = 6;
     map<string, string> labels = 7;
     map<string, string> env_read = 8;
     repeated string UUIDs = 9;
@@ -73,10 +69,7 @@ message Clt {
       message HttpRequest {
         string method = 1;
         string url = 2;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 3;
+        repeated HeaderPair headers = 3;
         bytes body = 4;
         google.protobuf.Value body_decoded = 5;
       }
@@ -94,15 +87,14 @@ message Clt {
         string error = 1;
         uint32 status_code = 2;
         string reason = 3;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 4;
+        repeated HeaderPair headers = 4;
         bytes body = 5;
         google.protobuf.Value body_decoded = 6;
         int64 elapsed_ns = 7;  // TODO: finer timings (name lookup, connection, ...)
                                // add http timings similar to
                                // https://developers.google.com/web/tools/chrome-devtools/network/reference#timing-explanation
+                               // https://pkg.go.dev/net/http/httptrace#ClientTrace
+                               //   http://www.inanzzz.com/index.php/post/pzas/tracing-and-debugging-http-client-requests-within-golang
       }
       oneof output {
         HttpResponse http_response = 1;
@@ -168,6 +160,7 @@ message Srv {
     bytes seed = 2; // Seed in use for the campaign
     string token = 3;
     uint64 max_execution_steps_per_check = 4; // for Starlark SetMaxExecutionSteps
+    uint32 max_execution_ms_per_check = 5;
   }
 
   message Call {
@@ -175,10 +168,7 @@ message Srv {
       message HttpRequest {
         string method = 1;
         string url = 2;
-        message HeaderValues {
-          repeated string values = 1;
-        }
-        map<string, HeaderValues> headers = 3;
+        repeated HeaderPair headers = 3;
         google.protobuf.Value body = 4;
       }
       oneof input {
@@ -187,6 +177,7 @@ message Srv {
     }
     Input input = 1;
     uint32 EID = 2;
+    string model_name = 3;
   }
 
   message Reset {}
@@ -214,6 +205,15 @@ message Srv {
     // Result of testing campaign
     FuzzingResult fuzzing_result = 5;
   }
+}
+
+message Uint32s {
+  repeated uint32 values = 1;
+}
+
+message HeaderPair {
+  string key = 1;
+  repeated string values = 2;
 }
 
 message SpecIR {
@@ -300,18 +300,8 @@ message PathPartial {
   }
 }
 
-/// https://swagger.io/docs/specification/data-models/keywords/
-/// https://tools.ietf.org/html/draft-wright-json-schema-validation-00
-/// http://json-schema.org/draft-06/json-schema-release-notes.html
-/// http://json-schema.org/draft-07/json-schema-release-notes.html
-// https://github.com/mikunn/openapi-schema-to-json-schema
-// https://github.com/kogosoftwarellc/openapi-jsonschema-parameters
-// https://github.com/garethr/openapi2jsonschema
-
 message Schema {
   message JSON {
-    // (Some) things can be combined (: enum + type)
-    //   so just lay things out flat...
 
     enum Type {
       UNKNOWN = 0;
@@ -324,10 +314,9 @@ message Schema {
       string = 7;
       object = 8;
     }
-    repeated Type types = 1;  // default: []
+    repeated Type types = 1;
 
-    repeated google.protobuf.Value enum
-    = 2;
+    repeated google.protobuf.Value enum = 2;
 
     // type: string
     enum Format {
@@ -357,11 +346,11 @@ message Schema {
       binary = 23;
       password = 24;
     }
-    Format format = 3;      // default: NONE
-    uint64 min_length = 4;  // default: 0
+    Format format = 3;
+    uint64 min_length = 4;
     uint64 max_length = 5;
     bool has_max_length = 6;
-    string pattern = 7;  // default: ""
+    string pattern = 7;
 
     // type: number | integer
     double minimum = 8;
@@ -369,21 +358,21 @@ message Schema {
     bool has_minimum = 10;
     bool has_maximum = 11;
     double translated_multiple_of = 12;  // default: 0.0, add +1.0 when reading
-    bool exclusive_minimum = 13;         // default: false
-    bool exclusive_maximum = 14;         // default: false
+    bool exclusive_minimum = 13;
+    bool exclusive_maximum = 14;
 
     // type: array
-    repeated uint32 items = 15;  // default: empty list
-    bool unique_items = 16;      // default: false
-    uint64 min_items = 17;       // default: 0
+    repeated uint32 items = 15;
+    bool unique_items = 16;
+    uint64 min_items = 17;
     uint64 max_items = 18;
     bool has_max_items = 19;
     // TODO: additionalItems :: bool | SID
 
     // type: object
-    map<string, uint32> properties = 20;  // default {}
-    repeated string required = 21;        // default: []
-    uint64 min_properties = 22;           // default: 0
+    map<string, uint32> properties = 20;
+    repeated string required = 21;
+    uint64 min_properties = 22;
     uint64 max_properties = 23;
     bool has_max_properties = 24;
     message AdditionalProperties {
@@ -396,25 +385,10 @@ message Schema {
     bool has_additional_properties = 26;
     // TODO: patternProperties :: SID
 
-    repeated uint32 all_of = 27;  // default: []
-    repeated uint32 any_of = 28;  // default: []
-    repeated uint32 one_of = 29;  // default: []
+    repeated uint32 all_of = 27;
+    repeated uint32 any_of = 28;
+    repeated uint32 one_of = 29;
 
     uint32 not = 30;
-
-    // TODO: default, examples
-    // TODO: draft-04 but not part of OpenAPIv3.0.0
-    //  $schema
-    //  id, $id
-    //  dependencies
-    // TODO: http://json-schema.org/draft-06/json-schema-release-notes.html
-    //  const
-    //  contains
-    //  propertyNames
-    //  some formats
-    // TODO: http://json-schema.org/draft-07/json-schema-release-notes.html
-    //  if, then, else
-    //  (readOnly, writeOnly, contentMediaType, contentEncoding)
-    //  some formats
   }
 }

@@ -11,15 +11,11 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"go.starlark.net/starlark"
 )
-
-const localCfg = "fuzzymonkey.star"
-
-func init() {
-	initExec()
-}
 
 // Runtime executes commands, resets and checks against the System Under Test
 type Runtime struct {
@@ -29,16 +25,21 @@ type Runtime struct {
 	globals starlark.StringDict
 
 	envRead map[string]string // holds all the envs looked up on initial run
-	models  map[string]modeler.Interface
 	files   map[string]string
+
+	models      map[string]modeler.Interface
+	modelsNames []string
+
+	resetters      map[string]resetter.Interface
+	resettersNames []string
 
 	checks      map[string]*check
 	checksNames []string
 
-	client    *fm.ChBiDi
-	eIds      []uint32
-	labels    map[string]string
-	cleanedup bool
+	client       fm.BiDier
+	selectedEIDs map[string]*fm.Uint32S
+	labels       map[string]string
+	cleanedup    bool
 
 	progress            progresser.Interface
 	lastFuzzingProgress *fm.Srv_FuzzingProgress
@@ -46,12 +47,8 @@ type Runtime struct {
 }
 
 // NewMonkey parses and optionally pretty-prints configuration
-func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
-	if name == "" {
-		err = errors.New("unnamed NewMonkey")
-		log.Println("[ERR]", err)
-		return
-	}
+func NewMonkey(name, starfile string, arglabels []string) (rt *Runtime, err error) {
+	initExec()
 
 	labels := make(map[string]string, len(arglabels))
 	for _, kv := range arglabels {
@@ -74,17 +71,18 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 		}
 	}
 
-	var localCfgContents []byte
-	if localCfgContents, err = localcfgdata(); err != nil {
+	var starfileContents []byte
+	if starfileContents, err = starfiledata(starfile); err != nil {
 		log.Println("[ERR]", err)
-		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", localCfg)
+		as.ColorERR.Printf("You must provide a readable %q file in the current directory.\n", starfile)
 		return
 	}
 
 	r := &Runtime{
-		binTitle: name,
-		files:    map[string]string{localCfg: string(localCfgContents)},
-		models:   make(map[string]modeler.Interface, 1),
+		binTitle:  name,
+		files:     map[string]string{starfile: string(starfileContents)},
+		models:    make(map[string]modeler.Interface, moduleModelers),
+		resetters: make(map[string]resetter.Interface, moduleResetters),
 		thread: &starlark.Thread{
 			Name:  "cfg",
 			Load:  loadDisabled,
@@ -94,78 +92,83 @@ func NewMonkey(name string, arglabels []string) (rt *Runtime, err error) {
 		envRead: make(map[string]string),
 		checks:  make(map[string]*check),
 	}
-	r.globals = make(starlark.StringDict, len(r.builtins())+len(registeredModelers))
+	r.globals = starlark.StringDict{"monkey": r.newModule()}
 
-	log.Println("[NFO] registered modelers:", len(registeredModelers))
-	for modelName, mdl := range registeredModelers {
-		log.Printf("[DBG] registered modeler: %q", modelName)
-		builtin := r.modelMaker(modelName, mdl.NewFromKwargs)
-		r.globals[modelName] = starlark.NewBuiltin(modelName, builtin)
-	}
-	for t, b := range r.builtins() {
-		r.globals[t] = starlark.NewBuiltin(t, b)
-	}
-
-	log.Println("[NFO] loading starlark config from", localCfg)
+	log.Println("[NFO] loading starlark config from", starfile)
 	start := time.Now()
-	if err = r.loadCfg(); err != nil {
+	if err = r.loadCfg(starfile); err != nil {
 		return
 	}
-	log.Println("[NFO] loaded", localCfg, "in", time.Since(start))
+	log.Println("[NFO] loaded", starfile, "in", time.Since(start))
 
 	rt = r
 	return
 }
 
-func (rt *Runtime) loadCfg() (err error) {
+func (rt *Runtime) loadCfg(starfile string) (err error) {
 	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
 	for k, v := range rt.globals {
 		log.Printf("[DBG] starlark global %q: %+v", k, v)
 	}
 
-	if rt.globals, err = starlark.ExecFile(rt.thread, localCfg, rt.files[localCfg], rt.globals); err != nil {
+	if rt.globals, err = starlark.ExecFile(rt.thread, starfile, rt.files[starfile], rt.globals); err != nil {
 		log.Println("[ERR]", err)
-		if evalErr, ok := err.(*starlark.EvalError); ok {
-			bt := evalErr.Backtrace()
-			log.Println("[ERR]", bt)
-			as.ColorWRN.Println(bt)
-		}
+		err = starTrickError(err)
+		return
+	}
+	if err = starlarktruth.Close(rt.thread); err != nil {
+		log.Println("[ERR]", err)
+		// Incomplete `assert that()` call
+		err = starTrickError(err)
 		return
 	}
 
 	log.Printf("[DBG] models defined: %d", len(rt.models))
-	for k, v := range rt.models {
-		log.Printf("[DBG] defined model %q: %+v", k, v)
-	}
+	_ = rt.forEachModel(func(name string, mdl modeler.Interface) error {
+		log.Printf("[DBG] defined model %q: %+v", name, mdl)
+		return nil
+	})
 	if len(rt.models) == 0 {
 		err = errors.New("no models registered")
 		log.Println("[ERR]", err)
 		return
 	}
 
+	log.Printf("[DBG] resetters defined: %d", len(rt.resetters))
+	if err = rt.forEachResetter(func(name string, rsttr resetter.Interface) error {
+		log.Printf("[DBG] defined resetter %q: %+v", name, rsttr)
+		for _, mdl := range rsttr.Provides() {
+			if _, ok := rt.models[mdl]; !ok {
+				err := fmt.Errorf("resetter %q provides undefined %q", name, mdl)
+				log.Println("[ERR]", err)
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return
+	}
+
 	log.Printf("[NFO] frozen envs: %d", len(rt.envRead))
-	for k, v := range rt.envRead {
-		log.Printf("[NFO] env frozen %q: %+v", k, v)
+	for name, value := range rt.envRead {
+		log.Printf("[NFO] froze env %q: %+v", name, value)
 	}
 
 	log.Printf("[NFO] checks defined: %d", len(rt.checks))
-	for k, v := range rt.checks {
-		log.Printf("[NFO] defined check %q: %+v", k, v)
-	}
+	_ = rt.forEachCheck(func(name string, chk *check) error {
+		log.Printf("[NFO] defined check %q: %+v", name, chk)
+		return nil
+	})
 
-	for t := range rt.builtins() {
-		delete(rt.globals, t)
-	}
-	for key := range rt.globals {
-		if err = tags.LegalName(key); err != nil {
-			err = fmt.Errorf("illegal value name: %v", err)
+	delete(rt.globals, "monkey")
+	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
+	for name, value := range rt.globals {
+		if err = tags.LegalName(name); err != nil {
+			err = fmt.Errorf("illegal name %q: %v", name, err)
 			log.Println("[ERR]", err)
 			return
 		}
-	}
-	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
-	for k, v := range rt.globals {
-		log.Printf("[DBG] starlark global %q: %+v", k, v)
+		log.Printf("[DBG] starlark global %q: %+v", name, value)
 	}
 	return
 }

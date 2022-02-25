@@ -10,15 +10,17 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/types"
 )
 
 var (
@@ -50,7 +52,7 @@ type tCapHTTP struct {
 	repProto         *fm.Clt_CallResponseRaw_Output_HttpResponse
 	repBodyDecodeErr error
 
-	// TODO: pick from these
+	// TODO: pick from these and timings
 	// %{content_type} shows the Content-Type of the requested document, if there was any.
 	// %{filename_effective} shows the ultimate filename that curl writes out to. This is only meaningful if curl is told to write to a file with the --remote-name or --output option. It's most useful in combination with the --remote-header-name option.
 	// %{ftp_entry_path} shows the initial path curl ended up in when logging on to the remote FTP server.
@@ -96,12 +98,12 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 	var r *http.Request
 
 	if body := input.GetBody(); body != nil {
-		buf := &bytes.Buffer{}
-		if err = (&jsonpb.Marshaler{}).Marshal(buf, body); err != nil {
+		var bodyBytes []byte
+		if bodyBytes, err = protojson.Marshal(body); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
-		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), buf)
+		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), bytes.NewReader(bodyBytes))
 	} else {
 		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
 	}
@@ -110,19 +112,20 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		return
 	}
 
-	for key, values := range input.GetHeaders() {
-		for _, value := range values.GetValues() {
+	for _, kvs := range input.GetHeaders() {
+		key := kvs.GetKey()
+		for _, value := range kvs.GetValues() {
 			r.Header.Add(key, value)
 		}
 	}
 
-	if authz := m.HeaderAuthorization; authz != "" {
+	if authz := m.pb.HeaderAuthorization; authz != "" {
 		r.Header.Add(headerAuthorization, authz)
 	}
 
 	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.XUserAgent).(string))
 
-	if host := m.Host; host != "" {
+	if host := m.pb.Host; host != "" {
 		var configured *url.URL
 		if configured, err = url.ParseRequestURI(host); err != nil {
 			log.Println("[ERR]", err)
@@ -168,25 +171,32 @@ func requestToProto(r *http.Request) (
 		Url:    r.URL.String(),
 	}
 
-	reqProto.Headers = make(map[string]*fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues, len(r.Header))
-	for key, headers := range r.Header {
-		if len(headers) == 0 {
-			continue
-		}
-		var values []string
+	headerNames := make([]string, 0, len(r.Header))
+	for key := range r.Header {
+		headerNames = append(headerNames, key)
+	}
+	sort.Strings(headerNames)
+	reqProto.Headers = make([]*fm.HeaderPair, 0, len(headerNames))
+	for _, key := range headerNames {
+		values := r.Header[key]
 		switch key {
 		case headerContentLength:
-			values = []string{strconv.FormatInt(r.ContentLength, 10)}
+			newvalues := []string{strconv.FormatInt(r.ContentLength, 10)}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerTransferEncoding:
-			values = r.TransferEncoding
+			newvalues := r.TransferEncoding
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerHost:
-			values = []string{r.Host}
-		default:
-			values = headers
+			newvalues := []string{r.Host}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		}
-		reqProto.Headers[key] = &fm.Clt_CallRequestRaw_Input_HttpRequest_HeaderValues{
+		reqProto.Headers = append(reqProto.Headers, &fm.HeaderPair{
+			Key:    key,
 			Values: values,
-		}
+		})
 	}
 
 	if r.Body != nil {
@@ -200,8 +210,8 @@ func requestToProto(r *http.Request) (
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(reqProto.Body))
 
-		var x types.Value
-		if e := jsonpb.UnmarshalString(string(reqProto.Body), &x); e != nil {
+		var x structpb.Value
+		if e := protojson.Unmarshal(reqProto.Body, &x); e != nil {
 			log.Println("[NFO] request body could not be decoded:", e)
 		} else {
 			reqProto.BodyDecoded = &x
@@ -243,6 +253,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 }
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
+	// TODO: stricter/smaller timeouts https://pkg.go.dev/github.com/asecurityteam/transport#Option
 	t := &http.Transport{
 		Proxy: func(req *http.Request) (*url.URL, error) {
 			// TODO: snap the envs that ProxyFromEnvironment reads
@@ -288,23 +299,28 @@ func (c *tCapHTTP) responseToProto(r *http.Response) (err error) {
 	c.repProto.StatusCode = uint32(r.StatusCode)
 	c.repProto.Reason = r.Status
 
-	c.repProto.Headers = make(map[string]*fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues, len(r.Header))
-	for key, headers := range r.Header {
-		if len(headers) == 0 {
-			continue
-		}
-		var values []string
+	headerNames := make([]string, 0, len(r.Header))
+	for key := range r.Header {
+		headerNames = append(headerNames, key)
+	}
+	sort.Strings(headerNames)
+	c.repProto.Headers = make([]*fm.HeaderPair, 0, len(headerNames))
+	for _, key := range headerNames {
+		values := r.Header[key]
 		switch key {
 		case headerContentLength:
-			values = []string{strconv.FormatInt(r.ContentLength, 10)}
+			newvalues := []string{strconv.FormatInt(r.ContentLength, 10)}
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		case headerTransferEncoding:
-			values = r.TransferEncoding
-		default:
-			values = headers
+			newvalues := r.TransferEncoding
+			log.Printf("[NFO] replacing %s headers %+v with %+v", key, values, newvalues)
+			values = newvalues
 		}
-		c.repProto.Headers[key] = &fm.Clt_CallResponseRaw_Output_HttpResponse_HeaderValues{
+		c.repProto.Headers = append(c.repProto.Headers, &fm.HeaderPair{
+			Key:    key,
 			Values: values,
-		}
+		})
 	}
 
 	if r.Body != nil {
@@ -318,8 +334,8 @@ func (c *tCapHTTP) responseToProto(r *http.Response) (err error) {
 		}
 		r.Body = ioutil.NopCloser(bytes.NewReader(c.repProto.Body))
 
-		var x types.Value
-		if e := jsonpb.UnmarshalString(string(c.repProto.Body), &x); e != nil {
+		var x structpb.Value
+		if e := protojson.Unmarshal(c.repProto.Body, &x); e != nil {
 			log.Println("[NFO] response body could not be decoded:", e)
 			c.repBodyDecodeErr = e
 		} else {

@@ -285,13 +285,15 @@
                 "fields": [
                   {
                     "id": 1,
-                    "name": "resetter",
-                    "type": "Resetter"
+                    "name": "resetters",
+                    "type": "Resetter",
+                    "is_repeated": true
                   },
                   {
                     "id": 2,
-                    "name": "model",
-                    "type": "Model"
+                    "name": "models",
+                    "type": "Model",
+                    "is_repeated": true
                   },
                   {
                     "id": 3,
@@ -310,12 +312,6 @@
                     "type": "uint32"
                   },
                   {
-                    "id": 6,
-                    "name": "EIDs",
-                    "type": "uint32",
-                    "is_repeated": true
-                  },
-                  {
                     "id": 9,
                     "name": "UUIDs",
                     "type": "string",
@@ -323,6 +319,14 @@
                   }
                 ],
                 "maps": [
+                  {
+                    "key_type": "string",
+                    "field": {
+                      "id": 6,
+                      "name": "EIDs",
+                      "type": "Uint32s"
+                    }
+                  },
                   {
                     "key_type": "string",
                     "field": {
@@ -354,6 +358,17 @@
                     "fields": [
                       {
                         "id": 1,
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "id": 2,
+                        "name": "provides",
+                        "type": "string",
+                        "is_repeated": true
+                      },
+                      {
+                        "id": 3,
                         "name": "shell",
                         "type": "Shell"
                       }
@@ -386,6 +401,11 @@
                     "fields": [
                       {
                         "id": 1,
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "id": 2,
                         "name": "openapiv3",
                         "type": "OpenAPIv3"
                       }
@@ -481,6 +501,12 @@
                             "type": "string"
                           },
                           {
+                            "id": 3,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 4,
                             "name": "body",
                             "type": "bytes"
@@ -489,29 +515,6 @@
                             "id": 5,
                             "name": "body_decoded",
                             "type": "google.protobuf.Value"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 3,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -563,6 +566,12 @@
                             "type": "string"
                           },
                           {
+                            "id": 4,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 5,
                             "name": "body",
                             "type": "bytes"
@@ -576,29 +585,6 @@
                             "id": 7,
                             "name": "elapsed_ns",
                             "type": "int64"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 4,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -756,6 +742,11 @@
                     "id": 4,
                     "name": "max_execution_steps_per_check",
                     "type": "uint64"
+                  },
+                  {
+                    "id": 5,
+                    "name": "max_execution_ms_per_check",
+                    "type": "uint32"
                   }
                 ]
               },
@@ -771,6 +762,11 @@
                     "id": 2,
                     "name": "EID",
                     "type": "uint32"
+                  },
+                  {
+                    "id": 3,
+                    "name": "model_name",
+                    "type": "string"
                   }
                 ],
                 "messages": [
@@ -798,32 +794,15 @@
                             "type": "string"
                           },
                           {
+                            "id": 3,
+                            "name": "headers",
+                            "type": "HeaderPair",
+                            "is_repeated": true
+                          },
+                          {
                             "id": 4,
                             "name": "body",
                             "type": "google.protobuf.Value"
-                          }
-                        ],
-                        "maps": [
-                          {
-                            "key_type": "string",
-                            "field": {
-                              "id": 3,
-                              "name": "headers",
-                              "type": "HeaderValues"
-                            }
-                          }
-                        ],
-                        "messages": [
-                          {
-                            "name": "HeaderValues",
-                            "fields": [
-                              {
-                                "id": 1,
-                                "name": "values",
-                                "type": "string",
-                                "is_repeated": true
-                              }
-                            ]
                           }
                         ]
                       }
@@ -886,6 +865,33 @@
                     ]
                   }
                 ]
+              }
+            ]
+          },
+          {
+            "name": "Uint32s",
+            "fields": [
+              {
+                "id": 1,
+                "name": "values",
+                "type": "uint32",
+                "is_repeated": true
+              }
+            ]
+          },
+          {
+            "name": "HeaderPair",
+            "fields": [
+              {
+                "id": 1,
+                "name": "key",
+                "type": "string"
+              },
+              {
+                "id": 2,
+                "name": "values",
+                "type": "string",
+                "is_repeated": true
               }
             ]
           },
@@ -1241,9 +1247,6 @@
         "imports": [
           {
             "path": "google/protobuf/struct.proto"
-          },
-          {
-            "path": "github.com/gogo/protobuf/gogoproto/gogo.proto"
           }
         ],
         "package": {
@@ -1253,22 +1256,6 @@
           {
             "name": "go_package",
             "value": "github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-          },
-          {
-            "name": "(gogoproto.sizer_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.marshaler_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.unmarshaler_all)",
-            "value": "true"
-          },
-          {
-            "name": "(gogoproto.equal_all)",
-            "value": "true"
           }
         ]
       }

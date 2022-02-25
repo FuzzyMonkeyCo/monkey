@@ -3,73 +3,49 @@ package modeler
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"github.com/gogo/protobuf/types"
 	"go.starlark.net/starlark"
+	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
 var (
 	ErrUnparsablePayload = errors.New("unparsable piped payload")
 	ErrNoSuchSchema      = errors.New("no such schema")
-	ErrNoSuchRef         = errors.New("no such ref")
 )
 
-// Interface describes checkable models
-type Interface interface {
+// Maker types the New func that instanciates new models
+type Maker func(kwargs []starlark.Tuple) (Interface, error)
+
+// Interface describes checkable models.
+// A package defining a type that implements Interface also has to define:
+// * a non-empty const Name that names the Starlark builtin
+// * a func of type Maker named New that instanciates a new model
+type Interface interface { // TODO models.Modeler
+	// Name uniquely identifies this instance
+	Name() string
+
+	// ToProto marshals a modeler.Interface implementation into a *fm.Clt_Fuzz_Model
 	ToProto() *fm.Clt_Fuzz_Model
-	FromProto(*fm.Clt_Fuzz_Model) error
 
-	NewFromKwargs(starlark.StringDict) (Interface, *Error)
+	// Lint goes through specs and unsures they are valid
+	Lint(ctx context.Context, showSpec bool) error
 
-	SetResetter(resetter.Interface)
-	GetResetter() resetter.Interface
-
-	Lint(context.Context, bool) error
-
+	// InputsCount sums the amount of named schemas or types APIs define
 	InputsCount() int
-	WriteAbsoluteReferences(io.Writer)
-	FilterEndpoints([]string) ([]uint32, error)
+	// WriteAbsoluteReferences pretty-prints the API's named types
+	WriteAbsoluteReferences(w io.Writer)
+	// FilterEndpoints restricts which API endpoints are considered
+	FilterEndpoints(criteria []string) ([]uint32, error)
 
-	ValidateAgainstSchema(string, []byte) error
-	Validate(uint32, *types.Value) []string
+	ValidateAgainstSchema(ref string, data []byte) error
+	Validate(uint32, *structpb.Value) []string
 
 	// NewCaller is called before making each call
-	NewCaller(context.Context, *fm.Srv_Call, ShowFunc) Caller
-
-	// Check(...) ...
+	NewCaller(ctx context.Context, call *fm.Srv_Call, showf ShowFunc) Caller
 }
 
 // ShowFunc can be used to display informational messages to the tester
 type ShowFunc func(string, ...interface{})
-
-// Func TODO
-type Func func(starlark.StringDict) (Interface, *Error)
-
-var _ error = (*Error)(nil)
-
-// Error TODO
-type Error struct {
-	modelerName          string
-	fieldRead, want, got string
-}
-
-func NewError(fieldRead, want, got string) *Error {
-	return &Error{
-		fieldRead: fieldRead,
-		want:      want,
-		got:       got,
-	}
-}
-
-func (e *Error) SetModelerName(name string) {
-	e.modelerName = name
-}
-
-func (e *Error) Error() string {
-	return fmt.Sprintf("%s(%s = ...) must be %s, got: %s",
-		e.modelerName, e.fieldRead, e.want, e.got)
-}

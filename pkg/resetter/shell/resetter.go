@@ -12,20 +12,52 @@ import (
 	"strings"
 	"time"
 
+	"go.starlark.net/starlark"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
+
+// Name names the Starlark builtin
+const Name = "shell"
 
 const (
 	timeoutShort = 200 * time.Millisecond
 	timeoutLong  = 2 * time.Minute
 )
 
+// New instanciates a new resetter
+func New(kwargs []starlark.Tuple) (resetter.Interface, error) {
+	var name, start, reset, stop starlark.String
+	var provides tags.UniqueStringsNonEmpty
+	if err := starlark.UnpackArgs(Name, nil, kwargs,
+		"name", &name,
+		"provides", &provides,
+		// TODO: waiton = "tcp/4000", various recipes => 1 rsttr / service
+		"start??", &start,
+		"reset??", &reset,
+		"stop??", &stop,
+	); err != nil {
+		return nil, err
+	}
+	s := &Resetter{
+		name:     name.GoString(),
+		provides: provides.GoStrings(),
+	}
+	s.Start = start.GoString()
+	s.Rst = reset.GoString()
+	s.Stop = stop.GoString()
+	return s, nil
+}
+
 var _ resetter.Interface = (*Resetter)(nil)
 
 // Resetter implements resetter.Interface
 type Resetter struct {
+	name     string
+	provides []string
 	fm.Clt_Fuzz_Resetter_Shell
 
 	isNotFirstRun bool
@@ -33,9 +65,17 @@ type Resetter struct {
 	setReadonlyEnvs func(Y io.Writer)
 }
 
+// Name uniquely identifies this instance
+func (s *Resetter) Name() string { return s.name }
+
+// Provides lists the models a resetter resets
+func (s *Resetter) Provides() []string { return s.provides }
+
 // ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
 func (s *Resetter) ToProto() *fm.Clt_Fuzz_Resetter {
 	return &fm.Clt_Fuzz_Resetter{
+		Name:     s.name,
+		Provides: s.provides,
 		Resetter: &fm.Clt_Fuzz_Resetter_Shell_{
 			Shell: &s.Clt_Fuzz_Resetter_Shell,
 		}}
@@ -84,15 +124,16 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
 		if err = s.ExecStop(ctx, stdout, stderr, true); err != nil {
 			log.Println("[ERR]", err)
-			// Keep going
+			return
 		}
 	}
 
-	if errR := os.Remove(cwid.EnvFile()); errR != nil && !os.IsNotExist(errR) {
-		log.Println("[ERR]", errR)
-		if err == nil {
-			err = errR
+	if err = os.Remove(cwid.EnvFile()); err != nil {
+		if !os.IsNotExist(err) {
+			log.Println("[ERR]", err)
+			return
 		}
+		err = nil
 	}
 	return
 }
@@ -138,13 +179,15 @@ func (s *Resetter) commands() (cmds string, err error) {
 	}
 }
 
-func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer, cmds string) (err error) {
+func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds string) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeoutLong)
+	ctx, cancel := context.WithTimeout(ctx, timeoutLong) // TODO: tune through kwargs
+	// TODO:{start,reset,strop}_file a la Bazel
+	// write files to /tmp once + chmodx + use mentioned shell
 	defer cancel()
 
 	envFile := cwid.EnvFile()
@@ -176,7 +219,11 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 		defer script.Close()
 
 		Y := io.MultiWriter(script, &scriptListing)
-		s.setReadonlyEnvs(Y)
+		if f := s.setReadonlyEnvs; f != nil {
+			f(Y)
+		} else {
+			log.Println("[NFO] setReadonlyEnvs was nil")
+		}
 		fmt.Fprintln(Y, "source", envFile, ">/dev/null 2>&1")
 		fmt.Fprintln(Y, "set -o errexit")
 		fmt.Fprintln(Y, "set -o errtrace")
@@ -195,7 +242,7 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 
 	// NOTE: if piping script to Bash and the script calls exec,
 	// even in a subshell, bash will stop execution.
-	var stdboth bytes.Buffer
+	var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
 	exe := exec.CommandContext(ctx, s.shell(), "--norc", "--", scriptFile)
 	exe.Stdin = nil
 	exe.Stdout = io.MultiWriter(&stdboth, stdout)
@@ -213,6 +260,12 @@ func (s *Resetter) exec(ctx context.Context, stdout io.Writer, stderr io.Writer,
 	}
 	go func() {
 		e := exe.Wait()
+		if e == io.ErrShortWrite { // TODO: drop this
+			// Reproduce with `make debug && make debug && ...`
+			// Surely happens on write to STDOUT/STDERR
+			// A mutex for both progress writers does not fix this
+			e = nil
+		}
 		ch <- e
 		log.Println("[ERR] shell script execution error:", e)
 		cancel()

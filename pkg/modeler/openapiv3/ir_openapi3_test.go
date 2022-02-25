@@ -9,12 +9,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gogo/protobuf/jsonpb"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
 )
 
 var someDescription = "some description"
@@ -33,8 +34,9 @@ func TestMakeXXXFromOA3(t *testing.T) {
 }
 
 func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
-	jsoner := &jsonpb.Marshaler{Indent: "\t"}
+	jsoner := &protojson.MarshalOptions{Indent: "\t"}
 	pattern := filepath.Join("testdata", "specs", "openapi3", "*.*")
+	// TODO pattern := filepath.Join("testdata", "documents", "*.*")
 	matches, err := filepath.Glob(pattern)
 	require.NoError(t, err)
 	require.NotEmpty(t, matches)
@@ -42,38 +44,40 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 		t.Run(docPath, func(t *testing.T) {
 			t.Logf("lint spec from OpenAPIv3 file")
 			m0 := &oa3{}
-			m0.File = docPath
-			err := m0.Lint(context.TODO(), false)
+			m0.pb = &fm.Clt_Fuzz_Model_OpenAPIv3{File: docPath}
+			err := m0.Lint(context.Background(), false)
 			require.NoError(t, err)
 			t.Logf("validate some schemas")
 			validateSomeSchemas(t, m0)
 			t.Logf("proto marshaling")
 			proto0 := m0.ToProto()
-			bin0, err := proto.Marshal(proto0)
+			bin0, err := proto0.MarshalVT()
 			require.NoError(t, err)
-			require.NotNil(t, bin0)
-			jsn0, err := jsoner.MarshalToString(proto0)
+			require.NotEmpty(t, bin0)
+			jsn0, err := jsoner.Marshal(proto0)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn0)
 
 			t.Logf("build & use validator from proto")
 			var m1Prime fm.Clt_Fuzz_Model
-			err = proto.Unmarshal(bin0, &m1Prime)
+			err = m1Prime.UnmarshalVT(bin0)
 			require.NoError(t, err)
 			require.NotNil(t, &m1Prime)
 			m1 := &oa3{}
-			err = m1.FromProto(&m1Prime)
-			require.NoError(t, err)
-			require.NotNil(t, m1.Clt_Fuzz_Model_OpenAPIv3)
+			m1.fromProto(&m1Prime)
+			require.NotEmpty(t, m1.pb.File)
+			require.Empty(t, m1.pb.Host)
+			require.Empty(t, m1.pb.HeaderAuthorization)
+			require.NotEmpty(t, m1.pb.Spec)
 			require.NotNil(t, m1.vald)
 			validateSomeSchemas(t, m1)
 
 			t.Logf("compare encoded to re-created")
 			proto1 := m1.ToProto()
-			jsn1, err := jsoner.MarshalToString(proto1)
+			jsn1, err := jsoner.Marshal(proto1)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn1)
-			require.JSONEq(t, jsn0, jsn1)
+			require.JSONEq(t, string(jsn0), string(jsn1))
 
 			t.Logf("enc ∘ dec ∘ enc = enc")
 			doc := toOA3(m1)
@@ -87,12 +91,18 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			t.Skipf("TODO: compare encoded with re-encoded")
 			require.Equal(t, m1.vald.Spec, m0.vald.Spec)
 			proto2 := m1.ToProto()
-			jsn2, err := jsoner.MarshalToString(proto2)
+			jsn2, err := jsoner.Marshal(proto2)
 			require.NoError(t, err)
 			require.NotEmpty(t, jsn2)
-			require.JSONEq(t, jsn0, jsn2)
+			require.JSONEq(t, string(jsn0), string(jsn2))
 		})
 	}
+}
+
+func (m *oa3) fromProto(p *fm.Clt_Fuzz_Model) {
+	mm := p.GetOpenapiv3()
+	m.pb = proto.Clone(mm).(*fm.Clt_Fuzz_Model_OpenAPIv3)
+	m.vald = &validator{Spec: mm.Spec}
 }
 
 func toOA3(m *oa3) (doc openapi3.T) {
@@ -102,9 +112,9 @@ func toOA3(m *oa3) (doc openapi3.T) {
 		Version: "1.42.3",
 	}
 	var sm schemap
-	sm = m.Spec.GetSchemas().GetJson()
+	sm = m.pb.Spec.GetSchemas().GetJson()
 	sm.schemasToOA3(&doc)
-	sm.endpointsToOA3(&doc, m.Spec.GetEndpoints())
+	sm.endpointsToOA3(&doc, m.pb.Spec.GetEndpoints())
 	return
 }
 

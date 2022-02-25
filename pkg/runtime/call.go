@@ -16,18 +16,13 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64) error {
+func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64, maxDuration time.Duration) error {
 	showf := func(format string, s ...interface{}) {
-		// TODO: prepend with 2-space indentation (somehow doesn't work)
 		rt.progress.Printf(format, s...)
 	}
 
-	var mdl modeler.Interface
-	for _, mdl = range rt.models {
-		break
-	}
-
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
+	mdl := rt.models[msg.GetModelName()]
 	cllr := mdl.NewCaller(ctx, msg, showf)
 
 	input := cllr.RequestProto()
@@ -69,9 +64,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	}
 
 	{
+		print := func(msg string) { rt.progress.Printf("%s", msg) }
 		ctxer1 := ctxer2(output.GetOutput())
 		var passed2 bool
-		if passed2, errT = rt.userChecks(ctx, tagsFilter, ctxer1, maxSteps); errT != nil {
+		if passed2, errT = rt.userChecks(ctx, print, tagsFilter, ctxer1, maxSteps, maxDuration); errT != nil {
 			return errT
 		}
 		if !passed2 {
@@ -176,22 +172,37 @@ func (rt *Runtime) runCallerCheck(
 	}
 }
 
-func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxer1 ctxctor1, maxSteps uint64) (bool, error) {
+func (rt *Runtime) userChecks(
+	ctx context.Context,
+	print func(string),
+	tagsFilter *tags.Filter,
+	ctxer1 ctxctor1,
+	maxSteps uint64,
+	maxDuration time.Duration,
+) (bool, error) {
 	log.Printf("[NFO] checking %d user properties", len(rt.checks))
 
-	g, _ := errgroup.WithContext(ctx)
-	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
 	// Run all checks concurrently, send their results to vs.
 	// Concurrently, consume and send these one-by-one.
 	// Return early if ctx is canceled.
 
+	ctxG, cancel := context.WithTimeout(ctx, maxDuration)
+	defer cancel()
+
+	g, ctxG := errgroup.WithContext(ctxG)
+	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
+	threads := rt.makeThreads(ctxG)
+
 	passed := true
 	g.Go(func() (errT error) {
-		for i := 0; i < len(rt.checks); i++ {
+		for name := range rt.checks {
+			name := name
 			select {
-			case <-ctx.Done():
-				errT, passed = ctx.Err(), false
-				// TODO: (*starlark.Thread).Cancel(ctx.Err().Error()) for each userCheck
+			case <-ctxG.Done():
+				errT, passed = ctxG.Err(), false
+				if errT != nil {
+					threads[name].Cancel(errT.Error())
+				}
 				return
 			case v := <-vs:
 				if errT = rt.client.Send(ctx, cvp(v)); errT != nil {
@@ -213,11 +224,10 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 		return
 	})
 
-	for _, name := range rt.checksNames {
-		name, chk := name, rt.checks[name]
-
+	_ = rt.forEachCheck(func(name string, chk *check) error {
 		g.Go(func() error {
-			v := rt.runUserCheckWrapper(name, chk, tagsFilter, ctxer1, maxSteps)
+			th := threads[name]
+			v := rt.runUserCheckWrapper(name, th, chk, print, tagsFilter, ctxer1, maxSteps)
 			switch v.Status {
 			case fm.Clt_CallVerifProgress_success:
 				rt.progress.CheckPassed(v.Name, chk.afterResponse.String())
@@ -230,7 +240,8 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 			vs <- v
 			return nil
 		})
-	}
+		return nil
+	})
 
 	if errT := g.Wait(); errT != nil {
 		return false, errT
@@ -240,7 +251,9 @@ func (rt *Runtime) userChecks(ctx context.Context, tagsFilter *tags.Filter, ctxe
 
 func (rt *Runtime) runUserCheckWrapper(
 	name string,
+	th *starlark.Thread,
 	chk *check,
+	print func(string),
 	tagsFilter *tags.Filter,
 	ctxer1 ctxctor1,
 	maxSteps uint64,
@@ -249,24 +262,34 @@ func (rt *Runtime) runUserCheckWrapper(
 	log.Println("[NFO] checking user property:", v.Name)
 
 	start := time.Now()
-	errL := rt.runUserCheck(v, chk, tagsFilter, ctxer1, maxSteps)
+	errL := rt.runUserCheck(v, th, chk, print, tagsFilter, ctxer1, maxSteps)
 	v.ElapsedNs = time.Since(start).Nanoseconds()
 	if errL != nil {
 		v.Reason = []string{fmt.Sprintf("%T", errL)}
-		var reason string
-		if e, ok := errL.(*starlark.EvalError); ok {
-			reason = e.Backtrace()
-		} else {
-			reason = errL.Error()
-		}
+		reason := starTrickError(errL).Error()
 		v.Reason = append(v.Reason, strings.Split(reason, "\n")...)
 	}
 	return v
 }
 
+func (rt *Runtime) makeThreads(ctx context.Context) map[string]*starlark.Thread {
+	threads := make(map[string]*starlark.Thread, len(rt.checks))
+	for name := range rt.checks {
+		th := &starlark.Thread{
+			Name: name,
+			Load: loadDisabled,
+		}
+		th.SetLocal("ctx", ctx)
+		threads[name] = th
+	}
+	return threads
+}
+
 func (rt *Runtime) runUserCheck(
 	v *fm.Clt_CallVerifProgress,
+	th *starlark.Thread,
 	chk *check,
+	print func(string),
 	tagsFilter *tags.Filter,
 	ctxer1 ctxctor1,
 	maxSteps uint64,
@@ -279,10 +302,10 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	th := &starlark.Thread{
-		Name:  v.Name,
-		Load:  loadDisabled,
-		Print: func(_ *starlark.Thread, msg string) { rt.progress.Printf("%s", msg) },
+	didPrint := false
+	th.Print = func(_ *starlark.Thread, msg string) {
+		didPrint = true
+		print(msg)
 	}
 	th.SetMaxExecutionSteps(maxSteps) // Upper bound on computation
 
@@ -302,7 +325,7 @@ func (rt *Runtime) runUserCheck(
 	}
 	if err = starlarktruth.Close(th); err != nil {
 		log.Println("[ERR]", err)
-		// Incomplete assert.that() call
+		// Incomplete `assert that()` call
 		v.Status = fm.Clt_CallVerifProgress_failure
 		return
 	}
@@ -313,9 +336,7 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 
-	wasMutated := snapshot != chk.state.String()
-
-	if wasMutated {
+	if wasMutated := snapshot != chk.state.String(); wasMutated {
 		if err = ensureStateDict(v.Name, chk.state); err != nil {
 			log.Println("[ERR]", err)
 			v.Status = fm.Clt_CallVerifProgress_failure
@@ -328,7 +349,7 @@ func (rt *Runtime) runUserCheck(
 			v.Status = fm.Clt_CallVerifProgress_failure
 			return
 		}
-	} else if !starlarktruth.Asserted(th) {
+	} else if !didPrint && !starlarktruth.Asserted(th) {
 		// Predicate did not trigger
 		v.Status = fm.Clt_CallVerifProgress_skipped
 		return

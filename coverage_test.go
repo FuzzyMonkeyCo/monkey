@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -27,6 +26,6 @@ func TestCov(t *testing.T) {
 
 	fmt.Println("EXIT", code)
 	data := []byte(strconv.Itoa(code))
-	err := ioutil.WriteFile(pathErrCode, data, 0644)
+	err := os.WriteFile(pathErrCode, data, 0644)
 	require.NoError(t, err)
 }

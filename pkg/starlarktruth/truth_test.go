@@ -21,7 +21,7 @@ const (
 const abc = `"abc"` // Please linter
 
 func helper(t *testing.T, as asWhat, program string) (starlark.StringDict, error) {
-	t.Helper() // TODO: make this work (for failed test reports)
+	t.Helper()
 
 	// Enabled so they can be tested
 	resolve.AllowFloat = true
@@ -104,7 +104,7 @@ func TestClosedness(t *testing.T) {
 		`
 fortytwo = that(True)
 that(False).is_false()
-`: UnresolvedError("TestClosedness/_fortytwo_=_that(True)_that(False).is_false()_.star:4:16"),
+`: newUnresolvedError("TestClosedness/_fortytwo_=_that(True)_that(False).is_false()_.star:4:16"),
 		`
 fortytwo = that(True)
 fortytwo.is_true()
@@ -112,15 +112,15 @@ that(False).is_false()
 `: nil,
 	})
 	testEach(t, map[string]error{
-		`assert.that(True)`:           UnresolvedError("TestClosedness/assert.that(True).star:3:12"),
+		`assert.that(True)`:           newUnresolvedError("TestClosedness/assert.that(True).star:3:12"),
 		`assert.that(True).is_true()`: nil,
 
-		`assert.that(True).named("eh")`:           UnresolvedError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
+		`assert.that(True).named("eh")`:           newUnresolvedError(`TestClosedness/assert.that(True).named("eh").star:3:12`),
 		`assert.that(True).named("eh").is_true()`: nil,
 
-		`assert.that(10).is_within(0.1)`:            UnresolvedError("TestClosedness/assert.that(10).is_within(0.1).star:3:12"),
+		`assert.that(10).is_within(0.1)`:            newUnresolvedError("TestClosedness/assert.that(10).is_within(0.1).star:3:12"),
 		`assert.that(10).is_within(0.1).of(10)`:     nil,
-		`assert.that(10).is_not_within(0.1)`:        UnresolvedError("TestClosedness/assert.that(10).is_not_within(0.1).star:3:12"),
+		`assert.that(10).is_not_within(0.1)`:        newUnresolvedError("TestClosedness/assert.that(10).is_not_within(0.1).star:3:12"),
 		`assert.that(10).is_not_within(0.1).of(42)`: nil,
 	}, asModule)
 }
@@ -149,4 +149,15 @@ func TestImpossibleInOrder(t *testing.T) {
 		`that([1,2,3]).is_ordered()`: nil,
 		`that([1,2,3]).in_order()`:   fmt.Errorf(`Invalid assertion .in_order() on value of type list`),
 	})
+}
+
+func TestKwargsForbidden(t *testing.T) {
+	tests := make(map[string]error, len(methods))
+	for _, method := range methods {
+		for m := range method {
+			tests[`that([42]).`+m+`(a="blip", b="blap", c="blop")`] = fmt.Errorf("%s: unexpected keyword arguments", m)
+			break
+		}
+	}
+	testEach(t, tests)
 }

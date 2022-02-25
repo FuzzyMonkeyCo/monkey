@@ -173,7 +173,7 @@ func (rel *GithubRelease) ReplaceCurrentRelease(latest string) (err error) {
 		log.Println("[ERR]", err)
 		return
 	}
-	if err = os.Rename(bin.Name(), dst); err != nil {
+	if err = os.Rename(bin.Name(), dst); err != nil { // TODO on non-windows: https://github.com/google/renameio
 		log.Println("[ERR]", err)
 		return
 	}

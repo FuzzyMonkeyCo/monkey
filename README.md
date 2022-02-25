@@ -7,55 +7,59 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.15.5 linux amd64
+monkey M.m.p go1.17.5 linux amd64
 
 Usage:
-  monkey [-vvv] fuzz [--intensity=N] [--seed=SEED] [--label=KV]...
-                     [--tags=TAGS | --exclude-tags=TAGS]
-                     [--no-shrinking]
-                     [--progress=PROGRESS]
-                     [--time-budget-overall=DURATION]
-                     [--only=REGEX]... [--except=REGEX]...
-                     [--calls-with-input=SCHEMA]... [--calls-without-input=SCHEMA]...
-                     [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
-  monkey [-vvv] lint [--show-spec]
-  monkey [-vvv] fmt [-w]
-  monkey [-vvv] schema [--validate-against=REF]
-  monkey [-vvv] exec (repl | start | reset | stop)
-  monkey [-vvv] env [VAR ...]
-  monkey        logs [--previous=N]
-  monkey        pastseed
-  monkey [-vvv] update
-  monkey        version | --version
-  monkey        help    | --help    | -h
+  monkey [-vvv]           env [VAR ...]
+  monkey [-vvv] [-f STAR] fmt [-w]
+  monkey [-vvv] [-f STAR] lint [--show-spec]
+  monkey [-vvv] [-f STAR] exec (repl | start | reset | stop)
+  monkey [-vvv] [-f STAR] schema [--validate-against=REF]
+  monkey [-vvv] [-f STAR] fuzz [--intensity=N] [--seed=SEED]
+                               [--label=KV]...
+                               [--tags=TAGS | --exclude-tags=TAGS]
+                               [--no-shrinking]
+                               [--progress=PROGRESS]
+                               [--time-budget-overall=DURATION]
+                               [--only=REGEX]... [--except=REGEX]...
+                               [--calls-with-input=SCHEMA]...  [--calls-without-input=SCHEMA]...
+                               [--calls-with-output=SCHEMA]... [--calls-without-output=SCHEMA]...
+  monkey        [-f STAR] pastseed
+  monkey        [-f STAR] logs [--previous=N]
+  monkey [-vvv]           update
+  monkey                  version | --version
+  monkey                  help    | --help    | -h
 
 Options:
   -v, -vv, -vvv                   Debug verbosity level
+  -f STAR, --file=STAR            Name of the fuzzymonkey.star file
   version                         Show the version string
   update                          Ensures monkey is the latest version
   --intensity=N                   The higher the more complex the tests [default: 10]
   --time-budget-overall=DURATION  Stop testing after DURATION (e.g. '30s' or '5h')
   --seed=SEED                     Use specific parameters for the Random Number Generator
   --label=KV                      Labels that can help classification (format: key=value)
-  --tags=TAGS                     Only run Check.s whose tags match at least one of these (comma separated)
+  --tags=TAGS                     Only run checks whose tags match at least one of these (comma separated)
+  --exclude-tags=TAGS             Skip running checks whose tags match at least one of these (comma separated)
   --progress=PROGRESS             dots, bar, ci (defaults: dots)
   --only=REGEX                    Only test matching calls
   --except=REGEX                  Do not test these calls
   --calls-with-input=SCHEMA       Test calls which can take schema PTR as input
   --calls-without-output=SCHEMA   Test calls which never output schema PTR
-  --validate-against=REF          Schema $ref to validate STDIN against
+  --validate-against=REF          Validate STDIN payload against given schema $ref
+  --previous=N                    Select logs from Nth previous run [default: 1]
 
 Try:
      export FUZZYMONKEY_API_KEY=fm_42
   monkey update
-  monkey exec reset
+  monkey -f fm.star exec reset
   monkey fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
   echo '"kitty"' | monkey schema --validate-against=#/components/schemas/PetKind
 ```
 
 ### Getting started
 
-**Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/action-monkey).
+**Recommended way:** using [the GitHub Action](https://github.com/FuzzyMonkeyCo/setup-monkey).
 
 Quick install:
 ```shell
@@ -101,43 +105,50 @@ OpenAPIv3(
 ```python
 # Invariants of our APIs expressed in a Python-like language
 
-print("$THIS_ENVIRONMENT_VARIABLE is", Env("THIS_ENVIRONMENT_VARIABLE", "not set"))
+assert that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
+spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
+print("Using {}.".format(spec))
 
-host, spec = "https://jsonplaceholder.typicode.com", None
-mode = Env("TESTING_WHAT", "")
-if mode == "":
-    spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
-elif mode == "other-thing":
-    pass
-else:
-    assert.that(mode).is_equal_to("unhandled testing mode")
-print("Now testing {}.".format(spec))
-
-OpenAPIv3(
-    name = "my_model",
+monkey.openapi3(
+    name = "my_spec",
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = spec,
-    host = "{host}:{port}".format(host = host, port = Env("DEV_PORT", "443")),
-    # header_authorization = "Bearer {}".format(Env("DEV_API_TOKEN")),
+    host = "https://jsonplaceholder.typicode.com",
+    # header_authorization = "Bearer {}".format(monkey.env("DEV_API_TOKEN")),
+)
 
-    # Note: exec commands are executed in shells sharing the same environment variables,
-    # with `set -e` and `set -o pipefail` flags on.
+# Note: exec commands are executed in shells sharing the same environment variables,
+# with `set -e` and `set -o pipefail` flags on.
 
-    # The following get executed once per test
+# List here the commands to run so that the service providing "my_spec"
+# can be restored to its initial state.
+monkey.shell(
+    name = "example_resetter",
+
+    # Link to above defined spec.
+    provides = ["my_spec"],
+
+    # The following gets executed once per test
     #   so have these commands complete as fast as possible.
-    # Also, make sure that each test starts from a clean slate
-    #   otherwise results will be unreliable.
-    ExecReset = """
-    echo Resetting state...
+    # For best results, tests should start with a clean slate
+    #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
+    reset = """
+echo Resetting state...
     """,
 )
 
 ## Ensure some general property
 
-Check(
+def ensure_lowish_response_time(ms):
+    def responds_in_a_timely_manner(ctx):
+        assert that(ctx.response.elapsed_ms).is_at_most(ms)
+
+    return responds_in_a_timely_manner
+
+monkey.check(
     name = "responds_in_a_timely_manner",
-    after_response = lambda ctx: assert.that(ctx.response.elapsed_ns).is_at_most(500e6),
-    tags = ["timing"],
+    after_response = ensure_lowish_response_time(500),
+    tags = ["timings"],
 )
 
 ## Express stateful properties
@@ -154,15 +165,15 @@ def stateful_model_of_posts(ctx):
         "/posts/" in url and url[-1] in "1234567890",  # /posts/{post_id}
         ctx.response.status_code in range(200, 299),
     ]):
-        post_id = int(url.split("/")[-1])
+        post_id = url.split("/")[-1]
         post = ctx.response.body
 
         # Ensure post ID in response matches ID in URL (an API contract):
-        assert.that(post["id"]).is_equal_to(post_id)
+        assert that(str(int(post["id"]))).is_equal_to(post_id)
 
         # Verify that retrieved post matches local model
         if post_id in ctx.state:
-            assert.that(post).is_equal_to(ctx.state[post_id])
+            assert that(post).is_equal_to(ctx.state[post_id])
 
         return
 
@@ -173,28 +184,28 @@ def stateful_model_of_posts(ctx):
     ]):
         # Store posts in state
         for post in ctx.response.body:
-            post_id = int(post["id"])
+            post_id = str(int(post["id"]))
             ctx.state[post_id] = post
         print("State contains {} posts".format(len(ctx.state)))
 
-Check(
+monkey.check(
     name = "some_props",
     after_response = stateful_model_of_posts,
 )
 
-## Encapsulation: ensure each Check owns its own ctx.state.
+## Encapsulation: ensure each monkey.check owns its own ctx.state.
 
 def encapsulation_1_of_2(ctx):
     """Show that state is not shared with encapsulation_2_of_2"""
-    assert.that(ctx.state).is_empty()
+    assert that(ctx.state).is_empty()
 
-Check(
+monkey.check(
     name = "encapsulation_1_of_2",
     after_response = encapsulation_1_of_2,
     tags = ["encapsulation"],
 )
 
-Check(
+monkey.check(
     name = "encapsulation_2_of_2",
     after_response = lambda ctx: None,
     state = {"data": 42},
@@ -203,9 +214,12 @@ Check(
 
 ## A test that always fails
 
-Check(
+def this_always_fails(ctx):
+    assert that(ctx).is_none()
+
+monkey.check(
     name = "always_fails",
-    after_response = lambda ctx: assert.that(None).is_not_none(),
+    after_response = this_always_fails,
     tags = ["failing"],
 )
 ```

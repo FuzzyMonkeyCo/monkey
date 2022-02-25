@@ -43,7 +43,7 @@ func TestIsCallable(t *testing.T) {
 
 func TestIsNotCallable(t *testing.T) {
 	testEach(t, map[string]error{
-		`assert.that(assert.that).is_not_callable()`: fail(`built-in method assert of assert value`, `is not callable`),
+		`assert.that(assert.that).is_not_callable()`: fail(`built-in method `+Method+` of `+Module+` value`, `is not callable`),
 	}, asModule)
 	s := func(t string) string {
 		return `that(` + t + `).is_not_callable()`

@@ -17,9 +17,9 @@ func (ceI *Srv_FuzzingResult_CounterexampleItem) CLIString() (s string) {
 		b.WriteString("curl -#fsSL -X ")
 		b.WriteString(req.GetMethod())
 		indent()
-		for key, vs := range req.GetHeaders() {
-			values := strings.Join(vs.GetValues(), ",")
-			switch key {
+		for _, kvs := range req.GetHeaders() {
+			values := strings.Join(kvs.GetValues(), ",")
+			switch key := kvs.GetKey(); key {
 			case "User-Agent":
 				b.WriteString("-A ")
 				b.WriteString(shellEscape(values))
