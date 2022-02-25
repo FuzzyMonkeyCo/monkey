@@ -1,7 +1,7 @@
 name: master
 
 on:
-  push: {branches: [master]}
+  push: {}
 
 jobs:
   master:
@@ -30,11 +30,13 @@ jobs:
       with:
         files: ./docker-bake.hcl
         targets: goreleaser-dist
-        set: |
-          *.cache-to=type=registry,ref=${{ env.IMAGE }}:goreleaser-dist,mode=max
+        # TODO: cache-to
+        # set: |
+        #   *.cache-to=type=registry,ref=${{ env.IMAGE }}:goreleaser-dist,mode=max
 
-    - name: If on master push image to GHCR
-      run: docker push ${{ env.IMAGE }}:goreleaser-dist
+    # TODO: cache-to
+    # - name: If on master push image to GHCR
+    #   run: docker push ${{ env.IMAGE }}:goreleaser-dist
 
     - name: Test CLI
       run: |
@@ -48,6 +50,7 @@ jobs:
         ./monkey --version | grep -F $(cat Tagfile)
 
     - uses: ncipollo/release-action@v1
+      if: github.ref == 'refs/heads/master'
       with:
         artifacts: ./dist/*
         commit: master       # Required to push tag
