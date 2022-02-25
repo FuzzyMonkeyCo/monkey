@@ -27,6 +27,8 @@ target "binaries" {
   target = "binaries"
   output = ["."]
   cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:binaries"]
+  # TODO: cache-to
+  # error: cache export feature is currently not supported for docker driver
   # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:binaries,mode=max"]
 }
 
@@ -35,7 +37,6 @@ target "goreleaser-dist" {
   target = "goreleaser-dist"
   output = ["./dist"]
   cache-from = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:goreleaser-dist"]
-  # cache-to only supported in CI? (must not be using docker driver)
   # cache-to = ["type=registry,ref=ghcr.io/fuzzymonkeyco/monkey:goreleaser-dist,mode=max"]
 }
 
