@@ -1,7 +1,7 @@
 name: master
 
 on:
-  push: {branches: [master]}
+  push: {}
 
 jobs:
   master:
@@ -50,6 +50,7 @@ jobs:
         ./monkey --version | grep -F $(cat Tagfile)
 
     - uses: ncipollo/release-action@v1
+      if: github.ref == 'refs/heads/master'
       with:
         artifacts: ./dist/*
         commit: master       # Required to push tag
