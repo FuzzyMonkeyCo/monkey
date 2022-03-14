@@ -107,9 +107,10 @@ func NewMonkey(name, starfile string, arglabels []string) (rt *Runtime, err erro
 
 func (rt *Runtime) loadCfg(starfile string) (err error) {
 	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
-	for k, v := range rt.globals {
+	_ = rt.forEachGlobal(func(k string, v starlark.Value) error {
 		log.Printf("[DBG] starlark global %q: %+v", k, v)
-	}
+		return nil
+	})
 
 	if rt.globals, err = starlark.ExecFile(rt.thread, starfile, rt.files[starfile], rt.globals); err != nil {
 		log.Println("[ERR]", err)
@@ -162,13 +163,16 @@ func (rt *Runtime) loadCfg(starfile string) (err error) {
 
 	delete(rt.globals, "monkey")
 	log.Printf("[DBG] starlark globals: %d", len(rt.globals))
-	for name, value := range rt.globals {
-		if err = tags.LegalName(name); err != nil {
-			err = fmt.Errorf("illegal name %q: %v", name, err)
-			log.Println("[ERR]", err)
-			return
+	err = rt.forEachGlobal(func(name string, value starlark.Value) error {
+		if !tags.IsFullCaps(name) {
+			if err := tags.LegalName(name); err != nil {
+				err := fmt.Errorf("illegal name %q: %v", name, err)
+				log.Println("[ERR]", err)
+				return err
+			}
 		}
 		log.Printf("[DBG] starlark global %q: %+v", name, value)
-	}
+		return nil
+	})
 	return
 }
