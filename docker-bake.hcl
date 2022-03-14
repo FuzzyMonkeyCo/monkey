@@ -20,6 +20,9 @@ group "ci-checks" {
 
 target "dockerfile" {
   dockerfile = "Dockerfile"
+  args = {
+    "BUILDKIT_INLINE_CACHE" = "1"
+  }
 }
 
 target "binaries" {
