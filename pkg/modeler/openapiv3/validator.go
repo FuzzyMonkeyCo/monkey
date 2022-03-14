@@ -139,7 +139,7 @@ func (vald *validator) fromGo(s schemaJSON) (schema fm.Schema_JSON) {
 
 	// "format"
 	if v, ok := s["format"]; ok {
-		schema.Format = formatFromGo(v.(string))
+		schema.Format = v.(string)
 	}
 	// "minLength"
 	if v, ok := s["minLength"]; ok {
@@ -324,8 +324,8 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	}
 
 	// "format"
-	if schemaFormat := schema.GetFormat(); schemaFormat != fm.Schema_JSON_NONE {
-		s["format"] = formatToGo(schemaFormat)
+	if schemaFormat := schema.GetFormat(); schemaFormat != "" {
+		s["format"] = schemaFormat
 	}
 	// "minLength"
 	if schemaMinLength := schema.GetMinLength(); schemaMinLength != 0 {
@@ -436,34 +436,6 @@ func (sm schemap) toGo(SID sid) (s schemaJSON) {
 	}
 
 	return
-}
-
-func formatFromGo(format string) fm.Schema_JSON_Format {
-	switch format {
-	case "date-time":
-		return fm.Schema_JSON_date_time
-	case "uriref", "uri-reference":
-		return fm.Schema_JSON_uri_reference
-	default:
-		v, ok := fm.Schema_JSON_Format_value[format]
-		if ok {
-			return fm.Schema_JSON_Format(v)
-		}
-		return fm.Schema_JSON_NONE
-	}
-}
-
-func formatToGo(format fm.Schema_JSON_Format) string {
-	switch format {
-	case fm.Schema_JSON_NONE:
-		return ""
-	case fm.Schema_JSON_date_time:
-		return "date-time"
-	case fm.Schema_JSON_uri_reference:
-		return "uri-reference"
-	default:
-		return format.String()
-	}
 }
 
 func (vald *validator) filterEndpoints(args []string) (eids []eid, err error) {
