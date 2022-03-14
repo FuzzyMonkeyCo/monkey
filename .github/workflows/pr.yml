@@ -26,6 +26,16 @@ jobs:
     - name: Ensure tag wasn't published already
       run: git tag | grep -vF $(cat Tagfile)
 
+    - name: Ensure new tag is a 1-increment
+      run: |
+        curr=$(cat Tagfile)
+        prev=./master-Tagfile/Tagfile
+        {
+          echo $(( $(cut -d. -f1 <$prev) + 1 )).$(cut -d. -f2 <$prev).$(cut -d. -f3 <$prev)
+          echo $(cut -d. -f1 <$prev).$(( $(cut -d. -f2 <$prev) + 1 )).$(cut -d. -f3 <$prev)
+          echo $(cut -d. -f1 <$prev).$(cut -d. -f2 <$prev).$(( $(cut -d. -f3 <$prev) + 1 ))
+        } | awk '{ printf("%s ", $0) }' | grep -F "$curr"
+
   checks:
     runs-on: ubuntu-latest
     strategy:
