@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"errors"
 	"sort"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -62,6 +63,9 @@ func (rt *Runtime) forEachSelectedResetter(ctx context.Context, f func(string, r
 				}
 			}
 		}
+	}
+	if len(selectedResetters) == 0 {
+		return errors.New("no resetter selected")
 	}
 
 	g, _ := errgroup.WithContext(ctx)

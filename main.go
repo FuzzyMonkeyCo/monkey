@@ -148,6 +148,8 @@ func actualMain() int {
 			fn = mrt.JustExecStop
 		case args.Repl:
 			fn = mrt.JustExecREPL
+		default:
+			panic("unreachable")
 		}
 		if err := fn(ctx); err != nil {
 			if e := err.Error(); e != "" {
