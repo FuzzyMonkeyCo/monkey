@@ -3213,7 +3213,7 @@ type isSchema_JSON_AdditionalProperties_AddProps interface {
 }
 
 type Schema_JSON_AdditionalProperties_AlwaysSucceed struct {
-	AlwaysSucceed bool `protobuf:"varint,1,opt,name=always_succeed,json=alwaysSucceed,proto3,oneof"` //TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
+	AlwaysSucceed bool `protobuf:"varint,1,opt,name=always_succeed,json=alwaysSucceed,proto3,oneof"` // TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
 }
 
 type Schema_JSON_AdditionalProperties_SID struct {

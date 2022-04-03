@@ -349,7 +349,7 @@ message Schema {
     bool has_max_properties = 24;
     message AdditionalProperties {
       oneof add_props {
-        bool always_succeed = 1; //TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
+        bool always_succeed = 1; // TODO: simplify: true is equivalent to {}, false is equivalent to {"not": {}}
         uint32 SID = 2;
       }
     }
