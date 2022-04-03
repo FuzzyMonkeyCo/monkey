@@ -86,7 +86,7 @@ func (vald *validator) ensureMapped(ref string, goSchema schemaJSON) sid {
 	if ref == "" {
 		schema := vald.fromGo(goSchema)
 		for SID, schemaPtr := range vald.Spec.Schemas.Json {
-			if s := schemaPtr.GetSchema(); s != nil && schema.Equal(s) {
+			if s := schemaPtr.GetSchema(); s != nil && schema.EqualVT(s) {
 				return SID
 			}
 		}

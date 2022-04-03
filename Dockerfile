@@ -83,6 +83,14 @@ RUN \
 FROM scratch AS ci-check--protolock
 COPY --from=ci-check--protolock- /app/proto.lock /
 
+FROM alpine AS vtprotobuf-src-
+# ADD https://codeload.github.com/planetscale/vtprotobuf/tar.gz/refs/heads/main /
+ADD https://codeload.github.com/fenollp/vtprotobuf/tar.gz/refs/heads/features-equal-bis /
+RUN \
+    set -ux \
+ && tar zxvf /features-equal-bis
+FROM scratch AS vtprotobuf-src
+COPY --from=vtprotobuf-src- /vtprotobuf-features-equal-bis /
 FROM golang AS ci-check--protoc-
 WORKDIR /app
 ENV GOBIN /go/bin
@@ -96,10 +104,12 @@ RUN \
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
+  --mount=from=vtprotobuf-src,source=/,target=/vtpb \
     set -ux \
  && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
  && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
- && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@v0.2.0
+ # TODO: whence https://github.com/planetscale/vtprotobuf/pull/28
+ && cd /vtpb && go install /vtpb/cmd/protoc-gen-go-vtproto
 ADD https://raw.githubusercontent.com/protocolbuffers/protobuf/2f91da585e96a7efe43505f714f03c7716a94ecb/src/google/protobuf/struct.proto /wellknown/google/protobuf/struct.proto
 COPY pkg/internal/fm/*.proto .
 RUN \
@@ -111,7 +121,7 @@ RUN \
       --go_out=.         --plugin protoc-gen-go="$GOBIN"/protoc-gen-go \
       --go-grpc_out=.    --plugin protoc-gen-go-grpc="$GOBIN"/protoc-gen-go-grpc \
       --go-vtproto_out=. --plugin protoc-gen-go-vtproto="$GOBIN"/protoc-gen-go-vtproto \
-      --go-vtproto_opt=features=marshal+unmarshal+size \
+      --go-vtproto_opt=features=marshal+unmarshal+size+equal \
       *.proto
 FROM scratch AS ci-check--protoc
 COPY --from=ci-check--protoc- /app/github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/*.pb.go /
