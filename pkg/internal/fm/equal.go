@@ -7,9 +7,11 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func (this *Schema_JSON) Equal(that interface{}) bool {
+func (this *Schema_JSON) Equal(that *Schema_JSON) bool {
 	if that == nil {
 		return this == nil
+	} else if this == nil {
+		return false
 	}
 
 	that1, ok := that.(*Schema_JSON)

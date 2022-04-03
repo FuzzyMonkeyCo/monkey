@@ -103,9 +103,9 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 			log.Println("[ERR]", err)
 			return
 		}
-		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), bytes.NewReader(bodyBytes))
+		r, err = http.NewRequestWithContext(ctx, input.GetMethod(), input.GetUrl(), bytes.NewReader(bodyBytes))
 	} else {
-		r, err = http.NewRequest(input.GetMethod(), input.GetUrl(), nil)
+		r, err = http.NewRequestWithContext(ctx, input.GetMethod(), input.GetUrl(), nil)
 	}
 	if err != nil {
 		log.Println("[ERR]", err)
