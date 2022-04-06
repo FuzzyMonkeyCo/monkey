@@ -5,7 +5,6 @@
 package fm
 
 import (
-	bytes "bytes"
 	binary "encoding/binary"
 	fmt "fmt"
 	proto "google.golang.org/protobuf/proto"
@@ -23,201 +22,41 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// len(file.Messages) = 13
-func (this *Clt) EqualVT(that *Clt) bool {
+func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "Fuzz"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.msg
-	   	Fields:   [fuzz, reset_progress, call_request_raw, call_response_raw, call_verif_progress]
-
-	   if !this.Fuzz.EqualVT(that.Fuzz) {
-	   	return false
-	   }
-	*/
-
-	// n = 2
-	/*
-	   oneof of "ResetProgress"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.msg
-	   	Fields:   [fuzz, reset_progress, call_request_raw, call_response_raw, call_verif_progress]
-
-	   if !this.ResetProgress.EqualVT(that.ResetProgress) {
-	   	return false
-	   }
-	*/
-
-	// n = 3
-	/*
-	   oneof of "CallRequestRaw"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.msg
-	   	Fields:   [fuzz, reset_progress, call_request_raw, call_response_raw, call_verif_progress]
-
-	   if !this.CallRequestRaw.EqualVT(that.CallRequestRaw) {
-	   	return false
-	   }
-	*/
-
-	// n = 4
-	/*
-	   oneof of "CallResponseRaw"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.msg
-	   	Fields:   [fuzz, reset_progress, call_request_raw, call_response_raw, call_verif_progress]
-
-	   if !this.CallResponseRaw.EqualVT(that.CallResponseRaw) {
-	   	return false
-	   }
-	*/
-
-	// n = 5
-	/*
-	   oneof of "CallVerifProgress"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.msg
-	   	Fields:   [fuzz, reset_progress, call_request_raw, call_response_raw, call_verif_progress]
-
-	   if !this.CallVerifProgress.EqualVT(that.CallVerifProgress) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if this.Start != that.Start {
 		return false
 	}
-	return true
+	if this.Rst != that.Rst {
+		return false
+	}
+	if this.Stop != that.Stop {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 5
-func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if len(this.Resetters) != len(that.Resetters) {
-		return false
-	}
-	for i := range this.Resetters {
-		if !this.Resetters[i].EqualVT(that.Resetters[i]) {
-			return false
-		}
-	}
-
-	// n = 2
-	if len(this.Models) != len(that.Models) {
-		return false
-	}
-	for i := range this.Models {
-		if !this.Models[i].EqualVT(that.Models[i]) {
-			return false
-		}
-	}
-
-	// n = 3
-	if len(this.Usage) != len(that.Usage) {
-		return false
-	}
-	for i := range this.Usage {
-		if this.Usage[i] != that.Usage[i] {
-			return false
-		}
-	}
-
-	// n = 4
-	if !bytes.Equal(this.Seed, that.Seed) {
-		return false
-	}
-
-	// n = 5
-	if this.Ntensity != that.Ntensity {
-		return false
-	}
-
-	// n = 6
-	if len(this.EIDs) != len(that.EIDs) {
-		return false
-	}
-	for i := range this.EIDs {
-		if !this.EIDs[i].EqualVT(that.EIDs[i]) {
-			return false
-		}
-	}
-
-	// n = 7
-	if len(this.Labels) != len(that.Labels) {
-		return false
-	}
-	for i := range this.Labels {
-		if this.Labels[i] != that.Labels[i] {
-			return false
-		}
-	}
-
-	// n = 8
-	if len(this.EnvRead) != len(that.EnvRead) {
-		return false
-	}
-	for i := range this.EnvRead {
-		if this.EnvRead[i] != that.EnvRead[i] {
-			return false
-		}
-	}
-
-	// n = 9
-	if len(this.UUIDs) != len(that.UUIDs) {
-		return false
-	}
-	for i := range this.UUIDs {
-		if this.UUIDs[i] != that.UUIDs[i] {
-			return false
-		}
-	}
-
-	// n = 10
-	if len(this.Files) != len(that.Files) {
-		return false
-	}
-	for i := range this.Files {
-		if this.Files[i] != that.Files[i] {
-			return false
-		}
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested.Messages) = 6
 func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
+	if that.Resetter == nil {
+		return this.Resetter == nil
+	} else if this.Resetter == nil {
+		return false
+	}
+	if !this.GetShell().EqualVT(that.GetShell()) {
+		return false
+	}
 	if this.Name != that.Name {
 		return false
 	}
-
-	// n = 2
 	if len(this.Provides) != len(that.Provides) {
 		return false
 	}
@@ -226,140 +65,141 @@ func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
 			return false
 		}
 	}
-
-	// n = 3
-	/*
-	   oneof of "Shell"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.Fuzz.Resetter.resetter
-	   	Fields:   [shell]
-
-	   if !this.Shell.EqualVT(that.Shell) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested2.Messages) = 1
-func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.Start != that.Start {
-		return false
-	}
-
-	// n = 2
-	if this.Rst != that.Rst {
-		return false
-	}
-
-	// n = 3
-	if this.Stop != that.Stop {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested3.Messages) = 0
-func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.Name != that.Name {
-		return false
-	}
-
-	// n = 2
-	/*
-	   oneof of "Openapiv3"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.Fuzz.Model.model
-	   	Fields:   [openapiv3]
-
-	   if !this.Openapiv3.EqualVT(that.Openapiv3) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested2.Messages) = 1
 func (this *Clt_Fuzz_Model_OpenAPIv3) EqualVT(that *Clt_Fuzz_Model_OpenAPIv3) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.File != that.File {
 		return false
 	}
-
-	// n = 2
 	if this.Host != that.Host {
 		return false
 	}
-
-	// n = 3
 	if this.HeaderAuthorization != that.HeaderAuthorization {
 		return false
 	}
-
-	// n = 4
 	if !this.Spec.EqualVT(that.Spec) {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested3.Messages) = 0
-// len(nested2.Messages) = 0
-// len(nested2.Messages) = 0
-// len(nested2.Messages) = 0
-// len(nested2.Messages) = 0
+func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that.Model == nil {
+		return this.Model == nil
+	} else if this.Model == nil {
+		return false
+	}
+	if !this.GetOpenapiv3().EqualVT(that.GetOpenapiv3()) {
+		return false
+	}
+	if this.Name != that.Name {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if len(this.Resetters) != len(that.Resetters) {
+		return false
+	}
+	for i := range this.Resetters {
+		if !this.Resetters[i].EqualVT(that.Resetters[i]) {
+			return false
+		}
+	}
+	if len(this.Models) != len(that.Models) {
+		return false
+	}
+	for i := range this.Models {
+		if !this.Models[i].EqualVT(that.Models[i]) {
+			return false
+		}
+	}
+	if len(this.Usage) != len(that.Usage) {
+		return false
+	}
+	for i := range this.Usage {
+		if this.Usage[i] != that.Usage[i] {
+			return false
+		}
+	}
+	if string(this.Seed) != string(that.Seed) {
+		return false
+	}
+	if this.Ntensity != that.Ntensity {
+		return false
+	}
+	if len(this.EIDs) != len(that.EIDs) {
+		return false
+	}
+	for i := range this.EIDs {
+		if !this.EIDs[i].EqualVT(that.EIDs[i]) {
+			return false
+		}
+	}
+	if len(this.Labels) != len(that.Labels) {
+		return false
+	}
+	for i := range this.Labels {
+		if this.Labels[i] != that.Labels[i] {
+			return false
+		}
+	}
+	if len(this.EnvRead) != len(that.EnvRead) {
+		return false
+	}
+	for i := range this.EnvRead {
+		if this.EnvRead[i] != that.EnvRead[i] {
+			return false
+		}
+	}
+	if len(this.UUIDs) != len(that.UUIDs) {
+		return false
+	}
+	for i := range this.UUIDs {
+		if this.UUIDs[i] != that.UUIDs[i] {
+			return false
+		}
+	}
+	if len(this.Files) != len(that.Files) {
+		return false
+	}
+	for i := range this.Files {
+		if this.Files[i] != that.Files[i] {
+			return false
+		}
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
 func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.Status != that.Status {
 		return false
 	}
-
-	// n = 2
 	if this.ElapsedNs != that.ElapsedNs {
 		return false
 	}
-
-	// n = 3
 	if len(this.Reason) != len(that.Reason) {
 		return false
 	}
@@ -368,85 +208,21 @@ func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 0
-func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if !this.Input.EqualVT(that.Input) {
-		return false
-	}
-
-	// n = 2
-	if len(this.Reason) != len(that.Reason) {
-		return false
-	}
-	for i := range this.Reason {
-		if this.Reason[i] != that.Reason[i] {
-			return false
-		}
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested.Messages) = 1
-func (this *Clt_CallRequestRaw_Input) EqualVT(that *Clt_CallRequestRaw_Input) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	/*
-	   oneof of "HttpRequest"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.CallRequestRaw.Input.input
-	   	Fields:   [http_request]
-
-	   if !this.HttpRequest.EqualVT(that.HttpRequest) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested2.Messages) = 1
 func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestRaw_Input_HttpRequest) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.Method != that.Method {
 		return false
 	}
-
-	// n = 2
 	if this.Url != that.Url {
 		return false
 	}
-
-	// n = 3
 	if len(this.Headers) != len(that.Headers) {
 		return false
 	}
@@ -455,160 +231,45 @@ func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestR
 			return false
 		}
 	}
-
-	// n = 4
-	if !bytes.Equal(this.Body, that.Body) {
+	if string(this.Body) != string(that.Body) {
 		return false
 	}
-
-	// n = 5
 	if equal, ok := interface{}(this.BodyDecoded).(interface{ EqualVT(*structpb.Value) bool }); ok {
 		if !equal.EqualVT(that.BodyDecoded) {
 			return false
 		}
-	} else {
-		if !proto.Equal(this.BodyDecoded, that.BodyDecoded) {
-			return false
-		}
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	} else if !proto.Equal(this.BodyDecoded, that.BodyDecoded) {
 		return false
 	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested3.Messages) = 0
-func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
+func (this *Clt_CallRequestRaw_Input) EqualVT(that *Clt_CallRequestRaw_Input) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	if !this.Output.EqualVT(that.Output) {
+	if that.Input == nil {
+		return this.Input == nil
+	} else if this.Input == nil {
 		return false
 	}
-
-	// n = 2
-	if this.OutputId != that.OutputId {
+	if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 1
-func (this *Clt_CallResponseRaw_Output) EqualVT(that *Clt_CallResponseRaw_Output) bool {
+func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "HttpResponse"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Clt.CallResponseRaw.Output.output
-	   	Fields:   [http_response]
-
-	   if !this.HttpResponse.EqualVT(that.HttpResponse) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if !this.Input.EqualVT(that.Input) {
 		return false
 	}
-	return true
-}
-
-// len(nested2.Messages) = 1
-func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallResponseRaw_Output_HttpResponse) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.Error != that.Error {
-		return false
-	}
-
-	// n = 2
-	if this.StatusCode != that.StatusCode {
-		return false
-	}
-
-	// n = 3
-	if this.Reason != that.Reason {
-		return false
-	}
-
-	// n = 4
-	if len(this.Headers) != len(that.Headers) {
-		return false
-	}
-	for i := range this.Headers {
-		if !this.Headers[i].EqualVT(that.Headers[i]) {
-			return false
-		}
-	}
-
-	// n = 5
-	if !bytes.Equal(this.Body, that.Body) {
-		return false
-	}
-
-	// n = 6
-	if equal, ok := interface{}(this.BodyDecoded).(interface{ EqualVT(*structpb.Value) bool }); ok {
-		if !equal.EqualVT(that.BodyDecoded) {
-			return false
-		}
-	} else {
-		if !proto.Equal(this.BodyDecoded, that.BodyDecoded) {
-			return false
-		}
-	}
-
-	// n = 7
-	if this.ElapsedNs != that.ElapsedNs {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested3.Messages) = 0
-func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.Name != that.Name {
-		return false
-	}
-
-	// n = 2
-	if this.Status != that.Status {
-		return false
-	}
-
-	// n = 3
-	if this.Origin != that.Origin {
-		return false
-	}
-
-	// n = 4
 	if len(this.Reason) != len(that.Reason) {
 		return false
 	}
@@ -617,271 +278,24 @@ func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
 			return false
 		}
 	}
-
-	// n = 5
-	if this.ElapsedNs != that.ElapsedNs {
-		return false
-	}
-
-	// n = 6
-	if this.ExecutionSteps != that.ExecutionSteps {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 0
-func (this *Srv) EqualVT(that *Srv) bool {
+func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallResponseRaw_Output_HttpResponse) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	if !this.FuzzingProgress.EqualVT(that.FuzzingProgress) {
+	if this.Error != that.Error {
 		return false
 	}
-
-	// n = 2
-	/*
-	   oneof of "FuzzRep"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Srv.msg
-	   	Fields:   [fuzz_rep, call, reset, fuzzing_result]
-
-	   if !this.FuzzRep.EqualVT(that.FuzzRep) {
-	   	return false
-	   }
-	*/
-
-	// n = 3
-	/*
-	   oneof of "Call"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Srv.msg
-	   	Fields:   [fuzz_rep, call, reset, fuzzing_result]
-
-	   if !this.Call.EqualVT(that.Call) {
-	   	return false
-	   }
-	*/
-
-	// n = 4
-	/*
-	   oneof of "Reset_"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Srv.msg
-	   	Fields:   [fuzz_rep, call, reset, fuzzing_result]
-
-	   if !this.Reset_.EqualVT(that.Reset_) {
-	   	return false
-	   }
-	*/
-
-	// n = 5
-	/*
-	   oneof of "FuzzingResult"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Srv.msg
-	   	Fields:   [fuzz_rep, call, reset, fuzzing_result]
-
-	   if !this.FuzzingResult.EqualVT(that.FuzzingResult) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if this.StatusCode != that.StatusCode {
 		return false
 	}
-	return true
-}
-
-// len(message.Messages) = 5
-func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this.Reason != that.Reason {
 		return false
 	}
-
-	// n = 1
-	if this.Failure != that.Failure {
-		return false
-	}
-
-	// n = 2
-	if this.Success != that.Success {
-		return false
-	}
-
-	// n = 3
-	if this.LastCallSuccess != that.LastCallSuccess {
-		return false
-	}
-
-	// n = 4
-	if this.LastCheckFailure != that.LastCheckFailure {
-		return false
-	}
-
-	// n = 5
-	if this.LastCheckSuccess != that.LastCheckSuccess {
-		return false
-	}
-
-	// n = 6
-	if this.TotalTestsCount != that.TotalTestsCount {
-		return false
-	}
-
-	// n = 7
-	if this.TotalCallsCount != that.TotalCallsCount {
-		return false
-	}
-
-	// n = 8
-	if this.TotalChecksCount != that.TotalChecksCount {
-		return false
-	}
-
-	// n = 9
-	if this.TestCallsCount != that.TestCallsCount {
-		return false
-	}
-
-	// n = 10
-	if this.CallChecksCount != that.CallChecksCount {
-		return false
-	}
-
-	// n = 11
-	if this.CallChecksSkipped != that.CallChecksSkipped {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested.Messages) = 0
-func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.MaxTestsCount != that.MaxTestsCount {
-		return false
-	}
-
-	// n = 2
-	if !bytes.Equal(this.Seed, that.Seed) {
-		return false
-	}
-
-	// n = 3
-	if this.Token != that.Token {
-		return false
-	}
-
-	// n = 4
-	if this.MaxExecutionStepsPerCheck != that.MaxExecutionStepsPerCheck {
-		return false
-	}
-
-	// n = 5
-	if this.MaxExecutionMsPerCheck != that.MaxExecutionMsPerCheck {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested.Messages) = 0
-func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if !this.Input.EqualVT(that.Input) {
-		return false
-	}
-
-	// n = 2
-	if this.EID != that.EID {
-		return false
-	}
-
-	// n = 3
-	if this.ModelName != that.ModelName {
-		return false
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested.Messages) = 1
-func (this *Srv_Call_Input) EqualVT(that *Srv_Call_Input) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	/*
-	   oneof of "HttpRequest"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Srv.Call.Input.input
-	   	Fields:   [http_request]
-
-	   if !this.HttpRequest.EqualVT(that.HttpRequest) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
-}
-
-// len(nested2.Messages) = 1
-func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-
-	// n = 1
-	if this.Method != that.Method {
-		return false
-	}
-
-	// n = 2
-	if this.Url != that.Url {
-		return false
-	}
-
-	// n = 3
 	if len(this.Headers) != len(that.Headers) {
 		return false
 	}
@@ -890,70 +304,291 @@ func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest
 			return false
 		}
 	}
+	if string(this.Body) != string(that.Body) {
+		return false
+	}
+	if equal, ok := interface{}(this.BodyDecoded).(interface{ EqualVT(*structpb.Value) bool }); ok {
+		if !equal.EqualVT(that.BodyDecoded) {
+			return false
+		}
+	} else if !proto.Equal(this.BodyDecoded, that.BodyDecoded) {
+		return false
+	}
+	if this.ElapsedNs != that.ElapsedNs {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
 
-	// n = 4
+func (this *Clt_CallResponseRaw_Output) EqualVT(that *Clt_CallResponseRaw_Output) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that.Output == nil {
+		return this.Output == nil
+	} else if this.Output == nil {
+		return false
+	}
+	if !this.GetHttpResponse().EqualVT(that.GetHttpResponse()) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Output.EqualVT(that.Output) {
+		return false
+	}
+	if this.OutputId != that.OutputId {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Name != that.Name {
+		return false
+	}
+	if this.Status != that.Status {
+		return false
+	}
+	if this.Origin != that.Origin {
+		return false
+	}
+	if len(this.Reason) != len(that.Reason) {
+		return false
+	}
+	for i := range this.Reason {
+		if this.Reason[i] != that.Reason[i] {
+			return false
+		}
+	}
+	if this.ElapsedNs != that.ElapsedNs {
+		return false
+	}
+	if this.ExecutionSteps != that.ExecutionSteps {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Clt) EqualVT(that *Clt) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that.Msg == nil {
+		return this.Msg == nil
+	} else if this.Msg == nil {
+		return false
+	}
+	if !this.GetFuzz().EqualVT(that.GetFuzz()) {
+		return false
+	}
+	if !this.GetResetProgress().EqualVT(that.GetResetProgress()) {
+		return false
+	}
+	if !this.GetCallRequestRaw().EqualVT(that.GetCallRequestRaw()) {
+		return false
+	}
+	if !this.GetCallResponseRaw().EqualVT(that.GetCallResponseRaw()) {
+		return false
+	}
+	if !this.GetCallVerifProgress().EqualVT(that.GetCallVerifProgress()) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Failure != that.Failure {
+		return false
+	}
+	if this.Success != that.Success {
+		return false
+	}
+	if this.LastCallSuccess != that.LastCallSuccess {
+		return false
+	}
+	if this.LastCheckFailure != that.LastCheckFailure {
+		return false
+	}
+	if this.LastCheckSuccess != that.LastCheckSuccess {
+		return false
+	}
+	if this.TotalTestsCount != that.TotalTestsCount {
+		return false
+	}
+	if this.TotalCallsCount != that.TotalCallsCount {
+		return false
+	}
+	if this.TotalChecksCount != that.TotalChecksCount {
+		return false
+	}
+	if this.TestCallsCount != that.TestCallsCount {
+		return false
+	}
+	if this.CallChecksCount != that.CallChecksCount {
+		return false
+	}
+	if this.CallChecksSkipped != that.CallChecksSkipped {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.MaxTestsCount != that.MaxTestsCount {
+		return false
+	}
+	if string(this.Seed) != string(that.Seed) {
+		return false
+	}
+	if this.Token != that.Token {
+		return false
+	}
+	if this.MaxExecutionStepsPerCheck != that.MaxExecutionStepsPerCheck {
+		return false
+	}
+	if this.MaxExecutionMsPerCheck != that.MaxExecutionMsPerCheck {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if this.Method != that.Method {
+		return false
+	}
+	if this.Url != that.Url {
+		return false
+	}
+	if len(this.Headers) != len(that.Headers) {
+		return false
+	}
+	for i := range this.Headers {
+		if !this.Headers[i].EqualVT(that.Headers[i]) {
+			return false
+		}
+	}
 	if equal, ok := interface{}(this.Body).(interface{ EqualVT(*structpb.Value) bool }); ok {
 		if !equal.EqualVT(that.Body) {
 			return false
 		}
-	} else {
-		if !proto.Equal(this.Body, that.Body) {
-			return false
-		}
-	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	} else if !proto.Equal(this.Body, that.Body) {
 		return false
 	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested3.Messages) = 0
+func (this *Srv_Call_Input) EqualVT(that *Srv_Call_Input) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if that.Input == nil {
+		return this.Input == nil
+	} else if this.Input == nil {
+		return false
+	}
+	if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
+func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.Input.EqualVT(that.Input) {
+		return false
+	}
+	if this.EID != that.EID {
+		return false
+	}
+	if this.ModelName != that.ModelName {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
 func (this *Srv_Reset) EqualVT(that *Srv_Reset) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 0
+func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResult_CounterexampleItem) bool {
+	if that == nil {
+		return this == nil
+	} else if this == nil {
+		return false
+	}
+	if !this.CallRequest.EqualVT(that.CallRequest) {
+		return false
+	}
+	if !this.CallResponse.EqualVT(that.CallResponse) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
+}
+
 func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	if !bytes.Equal(this.SeedUsed, that.SeedUsed) {
+	if string(this.SeedUsed) != string(that.SeedUsed) {
 		return false
 	}
-
-	// n = 2
 	if this.WasShrinking != that.WasShrinking {
 		return false
 	}
-
-	// n = 3
-	if !bytes.Equal(this.NextSeed, that.NextSeed) {
+	if string(this.NextSeed) != string(that.NextSeed) {
 		return false
 	}
-
-	// n = 4
 	if this.WillNowShrink != that.WillNowShrink {
 		return false
 	}
-
-	// n = 5
-	if !bytes.Equal(this.SuggestedSeed, that.SuggestedSeed) {
+	if string(this.SuggestedSeed) != string(that.SuggestedSeed) {
 		return false
 	}
-
-	// n = 6
 	if len(this.Counterexample) != len(that.Counterexample) {
 		return false
 	}
@@ -962,44 +597,44 @@ func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 1
-func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResult_CounterexampleItem) bool {
+func (this *Srv) EqualVT(that *Srv) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	if !this.CallRequest.EqualVT(that.CallRequest) {
+	if that.Msg == nil {
+		return this.Msg == nil
+	} else if this.Msg == nil {
 		return false
 	}
-
-	// n = 2
-	if !this.CallResponse.EqualVT(that.CallResponse) {
+	if !this.GetFuzzRep().EqualVT(that.GetFuzzRep()) {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if !this.GetCall().EqualVT(that.GetCall()) {
 		return false
 	}
-	return true
+	if !this.GetReset_().EqualVT(that.GetReset_()) {
+		return false
+	}
+	if !this.GetFuzzingResult().EqualVT(that.GetFuzzingResult()) {
+		return false
+	}
+	if !this.FuzzingProgress.EqualVT(that.FuzzingProgress) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested2.Messages) = 0
 func (this *Uint32S) EqualVT(that *Uint32S) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if len(this.Values) != len(that.Values) {
 		return false
 	}
@@ -1008,26 +643,18 @@ func (this *Uint32S) EqualVT(that *Uint32S) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.Key != that.Key {
 		return false
 	}
-
-	// n = 2
 	if len(this.Values) != len(that.Values) {
 		return false
 	}
@@ -1036,26 +663,18 @@ func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *SpecIR) EqualVT(that *SpecIR) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if !this.Schemas.EqualVT(that.Schemas) {
 		return false
 	}
-
-	// n = 2
 	if len(this.Endpoints) != len(that.Endpoints) {
 		return false
 	}
@@ -1064,22 +683,15 @@ func (this *SpecIR) EqualVT(that *SpecIR) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 1
-// len(nested.Messages) = 0
 func (this *Schemas) EqualVT(that *Schemas) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if len(this.Json) != len(that.Json) {
 		return false
 	}
@@ -1088,115 +700,70 @@ func (this *Schemas) EqualVT(that *Schemas) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 1
-// len(nested.Messages) = 0
 func (this *RefOrSchemaJSON) EqualVT(that *RefOrSchemaJSON) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "Ptr"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.RefOrSchemaJSON.ptr_or_schema
-	   	Fields:   [ptr, schema]
-
-	   if !this.Ptr.EqualVT(that.Ptr) {
-	   	return false
-	   }
-	*/
-
-	// n = 2
-	/*
-	   oneof of "Schema"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.RefOrSchemaJSON.ptr_or_schema
-	   	Fields:   [ptr, schema]
-
-	   if !this.Schema.EqualVT(that.Schema) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if that.PtrOrSchema == nil {
+		return this.PtrOrSchema == nil
+	} else if this.PtrOrSchema == nil {
 		return false
 	}
-	return true
+	if !this.GetPtr().EqualVT(that.GetPtr()) {
+		return false
+	}
+	if !this.GetSchema().EqualVT(that.GetSchema()) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *SchemaPtr) EqualVT(that *SchemaPtr) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.SID != that.SID {
 		return false
 	}
-
-	// n = 2
 	if this.Ref != that.Ref {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *Endpoint) EqualVT(that *Endpoint) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "Json"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Endpoint.endpoint
-	   	Fields:   [json]
-
-	   if !this.Json.EqualVT(that.Json) {
-	   	return false
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if that.Endpoint == nil {
+		return this.Endpoint == nil
+	} else if this.Endpoint == nil {
 		return false
 	}
-	return true
+	if !this.GetJson().EqualVT(that.GetJson()) {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.Method != that.Method {
 		return false
 	}
-
-	// n = 2
 	if len(this.PathPartials) != len(that.PathPartials) {
 		return false
 	}
@@ -1205,8 +772,6 @@ func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 			return false
 		}
 	}
-
-	// n = 3
 	if len(this.Inputs) != len(that.Inputs) {
 		return false
 	}
@@ -1215,8 +780,6 @@ func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 			return false
 		}
 	}
-
-	// n = 4
 	if len(this.Outputs) != len(that.Outputs) {
 		return false
 	}
@@ -1225,119 +788,76 @@ func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 			return false
 		}
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 1
-// len(nested.Messages) = 0
 func (this *ParamJSON) EqualVT(that *ParamJSON) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if this.IsRequired != that.IsRequired {
 		return false
 	}
-
-	// n = 2
 	if this.SID != that.SID {
 		return false
 	}
-
-	// n = 3
 	if this.Name != that.Name {
 		return false
 	}
-
-	// n = 4
 	if this.Kind != that.Kind {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
 func (this *PathPartial) EqualVT(that *PathPartial) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "Part"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.PathPartial.pp
-	   	Fields:   [part, ptr]
-
-	   if equal, ok := interface{}(this.Part).(interface { EqualVT(string) bool }); ok {
-	   	if !equal.EqualVT(that.Part) {
-	   		return false
-	   	}
-	   } else {
-	   	if !proto.Equal(this.Part, that.Part) {
-	   		return false
-	   	}
-	   }
-	*/
-
-	// n = 2
-	/*
-	   oneof of "Ptr"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.PathPartial.pp
-	   	Fields:   [part, ptr]
-
-	   if equal, ok := interface{}(this.Ptr).(interface { EqualVT(string) bool }); ok {
-	   	if !equal.EqualVT(that.Ptr) {
-	   		return false
-	   	}
-	   } else {
-	   	if !proto.Equal(this.Ptr, that.Ptr) {
-	   		return false
-	   	}
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if that.Pp == nil {
+		return this.Pp == nil
+	} else if this.Pp == nil {
 		return false
 	}
-	return true
+	if this.GetPart() != that.GetPart() {
+		return false
+	}
+	if this.GetPtr() != that.GetPtr() {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 0
-func (this *Schema) EqualVT(that *Schema) bool {
+func (this *Schema_JSON_AdditionalProperties) EqualVT(that *Schema_JSON_AdditionalProperties) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
+	if that.AddProps == nil {
+		return this.AddProps == nil
+	} else if this.AddProps == nil {
 		return false
 	}
-	return true
+	if this.GetAlwaysSucceed() != that.GetAlwaysSucceed() {
+		return false
+	}
+	if this.GetSID() != that.GetSID() {
+		return false
+	}
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(message.Messages) = 1
 func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
 	if len(this.Types) != len(that.Types) {
 		return false
 	}
@@ -1346,8 +866,6 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 2
 	if len(this.Enum) != len(that.Enum) {
 		return false
 	}
@@ -1356,74 +874,46 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			if !equal.EqualVT(that.Enum[i]) {
 				return false
 			}
-		} else {
-			if !proto.Equal(this.Enum[i], that.Enum[i]) {
-				return false
-			}
+		} else if !proto.Equal(this.Enum[i], that.Enum[i]) {
+			return false
 		}
 	}
-
-	// n = 3
 	if this.Format != that.Format {
 		return false
 	}
-
-	// n = 4
 	if this.MinLength != that.MinLength {
 		return false
 	}
-
-	// n = 5
 	if this.MaxLength != that.MaxLength {
 		return false
 	}
-
-	// n = 6
 	if this.HasMaxLength != that.HasMaxLength {
 		return false
 	}
-
-	// n = 7
 	if this.Pattern != that.Pattern {
 		return false
 	}
-
-	// n = 8
 	if this.Minimum != that.Minimum {
 		return false
 	}
-
-	// n = 9
 	if this.Maximum != that.Maximum {
 		return false
 	}
-
-	// n = 10
 	if this.HasMinimum != that.HasMinimum {
 		return false
 	}
-
-	// n = 11
 	if this.HasMaximum != that.HasMaximum {
 		return false
 	}
-
-	// n = 12
 	if this.TranslatedMultipleOf != that.TranslatedMultipleOf {
 		return false
 	}
-
-	// n = 13
 	if this.ExclusiveMinimum != that.ExclusiveMinimum {
 		return false
 	}
-
-	// n = 14
 	if this.ExclusiveMaximum != that.ExclusiveMaximum {
 		return false
 	}
-
-	// n = 15
 	if len(this.Items) != len(that.Items) {
 		return false
 	}
@@ -1432,28 +922,18 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 16
 	if this.UniqueItems != that.UniqueItems {
 		return false
 	}
-
-	// n = 17
 	if this.MinItems != that.MinItems {
 		return false
 	}
-
-	// n = 18
 	if this.MaxItems != that.MaxItems {
 		return false
 	}
-
-	// n = 19
 	if this.HasMaxItems != that.HasMaxItems {
 		return false
 	}
-
-	// n = 20
 	if len(this.Properties) != len(that.Properties) {
 		return false
 	}
@@ -1462,8 +942,6 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 21
 	if len(this.Required) != len(that.Required) {
 		return false
 	}
@@ -1472,33 +950,21 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 22
 	if this.MinProperties != that.MinProperties {
 		return false
 	}
-
-	// n = 23
 	if this.MaxProperties != that.MaxProperties {
 		return false
 	}
-
-	// n = 24
 	if this.HasMaxProperties != that.HasMaxProperties {
 		return false
 	}
-
-	// n = 25
 	if !this.AdditionalProperties.EqualVT(that.AdditionalProperties) {
 		return false
 	}
-
-	// n = 26
 	if this.HasAdditionalProperties != that.HasAdditionalProperties {
 		return false
 	}
-
-	// n = 27
 	if len(this.AllOf) != len(that.AllOf) {
 		return false
 	}
@@ -1507,8 +973,6 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 28
 	if len(this.AnyOf) != len(that.AnyOf) {
 		return false
 	}
@@ -1517,8 +981,6 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 29
 	if len(this.OneOf) != len(that.OneOf) {
 		return false
 	}
@@ -1527,70 +989,21 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 			return false
 		}
 	}
-
-	// n = 30
 	if this.Not != that.Not {
 		return false
 	}
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested.Messages) = 2
-// len(nested2.Messages) = 0
-func (this *Schema_JSON_AdditionalProperties) EqualVT(that *Schema_JSON_AdditionalProperties) bool {
+func (this *Schema) EqualVT(that *Schema) bool {
 	if that == nil {
 		return this == nil
 	} else if this == nil {
 		return false
 	}
-
-	// n = 1
-	/*
-	   oneof of "AlwaysSucceed"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Schema.JSON.AdditionalProperties.add_props
-	   	Fields:   [always_succeed, SID]
-
-	   if equal, ok := interface{}(this.AlwaysSucceed).(interface { EqualVT(bool) bool }); ok {
-	   	if !equal.EqualVT(that.AlwaysSucceed) {
-	   		return false
-	   	}
-	   } else {
-	   	if !proto.Equal(this.AlwaysSucceed, that.AlwaysSucceed) {
-	   		return false
-	   	}
-	   }
-	*/
-
-	// n = 2
-	/*
-	   oneof of "SID"
-	   oneof &protogen.Oneof{Desc:OneofDescriptor{
-	   	Syntax:   proto3
-	   	FullName: fm.Schema.JSON.AdditionalProperties.add_props
-	   	Fields:   [always_succeed, SID]
-
-	   if equal, ok := interface{}(this.SID).(interface { EqualVT(uint32) bool }); ok {
-	   	if !equal.EqualVT(that.SID) {
-	   		return false
-	   	}
-	   } else {
-	   	if !proto.Equal(this.SID, that.SID) {
-	   		return false
-	   	}
-	   }
-	*/
-	if !bytes.Equal(this.unknownFields, that.unknownFields) {
-		return false
-	}
-	return true
+	return string(this.unknownFields) == string(that.unknownFields)
 }
 
-// len(nested2.Messages) = 0
 func (m *Clt_Fuzz_Resetter_Shell) MarshalVT() (dAtA []byte, err error) {
 	if m == nil {
 		return nil, nil
