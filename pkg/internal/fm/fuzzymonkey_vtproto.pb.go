@@ -23,9 +23,9 @@ const (
 )
 
 func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Start != that.Start {
@@ -41,18 +41,20 @@ func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool
 }
 
 func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Resetter == nil {
-		return this.Resetter == nil
-	} else if this.Resetter == nil {
+	if this.Resetter == nil && that.Resetter != nil {
 		return false
-	}
-	if !this.GetShell().EqualVT(that.GetShell()) {
-		return false
+	} else if this.Resetter != nil {
+		if that.Resetter == nil {
+			return false
+		}
+		if !this.GetShell().EqualVT(that.GetShell()) {
+			return false
+		}
 	}
 	if this.Name != that.Name {
 		return false
@@ -69,9 +71,9 @@ func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
 }
 
 func (this *Clt_Fuzz_Model_OpenAPIv3) EqualVT(that *Clt_Fuzz_Model_OpenAPIv3) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.File != that.File {
@@ -90,18 +92,20 @@ func (this *Clt_Fuzz_Model_OpenAPIv3) EqualVT(that *Clt_Fuzz_Model_OpenAPIv3) bo
 }
 
 func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Model == nil {
-		return this.Model == nil
-	} else if this.Model == nil {
+	if this.Model == nil && that.Model != nil {
 		return false
-	}
-	if !this.GetOpenapiv3().EqualVT(that.GetOpenapiv3()) {
-		return false
+	} else if this.Model != nil {
+		if that.Model == nil {
+			return false
+		}
+		if !this.GetOpenapiv3().EqualVT(that.GetOpenapiv3()) {
+			return false
+		}
 	}
 	if this.Name != that.Name {
 		return false
@@ -110,9 +114,9 @@ func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
 }
 
 func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if len(this.Resetters) != len(that.Resetters) {
@@ -189,9 +193,9 @@ func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
 }
 
 func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Status != that.Status {
@@ -212,9 +216,9 @@ func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
 }
 
 func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestRaw_Input_HttpRequest) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Method != that.Method {
@@ -245,26 +249,28 @@ func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestR
 }
 
 func (this *Clt_CallRequestRaw_Input) EqualVT(that *Clt_CallRequestRaw_Input) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Input == nil {
-		return this.Input == nil
-	} else if this.Input == nil {
+	if this.Input == nil && that.Input != nil {
 		return false
-	}
-	if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
-		return false
+	} else if this.Input != nil {
+		if that.Input == nil {
+			return false
+		}
+		if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if !this.Input.EqualVT(that.Input) {
@@ -282,9 +288,9 @@ func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
 }
 
 func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallResponseRaw_Output_HttpResponse) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Error != that.Error {
@@ -321,26 +327,28 @@ func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallRespo
 }
 
 func (this *Clt_CallResponseRaw_Output) EqualVT(that *Clt_CallResponseRaw_Output) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Output == nil {
-		return this.Output == nil
-	} else if this.Output == nil {
+	if this.Output == nil && that.Output != nil {
 		return false
-	}
-	if !this.GetHttpResponse().EqualVT(that.GetHttpResponse()) {
-		return false
+	} else if this.Output != nil {
+		if that.Output == nil {
+			return false
+		}
+		if !this.GetHttpResponse().EqualVT(that.GetHttpResponse()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if !this.Output.EqualVT(that.Output) {
@@ -353,9 +361,9 @@ func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
 }
 
 func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Name != that.Name {
@@ -385,38 +393,40 @@ func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
 }
 
 func (this *Clt) EqualVT(that *Clt) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Msg == nil {
-		return this.Msg == nil
-	} else if this.Msg == nil {
+	if this.Msg == nil && that.Msg != nil {
 		return false
-	}
-	if !this.GetFuzz().EqualVT(that.GetFuzz()) {
-		return false
-	}
-	if !this.GetResetProgress().EqualVT(that.GetResetProgress()) {
-		return false
-	}
-	if !this.GetCallRequestRaw().EqualVT(that.GetCallRequestRaw()) {
-		return false
-	}
-	if !this.GetCallResponseRaw().EqualVT(that.GetCallResponseRaw()) {
-		return false
-	}
-	if !this.GetCallVerifProgress().EqualVT(that.GetCallVerifProgress()) {
-		return false
+	} else if this.Msg != nil {
+		if that.Msg == nil {
+			return false
+		}
+		if !this.GetFuzz().EqualVT(that.GetFuzz()) {
+			return false
+		}
+		if !this.GetResetProgress().EqualVT(that.GetResetProgress()) {
+			return false
+		}
+		if !this.GetCallRequestRaw().EqualVT(that.GetCallRequestRaw()) {
+			return false
+		}
+		if !this.GetCallResponseRaw().EqualVT(that.GetCallResponseRaw()) {
+			return false
+		}
+		if !this.GetCallVerifProgress().EqualVT(that.GetCallVerifProgress()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Failure != that.Failure {
@@ -456,9 +466,9 @@ func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
 }
 
 func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.MaxTestsCount != that.MaxTestsCount {
@@ -480,9 +490,9 @@ func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
 }
 
 func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Method != that.Method {
@@ -510,26 +520,28 @@ func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest
 }
 
 func (this *Srv_Call_Input) EqualVT(that *Srv_Call_Input) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Input == nil {
-		return this.Input == nil
-	} else if this.Input == nil {
+	if this.Input == nil && that.Input != nil {
 		return false
-	}
-	if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
-		return false
+	} else if this.Input != nil {
+		if that.Input == nil {
+			return false
+		}
+		if !this.GetHttpRequest().EqualVT(that.GetHttpRequest()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if !this.Input.EqualVT(that.Input) {
@@ -545,18 +557,18 @@ func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
 }
 
 func (this *Srv_Reset) EqualVT(that *Srv_Reset) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResult_CounterexampleItem) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if !this.CallRequest.EqualVT(that.CallRequest) {
@@ -569,9 +581,9 @@ func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResul
 }
 
 func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if string(this.SeedUsed) != string(that.SeedUsed) {
@@ -601,27 +613,29 @@ func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
 }
 
 func (this *Srv) EqualVT(that *Srv) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Msg == nil {
-		return this.Msg == nil
-	} else if this.Msg == nil {
+	if this.Msg == nil && that.Msg != nil {
 		return false
-	}
-	if !this.GetFuzzRep().EqualVT(that.GetFuzzRep()) {
-		return false
-	}
-	if !this.GetCall().EqualVT(that.GetCall()) {
-		return false
-	}
-	if !this.GetReset_().EqualVT(that.GetReset_()) {
-		return false
-	}
-	if !this.GetFuzzingResult().EqualVT(that.GetFuzzingResult()) {
-		return false
+	} else if this.Msg != nil {
+		if that.Msg == nil {
+			return false
+		}
+		if !this.GetFuzzRep().EqualVT(that.GetFuzzRep()) {
+			return false
+		}
+		if !this.GetCall().EqualVT(that.GetCall()) {
+			return false
+		}
+		if !this.GetReset_().EqualVT(that.GetReset_()) {
+			return false
+		}
+		if !this.GetFuzzingResult().EqualVT(that.GetFuzzingResult()) {
+			return false
+		}
 	}
 	if !this.FuzzingProgress.EqualVT(that.FuzzingProgress) {
 		return false
@@ -630,9 +644,9 @@ func (this *Srv) EqualVT(that *Srv) bool {
 }
 
 func (this *Uint32S) EqualVT(that *Uint32S) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if len(this.Values) != len(that.Values) {
@@ -647,9 +661,9 @@ func (this *Uint32S) EqualVT(that *Uint32S) bool {
 }
 
 func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Key != that.Key {
@@ -667,9 +681,9 @@ func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
 }
 
 func (this *SpecIR) EqualVT(that *SpecIR) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if !this.Schemas.EqualVT(that.Schemas) {
@@ -687,9 +701,9 @@ func (this *SpecIR) EqualVT(that *SpecIR) bool {
 }
 
 func (this *Schemas) EqualVT(that *Schemas) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if len(this.Json) != len(that.Json) {
@@ -704,29 +718,31 @@ func (this *Schemas) EqualVT(that *Schemas) bool {
 }
 
 func (this *RefOrSchemaJSON) EqualVT(that *RefOrSchemaJSON) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.PtrOrSchema == nil {
-		return this.PtrOrSchema == nil
-	} else if this.PtrOrSchema == nil {
+	if this.PtrOrSchema == nil && that.PtrOrSchema != nil {
 		return false
-	}
-	if !this.GetPtr().EqualVT(that.GetPtr()) {
-		return false
-	}
-	if !this.GetSchema().EqualVT(that.GetSchema()) {
-		return false
+	} else if this.PtrOrSchema != nil {
+		if that.PtrOrSchema == nil {
+			return false
+		}
+		if !this.GetPtr().EqualVT(that.GetPtr()) {
+			return false
+		}
+		if !this.GetSchema().EqualVT(that.GetSchema()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *SchemaPtr) EqualVT(that *SchemaPtr) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.SID != that.SID {
@@ -739,26 +755,28 @@ func (this *SchemaPtr) EqualVT(that *SchemaPtr) bool {
 }
 
 func (this *Endpoint) EqualVT(that *Endpoint) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Endpoint == nil {
-		return this.Endpoint == nil
-	} else if this.Endpoint == nil {
+	if this.Endpoint == nil && that.Endpoint != nil {
 		return false
-	}
-	if !this.GetJson().EqualVT(that.GetJson()) {
-		return false
+	} else if this.Endpoint != nil {
+		if that.Endpoint == nil {
+			return false
+		}
+		if !this.GetJson().EqualVT(that.GetJson()) {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.Method != that.Method {
@@ -792,9 +810,9 @@ func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 }
 
 func (this *ParamJSON) EqualVT(that *ParamJSON) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if this.IsRequired != that.IsRequired {
@@ -813,49 +831,53 @@ func (this *ParamJSON) EqualVT(that *ParamJSON) bool {
 }
 
 func (this *PathPartial) EqualVT(that *PathPartial) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.Pp == nil {
-		return this.Pp == nil
-	} else if this.Pp == nil {
+	if this.Pp == nil && that.Pp != nil {
 		return false
-	}
-	if this.GetPart() != that.GetPart() {
-		return false
-	}
-	if this.GetPtr() != that.GetPtr() {
-		return false
+	} else if this.Pp != nil {
+		if that.Pp == nil {
+			return false
+		}
+		if this.GetPart() != that.GetPart() {
+			return false
+		}
+		if this.GetPtr() != that.GetPtr() {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Schema_JSON_AdditionalProperties) EqualVT(that *Schema_JSON_AdditionalProperties) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
-	if that.AddProps == nil {
-		return this.AddProps == nil
-	} else if this.AddProps == nil {
+	if this.AddProps == nil && that.AddProps != nil {
 		return false
-	}
-	if this.GetAlwaysSucceed() != that.GetAlwaysSucceed() {
-		return false
-	}
-	if this.GetSID() != that.GetSID() {
-		return false
+	} else if this.AddProps != nil {
+		if that.AddProps == nil {
+			return false
+		}
+		if this.GetAlwaysSucceed() != that.GetAlwaysSucceed() {
+			return false
+		}
+		if this.GetSID() != that.GetSID() {
+			return false
+		}
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	if len(this.Types) != len(that.Types) {
@@ -996,9 +1018,9 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 }
 
 func (this *Schema) EqualVT(that *Schema) bool {
-	if that == nil {
-		return this == nil
-	} else if this == nil {
+	if this == nil {
+		return that == nil
+	} else if that == nil {
 		return false
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
