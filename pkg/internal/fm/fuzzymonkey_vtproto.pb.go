@@ -24,9 +24,9 @@ const (
 
 func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Start != that.Start {
 		return false
@@ -42,9 +42,9 @@ func (this *Clt_Fuzz_Resetter_Shell) EqualVT(that *Clt_Fuzz_Resetter_Shell) bool
 
 func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Resetter == nil && that.Resetter != nil {
 		return false
@@ -72,9 +72,9 @@ func (this *Clt_Fuzz_Resetter) EqualVT(that *Clt_Fuzz_Resetter) bool {
 
 func (this *Clt_Fuzz_Model_OpenAPIv3) EqualVT(that *Clt_Fuzz_Model_OpenAPIv3) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.File != that.File {
 		return false
@@ -93,9 +93,9 @@ func (this *Clt_Fuzz_Model_OpenAPIv3) EqualVT(that *Clt_Fuzz_Model_OpenAPIv3) bo
 
 func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Model == nil && that.Model != nil {
 		return false
@@ -115,9 +115,9 @@ func (this *Clt_Fuzz_Model) EqualVT(that *Clt_Fuzz_Model) bool {
 
 func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if len(this.Resetters) != len(that.Resetters) {
 		return false
@@ -194,9 +194,9 @@ func (this *Clt_Fuzz) EqualVT(that *Clt_Fuzz) bool {
 
 func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Status != that.Status {
 		return false
@@ -217,9 +217,9 @@ func (this *Clt_ResetProgress) EqualVT(that *Clt_ResetProgress) bool {
 
 func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestRaw_Input_HttpRequest) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Method != that.Method {
 		return false
@@ -250,9 +250,9 @@ func (this *Clt_CallRequestRaw_Input_HttpRequest) EqualVT(that *Clt_CallRequestR
 
 func (this *Clt_CallRequestRaw_Input) EqualVT(that *Clt_CallRequestRaw_Input) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Input == nil && that.Input != nil {
 		return false
@@ -269,9 +269,9 @@ func (this *Clt_CallRequestRaw_Input) EqualVT(that *Clt_CallRequestRaw_Input) bo
 
 func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if !this.Input.EqualVT(that.Input) {
 		return false
@@ -289,9 +289,9 @@ func (this *Clt_CallRequestRaw) EqualVT(that *Clt_CallRequestRaw) bool {
 
 func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallResponseRaw_Output_HttpResponse) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Error != that.Error {
 		return false
@@ -328,9 +328,9 @@ func (this *Clt_CallResponseRaw_Output_HttpResponse) EqualVT(that *Clt_CallRespo
 
 func (this *Clt_CallResponseRaw_Output) EqualVT(that *Clt_CallResponseRaw_Output) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Output == nil && that.Output != nil {
 		return false
@@ -347,9 +347,9 @@ func (this *Clt_CallResponseRaw_Output) EqualVT(that *Clt_CallResponseRaw_Output
 
 func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if !this.Output.EqualVT(that.Output) {
 		return false
@@ -362,9 +362,9 @@ func (this *Clt_CallResponseRaw) EqualVT(that *Clt_CallResponseRaw) bool {
 
 func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Name != that.Name {
 		return false
@@ -394,9 +394,9 @@ func (this *Clt_CallVerifProgress) EqualVT(that *Clt_CallVerifProgress) bool {
 
 func (this *Clt) EqualVT(that *Clt) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Msg == nil && that.Msg != nil {
 		return false
@@ -425,9 +425,9 @@ func (this *Clt) EqualVT(that *Clt) bool {
 
 func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Failure != that.Failure {
 		return false
@@ -467,9 +467,9 @@ func (this *Srv_FuzzingProgress) EqualVT(that *Srv_FuzzingProgress) bool {
 
 func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.MaxTestsCount != that.MaxTestsCount {
 		return false
@@ -491,9 +491,9 @@ func (this *Srv_FuzzRep) EqualVT(that *Srv_FuzzRep) bool {
 
 func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Method != that.Method {
 		return false
@@ -521,9 +521,9 @@ func (this *Srv_Call_Input_HttpRequest) EqualVT(that *Srv_Call_Input_HttpRequest
 
 func (this *Srv_Call_Input) EqualVT(that *Srv_Call_Input) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Input == nil && that.Input != nil {
 		return false
@@ -540,9 +540,9 @@ func (this *Srv_Call_Input) EqualVT(that *Srv_Call_Input) bool {
 
 func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if !this.Input.EqualVT(that.Input) {
 		return false
@@ -558,18 +558,18 @@ func (this *Srv_Call) EqualVT(that *Srv_Call) bool {
 
 func (this *Srv_Reset) EqualVT(that *Srv_Reset) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
 
 func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResult_CounterexampleItem) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if !this.CallRequest.EqualVT(that.CallRequest) {
 		return false
@@ -582,9 +582,9 @@ func (this *Srv_FuzzingResult_CounterexampleItem) EqualVT(that *Srv_FuzzingResul
 
 func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if string(this.SeedUsed) != string(that.SeedUsed) {
 		return false
@@ -614,9 +614,9 @@ func (this *Srv_FuzzingResult) EqualVT(that *Srv_FuzzingResult) bool {
 
 func (this *Srv) EqualVT(that *Srv) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Msg == nil && that.Msg != nil {
 		return false
@@ -645,9 +645,9 @@ func (this *Srv) EqualVT(that *Srv) bool {
 
 func (this *Uint32S) EqualVT(that *Uint32S) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if len(this.Values) != len(that.Values) {
 		return false
@@ -662,9 +662,9 @@ func (this *Uint32S) EqualVT(that *Uint32S) bool {
 
 func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Key != that.Key {
 		return false
@@ -682,9 +682,9 @@ func (this *HeaderPair) EqualVT(that *HeaderPair) bool {
 
 func (this *SpecIR) EqualVT(that *SpecIR) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if !this.Schemas.EqualVT(that.Schemas) {
 		return false
@@ -702,9 +702,9 @@ func (this *SpecIR) EqualVT(that *SpecIR) bool {
 
 func (this *Schemas) EqualVT(that *Schemas) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if len(this.Json) != len(that.Json) {
 		return false
@@ -719,9 +719,9 @@ func (this *Schemas) EqualVT(that *Schemas) bool {
 
 func (this *RefOrSchemaJSON) EqualVT(that *RefOrSchemaJSON) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.PtrOrSchema == nil && that.PtrOrSchema != nil {
 		return false
@@ -741,9 +741,9 @@ func (this *RefOrSchemaJSON) EqualVT(that *RefOrSchemaJSON) bool {
 
 func (this *SchemaPtr) EqualVT(that *SchemaPtr) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.SID != that.SID {
 		return false
@@ -756,9 +756,9 @@ func (this *SchemaPtr) EqualVT(that *SchemaPtr) bool {
 
 func (this *Endpoint) EqualVT(that *Endpoint) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Endpoint == nil && that.Endpoint != nil {
 		return false
@@ -775,9 +775,9 @@ func (this *Endpoint) EqualVT(that *Endpoint) bool {
 
 func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Method != that.Method {
 		return false
@@ -811,9 +811,9 @@ func (this *EndpointJSON) EqualVT(that *EndpointJSON) bool {
 
 func (this *ParamJSON) EqualVT(that *ParamJSON) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.IsRequired != that.IsRequired {
 		return false
@@ -832,9 +832,9 @@ func (this *ParamJSON) EqualVT(that *ParamJSON) bool {
 
 func (this *PathPartial) EqualVT(that *PathPartial) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.Pp == nil && that.Pp != nil {
 		return false
@@ -854,9 +854,9 @@ func (this *PathPartial) EqualVT(that *PathPartial) bool {
 
 func (this *Schema_JSON_AdditionalProperties) EqualVT(that *Schema_JSON_AdditionalProperties) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if this.AddProps == nil && that.AddProps != nil {
 		return false
@@ -876,9 +876,9 @@ func (this *Schema_JSON_AdditionalProperties) EqualVT(that *Schema_JSON_Addition
 
 func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	if len(this.Types) != len(that.Types) {
 		return false
@@ -1019,9 +1019,9 @@ func (this *Schema_JSON) EqualVT(that *Schema_JSON) bool {
 
 func (this *Schema) EqualVT(that *Schema) bool {
 	if this == nil {
-		return that == nil
+		return that == nil || fmt.Sprintf("%v", that) == ""
 	} else if that == nil {
-		return false
+		return fmt.Sprintf("%v", this) == ""
 	}
 	return string(this.unknownFields) == string(that.unknownFields)
 }
