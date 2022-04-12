@@ -84,17 +84,6 @@ RUN \
 FROM scratch AS ci-check--protolock
 COPY --from=ci-check--protolock- /app/proto.lock /
 
-FROM alpine AS vtprotobuf-src-
-RUN \
-# Not using ADD as a network call is always performed
-  --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
-    set -ux \
- && apk update \
- && apk add curl ca-certificates \
- && curl -#fsSLo /vt.tar.gz https://github.com/fenollp/vtprotobuf/archive/c712ad1c00bb05521462c794900c0953f2cfb1b7.tar.gz \
- && tar zxvf /vt.tar.gz
-FROM scratch AS vtprotobuf-src
-COPY --from=vtprotobuf-src- /vtprotobuf-c712ad1c00bb05521462c794900c0953f2cfb1b7 /
 FROM golang AS ci-check--protoc-
 WORKDIR /app
 ENV GOBIN /go/bin
@@ -108,15 +97,13 @@ RUN \
 RUN \
   --mount=type=cache,target=/go/pkg/mod \
   --mount=type=cache,target=/root/.cache/go-build \
-  --mount=from=vtprotobuf-src,source=/,target=/vtpb \
     set -ux \
 # Not using ADD as a network call is always performed
  && mkdir -p /wellknown/google/protobuf \
  && curl -#fsSLo /wellknown/google/protobuf/struct.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/2f91da585e96a7efe43505f714f03c7716a94ecb/src/google/protobuf/struct.proto \
  && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
  && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
- # TODO: whence https://github.com/planetscale/vtprotobuf/pull/28
- && cd /vtpb && go install /vtpb/cmd/protoc-gen-go-vtproto
+ && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@eabc7615daf8a34ee7ccb8012755f323d8e42fe7
 COPY pkg/internal/fm/*.proto .
 RUN \
   --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt \
