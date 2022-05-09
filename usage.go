@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 )
 
 type params struct {
