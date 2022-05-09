@@ -24,7 +24,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 	log.Println("[NFO] terminating resetter")
 	if errR := rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		return rsttr.Terminate(ctx, os.Stdout, os.Stderr)
-	}); errR != nil && err == nil {
+	}); errR != nil {
 		err = errR
 		// Keep going
 	}

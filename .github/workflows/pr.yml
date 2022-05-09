@@ -45,6 +45,13 @@ jobs:
     - run: find . -type f -iname '*.go' ! -iname '*.pb.go' -exec goimports-reviser -file-path {} \;
     - run: git --no-pager diff --exit-code
 
+  check-nillness:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v3
+    - run: go run golang.org/x/tools/go/analysis/passes/nilness/cmd/nilness@latest ./...
+
   checks:
     runs-on: ubuntu-latest
     strategy:
