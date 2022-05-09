@@ -7,14 +7,15 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
+	"google.golang.org/grpc/metadata"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"github.com/google/uuid"
-	"google.golang.org/grpc/metadata"
 )
 
 // PastSeedMagic is a magic string to search through logs

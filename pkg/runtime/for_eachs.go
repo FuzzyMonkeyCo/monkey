@@ -5,10 +5,11 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"go.starlark.net/starlark"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 )
 
 func (rt *Runtime) forEachCheck(f func(name string, chk *check) error) error {

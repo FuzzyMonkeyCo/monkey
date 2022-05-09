@@ -7,13 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"go.starlark.net/starlark"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"go.starlark.net/starlark"
-	"golang.org/x/sync/errgroup"
 )
 
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64, maxDuration time.Duration) error {

@@ -10,12 +10,13 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/xeipuuv/gojsonschema"
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/protovalue"
-	"github.com/xeipuuv/gojsonschema"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type validator struct {

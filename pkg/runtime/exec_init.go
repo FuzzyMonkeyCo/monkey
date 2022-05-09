@@ -6,10 +6,11 @@ import (
 	"os/user"
 	"path"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/chzyer/readline"
 	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 )
 
 func loadDisabled(_th *starlark.Thread, _module string) (starlark.StringDict, error) {

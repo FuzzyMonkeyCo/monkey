@@ -36,6 +36,15 @@ jobs:
           echo $(cut -d. -f1 <$prev).$(cut -d. -f2 <$prev).$(( $(cut -d. -f3 <$prev) + 1 ))
         } | awk '{ printf("%s ", $0) }' | grep -F "$curr"
 
+  check-goimports:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-go@v3
+    - run: go install github.com/incu6us/goimports-reviser/v2@v2.5.1
+    - run: find . -type f -iname '*.go' ! -iname '*.pb.go' -exec goimports-reviser -file-path {} \;
+    - run: git --no-pager diff --exit-code
+
   checks:
     runs-on: ubuntu-latest
     strategy:
@@ -46,6 +55,7 @@ jobs:
         - ci-check--mod
         - ci-check--test
         - ci-check--protolock
+      # - ci-check--protolock-force
         - ci-check--protoc
     steps:
     - name: Set lowercase image name

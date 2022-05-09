@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"log"
 
+	"go.starlark.net/starlark"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	openapi3 "github.com/FuzzyMonkeyCo/monkey/pkg/modeler/openapiv3"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter/shell"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"go.starlark.net/starlark"
 )
 
 const (

@@ -10,8 +10,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"go.starlark.net/starlark"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 )
 
 func starTrickError(err error) error {

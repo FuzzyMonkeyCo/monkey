@@ -13,6 +13,7 @@ group "ci-checks" {
     "ci-check--test",
     "ci-check--protoc",
     "ci-check--protolock",
+  # "ci-check--protolock-force",
   ]
 }
 

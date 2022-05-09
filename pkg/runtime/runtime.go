@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"go.starlark.net/starlark"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
@@ -14,7 +16,6 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"go.starlark.net/starlark"
 )
 
 // Runtime executes commands, resets and checks against the System Under Test
