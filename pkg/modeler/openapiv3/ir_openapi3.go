@@ -8,9 +8,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getkin/kin-openapi/openapi3"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-	"github.com/getkin/kin-openapi/openapi3"
 )
 
 const (

@@ -9,14 +9,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-
 	"github.com/stretchr/testify/require"
 	"go.starlark.net/starlark"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
 
 const someOpenAPI3Model = `

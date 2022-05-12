@@ -10,14 +10,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 
-	goruntime "runtime"
-
-	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/bazelbuild/buildtools/build"
 	"github.com/bazelbuild/buildtools/buildifier/utils"
 	"github.com/bazelbuild/buildtools/wspace"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 )
 
 const (

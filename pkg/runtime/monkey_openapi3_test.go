@@ -3,8 +3,9 @@ package runtime
 import (
 	"testing"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/stretchr/testify/require"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
 
 // generic over modelers

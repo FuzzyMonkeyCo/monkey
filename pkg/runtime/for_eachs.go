@@ -2,10 +2,14 @@ package runtime
 
 import (
 	"context"
+	"errors"
+	"sort"
+
+	"go.starlark.net/starlark"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
-	"golang.org/x/sync/errgroup"
 )
 
 func (rt *Runtime) forEachCheck(f func(name string, chk *check) error) error {
@@ -61,6 +65,9 @@ func (rt *Runtime) forEachSelectedResetter(ctx context.Context, f func(string, r
 			}
 		}
 	}
+	if len(selectedResetters) == 0 {
+		return errors.New("no resetter selected")
+	}
 
 	g, _ := errgroup.WithContext(ctx)
 	_ = rt.forEachResetter(func(name string, rsttr resetter.Interface) error {
@@ -72,4 +79,19 @@ func (rt *Runtime) forEachSelectedResetter(ctx context.Context, f func(string, r
 		return nil
 	})
 	return g.Wait()
+}
+
+func (rt *Runtime) forEachGlobal(f func(name string, value starlark.Value) error) error {
+	names := make([]string, 0, len(rt.globals))
+	for name := range rt.globals {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		name, value := name, rt.globals[name]
+		if err := f(name, value); err != nil {
+			return err
+		}
+	}
+	return nil
 }

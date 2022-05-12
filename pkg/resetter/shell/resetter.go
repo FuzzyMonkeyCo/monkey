@@ -140,9 +140,9 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 
 func (s *Resetter) commands() (cmds string, err error) {
 	var (
-		hasStart = strings.TrimSpace(s.Start) != ""
-		hasReset = strings.TrimSpace(s.Rst) != ""
-		hasStop  = strings.TrimSpace(s.Stop) != ""
+		hasStart = "" != strings.TrimSpace(s.Start)
+		hasReset = "" != strings.TrimSpace(s.Rst)
+		hasStop  = "" != strings.TrimSpace(s.Stop)
 	)
 	switch {
 	case !hasStart && hasReset && !hasStop:

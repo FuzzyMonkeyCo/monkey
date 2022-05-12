@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/logutils"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
@@ -19,7 +21,6 @@ import (
 	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/update"
-	"github.com/hashicorp/logutils"
 )
 
 const (
@@ -148,6 +149,8 @@ func actualMain() int {
 			fn = mrt.JustExecStop
 		case args.Repl:
 			fn = mrt.JustExecREPL
+		default:
+			panic("unreachable")
 		}
 		if err := fn(ctx); err != nil {
 			if e := err.Error(); e != "" {

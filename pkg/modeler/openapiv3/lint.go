@@ -15,6 +15,10 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
 )
 
+func init() {
+	openapi3.SchemaFormatValidationDisabled = true // Silence "unknown schema format value" errors
+}
+
 var errLinting = func() error {
 	msg := "Documentation validation failed."
 	return errors.New(msg) // Gets around golint

@@ -106,13 +106,13 @@ OpenAPIv3(
 # Invariants of our APIs expressed in a Python-like language
 
 assert that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
-spec = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
-print("Using {}.".format(spec))
+SPEC = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
+print("Using {}.".format(SPEC))
 
 monkey.openapi3(
     name = "my_spec",
     # Note: references to schemas in `file` are resolved relative to file's location.
-    file = spec,
+    file = SPEC,
     host = "https://jsonplaceholder.typicode.com",
     # header_authorization = "Bearer {}".format(monkey.env("DEV_API_TOKEN")),
 )

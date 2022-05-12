@@ -175,78 +175,6 @@
                 "integer": 8
               }
             ]
-          },
-          {
-            "name": "JSON.Format",
-            "enum_fields": [
-              {
-                "name": "NONE"
-              },
-              {
-                "name": "date_time",
-                "integer": 1
-              },
-              {
-                "name": "date",
-                "integer": 2
-              },
-              {
-                "name": "email",
-                "integer": 4
-              },
-              {
-                "name": "hostname",
-                "integer": 6
-              },
-              {
-                "name": "ipv4",
-                "integer": 8
-              },
-              {
-                "name": "ipv6",
-                "integer": 9
-              },
-              {
-                "name": "uri",
-                "integer": 10
-              },
-              {
-                "name": "uri_reference",
-                "integer": 11
-              },
-              {
-                "name": "regex",
-                "integer": 17
-              },
-              {
-                "name": "int32",
-                "integer": 18
-              },
-              {
-                "name": "int64",
-                "integer": 19
-              },
-              {
-                "name": "float",
-                "integer": 20
-              },
-              {
-                "name": "double",
-                "integer": 21
-              },
-              {
-                "name": "byte",
-                "integer": 22
-              },
-              {
-                "name": "binary",
-                "integer": 23
-              },
-              {
-                "name": "password",
-                "integer": 24
-              }
-            ]
           }
         ],
         "messages": [
@@ -1061,7 +989,7 @@
                   {
                     "id": 3,
                     "name": "format",
-                    "type": "Format"
+                    "type": "string"
                   },
                   {
                     "id": 4,

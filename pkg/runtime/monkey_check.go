@@ -5,10 +5,11 @@ import (
 	"log"
 	"strings"
 
+	"go.starlark.net/starlark"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkclone"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
-	"go.starlark.net/starlark"
 )
 
 type check struct {

@@ -3,6 +3,7 @@ package tags
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -87,4 +88,11 @@ func LegalName(name string) error {
 		}
 	}
 	return nil
+}
+
+var isFullCapsRegexp = regexp.MustCompile(`^[A-Z]+[A-Z0-9_]*$`)
+
+// IsFullCaps returns whether a name would represent a Pythonic constant
+func IsFullCaps(name string) bool {
+	return isFullCapsRegexp.MatchString(name)
 }

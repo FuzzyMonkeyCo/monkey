@@ -5,10 +5,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
-	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 	docopt "github.com/docopt/docopt-go"
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/as"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/code"
 )
 
 type params struct {
@@ -39,6 +40,7 @@ func usage() (args *params, ret int) {
 	// TODO: B [-vvv] exec (start | reset | stop) [RESETTER]
 	// TODO: B [-vvv] schema [--validate-against=REF] [MODELER]
 	// TODO: B [-vvv] docs
+	// TODO: separate repl from exec ...
 	usage := binTitle + `
 
 Usage:

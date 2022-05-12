@@ -3,8 +3,9 @@ package starlarktruth_test
 import (
 	"fmt"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 	"go.starlark.net/starlark"
+
+	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 )
 
 func Example() {
