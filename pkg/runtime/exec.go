@@ -30,5 +30,3 @@ func (rt *Runtime) JustExecStop(ctx context.Context) error {
 		return rsttr.ExecStop(ctx, os.Stdout, os.Stderr, true)
 	})
 }
-
-//https://github.com/asciinema/asciinema/blob/fdb6cb067ad73ded7253762534171bcf5a97c6e4/doc/asciicast-v2.md

@@ -40,8 +40,7 @@ func usage() (args *params, ret int) {
 	// TODO: B [-vvv] exec (start | reset | stop) [RESETTER]
 	// TODO: B [-vvv] schema [--validate-against=REF] [MODELER]
 	// TODO: B [-vvv] docs
-	// ` + B + ` [-vvv] [-f STAR] repl
-	// ` + B + ` [-vvv] [-f STAR] exec start,reset,stop
+	// TODO: separate repl from exec ...
 	usage := binTitle + `
 
 Usage:
