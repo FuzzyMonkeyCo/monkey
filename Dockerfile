@@ -101,9 +101,9 @@ RUN \
 # Not using ADD as a network call is always performed
  && mkdir -p /wellknown/google/protobuf \
  && curl -#fsSLo /wellknown/google/protobuf/struct.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/2f91da585e96a7efe43505f714f03c7716a94ecb/src/google/protobuf/struct.proto \
- && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
- && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
- && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@eabc7615daf8a34ee7ccb8012755f323d8e42fe7
+ && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.0 \
+ && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0 \
+ && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@729cfe4bde1a734cb9757bdc74253e6ecf968ab5
 COPY pkg/internal/fm/*.proto .
 RUN \
   --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt \

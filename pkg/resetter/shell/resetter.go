@@ -180,7 +180,7 @@ func (s *Resetter) commands() (cmds string, err error) {
 }
 
 func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds string) (err error) {
-	if len(cmds) == 0 {
+	if cmds == "" {
 		err = errors.New("no usable script")
 		return
 	}
@@ -264,6 +264,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds stri
 			// Reproduce with `make debug && make debug && ...`
 			// Surely happens on write to STDOUT/STDERR
 			// A mutex for both progress writers does not fix this
+			log.Printf("[DBG] shell process short write")
 			e = nil
 		}
 		ch <- e
