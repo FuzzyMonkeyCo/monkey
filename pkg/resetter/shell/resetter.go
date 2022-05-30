@@ -249,7 +249,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, cmds stri
 	exe.Stderr = io.MultiWriter(&stdboth, stderr)
 	log.Printf("[DBG] executing script within %s:\n%s", timeoutLong, scriptListing.Bytes())
 
-	ch := make(chan error)
+	ch := make(chan error, 1)
 	start := time.Now()
 	// https://github.com/golang/go/issues/18874
 	//   exec.Cmd fails to cancel with non-*os.File outputs on linux
