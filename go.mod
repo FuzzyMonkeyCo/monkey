@@ -8,6 +8,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.15.0
+	github.com/fsnotify/fsnotify v1.6.0
 	github.com/getkin/kin-openapi v0.115.0
 	github.com/google/gnostic v0.6.9
 	github.com/google/uuid v1.3.0

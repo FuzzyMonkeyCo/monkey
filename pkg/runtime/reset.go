@@ -23,7 +23,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 
 	log.Println("[NFO] terminating resetter")
 	if errR := rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		return rsttr.Terminate(ctx, os.Stdout, os.Stderr)
+		return rsttr.Terminate(ctx, os.Stdout, os.Stderr, rt.envRead)
 	}); errR != nil {
 		err = errR
 		// Keep going
@@ -100,6 +100,6 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		stdout := newProgressWriter(rt.progress.Printf)
 		stderr := newProgressWriter(rt.progress.Errorf)
-		return rsttr.ExecReset(ctx, stdout, stderr, false)
+		return rsttr.ExecReset(ctx, stdout, stderr, false, rt.envRead)
 	})
 }
