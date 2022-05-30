@@ -28,6 +28,8 @@ monkey.shell(
     # For best results, tests should start with a clean slate
     #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
     reset = """
+echo ${BLA:-42}
+BLA=$(( ${BLA:-42} + 1 ))
 echo Resetting state...
     """,
 )

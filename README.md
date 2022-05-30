@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.17.5 linux amd64
+monkey M.m.p go1.18.3 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -133,6 +133,8 @@ monkey.shell(
     # For best results, tests should start with a clean slate
     #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
     reset = """
+echo ${BLA:-42}
+BLA=$(( ${BLA:-42} + 1 ))
 echo Resetting state...
     """,
 )
