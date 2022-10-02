@@ -3,7 +3,7 @@
 EXE ?= monkey
 
 all: pkg/internal/fm/fuzzymonkey.pb.go make_README.sh README.md lint
-	CGO_ENABLED=0 go build -o $(EXE) -ldflags '-s -w' $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
+	CGO_ENABLED=0 go build -o $(EXE) $(if $(wildcard $(EXE)),|| (rm $(EXE) && false))
 	cat .gitignore >.dockerignore && echo /.git >>.dockerignore
 	./$(EXE) fmt -w && ./make_README.sh
 
