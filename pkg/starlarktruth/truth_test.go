@@ -62,8 +62,12 @@ func helper(t *testing.T, as asWhat, program string) (starlark.StringDict, error
 }
 
 func testEach(t *testing.T, m map[string]error, asSlice ...asWhat) {
+	if len(asSlice) > 1 {
+		panic("too many items in slice")
+	}
 	as := asFunc
 	for _, as = range asSlice {
+		break
 	}
 	for code, expectedErr := range m {
 		t.Run(code, func(t *testing.T) {
@@ -77,9 +81,16 @@ func testEach(t *testing.T, m map[string]error, asSlice ...asWhat) {
 			} else {
 				require.Error(t, err)
 				require.EqualError(t, err, expectedErr.Error())
-				if _, ok := err.(UnhandledError); !ok {
-					require.True(t, errors.As(err, &expectedErr))
-					require.IsType(t, expectedErr, err)
+				switch err := err.(type) {
+				case *starlark.EvalError:
+					e := err.Unwrap()
+					if _, ok := e.(*UnhandledError); !ok {
+						require.Exactly(t, expectedErr, e)
+					}
+				case *UnresolvedError:
+					require.Exactly(t, expectedErr, err)
+				default:
+					panic("unreachable")
 				}
 			}
 		})
