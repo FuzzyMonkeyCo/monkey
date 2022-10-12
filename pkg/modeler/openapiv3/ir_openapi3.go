@@ -424,7 +424,7 @@ func makeXXXToOA3(xxx uint32) string {
 	return strconv.FormatUint(uint64(xxx), 10)
 }
 
-//TODO: support the whole spec on /"servers"
+// TODO: support the whole spec on /"servers"
 func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err error) {
 	if len(docServers) == 0 {
 		log.Println(`[NFO] field 'servers' empty/unset: using "/"`)
