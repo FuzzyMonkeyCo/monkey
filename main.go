@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -34,7 +35,8 @@ const (
 var (
 	binVersion = "M.m.p"
 	binTitle   = strings.Join([]string{binName, binVersion,
-		runtime.Version(), runtime.GOOS, runtime.GOARCH}, " ")
+		regexp.MustCompile(`go[0-9.]+`).FindString(runtime.Version()),
+		runtime.GOOS, runtime.GOARCH}, " ")
 )
 
 func main() {
