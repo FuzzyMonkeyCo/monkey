@@ -1,13 +1,13 @@
-# syntax=docker.io/docker/dockerfile:1@sha256:42399d4635eddd7a9b8a24be879d2f9a930d0ed040a61324cfdf59ef1357b3b2
+# syntax=docker.io/docker/dockerfile:1@sha256:9ba7531bd80fb0a858632727cf7a112fbfd19b17e94c4e84ced81e24ef1a0dbc
 
 # Use --build-arg PREBUILT=1 with default target to fetch binaries from GitHub releases
 ARG PREBUILT
 
 # Fetched 2022/04/04
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:f22945d45ee2eb4dd463ed5a431d9f04fcd80ca768bb1acf898d91ce51f7bf04 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:8914eb54f968791faf6a8638949e480fef81e697984fba772b3976835194c6d4 AS alpine
 FROM --platform=$BUILDPLATFORM docker.io/nilslice/protolock@sha256:baf9bca8b7a28b945c557f36d562a34cf7ca85a63f6ba8cdadbe333e12ccea51 AS protolock
-FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:5eb58ca0a747ed2e2f4e069d1116badb02a172cf160d31f801776a2342c12863 AS golang
-FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:dfc806a6a7363fd87231b145bd8fb0749121585a3b996851c35e1304e2e12430 AS goreleaser
+FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:660f138b4477001d65324a51fa158c1b868651b44e43f0953bf062e9f38b72f3 AS golang
+FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:05ee558b6a6114557b11a16fc0bfa2483287208c9977fc8840cc8c82d01fea92 AS goreleaser
 # On this image:
 #  go env GOCACHE    => /root/.cache/go-build
 #  go env GOMODCACHE => /go/pkg/mod
@@ -62,7 +62,7 @@ RUN \
  && go test -count 10 ./... \
  && git --no-pager diff --exit-code
 
-FROM alpine AS ci-check--protolock-
+FROM alpine AS ci-check--protolock-stage
 WORKDIR /app
 RUN \
   --mount=type=cache,target=/var/cache/apk ln -vs /var/cache/apk /etc/apk/cache && \
@@ -82,9 +82,9 @@ RUN \
  && /usr/bin/protolock commit \
  && git --no-pager diff --exit-code
 FROM scratch AS ci-check--protolock
-COPY --from=ci-check--protolock- /app/proto.lock /
+COPY --from=ci-check--protolock-stage /app/proto.lock /
 
-FROM golang AS ci-check--protoc-
+FROM golang AS ci-check--protoc-stage
 WORKDIR /app
 ENV GOBIN /go/bin
 # https://github.com/moby/buildkit/blob/a1cfefeaeb66501a95a4d2f5858c939211f331ac/frontend/dockerfile/docs/syntax.md#example-cache-apt-packages
@@ -101,9 +101,9 @@ RUN \
 # Not using ADD as a network call is always performed
  && mkdir -p /wellknown/google/protobuf \
  && curl -#fsSLo /wellknown/google/protobuf/struct.proto https://raw.githubusercontent.com/protocolbuffers/protobuf/2f91da585e96a7efe43505f714f03c7716a94ecb/src/google/protobuf/struct.proto \
- && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.27.1 \
- && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest \
- && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@eabc7615daf8a34ee7ccb8012755f323d8e42fe7
+ && go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1 \
+ && go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0 \
+ && go install github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto@0ae748fd2007a8ade11db4174599f4ba967b3f37
 COPY pkg/internal/fm/*.proto .
 RUN \
   --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt \
@@ -117,7 +117,7 @@ RUN \
       --go-vtproto_opt=features=marshal+unmarshal+size+equal \
       *.proto
 FROM scratch AS ci-check--protoc
-COPY --from=ci-check--protoc- /app/github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/*.pb.go /
+COPY --from=ci-check--protoc-stage /app/github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm/*.pb.go /
 
 ## Build all platforms/OS
 
@@ -142,18 +142,18 @@ COPY --from=goreleaser-dist-many / /
 
 ## Binaries for each OS
 
-FROM alpine AS archmap-darwin-amd64-
+FROM alpine AS archmap-darwin-amd64--stage
 RUN        echo monkey-Darwin-x86_64.tar.gz >/archmap
-FROM alpine AS archmap-linux-386-
+FROM alpine AS archmap-linux-386--stage
 RUN        echo monkey-Linux-i386.tar.gz    >/archmap
-FROM alpine AS archmap-linux-amd64-
+FROM alpine AS archmap-linux-amd64--stage
 RUN        echo monkey-Linux-x86_64.tar.gz  >/archmap
-FROM alpine AS archmap-windows-386-
+FROM alpine AS archmap-windows-386--stage
 RUN        echo monkey-Windows-i386.zip     >/archmap
-FROM alpine AS archmap-windows-amd64-
+FROM alpine AS archmap-windows-amd64--stage
 RUN        echo monkey-Windows-x86_64.zip   >/archmap
 
-FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT AS archmap
+FROM archmap-$TARGETOS-$TARGETARCH-$TARGETVARIANT-stage AS archmap
 
 
 FROM monkey-build AS zxf
@@ -161,7 +161,7 @@ RUN \
     --mount=from=archmap,source=/archmap,target=/archmap \
     set -ux \
  && tar zxvf ./dist/$(cat /archmap) -C .
-FROM scratch AS binaries-
+FROM scratch AS binaries--stage
 COPY --from=zxf /w/monkey* /
 
 FROM alpine AS monkey-prebuilt
@@ -183,10 +183,10 @@ RUN \
  && sha256sum -s -c only \
  && tar zxvf $ARCHIVE -C . \
  && rm $ARCHIVE
-FROM scratch AS binaries-1
+FROM scratch AS binaries-1-stage
 COPY --from=monkey-prebuilt /w/monkey* /
 
-FROM binaries-$PREBUILT AS binaries
+FROM binaries-$PREBUILT-stage AS binaries
 
 
 ## Default target

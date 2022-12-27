@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"runtime"
 	"strings"
 	"time"
@@ -34,7 +35,8 @@ const (
 var (
 	binVersion = "M.m.p"
 	binTitle   = strings.Join([]string{binName, binVersion,
-		runtime.Version(), runtime.GOOS, runtime.GOARCH}, " ")
+		regexp.MustCompile(`go[0-9.]+`).FindString(runtime.Version()),
+		runtime.GOOS, runtime.GOARCH}, " ")
 )
 
 func main() {
@@ -66,6 +68,10 @@ func actualMain() int {
 		return doEnv(args.EnvVars)
 	}
 
+	if args.Update {
+		return doUpdate()
+	}
+
 	if err := cwid.MakePwdID(binName, args.File, 0); err != nil {
 		as.ColorERR.Println(err) // Print as LogFile isn't set up yet
 		return code.Failed
@@ -84,10 +90,6 @@ func actualMain() int {
 	log.SetOutput(io.MultiWriter(logCatchall, logFiltered))
 	log.Printf("[ERR] (not an error) %s %s %#v", binTitle, cwid.LogFile(), args)
 	defer func() { log.Printf("[ERR] (not an error) ran for %s", time.Since(start)) }()
-
-	if args.Update {
-		return doUpdate()
-	}
 
 	if args.Fmt {
 		if err := rt.Format(args.File, args.FmtW); err != nil {

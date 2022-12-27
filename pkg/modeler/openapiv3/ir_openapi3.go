@@ -1,9 +1,7 @@
 package openapiv3
 
 import (
-	"errors"
 	"log"
-	"net/url"
 	"sort"
 	"strconv"
 	"strings"
@@ -30,9 +28,10 @@ func newSpecFromOA3(doc *openapi3.T) (vald *validator, err error) {
 		return
 	}
 
-	// FIXME: set host in basePath & still allow it to be overridden in .star
-	_, basePath, err := basePathFromOA3(doc.Servers)
-	if err != nil {
+	var basePath string
+	if basePath, err = doc.Servers.BasePath(); err != nil {
+		log.Println("[ERR]", err)
+		as.ColorERR.Println(err)
 		return
 	}
 	log.Println("[DBG] going through endpoints")
@@ -422,35 +421,6 @@ func makeXXXToOA3(xxx uint32) string {
 		}
 	}
 	return strconv.FormatUint(uint64(xxx), 10)
-}
-
-// TODO: support the whole spec on /"servers"
-func basePathFromOA3(docServers openapi3.Servers) (host, basePath string, err error) {
-	if len(docServers) == 0 {
-		log.Println(`[NFO] field 'servers' empty/unset: using "/"`)
-		basePath = "/"
-		return
-	}
-
-	if len(docServers) != 1 {
-		log.Println(`[NFO] field 'servers' has many values: using the first one`)
-	}
-
-	u, err := url.ParseRequestURI(docServers[0].URL)
-	if err != nil {
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
-		return
-	}
-	basePath = u.Path
-	host = u.String()
-
-	if basePath == "" || basePath[0] != '/' {
-		err = errors.New(`field 'servers' has no suitable 'url'`)
-		log.Println("[ERR]", err)
-		as.ColorERR.Println(err)
-	}
-	return
 }
 
 func isInputBody(input *fm.ParamJSON) bool {

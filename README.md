@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.17.5 linux amd64
+monkey M.m.p go1.18.3 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -71,10 +71,10 @@ curl -#fL https://raw.githubusercontent.com/FuzzyMonkeyCo/monkey/master/.godownl
 
 With Docker:
 ```shell
-DOCKER_BUILDKIT=1 docker build -o=. --platform=local git://github.com/FuzzyMonkeyCo/monkey
+DOCKER_BUILDKIT=1 docker build -o=/usr/local/bin --platform=local https://github.com/FuzzyMonkeyCo/monkey.git
 
 # or the faster:
-DOCKER_BUILDKIT=1 docker build -o=. --platform=local --build-arg PREBUILT=1 git://github.com/FuzzyMonkeyCo/monkey
+DOCKER_BUILDKIT=1 docker build -o=/usr/local/bin --platform=local --build-arg PREBUILT=1 https://github.com/FuzzyMonkeyCo/monkey.git
 ```
 
 Or simply install the [latest release](https://github.com/FuzzyMonkeyCo/monkey/releases/latest).
@@ -133,6 +133,8 @@ monkey.shell(
     # For best results, tests should start with a clean slate
     #   so limit filesystem access, usage of $RANDOM and non-reproducibility.
     reset = """
+echo ${BLA:-42}
+BLA=$(( ${BLA:-42} + 1 ))
 echo Resetting state...
     """,
 )
