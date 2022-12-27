@@ -50,6 +50,7 @@ func (rt *Runtime) Fuzz(
 
 	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(selectedResetters))
 	_ = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		rsttr.Env(rt.envRead)
 		protoResetters = append(protoResetters, rsttr.ToProto())
 		return nil
 	})

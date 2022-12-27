@@ -37,7 +37,7 @@ paths:
               schema:
                 format: uri
           content:
-            application/json:    
+            application/json:
               schema:
                 $ref: "#/components/schemas/Pets"
         default:

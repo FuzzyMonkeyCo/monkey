@@ -15,11 +15,14 @@ const pwdIDDigits = 20
 
 var pwdID string
 
+// EnvFile points to a usable regular file after a call to MakePwdID()
+func EnvFile() string { return pwdID + ".env" }
+
 // LogFile points to a usable regular file after a call to MakePwdID()
 func LogFile() string { return pwdID + ".log" }
 
-// Prefixed points to a usable regular file prefix after a call to MakePwdID()
-func Prefixed() string { return pwdID }
+// ScriptFile points to a usable regular file after a call to MakePwdID()
+func ScriptFile() string { return pwdID + ".script" }
 
 // MakePwdID looks for a usable temporary path for var run logfiles
 func MakePwdID(name, starfile string, offset uint64) (err error) {

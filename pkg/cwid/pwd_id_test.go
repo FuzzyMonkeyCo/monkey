@@ -12,8 +12,9 @@ import (
 func filesContain(t *testing.T, pattern string) {
 	t.Helper()
 
+	require.Contains(t, EnvFile(), pattern)
 	require.Contains(t, LogFile(), pattern)
-	require.Contains(t, Prefixed(), pattern)
+	require.Contains(t, ScriptFile(), pattern)
 }
 
 func TestPwdID(t *testing.T) {
