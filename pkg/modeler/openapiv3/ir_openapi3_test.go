@@ -133,6 +133,9 @@ func (sm schemap) schemasToOA3(doc *openapi3.T) {
 			}
 		}
 	}
+	if doc.Components == nil {
+		doc.Components = &openapi3.Components{}
+	}
 	doc.Components.Schemas = seededSchemas
 }
 
