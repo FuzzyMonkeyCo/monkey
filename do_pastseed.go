@@ -11,10 +11,10 @@ import (
 	rt "github.com/FuzzyMonkeyCo/monkey/pkg/runtime"
 )
 
-var rePastseed = regexp.MustCompile(rt.PastSeedMagic + `=([^\s]+)`)
+var rePastseed = regexp.MustCompile(rt.PastSeedMagic + ` ([^\s]+)`)
 
 // Looks in the logs for the youngest seed that triggered a bug
-// Only ever prints best seed on a newline character
+// Only ever prints best seed and a newline character
 // so it can be used as --seed=$(monkey pastseed)
 func doPastseed(starfile string) int {
 	for offset := uint64(1); true; offset++ {
