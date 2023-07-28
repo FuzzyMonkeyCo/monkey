@@ -1,10 +1,15 @@
 package runtime
 
 import (
+	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser/ci"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
 
@@ -205,4 +210,53 @@ Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
 Error in shell: shell: for parameter "stop": got float, want string`[1:])
 	require.Nil(t, rt)
+}
+
+// execution
+
+func TestShellResets(t *testing.T) {
+	rt, err := newFakeMonkey(t, `
+monkey.shell(
+    name = "blop",
+    provides = ["some_model"],
+    reset = "sleep 3",
+)
+`[1:]+someOpenAPI3Model)
+	require.NoError(t, err)
+	require.Len(t, rt.resetters, 1)
+	require.Equal(t, []string{"some_model"}, rt.resetters["blop"].Provides())
+	require.Contains(t, someOpenAPI3Model, `"some_model"`)
+	require.Len(t, rt.selectedResetters, 0)
+
+	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// In the order written in main.go
+	err = rt.Lint(ctx, false)
+	require.NoError(t, err)
+	err = rt.FilterEndpoints(nil)
+	require.NoError(t, err)
+
+	require.Len(t, rt.selectedResetters, 0)
+	var selected []string
+	err = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+		selected = append(selected, name)
+		return nil
+	})
+	require.NoError(t, err)
+	require.Len(t, rt.selectedResetters, 1)
+	require.Equal(t, []string{"blop"}, selected)
+
+	rt.progress = &ci.Progresser{}
+	rt.client = &fakeClient{}
+
+	err = cwid.MakePwdID(rt.binTitle, ".", 0)
+	require.NoError(t, err)
+	require.NotEmpty(t, cwid.Prefixed())
+
+	scriptErr, err := rt.reset(ctx)
+	require.NoError(t, err)
+	require.Len(t, rt.selectedResetters, 1)
+	require.NoError(t, scriptErr)
 }

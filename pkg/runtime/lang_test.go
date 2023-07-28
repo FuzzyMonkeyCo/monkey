@@ -22,7 +22,7 @@ import (
 const someOpenAPI3Model = `
 monkey.openapi3(
     name = "some_model",
-    file = "pkg/runtime/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml",
+    file = "testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml",
     host = "https://jsonplaceholder.typicode.com",
 )
 `

@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
 	"go.starlark.net/starlark"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
@@ -73,6 +72,8 @@ type Resetter struct {
 	scriptsPaths   map[shellCmd]string
 	sherr          chan error
 	i, o           string
+	stdin          io.WriteCloser
+	rcoms          *rcoms
 }
 
 // Name uniquely identifies this instance
@@ -224,20 +225,34 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		s.i, s.o = i, o
 
 		s.sherr = make(chan error, 1)
-		go startShell(ctx, s.sherr, stdout, stderr, main)
+		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
+		cmd := exec.CommandContext(ctx, shell, "--norc", "--", main)
+		// cmd.Stdin = nil
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			log.Println("[ERR]", err)
+			return
+		}
+		s.stdin = stdin
+		s.rcoms = &rcoms{errcodes: make(chan uint8)}
+		cmd.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
+		cmd.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
+		log.Printf("[DBG] starting shell instance")
+		// FIXME: goroutines may leak
+		go func() {
+			log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
+			for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
+				log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
+			}
+		}()
+		go func() {
+			if err := cmd.Run(); err != nil {
+				reason := stdboth.String() + "\n" + err.Error()
+				s.sherr <- resetter.NewError(strings.Split(reason, "\n"))
+			}
+		}()
 
-		// if e := s.execEach(ctx, s.scriptsPaths[cmdGuard]); e == nil || e.Error() != `
-		// script failed during Reset:
-		// ++ exec false
-
-		// exit status 1
-		// `[1:] {
-		// 	err = fmt.Errorf("could not setup shell resetter: %s", e)
-		// 	log.Println("[ERR]", err)
-		// 	return
-		// }
-
-		if e := s.execEach(ctx, s.scriptsPaths[cmdGuard]); e != nil {
+		if e := s.execEach(ctx, stdin, s.scriptsPaths[cmdGuard]); e != nil { //fixme: hide all these from output streams
 			err = fmt.Errorf("could not setup shell resetter: %s", e)
 			log.Println("[ERR]", err)
 			return
@@ -249,7 +264,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 
 	for _, cmd := range cmds {
 		scriptFile := s.scriptsPaths[cmd]
-		if err = s.execEach(ctx, scriptFile); err != nil {
+		if err = s.execEach(ctx, s.stdin, scriptFile); err != nil {
 			return
 		}
 	}
@@ -272,9 +287,14 @@ func writeMainScript(name, i, o string, paths []string) (err error) {
 
 set -o pipefail
 
-trap "echo Shell instance exiting >&2" EXIT
+trap 'echo Shell instance exiting >&2' EXIT
+trap 'rm -f "%s"' EXIT
 
-while :; do
+while read -r x; do
+	if [[ "$x" != 'go' ]]; then
+		echo ."$x".
+	fi
+
 	if ! script=$(cat "%s"); then
 		# File was deleted
 		break
@@ -288,24 +308,45 @@ while :; do
 
 	source "$script"
 	echo $? >"%s"
-
-	while :; do
-		if ! script=$(cat "%s"); then
-			# File was deleted
-			break
-		fi
-		if [[ -z "$script" ]]; then
-			# Input was finally reset
-			break
-		fi
-	done
+	echo "###:exit:$?"
 done
-rm -f "%s"
 `[1:]
-	code := fmt.Sprintf(mainCode, i, o, i, strings.Join(append(paths, i, o, name), `" "`))
+	code := fmt.Sprintf(mainCode, strings.Join(append(paths, i, o, name), `" "`), i, o)
 
 	fmt.Fprintln(script, code)
 	return
+}
+
+var _ io.Writer = (*rcoms)(nil)
+
+type rcoms struct {
+	errcodes chan uint8
+	// chanfunc pong(pings <-chan string, pongs chan<- string) {
+}
+
+// FIXME: generalize from progress_writer
+// see https://stackoverflow.com/a/42208606/1418165
+func (coms *rcoms) Write(p []byte) (int, error) {
+	do := func(data []byte) {
+		if n := len(data); n > 0 {
+			if x := bytes.TrimPrefix(data, []byte("###:exit:")); n != len(x) {
+				if y, err := strconv.ParseInt(string(x), 10, 8); err == nil {
+					coms.errcodes <- uint8(y)
+				}
+			}
+		}
+	}
+
+	for i := 0; ; {
+		n := bytes.IndexAny(p[i:], "\n\r")
+		if n < 0 {
+			do(p[i:])
+			break
+		}
+		do(p[i : i+n])
+		i += n + 1
+	}
+	return len(p), nil
 }
 
 func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (err error) {
@@ -339,97 +380,28 @@ func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (e
 	return
 }
 
-// FIXME: this goroutine may leak
-func startShell(ctx context.Context, sherr chan error, stdout, stderr io.Writer, mainPath string) {
-	var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
-
-	exe := exec.CommandContext(ctx, shell, "--norc", "--", mainPath)
-	exe.Stdin = nil
-	exe.Stdout = io.MultiWriter(&stdboth, stdout)
-	exe.Stderr = io.MultiWriter(&stdboth, stderr)
-
-	log.Printf("[DBG] starting shell instance")
+func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, scriptFile string) (err error) {
 	start := time.Now()
 
-	err := exe.Run()
-
-	log.Printf("[NFO] exec'd in %s", time.Since(start))
-
-	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
-		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
-	}
-
-	if err != nil {
-		reason := stdboth.String() + "\n" + err.Error()
-		err = resetter.NewError(strings.Split(reason, "\n"))
-	}
-
-	sherr <- err
-}
-
-func (s *Resetter) execEach(ctx context.Context, scriptFile string) (err error) {
-	var watcher *fsnotify.Watcher
-	if watcher, err = fsnotify.NewWatcher(); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	defer watcher.Close()
-	if err = watcher.Add(s.o); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-
-	start := time.Now()
-
-	mtime := func(f string) time.Time {
-		fi, err := os.Stat(f)
-		if err != nil {
-			panic(err)
-		}
-		return fi.ModTime()
-	}
-
-	before := mtime(s.i)
-	log.Println("[NFO] mtime before", before)
 	if err = writeFile(s.i, []byte(scriptFile)); err != nil {
 		log.Println("[ERR]", err)
 		return
 	}
-	time.Sleep(100 * time.Millisecond)
-	after := mtime(s.i)
-	log.Println("[NFO] mtime after", after, before == after)
-	defer writeFile(s.i, nil)
+
+	io.WriteString(stdin, "go\n")
+
 	log.Println("[DBG] sent processing signal to shell singleton")
 
 	select {
+	case errcode := <-s.rcoms.errcodes:
+		if errcode != 0 {
+			err = fmt.Errorf("script exited with non-zero code %d", errcode)
+			log.Println("[ERR]", err)
+		}
+		// log.Println("[DBG] shell script execution error code:", errcode)
+
 	case err = <-s.sherr:
 		log.Println("[ERR] shell script execution error:", err)
-		return
-
-	case wevent, ok := <-watcher.Events:
-		if !ok {
-			err = errors.New("file watcher unexpectedly closed events channel")
-			log.Println("[ERR]", err)
-			return
-		}
-		// if true {
-		// 	panic(wevent)
-		// }
-		if !(wevent.Op == fsnotify.Write && wevent.Name == s.o) {
-			err = errors.New("file watcher encountered an issue")
-			log.Printf("[ERR] op=%s name=%q: %s", wevent.Op, wevent.Name, err)
-			return
-		}
-		log.Println("[DBG] file watcher got the termination signal")
-
-	case werr, ok := <-watcher.Errors:
-		if !ok {
-			err = errors.New("file watcher unexpectedly closed errors channel")
-			log.Println("[ERR]", err)
-			return
-		}
-		err = errors.New("file watcher received unexpected error")
-		log.Printf("[ERR] %s: %s", err, werr)
 		return
 
 	case <-ctx.Done():
