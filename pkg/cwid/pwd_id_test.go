@@ -34,13 +34,13 @@ func TestPwdID(t *testing.T) {
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
 	filesContain(t, "_12404825836092798244_")
-	filesContain(t, "_00000000000000000001.")
+	filesContain(t, "_00000000000000000001")
 
 	// PwdID changes with offset
 
 	func(filename string) {
 
-		newfilename := strings.Replace(filename, "_00000000000000000001.", "_00000000000000000002.", -1)
+		newfilename := strings.Replace(filename, "_00000000000000000001", "_00000000000000000002", -1)
 		err := os.WriteFile(newfilename, nil, 0644)
 		require.NoError(t, err)
 		defer os.Remove(newfilename)
@@ -50,7 +50,7 @@ func TestPwdID(t *testing.T) {
 		require.NoError(t, err)
 		filesContain(t, ".monkeh_")
 		filesContain(t, "_12404825836092798244_")
-		filesContain(t, "_00000000000000000002.")
+		filesContain(t, "_00000000000000000002")
 
 	}(LogFile())
 
@@ -61,7 +61,7 @@ func TestPwdID(t *testing.T) {
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
 	filesContain(t, "_2078280350767222314_")
-	filesContain(t, "_00000000000000000001.")
+	filesContain(t, "_00000000000000000001")
 
 	// No symlinks allowed
 	func() {
