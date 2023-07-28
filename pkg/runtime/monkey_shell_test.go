@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -215,48 +216,68 @@ Error in shell: shell: for parameter "stop": got float, want string`[1:])
 // execution
 
 func TestShellResets(t *testing.T) {
-	rt, err := newFakeMonkey(t, `
+	type testcase struct {
+		code     string
+		expected error
+	}
+
+	for _, tst := range []testcase{
+		{":", nil},
+		{"true", nil},
+		{"sleep 3", nil},
+		{"false", nil},
+	} {
+		t.Run(tst.code, func(t *testing.T) {
+			rt, err := newFakeMonkey(t, fmt.Sprintf(`
 monkey.shell(
     name = "blop",
     provides = ["some_model"],
-    reset = "sleep 3",
+    reset = "%s",
 )
-`[1:]+someOpenAPI3Model)
-	require.NoError(t, err)
-	require.Len(t, rt.resetters, 1)
-	require.Equal(t, []string{"some_model"}, rt.resetters["blop"].Provides())
-	require.Contains(t, someOpenAPI3Model, `"some_model"`)
-	require.Len(t, rt.selectedResetters, 0)
+`[1:]+someOpenAPI3Model, tst.code))
+			require.NoError(t, err)
+			require.Len(t, rt.resetters, 1)
+			require.Equal(t, []string{"some_model"}, rt.resetters["blop"].Provides())
+			require.Contains(t, someOpenAPI3Model, `"some_model"`)
+			require.Len(t, rt.selectedResetters, 0)
 
-	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+			ctx := context.Background()
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
 
-	// In the order written in main.go
-	err = rt.Lint(ctx, false)
-	require.NoError(t, err)
-	err = rt.FilterEndpoints(nil)
-	require.NoError(t, err)
+			// In the order written in main.go
+			err = rt.Lint(ctx, false)
+			require.NoError(t, err)
+			err = rt.FilterEndpoints(nil)
+			require.NoError(t, err)
 
-	require.Len(t, rt.selectedResetters, 0)
-	var selected []string
-	err = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		selected = append(selected, name)
-		return nil
-	})
-	require.NoError(t, err)
-	require.Len(t, rt.selectedResetters, 1)
-	require.Equal(t, []string{"blop"}, selected)
+			//todo: move some code to lang_test.go + share with fuzz.go / exec.go
 
-	rt.progress = &ci.Progresser{}
-	rt.client = &fakeClient{}
+			require.Len(t, rt.selectedResetters, 0)
+			var selected []string
+			err = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
+				selected = append(selected, name)
+				return nil
+			})
+			require.NoError(t, err)
+			require.Len(t, rt.selectedResetters, 1)
+			require.Equal(t, []string{"blop"}, selected)
 
-	err = cwid.MakePwdID(rt.binTitle, ".", 0)
-	require.NoError(t, err)
-	require.NotEmpty(t, cwid.Prefixed())
+			rt.progress = &ci.Progresser{}
+			rt.client = &fakeClient{}
 
-	scriptErr, err := rt.reset(ctx)
-	require.NoError(t, err)
-	require.Len(t, rt.selectedResetters, 1)
-	require.NoError(t, scriptErr)
+			err = cwid.MakePwdID(rt.binTitle, ".", 0)
+			require.NoError(t, err)
+			require.NotEmpty(t, cwid.Prefixed())
+
+			scriptErr, err := rt.reset(ctx)
+			require.NoError(t, err)
+			require.Len(t, rt.selectedResetters, 1)
+			if tst.expected != nil {
+				require.ErrorContains(t, scriptErr, "bla")
+			} else {
+				require.NoError(t, scriptErr)
+			}
+		})
+	}
 }

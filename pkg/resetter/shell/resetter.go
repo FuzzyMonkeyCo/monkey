@@ -71,7 +71,7 @@ type Resetter struct {
 	scriptsCreator sync.Once
 	scriptsPaths   map[shellCmd]string
 	sherr          chan error
-	i, o           string
+	i              string
 	stdin          io.WriteCloser
 	rcoms          *rcoms
 }
@@ -214,15 +214,11 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		if err = writeFile(i, nil); err != nil {
 			log.Println("[ERR]", err)
 		}
-		o := fmt.Sprintf("%s%s.txt", scriptPrefix, "main_o")
-		if err = writeFile(o, nil); err != nil {
-			log.Println("[ERR]", err)
-		}
 		main := fmt.Sprintf("%s%s.bash", scriptPrefix, "main")
-		if err = writeMainScript(main, i, o, paths); err != nil {
+		if err = writeMainScript(main, i, paths); err != nil {
 			return
 		}
-		s.i, s.o = i, o
+		s.i = i
 
 		s.sherr = make(chan error, 1)
 		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
@@ -275,7 +271,7 @@ func writeFile(name string, data []byte) error {
 	return os.WriteFile(name, data, 0640)
 }
 
-func writeMainScript(name, i, o string, paths []string) (err error) {
+func writeMainScript(name, i string, paths []string) (err error) {
 	var script *os.File
 	if script, err = os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
 		return
@@ -307,11 +303,10 @@ while read -r x; do
 	fi
 
 	source "$script"
-	echo $? >"%s"
 	echo "###:exit:$?"
 done
 `[1:]
-	code := fmt.Sprintf(mainCode, strings.Join(append(paths, i, o, name), `" "`), i, o)
+	code := fmt.Sprintf(mainCode, strings.Join(append(paths, i, name), `" "`), i)
 
 	fmt.Fprintln(script, code)
 	return
@@ -321,7 +316,6 @@ var _ io.Writer = (*rcoms)(nil)
 
 type rcoms struct {
 	errcodes chan uint8
-	// chanfunc pong(pings <-chan string, pongs chan<- string) {
 }
 
 // FIXME: generalize from progress_writer
@@ -417,20 +411,5 @@ func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, scriptFil
 	}
 
 	log.Printf("[NFO] exec'd in %s", time.Since(start))
-
-	var data []byte
-	if data, err = os.ReadFile(s.o); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	var errcode int
-	if errcode, err = strconv.Atoi(strings.TrimSpace(string(data))); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
-	if errcode != 0 {
-		err = fmt.Errorf("script exited with non-zero code %d", errcode)
-		log.Println("[ERR]", err)
-	}
 	return
 }
