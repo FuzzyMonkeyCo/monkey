@@ -33,7 +33,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 	return
 }
 
-func (rt *Runtime) reset(ctx context.Context) error {
+func (rt *Runtime) reset(ctx context.Context) (errL, errT error) {
 	const showp = "Resetting system under test..."
 	rt.progress.Printf(showp + "\n")
 
@@ -41,15 +41,15 @@ func (rt *Runtime) reset(ctx context.Context) error {
 		return &fm.Clt{Msg: &fm.Clt_ResetProgress_{ResetProgress: msg}}
 	}
 
-	if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+	if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 		Status: fm.Clt_ResetProgress_started,
 	})); errT != nil {
 		log.Println("[ERR]", errT)
-		return errT
+		return
 	}
 
 	start := time.Now()
-	errL := rt.runReset(ctx)
+	errL = rt.runReset(ctx)
 	elapsed := time.Since(start).Nanoseconds()
 	if errL != nil {
 		log.Println("[ERR] ExecReset:", errL)
@@ -60,29 +60,29 @@ func (rt *Runtime) reset(ctx context.Context) error {
 			reason = strings.Split(errL.Error(), "\n")
 		}
 
-		if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+		if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 			Status:    fm.Clt_ResetProgress_failed,
 			ElapsedNs: elapsed,
 			Reason:    reason,
 		})); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return
 		}
 
 		rt.progress.Errorf(showp + " failed!\n")
-		return nil // Don't end fuzz loop due to SUT error
+		return
 	}
 
-	if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+	if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 		Status:    fm.Clt_ResetProgress_ended,
 		ElapsedNs: elapsed,
 	})); errT != nil {
 		log.Println("[ERR]", errT)
-		return errT
+		return
 	}
 
 	rt.progress.Printf(showp + " done.\n")
-	return nil
+	return
 }
 
 func (rt *Runtime) runReset(ctx context.Context) (err error) {

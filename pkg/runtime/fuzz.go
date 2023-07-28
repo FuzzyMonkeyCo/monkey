@@ -124,7 +124,8 @@ func (rt *Runtime) Fuzz(
 					return
 				}
 			case *fm.Srv_Reset_:
-				if err = rt.reset(ctx); err != nil {
+				// Don't end fuzz loop due to SUT error, only on transport errors.
+				if _, err = rt.reset(ctx); err != nil {
 					return
 				}
 			case *fm.Srv_FuzzingResult_:
