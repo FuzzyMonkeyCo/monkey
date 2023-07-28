@@ -200,7 +200,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 			cmdReset: {"reset", s.Rst},
 			cmdStop:  {"stop", s.Stop},
 		} {
-			path := fmt.Sprintf("%s_%s.bash", scriptPrefix, command.Name)
+			path := fmt.Sprintf("%s%s.bash", scriptPrefix, command.Name)
 			if err = writeScript(path, command.Name, command.Code, envRead); err != nil {
 				log.Println("[ERR]", err)
 				return
@@ -209,15 +209,15 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 			paths = append(paths, path)
 		}
 
-		i := fmt.Sprintf("%s_%s.txt", scriptPrefix, "main_i")
+		i := fmt.Sprintf("%s%s.txt", scriptPrefix, "main_i")
 		if err = writeFile(i, nil); err != nil {
 			log.Println("[ERR]", err)
 		}
-		o := fmt.Sprintf("%s_%s.txt", scriptPrefix, "main_o")
+		o := fmt.Sprintf("%s%s.txt", scriptPrefix, "main_o")
 		if err = writeFile(o, nil); err != nil {
 			log.Println("[ERR]", err)
 		}
-		main := fmt.Sprintf("%s_%s.bash", scriptPrefix, "main")
+		main := fmt.Sprintf("%s%s.bash", scriptPrefix, "main")
 		if err = writeMainScript(main, i, o, paths); err != nil {
 			return
 		}
