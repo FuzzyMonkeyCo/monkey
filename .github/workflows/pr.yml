@@ -7,7 +7,7 @@ jobs:
   tagfile:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # For $ git tag
 
@@ -15,7 +15,7 @@ jobs:
       run: grep -E '^[0-9]+[.][0-9]+[.][0-9]+$' Tagfile
 
     - name: Checkout master Tagfile
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         ref: master
         path: ./master-Tagfile
@@ -40,8 +40,8 @@ jobs:
   check-goimports:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v3
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v4.0.1
       with:
         go-version: '>=1.17.0'
     - run: go install github.com/incu6us/goimports-reviser/v2@v2.5.1
@@ -52,8 +52,8 @@ jobs:
   check-nillness:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-go@v3
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v4.0.1
     - run: go run golang.org/x/tools/go/analysis/passes/nilness/cmd/nilness@latest ./...
 
   checks:
@@ -74,18 +74,18 @@ jobs:
       env:
         SLUG: ${{ github.repository }}
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
-    - uses: docker/setup-buildx-action@v1
+    - uses: docker/setup-buildx-action@v2.9.1
 
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2.2.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: docker/bake-action@v1.7.0
+    - uses: docker/bake-action@v3.1.0
       with:
         files: ./docker-bake.hcl
         targets: ${{ matrix.check }}
