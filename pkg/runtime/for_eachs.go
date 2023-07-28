@@ -51,27 +51,25 @@ func (rt *Runtime) forEachResetter(f func(name string, rsttr resetter.Interface)
 	return nil
 }
 
-var selectedResetters map[string]struct{}
-
 func (rt *Runtime) forEachSelectedResetter(ctx context.Context, f func(string, resetter.Interface) error) error {
-	if selectedResetters == nil {
-		selectedResetters = make(map[string]struct{}, len(rt.resetters))
+	if rt.selectedResetters == nil {
+		rt.selectedResetters = make(map[string]struct{}, len(rt.resetters))
 		for name, rsttr := range rt.resetters {
 			for _, modelName := range rsttr.Provides() {
 				if _, ok := rt.selectedEIDs[modelName]; ok {
-					selectedResetters[name] = struct{}{}
+					rt.selectedResetters[name] = struct{}{}
 					break
 				}
 			}
 		}
 	}
-	if len(selectedResetters) == 0 {
+	if len(rt.selectedResetters) == 0 {
 		return errors.New("no resetter selected")
 	}
 
 	g, _ := errgroup.WithContext(ctx)
 	_ = rt.forEachResetter(func(name string, rsttr resetter.Interface) error {
-		if _, ok := selectedResetters[name]; ok {
+		if _, ok := rt.selectedResetters[name]; ok {
 			g.Go(func() error {
 				return f(name, rsttr)
 			})

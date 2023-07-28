@@ -48,7 +48,7 @@ func (rt *Runtime) Fuzz(
 	}
 	defer rt.client.Close()
 
-	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(selectedResetters))
+	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(rt.selectedResetters))
 	_ = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
 		protoResetters = append(protoResetters, rsttr.ToProto())
 		return nil

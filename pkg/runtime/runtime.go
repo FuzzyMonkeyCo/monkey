@@ -31,8 +31,9 @@ type Runtime struct {
 	models      map[string]modeler.Interface
 	modelsNames []string
 
-	resetters      map[string]resetter.Interface
-	resettersNames []string
+	selectedResetters map[string]struct{}
+	resetters         map[string]resetter.Interface
+	resettersNames    []string
 
 	checks      map[string]*check
 	checksNames []string
