@@ -156,7 +156,7 @@ Error in shell: shell: for parameter "provides": must not be empty`[1:])
 	require.Nil(t, rt)
 }
 
-// kwarg: file
+// kwarg: start
 
 func TestShellStartTyping(t *testing.T) {
 	rt, err := newFakeMonkey(t, `
@@ -165,7 +165,7 @@ monkey.shell(
     provides = ["some_model"],
     start = 42.1337,
 )
-`[1:])
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -182,7 +182,7 @@ monkey.shell(
     provides = ["some_model"],
     reset = 42.1337,
 )
-`[1:])
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
@@ -199,7 +199,7 @@ monkey.shell(
     provides = ["some_model"],
     stop = 42.1337,
 )
-`[1:])
+`[1:]+someOpenAPI3Model)
 	require.EqualError(t, err, `
 Traceback (most recent call last):
   fuzzymonkey.star:1:13: in <toplevel>
