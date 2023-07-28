@@ -1,5 +1,7 @@
 package runtime
 
+// fixme: move to reset.go
+
 import (
 	"bytes"
 	"io"
@@ -20,8 +22,15 @@ func newProgressWriter(cb modeler.ShowFunc) *progressWriter {
 
 func (pw *progressWriter) Write(p []byte) (int, error) {
 	print := func(data []byte) {
-		if len(data) > 0 {
-			pw.printf("%s", data)
+		if n := len(data); n > 0 {
+			if bytes.HasPrefix(data, []byte("+ ")) {
+				return
+			}
+			if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
+				if string(x) != "set +o xtrace" {
+					pw.printf("%s", x)
+				}
+			}
 		}
 	}
 

@@ -121,6 +121,12 @@ func (s *Resetter) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Wri
 	return s.exec(ctx, stdout, stderr, envRead, cmdStop)
 }
 
+// TidyOutput filter maps over each line
+func (s *Resetter) TidyOutput(stdeither [][]byte) resetter.TidiedOutput {
+	// for
+	return stdeither
+}
+
 // Terminate cleans up after a resetter.Interface implementation instance
 func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Writer, envRead map[string]string) (err error) {
 	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
@@ -135,8 +141,7 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 type shellCmd int
 
 const (
-	cmdGuard shellCmd = iota
-	cmdStart
+	cmdStart shellCmd = iota
 	cmdReset
 	cmdStop
 )
@@ -195,8 +200,6 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		for cmd, command := range map[shellCmd]struct {
 			Name, Code string
 		}{
-			// cmdGuard: {"guard", "exec false"},
-			cmdGuard: {"guard", "true"},
 			cmdStart: {"start", s.Start},
 			cmdReset: {"reset", s.Rst},
 			cmdStop:  {"stop", s.Stop},
@@ -223,7 +226,6 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		s.sherr = make(chan error, 1)
 		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
 		cmd := exec.CommandContext(ctx, shell, "--norc", "--", main)
-		// cmd.Stdin = nil
 		stdin, err := cmd.StdinPipe()
 		if err != nil {
 			log.Println("[ERR]", err)
@@ -231,28 +233,34 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}
 		s.stdin = stdin
 		s.rcoms = &rcoms{errcodes: make(chan uint8)}
-		cmd.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
-		cmd.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
+		cmd.Stdout = io.MultiWriter(&stdboth /*wrap(stdout)*/, stdout, s.rcoms) //FIXME: drop our prefixed intructions
+		cmd.Stderr = io.MultiWriter(&stdboth /*wrap(stderr)*/, stderr, s.rcoms) //FIXME: drop our prefixed intructions
 		log.Printf("[DBG] starting shell instance")
 		// FIXME: goroutines may leak
+
 		go func() {
+			// fixme: turn into progresswriter
 			log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
 			for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
 				log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
 			}
 		}()
+
 		go func() {
 			if err := cmd.Run(); err != nil {
 				reason := stdboth.String() + "\n" + err.Error()
-				s.sherr <- resetter.NewError(strings.Split(reason, "\n"))
+				var lines [][]byte
+				for _, line := range strings.Split(reason, "\n") {
+					if strings.HasPrefix(line, stdeitherPrefixSkip) {
+						continue
+					}
+					if x := strings.TrimPrefix(line, stdeitherPrefixDropPrefix); x != line {
+						lines = append(lines, []byte(x))
+					}
+				}
+				s.sherr <- resetter.NewError(lines)
 			}
 		}()
-
-		if e := s.execEach(ctx, stdin, s.scriptsPaths[cmdGuard]); e != nil { //fixme: hide all these from output streams
-			err = fmt.Errorf("could not setup shell resetter: %s", e)
-			log.Println("[ERR]", err)
-			return
-		}
 	})
 	if err != nil {
 		return
@@ -266,6 +274,11 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 	}
 	return
 }
+
+const (
+	stdeitherPrefixSkip       = "+ "
+	stdeitherPrefixDropPrefix = "++ "
+)
 
 func writeFile(name string, data []byte) error {
 	return os.WriteFile(name, data, 0640)
@@ -312,14 +325,48 @@ done
 	return
 }
 
+// FIXME: generalize from progress_writer
+// see https://stackoverflow.com/a/42208606/1418165
+
+var _ io.Writer = (*wrp)(nil)
+
+type wrp struct {
+	w io.Writer
+}
+
+func wrap(stdio io.Writer) io.Writer {
+	return &wrp{w: stdio}
+}
+
+func (w *wrp) Write(p []byte) (int, error) {
+	do := func(data []byte) {
+		if n := len(data); n > 0 {
+			if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
+				if string(x) != "set +o xtrace" {
+					w.w.Write(x)
+				}
+			}
+		}
+	}
+
+	for i := 0; ; {
+		n := bytes.IndexAny(p[i:], "\n\r")
+		if n < 0 {
+			do(p[i:])
+			break
+		}
+		do(p[i : i+n])
+		i += n + 1
+	}
+	return len(p), nil
+}
+
 var _ io.Writer = (*rcoms)(nil)
 
 type rcoms struct {
 	errcodes chan uint8
 }
 
-// FIXME: generalize from progress_writer
-// see https://stackoverflow.com/a/42208606/1418165
 func (coms *rcoms) Write(p []byte) (int, error) {
 	do := func(data []byte) {
 		if n := len(data); n > 0 {
@@ -388,11 +435,12 @@ func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, scriptFil
 
 	select {
 	case errcode := <-s.rcoms.errcodes:
+		log.Println("[DBG] shell script execution error code:", errcode)
 		if errcode != 0 {
 			err = fmt.Errorf("script exited with non-zero code %d", errcode)
 			log.Println("[ERR]", err)
+			return
 		}
-		// log.Println("[DBG] shell script execution error code:", errcode)
 
 	case err = <-s.sherr:
 		log.Println("[ERR] shell script execution error:", err)

@@ -2,7 +2,6 @@ package resetter
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"strings"
 
@@ -35,19 +34,24 @@ type Interface interface { // TODO: initers.Initer
 	// ExecStop executes the cleanup phase of the System Under Test
 	ExecStop(context.Context, io.Writer, io.Writer, bool, map[string]string) error
 
+	// TidyOutput filter maps over each line
+	TidyOutput([][]byte) TidiedOutput
+
 	// Terminate cleans up after a resetter.Interface implementation instance
 	Terminate(context.Context, io.Writer, io.Writer, map[string]string) error
 }
+
+type TidiedOutput [][]byte
 
 var _ error = (*Error)(nil)
 
 // Error describes a resetter error
 type Error struct {
-	bt []string
+	bt TidiedOutput
 }
 
 // NewError returns a new empty resetter.Error
-func NewError(bt []string) *Error {
+func NewError(bt TidiedOutput) *Error {
 	return &Error{
 		bt: bt,
 	}
@@ -55,13 +59,22 @@ func NewError(bt []string) *Error {
 
 // Reason describes the error on multiple lines
 func (re *Error) Reason() []string {
-	return re.bt
+	bt := make([]string, 0, len(re.bt))
+	for _, line := range re.bt {
+		bt = append(bt, string(line))
+	}
+	return bt
 }
 
 // Error returns the error string
 func (re *Error) Error() string {
-	return fmt.Sprintf(
-		"\nscript failed during Reset:\n%s",
-		strings.Join(re.bt, "\n"),
-	)
+	var msg strings.Builder
+	msg.WriteByte('\n')
+	msg.WriteString("script failed during Reset:")
+	msg.WriteByte('\n')
+	for _, line := range re.bt {
+		msg.Write(line)
+		msg.WriteByte('\n')
+	}
+	return msg.String()
 }
