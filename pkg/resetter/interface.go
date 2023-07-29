@@ -1,7 +1,9 @@
 package resetter
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 
@@ -66,15 +68,25 @@ func (re *Error) Reason() []string {
 	return bt
 }
 
+func rev(s string) string {
+	n := len(s)
+	runes := make([]rune, n)
+	for _, rune := range s {
+		n--
+		runes[n] = rune
+	}
+	return string(runes[n:])
+}
+
 // Error returns the error string
 func (re *Error) Error() string {
+	e := bytes.Join(re.bt, []byte(";"))
+	ee := rev(fmt.Sprintf("%.280s", rev(string(e))))
+
 	var msg strings.Builder
-	msg.WriteByte('\n')
-	msg.WriteString("script failed during Reset:")
-	msg.WriteByte('\n')
-	for _, line := range re.bt {
-		msg.Write(line)
-		msg.WriteByte('\n')
+	if len(e) != len(ee) {
+		msg.WriteString("...")
 	}
+	msg.WriteString(ee)
 	return msg.String()
 }

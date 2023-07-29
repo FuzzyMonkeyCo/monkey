@@ -225,16 +225,16 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 
 		s.sherr = make(chan error, 1)
 		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
-		cmd := exec.CommandContext(ctx, shell, "--norc", "--", main)
-		stdin, err := cmd.StdinPipe()
+		exe := exec.CommandContext(ctx, shell, "--norc", "--", main)
+		stdin, err := exe.StdinPipe()
 		if err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
 		s.stdin = stdin
 		s.rcoms = &rcoms{errcodes: make(chan uint8)}
-		cmd.Stdout = io.MultiWriter(&stdboth /*wrap(stdout)*/, stdout, s.rcoms) //FIXME: drop our prefixed intructions
-		cmd.Stderr = io.MultiWriter(&stdboth /*wrap(stderr)*/, stderr, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stdout = io.MultiWriter(&stdboth /*wrap(stdout)*/, stdout, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stderr = io.MultiWriter(&stdboth /*wrap(stderr)*/, stderr, s.rcoms) //FIXME: drop our prefixed intructions
 		log.Printf("[DBG] starting shell instance")
 		// FIXME: goroutines may leak
 
@@ -247,7 +247,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}()
 
 		go func() {
-			if err := cmd.Run(); err != nil {
+			if err := exe.Run(); err != nil {
 				reason := stdboth.String() + "\n" + err.Error()
 				var lines [][]byte
 				for _, line := range strings.Split(reason, "\n") {

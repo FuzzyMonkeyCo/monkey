@@ -52,7 +52,8 @@ func (rt *Runtime) reset(ctx context.Context) (errL, errT error) {
 	errL = rt.runReset(ctx)
 	elapsed := time.Since(start).Nanoseconds()
 	if errL != nil {
-		log.Println("[ERR] ExecReset:", errL)
+		log.Println("[ERR] exec'd", errL)
+
 		var reason []string
 		if resetErr, ok := errL.(*resetter.Error); ok {
 			reason = resetErr.Reason()

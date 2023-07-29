@@ -3,6 +3,7 @@ package runtime
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -221,18 +222,30 @@ func TestShellResets(t *testing.T) {
 		expected error
 	}
 
+	as := func(ss []string) [][]byte {
+		xs := make([][]byte, 0, len(ss))
+		for _, s := range ss {
+			xs = append(xs, []byte(s))
+		}
+		return xs
+	}
+
+	repeated := strings.Repeat(":\n", 42)
+
 	for _, tst := range []testcase{
 		{":", nil},
 		{"true", nil},
-		{"sleep 3", nil},
-		{"false", nil},
+		{"sleep .1", nil},
+		{"echo Hello; echo hi >&2; false", resetter.NewError(as([]string{"echo Hello!", "echo hi >&2", "false"}))},
+		{"false", resetter.NewError(as([]string{"false"}))},
+		{repeated + "false", resetter.NewError(as(append(strings.Split(repeated, "\n"), "false")))},
 	} {
 		t.Run(tst.code, func(t *testing.T) {
 			rt, err := newFakeMonkey(t, fmt.Sprintf(`
 monkey.shell(
     name = "blop",
     provides = ["some_model"],
-    reset = "%s",
+    reset = """%s""",
 )
 `[1:]+someOpenAPI3Model, tst.code))
 			require.NoError(t, err)
@@ -274,7 +287,12 @@ monkey.shell(
 			require.NoError(t, err)
 			require.Len(t, rt.selectedResetters, 1)
 			if tst.expected != nil {
-				require.ErrorContains(t, scriptErr, "bla")
+				require.IsType(t, scriptErr, resetter.NewError(nil))
+				e := tst.code
+				e = strings.ReplaceAll(e, "\n", ";")
+				e = strings.ReplaceAll(e, "; ", ";")
+				e = strings.ReplaceAll(e, " >&2", "")
+				require.EqualError(t, scriptErr, e)
 			} else {
 				require.NoError(t, scriptErr)
 			}
