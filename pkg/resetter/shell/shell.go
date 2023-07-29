@@ -71,7 +71,6 @@ type Resetter struct {
 	scriptsCreator sync.Once
 	scriptsPaths   map[shellCmd]string
 	sherr          chan error
-	i              string
 	stdin          io.WriteCloser
 	rcoms          *rcoms
 }
@@ -146,6 +145,14 @@ const (
 	cmdStop
 )
 
+func (cmd shellCmd) String() string {
+	return map[shellCmd]string{
+		cmdStart: "Start",
+		cmdReset: "Reset",
+		cmdStop:  "Stop",
+	}[cmd]
+}
+
 func (s *Resetter) commands() (cmds []shellCmd, err error) {
 	var (
 		hasStart = "" != strings.TrimSpace(s.Start)
@@ -196,7 +203,6 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 	s.scriptsCreator.Do(func() {
 		paths := make([]string, 0, 3)
 		s.scriptsPaths = make(map[shellCmd]string, 3)
-		scriptPrefix := cwid.Prefixed()
 		for cmd, command := range map[shellCmd]struct {
 			Name, Code string
 		}{
@@ -204,7 +210,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 			cmdReset: {"reset", s.Rst},
 			cmdStop:  {"stop", s.Stop},
 		} {
-			path := fmt.Sprintf("%s%s.bash", scriptPrefix, command.Name)
+			path := fmt.Sprintf("%s%s.bash", cwid.Prefixed(), command.Name)
 			if err = writeScript(path, command.Name, command.Code, envRead); err != nil {
 				log.Println("[ERR]", err)
 				return
@@ -213,18 +219,14 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 			paths = append(paths, path)
 		}
 
-		i := fmt.Sprintf("%s%s.txt", scriptPrefix, "main_i")
-		if err = writeFile(i, nil); err != nil {
-			log.Println("[ERR]", err)
-		}
-		main := fmt.Sprintf("%s%s.bash", scriptPrefix, "main")
-		if err = writeMainScript(main, i, paths); err != nil {
+		main := fmt.Sprintf("%s%s.bash", cwid.Prefixed(), "main")
+		if err = writeMainScript(main, paths); err != nil {
 			return
 		}
-		s.i = i
 
 		s.sherr = make(chan error, 1)
 		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
+		// TODO: isolate shell better. See: https://github.com/maxmcd/bramble/blob/205f61427fe505d109d22ef94967561006d6c83d/internal/command/cli.go#L258
 		exe := exec.CommandContext(ctx, shell, "--norc", "--", main)
 		stdin, err := exe.StdinPipe()
 		if err != nil {
@@ -233,21 +235,22 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}
 		s.stdin = stdin
 		s.rcoms = &rcoms{errcodes: make(chan uint8)}
-		exe.Stdout = io.MultiWriter(&stdboth /*wrap(stdout)*/, stdout, s.rcoms) //FIXME: drop our prefixed intructions
-		exe.Stderr = io.MultiWriter(&stdboth /*wrap(stderr)*/, stderr, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
 		log.Printf("[DBG] starting shell instance")
-		// FIXME: goroutines may leak
 
-		go func() {
-			// fixme: turn into progresswriter
-			log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
-			for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
-				log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
-			}
-		}()
+		// go func() {
+		// 	// fixme: turn into progresswriter
+		// 	log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
+		// 	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
+		// 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
+		// 	}
+		// }()
 
 		go func() {
 			if err := exe.Run(); err != nil {
+				log.Println("[ERR] building then forwarding resetter erroor:", err)
+
 				reason := stdboth.String() + "\n" + err.Error()
 				var lines [][]byte
 				for _, line := range strings.Split(reason, "\n") {
@@ -267,8 +270,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 	}
 
 	for _, cmd := range cmds {
-		scriptFile := s.scriptsPaths[cmd]
-		if err = s.execEach(ctx, s.stdin, scriptFile); err != nil {
+		if err = s.execEach(ctx, s.stdin, cmd); err != nil {
 			return
 		}
 	}
@@ -280,31 +282,27 @@ const (
 	stdeitherPrefixDropPrefix = "++ "
 )
 
-func writeFile(name string, data []byte) error {
-	return os.WriteFile(name, data, 0640)
-}
-
-func writeMainScript(name, i string, paths []string) (err error) {
+func writeMainScript(name string, paths []string) (err error) {
 	var script *os.File
 	if script, err = os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
 		return
 	}
 	defer script.Close()
 
-	mainCode := `
-#!/bin/bash -ux
+	fmt.Fprintln(script, `#!`+shell+` -ux
 
 set -o pipefail
 
 trap 'echo Shell instance exiting >&2' EXIT
-trap 'rm -f "%s"' EXIT
+trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
 
 while read -r x; do
-	if [[ "$x" != 'go' ]]; then
-		echo ."$x".
-	fi
+	case "$x" in
+	'###:exec:'*) x=${x:9} ;;
+	*) echo "###:unexpected:$x" && exit 42 ;;
+	esac
 
-	if ! script=$(cat "%s"); then
+	if ! script=$(cat "$x"); then
 		# File was deleted
 		break
 	fi
@@ -315,13 +313,10 @@ while read -r x; do
 		continue
 	fi
 
-	source "$script"
+	source "$x"
 	echo "###:exit:$?"
 done
-`[1:]
-	code := fmt.Sprintf(mainCode, strings.Join(append(paths, i, name), `" "`), i)
-
-	fmt.Fprintln(script, code)
+`)
 	return
 }
 
@@ -375,6 +370,9 @@ func (coms *rcoms) Write(p []byte) (int, error) {
 					coms.errcodes <- uint8(y)
 				}
 			}
+			if x := bytes.TrimPrefix(data, []byte("###:unexpected:")); n != len(x) {
+				log.Printf("[ERR] unexpected rcoms: %s", x)
+			}
 		}
 	}
 
@@ -397,7 +395,7 @@ func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (e
 	}
 	defer script.Close()
 
-	fmt.Fprintln(script, "#!/bin/bash")
+	fmt.Fprintln(script, "#!"+shell)
 	fmt.Fprintln(script)
 	for k, v := range envRead {
 		fmt.Fprintf(script, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
@@ -421,43 +419,42 @@ func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (e
 	return
 }
 
-func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, scriptFile string) (err error) {
+func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, cmd shellCmd) (err error) {
 	start := time.Now()
 
-	if err = writeFile(s.i, []byte(scriptFile)); err != nil {
-		log.Println("[ERR]", err)
-		return
-	}
+	io.WriteString(stdin, "###:exec:")
+	io.WriteString(stdin, s.scriptsPaths[cmd])
+	io.WriteString(stdin, "\n")
 
-	io.WriteString(stdin, "go\n")
-
-	log.Println("[DBG] sent processing signal to shell singleton")
+	log.Println("[DBG] sent processing signal to shell singleton:", s.scriptsPaths[cmd])
 
 	select {
 	case errcode := <-s.rcoms.errcodes:
-		log.Println("[DBG] shell script execution error code:", errcode)
+		log.Printf("[DBG] shell script %s execution error code: %d", cmd, errcode)
 		if errcode != 0 {
-			err = fmt.Errorf("script exited with non-zero code %d", errcode)
+			err = fmt.Errorf("script %s exited with non-zero code %d", cmd, errcode)
 			log.Println("[ERR]", err)
 			return
 		}
 
 	case err = <-s.sherr:
-		log.Println("[ERR] shell script execution error:", err)
-		return
+		if err != nil {
+			log.Printf("[ERR] shell script %s execution error: %s", cmd, err)
+			return
+		}
 
 	case <-ctx.Done():
 		if err = ctx.Err(); err != nil {
-			log.Println("[ERR]", err)
+			log.Printf("[ERR] %s ctx.Done(): %s", cmd, err)
 		}
 		return
 
 	case <-time.After(scriptTimeout):
 		err = context.Canceled
-		log.Println("[ERR]", err)
+		log.Printf("[ERR] %s scriptTimeout=%s: %s", cmd, scriptTimeout, err)
 		return
 	}
 
-	log.Printf("[NFO] exec'd in %s", time.Since(start))
+	log.Printf("[NFO] exec'd %s in %s", cmd, time.Since(start))
 	return
 }

@@ -287,7 +287,7 @@ monkey.shell(
 			require.NoError(t, err)
 			require.Len(t, rt.selectedResetters, 1)
 			if tst.expected != nil {
-				require.IsType(t, scriptErr, resetter.NewError(nil))
+				require.IsType(t, resetter.NewError(nil), scriptErr)
 				e := tst.code
 				e = strings.ReplaceAll(e, "\n", ";")
 				e = strings.ReplaceAll(e, "; ", ";")

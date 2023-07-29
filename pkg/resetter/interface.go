@@ -70,7 +70,7 @@ func (re *Error) Reason() []string {
 
 func rev(s string) string {
 	n := len(s)
-	runes := make([]rune, n)
+	runes := make([]rune /*n,*/, n)
 	for _, rune := range s {
 		n--
 		runes[n] = rune
