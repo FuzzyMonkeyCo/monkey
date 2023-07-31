@@ -296,6 +296,9 @@ monkey.shell(
 			} else {
 				require.NoError(t, scriptErr)
 			}
+
+			err = rt.Cleanup(ctx)
+			require.NoError(t, err)
 		})
 	}
 }

@@ -70,9 +70,10 @@ type Resetter struct {
 
 	scriptsCreator sync.Once
 	scriptsPaths   map[shellCmd]string
-	sherr          chan error
 	stdin          io.WriteCloser
-	rcoms          *rcoms
+	// stdboth        bytes.Buffer
+	sherr chan error
+	rcoms *rcoms
 }
 
 // Name uniquely identifies this instance
@@ -134,6 +135,10 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 			return
 		}
 	}
+	log.Println("[NFO] exiting shell singleton")
+	s.signal("###:exit:", "")
+	// close(s.sherr)
+	// s.rcoms = nil
 	return
 }
 
@@ -225,7 +230,6 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}
 
 		s.sherr = make(chan error, 1)
-		var stdboth bytes.Buffer // TODO: mux stderr+stdout and fwd to server to track progress
 		// TODO: isolate shell better. See: https://github.com/maxmcd/bramble/blob/205f61427fe505d109d22ef94967561006d6c83d/internal/command/cli.go#L258
 		exe := exec.CommandContext(ctx, shell, "--norc", "--", main)
 		stdin, err := exe.StdinPipe()
@@ -235,21 +239,35 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}
 		s.stdin = stdin
 		s.rcoms = &rcoms{errcodes: make(chan uint8)}
-		exe.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
-		exe.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
-		log.Printf("[DBG] starting shell instance")
-
-		// go func() {
-		// 	// fixme: turn into progresswriter
-		// 	log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
-		// 	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
-		// 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
-		// 	}
-		// }()
-
 		go func() {
+			var stdboth bytes.Buffer
+
+			// TODO: mux stderr+stdout and fwd to server to track progress
+			exe.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
+			exe.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
+			log.Printf("[DBG] starting shell instance")
+
+			// go func() {
+			// 	// fixme: turn into progresswriter
+			// 	log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
+			// 	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
+			// 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
+			// 	}
+			// }()
+
+			// go func() {
+			// defer close(s.sherr)
+			// defer func() { s.rcoms = nil }()
+			defer log.Println("[NFO] shell singleton exited")
+
 			if err := exe.Run(); err != nil {
-				log.Println("[ERR] building then forwarding resetter erroor:", err)
+				log.Println("[ERR] forwarding error:", err)
+				////////////////////////////////s.stdboth.Close()
+				exe.Stdout = stdout
+				exe.Stderr = stderr
+				// data := stdboth.Bytes()
+
+				// log.Println("[ERR] building then forwarding resetter error:", err)
 
 				reason := stdboth.String() + "\n" + err.Error()
 				var lines [][]byte
@@ -262,6 +280,8 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 					}
 				}
 				s.sherr <- resetter.NewError(lines)
+				// s.sherr <- err
+				// // close(s.sherr)
 			}
 		}()
 	})
@@ -270,7 +290,7 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 	}
 
 	for _, cmd := range cmds {
-		if err = s.execEach(ctx, s.stdin, cmd); err != nil {
+		if err = s.execEach(ctx, cmd); err != nil {
 			return
 		}
 	}
@@ -299,6 +319,7 @@ trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
 while read -r x; do
 	case "$x" in
 	'###:exec:'*) x=${x:9} ;;
+	'###:exit:') exit 0 ;;
 	*) echo "###:unexpected:$x" && exit 42 ;;
 	esac
 
@@ -314,7 +335,7 @@ while read -r x; do
 	fi
 
 	source "$x"
-	echo "###:exit:$?"
+	echo "###:exitcode:$?"
 done
 `)
 	return
@@ -365,7 +386,7 @@ type rcoms struct {
 func (coms *rcoms) Write(p []byte) (int, error) {
 	do := func(data []byte) {
 		if n := len(data); n > 0 {
-			if x := bytes.TrimPrefix(data, []byte("###:exit:")); n != len(x) {
+			if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
 				if y, err := strconv.ParseInt(string(x), 10, 8); err == nil {
 					coms.errcodes <- uint8(y)
 				}
@@ -419,13 +440,16 @@ func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (e
 	return
 }
 
-func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, cmd shellCmd) (err error) {
+func (s *Resetter) signal(verb, param string) {
+	io.WriteString(s.stdin, verb)
+	io.WriteString(s.stdin, param)
+	io.WriteString(s.stdin, "\n")
+}
+
+func (s *Resetter) execEach(ctx context.Context, cmd shellCmd) (err error) {
 	start := time.Now()
 
-	io.WriteString(stdin, "###:exec:")
-	io.WriteString(stdin, s.scriptsPaths[cmd])
-	io.WriteString(stdin, "\n")
-
+	s.signal("###:exec:", s.scriptsPaths[cmd])
 	log.Println("[DBG] sent processing signal to shell singleton:", s.scriptsPaths[cmd])
 
 	select {
@@ -440,6 +464,17 @@ func (s *Resetter) execEach(ctx context.Context, stdin io.WriteCloser, cmd shell
 	case err = <-s.sherr:
 		if err != nil {
 			log.Printf("[ERR] shell script %s execution error: %s", cmd, err)
+			// reason := s.stdboth.String() + "\n" + err.Error()
+			// var lines [][]byte
+			// for _, line := range strings.Split(reason, "\n") {
+			// 	if strings.HasPrefix(line, stdeitherPrefixSkip) {
+			// 		continue
+			// 	}
+			// 	if x := strings.TrimPrefix(line, stdeitherPrefixDropPrefix); x != line {
+			// 		lines = append(lines, []byte(x))
+			// 	}
+			// }
+			// err = resetter.NewError(lines)
 			return
 		}
 
