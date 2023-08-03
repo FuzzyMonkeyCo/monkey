@@ -70,7 +70,11 @@ func (rt *Runtime) reset(ctx context.Context) (errL, errT error) {
 			return
 		}
 
-		rt.progress.Errorf(showp + " failed!\n")
+		if strings.Contains(errL.Error(), context.Canceled.Error()) {
+			rt.progress.Errorf(showp + " failed! (timed out)\n")
+		} else {
+			rt.progress.Errorf(showp + " failed!\n")
+		}
 		return
 	}
 

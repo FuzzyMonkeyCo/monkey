@@ -419,6 +419,8 @@ func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (e
 	fmt.Fprintln(script, "#!"+shell)
 	fmt.Fprintln(script)
 	for k, v := range envRead {
+		// -r     Make  names  readonly.   These names cannot then be assigned values by subsequent
+		//        assignment statements or unset.
 		fmt.Fprintf(script, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
 	}
 	fmt.Fprintln(script)
