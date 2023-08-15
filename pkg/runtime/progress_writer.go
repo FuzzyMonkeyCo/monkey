@@ -28,9 +28,16 @@ func (pw *progressWriter) Write(p []byte) (int, error) {
 			}
 			if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
 				if string(x) != "set +o xtrace" {
-					pw.printf("%s", x)
+					pw.printf(" ❯ %s", x)
 				}
+				return
 			}
+			if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+				return
+				//just do all that within exe's existance (move to shell resetter pkg)
+
+			}
+			pw.printf("%s", data)
 		}
 	}
 
