@@ -71,9 +71,8 @@ type Resetter struct {
 	scriptsCreator sync.Once
 	scriptsPaths   map[shellCmd]string
 	stdin          io.WriteCloser
-	// stdboth        bytes.Buffer
-	sherr chan error
-	rcoms *rcoms
+	sherr          chan error
+	rcoms          *rcoms
 }
 
 // Name uniquely identifies this instance
@@ -137,8 +136,6 @@ func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Wr
 	}
 	log.Println("[NFO] exiting shell singleton")
 	s.signal("###:exit:", "")
-	// close(s.sherr)
-	// s.rcoms = nil
 	return
 }
 
@@ -239,49 +236,18 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 		}
 		s.stdin = stdin
 		s.rcoms = &rcoms{errcodes: make(chan uint8)}
+		// TODO: mux stderr+stdout and fwd to server to track progress
+		exe.Stdout = io.MultiWriter(stdout, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stderr = io.MultiWriter(stderr, s.rcoms) //FIXME: drop our prefixed intructions
+
 		go func() {
-			var stdboth bytes.Buffer
-
-			// TODO: mux stderr+stdout and fwd to server to track progress
-			exe.Stdout = io.MultiWriter(&stdboth, stdout, s.rcoms) //FIXME: drop our prefixed intructions
-			exe.Stderr = io.MultiWriter(&stdboth, stderr, s.rcoms) //FIXME: drop our prefixed intructions
 			log.Printf("[DBG] starting shell instance")
-
-			// go func() {
-			// 	// fixme: turn into progresswriter
-			// 	log.Printf("[NFO] STDERR+STDOUT: %q", stdboth.String())
-			// 	for i, line := range bytes.Split(stdboth.Bytes(), []byte{'\n'}) {
-			// 		log.Printf("[NFO] STDERR+STDOUT:%d: %q", i, line)
-			// 	}
-			// }()
-
-			// go func() {
-			// defer close(s.sherr)
-			// defer func() { s.rcoms = nil }()
 			defer log.Println("[NFO] shell singleton exited")
 
 			if err := exe.Run(); err != nil {
 				log.Println("[ERR] forwarding error:", err)
-				////////////////////////////////s.stdboth.Close()
-				exe.Stdout = stdout
-				exe.Stderr = stderr
-				// data := stdboth.Bytes()
-
-				// log.Println("[ERR] building then forwarding resetter error:", err)
-
-				reason := stdboth.String() + "\n" + err.Error()
-				var lines [][]byte
-				for _, line := range strings.Split(reason, "\n") {
-					if strings.HasPrefix(line, stdeitherPrefixSkip) {
-						continue
-					}
-					if x := strings.TrimPrefix(line, stdeitherPrefixDropPrefix); x != line {
-						lines = append(lines, []byte(x))
-					}
-				}
+				lines := append([][]byte(nil), []byte(err.Error()))
 				s.sherr <- resetter.NewError(lines)
-				// s.sherr <- err
-				// // close(s.sherr)
 			}
 		}()
 	})
@@ -466,17 +432,6 @@ func (s *Resetter) execEach(ctx context.Context, cmd shellCmd) (err error) {
 	case err = <-s.sherr:
 		if err != nil {
 			log.Printf("[ERR] shell script %s execution error: %s", cmd, err)
-			// reason := s.stdboth.String() + "\n" + err.Error()
-			// var lines [][]byte
-			// for _, line := range strings.Split(reason, "\n") {
-			// 	if strings.HasPrefix(line, stdeitherPrefixSkip) {
-			// 		continue
-			// 	}
-			// 	if x := strings.TrimPrefix(line, stdeitherPrefixDropPrefix); x != line {
-			// 		lines = append(lines, []byte(x))
-			// 	}
-			// }
-			// err = resetter.NewError(lines)
 			return
 		}
 

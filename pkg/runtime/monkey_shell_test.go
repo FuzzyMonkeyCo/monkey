@@ -236,9 +236,9 @@ func TestShellResets(t *testing.T) {
 		{":", nil},
 		{"true", nil},
 		{"sleep .1", nil},
-		{"echo Hello; echo hi >&2; false", resetter.NewError(as([]string{"echo Hello!", "echo hi >&2", "false"}))},
-		{"false", resetter.NewError(as([]string{"false"}))},
-		{repeated + "false", resetter.NewError(as(append(strings.Split(repeated, "\n"), "false")))},
+		{"echo Hello; echo hi >&2; false", resetter.NewError(as([]string{"exit status 1"}))},
+		{"false", resetter.NewError(as([]string{"exit status 1"}))},
+		{repeated + "false", resetter.NewError(as([]string{"exit status 1"}))},
 	} {
 		t.Run(tst.code, func(t *testing.T) {
 			rt, err := newFakeMonkey(t, fmt.Sprintf(`
@@ -288,11 +288,7 @@ monkey.shell(
 			require.Len(t, rt.selectedResetters, 1)
 			if tst.expected != nil {
 				require.IsType(t, resetter.NewError(nil), scriptErr)
-				e := tst.code
-				e = strings.ReplaceAll(e, "\n", ";")
-				e = strings.ReplaceAll(e, "; ", ";")
-				e = strings.ReplaceAll(e, " >&2", "")
-				require.EqualError(t, scriptErr, e)
+				require.EqualError(t, scriptErr, tst.expected.Error())
 			} else {
 				require.NoError(t, scriptErr)
 			}

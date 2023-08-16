@@ -55,8 +55,7 @@ test: all
 	[[ 1 = "$$(./$(EXE) exec start 2>&1 | wc -l)" ]]
 	[[ 6 = "$$(./$(EXE) exec reset 2>&1 | wc -l)" ]]
 	[[ 1 = "$$(./$(EXE) exec stop 2>&1 | wc -l)" ]]
-	richgo test -covermode=atomic ./...
-#FIXME 	richgo test -race -covermode=atomic ./...
+	richgo test -race -covermode=atomic ./...
 
 ci:
 	docker buildx bake ci-checks
