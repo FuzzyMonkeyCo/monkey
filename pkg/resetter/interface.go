@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"go.starlark.net/starlark"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 )
 
 // Maker types the New func that instanciates new resetters
@@ -30,17 +30,17 @@ type Interface interface { // TODO: initers.Initer
 	ToProto() *fm.Clt_Fuzz_Resetter
 
 	// ExecStart executes the setup phase of the System Under Test
-	ExecStart(context.Context, io.Writer, io.Writer, bool, map[string]string) error
+	ExecStart(context.Context, progresser.Shower, bool, map[string]string) error
 	// ExecReset resets the System Under Test to a state similar to a post-ExecStart state
-	ExecReset(context.Context, io.Writer, io.Writer, bool, map[string]string) error
+	ExecReset(context.Context, progresser.Shower, bool, map[string]string) error
 	// ExecStop executes the cleanup phase of the System Under Test
-	ExecStop(context.Context, io.Writer, io.Writer, bool, map[string]string) error
+	ExecStop(context.Context, progresser.Shower, bool, map[string]string) error
 
 	// TidyOutput filter maps over each line
 	TidyOutput([][]byte) TidiedOutput
 
 	// Terminate cleans up after a resetter.Interface implementation instance
-	Terminate(context.Context, io.Writer, io.Writer, map[string]string) error
+	Terminate(context.Context, progresser.Shower, map[string]string) error
 }
 
 type TidiedOutput [][]byte

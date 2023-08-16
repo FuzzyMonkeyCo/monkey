@@ -44,7 +44,7 @@ type Interface interface { // TODO models.Modeler
 	Validate(uint32, *structpb.Value) []string
 
 	// NewCaller is called before making each call
-	NewCaller(ctx context.Context, call *fm.Srv_Call, showf ShowFunc) Caller
+	NewCaller(ctx context.Context, call *fm.Srv_Call, showf ShowFunc) Caller // FIXME: use Shower iface?
 }
 
 // ShowFunc can be used to display informational messages to the tester

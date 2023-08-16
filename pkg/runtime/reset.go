@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -23,7 +22,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 
 	log.Println("[NFO] terminating resetter")
 	if errR := rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		return rsttr.Terminate(ctx, os.Stdout, os.Stderr, rt.envRead)
+		return rsttr.Terminate(ctx, &osShower{}, rt.envRead)
 	}); errR != nil {
 		err = errR
 		// Keep going
@@ -103,9 +102,6 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	log.Println("[NFO] re-initialized model state")
 
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		//fixme: just find/make a package that makes an io.Writer from a func + a ptr
-		stdout := newProgressWriter(rt.progress.Printf)
-		stderr := newProgressWriter(rt.progress.Errorf)
-		return rsttr.ExecReset(ctx, stdout, stderr, false, rt.envRead)
+		return rsttr.ExecReset(ctx, rt.progress, false, rt.envRead)
 	})
 }

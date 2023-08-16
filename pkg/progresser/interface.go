@@ -4,8 +4,18 @@ import (
 	"context"
 )
 
+// Shower displays informational data
+type Shower interface {
+	// Printf formats informational data
+	Printf(string, ...interface{})
+	// Errorf formats error messages
+	Errorf(string, ...interface{})
+} //FIXME: move ShowFunc here?
+
 // Interface displays calls, resets and checks progression
 type Interface interface {
+	Shower
+
 	// WithContext sets ctx of a progresser.Interface implementation
 	WithContext(context.Context)
 	// MaxTestsCount sets an upper bound before testing starts
@@ -30,14 +40,6 @@ type Interface interface {
 	CheckPassed(string, string)
 	// ChecksPassed may be called many times during testing
 	ChecksPassed()
-
-	// Printf formats informational data
-	Printf(string, ...interface{})
-	// Errorf formats error messages
-	Errorf(string, ...interface{})
-
-	// Before(Event, io.Writer)
-	// After(Event, io.Writer)
 
 	// Terminate cleans up after a progresser.Interface implementation instance
 	Terminate() error

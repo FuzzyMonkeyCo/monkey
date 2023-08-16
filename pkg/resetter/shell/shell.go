@@ -18,6 +18,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
@@ -72,7 +73,7 @@ type Resetter struct {
 	scriptsPaths   map[shellCmd]string
 	stdin          io.WriteCloser
 	sherr          chan error
-	rcoms          *rcoms
+	rcoms          chan uint8
 }
 
 // Name uniquely identifies this instance
@@ -92,12 +93,12 @@ func (s *Resetter) ToProto() *fm.Clt_Fuzz_Resetter {
 }
 
 // ExecStart executes the setup phase of the System Under Test
-func (s *Resetter) ExecStart(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool, envRead map[string]string) error {
-	return s.exec(ctx, stdout, stderr, envRead, cmdStart)
+func (s *Resetter) ExecStart(ctx context.Context, shower progresser.Shower, only bool, envRead map[string]string) error {
+	return s.exec(ctx, shower, envRead, cmdStart)
 }
 
 // ExecReset resets the System Under Test to a state similar to a post-ExecStart state
-func (s *Resetter) ExecReset(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool, envRead map[string]string) error {
+func (s *Resetter) ExecReset(ctx context.Context, shower progresser.Shower, only bool, envRead map[string]string) error {
 	if only {
 		// Makes $ monkey exec reset run as if in between tests
 		s.isNotFirstRun = true
@@ -112,12 +113,12 @@ func (s *Resetter) ExecReset(ctx context.Context, stdout io.Writer, stderr io.Wr
 		s.isNotFirstRun = true
 	}
 
-	return s.exec(ctx, stdout, stderr, envRead, cmds...)
+	return s.exec(ctx, shower, envRead, cmds...)
 }
 
 // ExecStop executes the cleanup phase of the System Under Test
-func (s *Resetter) ExecStop(ctx context.Context, stdout io.Writer, stderr io.Writer, only bool, envRead map[string]string) error {
-	return s.exec(ctx, stdout, stderr, envRead, cmdStop)
+func (s *Resetter) ExecStop(ctx context.Context, shower progresser.Shower, only bool, envRead map[string]string) error {
+	return s.exec(ctx, shower, envRead, cmdStop)
 }
 
 // TidyOutput filter maps over each line
@@ -127,9 +128,9 @@ func (s *Resetter) TidyOutput(stdeither [][]byte) resetter.TidiedOutput {
 }
 
 // Terminate cleans up after a resetter.Interface implementation instance
-func (s *Resetter) Terminate(ctx context.Context, stdout io.Writer, stderr io.Writer, envRead map[string]string) (err error) {
+func (s *Resetter) Terminate(ctx context.Context, shower progresser.Shower, envRead map[string]string) (err error) {
 	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
-		if err = s.ExecStop(ctx, stdout, stderr, true, envRead); err != nil {
+		if err = s.ExecStop(ctx, shower, true, envRead); err != nil {
 			log.Println("[ERR]", err)
 			return
 		}
@@ -196,7 +197,7 @@ func (s *Resetter) commands() (cmds []shellCmd, err error) {
 	}
 }
 
-func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead map[string]string, cmds ...shellCmd) (err error) {
+func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead map[string]string, cmds ...shellCmd) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
 		return
@@ -235,10 +236,61 @@ func (s *Resetter) exec(ctx context.Context, stdout, stderr io.Writer, envRead m
 			return
 		}
 		s.stdin = stdin
-		s.rcoms = &rcoms{errcodes: make(chan uint8)}
+
+		// s.rcoms = &rcoms{errcodes: make(chan uint8)}
+		s.rcoms = make(chan uint8)
+		coms := newlinesWriter(func(data []byte) {
+			if n := len(data); n > 0 {
+				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+					if y, err := strconv.ParseInt(string(x), 10, 8); err == nil {
+						s.rcoms <- uint8(y)
+					}
+				}
+				if x := bytes.TrimPrefix(data, []byte("###:unexpected:")); n != len(x) {
+					log.Printf("[ERR] unexpected rcoms: %s", x)
+				}
+			}
+		})
+
+		stdout := newlinesWriter(func(data []byte) {
+			if n := len(data); n > 0 {
+				if bytes.HasPrefix(data, []byte("+ ")) {
+					return
+				}
+				if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
+					if string(x) != "set +o xtrace" {
+						shower.Printf(" ❯ %s", x)
+					}
+					return
+				}
+				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+					return
+				}
+				shower.Printf("%s", data)
+			}
+		})
+
+		stderr := newlinesWriter(func(data []byte) {
+			if n := len(data); n > 0 {
+				if bytes.HasPrefix(data, []byte("+ ")) {
+					return
+				}
+				if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
+					if string(x) != "set +o xtrace" {
+						shower.Errorf(" ❯ %s", x)
+					}
+					return
+				}
+				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+					return
+				}
+				shower.Errorf("%s", data)
+			}
+		})
+
 		// TODO: mux stderr+stdout and fwd to server to track progress
-		exe.Stdout = io.MultiWriter(stdout, s.rcoms) //FIXME: drop our prefixed intructions
-		exe.Stderr = io.MultiWriter(stderr, s.rcoms) //FIXME: drop our prefixed intructions
+		exe.Stdout = io.MultiWriter(stdout, coms)
+		exe.Stderr = io.MultiWriter(stderr, coms)
 
 		go func() {
 			log.Printf("[DBG] starting shell instance")
@@ -307,74 +359,6 @@ done
 	return
 }
 
-// FIXME: generalize from progress_writer
-// see https://stackoverflow.com/a/42208606/1418165
-
-var _ io.Writer = (*wrp)(nil)
-
-type wrp struct {
-	w io.Writer
-}
-
-func wrap(stdio io.Writer) io.Writer {
-	return &wrp{w: stdio}
-}
-
-func (w *wrp) Write(p []byte) (int, error) {
-	do := func(data []byte) {
-		if n := len(data); n > 0 {
-			if x := bytes.TrimPrefix(data, []byte("++ ")); n != len(x) {
-				if string(x) != "set +o xtrace" {
-					w.w.Write(x)
-				}
-			}
-		}
-	}
-
-	for i := 0; ; {
-		n := bytes.IndexAny(p[i:], "\n\r")
-		if n < 0 {
-			do(p[i:])
-			break
-		}
-		do(p[i : i+n])
-		i += n + 1
-	}
-	return len(p), nil
-}
-
-var _ io.Writer = (*rcoms)(nil)
-
-type rcoms struct {
-	errcodes chan uint8
-}
-
-func (coms *rcoms) Write(p []byte) (int, error) {
-	do := func(data []byte) {
-		if n := len(data); n > 0 {
-			if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
-				if y, err := strconv.ParseInt(string(x), 10, 8); err == nil {
-					coms.errcodes <- uint8(y)
-				}
-			}
-			if x := bytes.TrimPrefix(data, []byte("###:unexpected:")); n != len(x) {
-				log.Printf("[ERR] unexpected rcoms: %s", x)
-			}
-		}
-	}
-
-	for i := 0; ; {
-		n := bytes.IndexAny(p[i:], "\n\r")
-		if n < 0 {
-			do(p[i:])
-			break
-		}
-		do(p[i : i+n])
-		i += n + 1
-	}
-	return len(p), nil
-}
-
 func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (err error) {
 	var script *os.File
 	if script, err = os.OpenFile(scriptFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
@@ -421,7 +405,7 @@ func (s *Resetter) execEach(ctx context.Context, cmd shellCmd) (err error) {
 	log.Println("[DBG] sent processing signal to shell singleton:", s.scriptsPaths[cmd])
 
 	select {
-	case errcode := <-s.rcoms.errcodes:
+	case errcode := <-s.rcoms:
 		log.Printf("[DBG] shell script %s execution error code: %d", cmd, errcode)
 		if errcode != 0 {
 			err = fmt.Errorf("script %s exited with non-zero code %d", cmd, errcode)
