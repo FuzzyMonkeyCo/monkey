@@ -136,7 +136,7 @@ func (s *Resetter) Terminate(ctx context.Context, shower progresser.Shower, envR
 		}
 	}
 	log.Println("[NFO] exiting shell singleton")
-	s.signal("###:exit:", "")
+	s.signal(comExit, "")
 	return
 }
 
@@ -241,12 +241,12 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 		s.rcoms = make(chan uint8)
 		coms := newlinesWriter(func(data []byte) {
 			if n := len(data); n > 0 {
-				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+				if x := bytes.TrimPrefix(data, []byte(comExitcode)); n != len(x) {
 					if y, err := strconv.ParseInt(string(x), 10, 8); err == nil {
 						s.rcoms <- uint8(y)
 					}
 				}
-				if x := bytes.TrimPrefix(data, []byte("###:unexpected:")); n != len(x) {
+				if x := bytes.TrimPrefix(data, []byte(comUnexpected)); n != len(x) {
 					log.Printf("[ERR] unexpected rcoms: %s", x)
 				}
 			}
@@ -263,7 +263,7 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 					}
 					return
 				}
-				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+				if x := bytes.TrimPrefix(data, []byte(comExitcode)); n != len(x) {
 					return
 				}
 				shower.Printf("%s", data)
@@ -281,7 +281,7 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 					}
 					return
 				}
-				if x := bytes.TrimPrefix(data, []byte("###:exitcode:")); n != len(x) {
+				if x := bytes.TrimPrefix(data, []byte(comExitcode)); n != len(x) {
 					return
 				}
 				shower.Errorf("%s", data)
@@ -318,6 +318,11 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 const (
 	stdeitherPrefixSkip       = "+ "
 	stdeitherPrefixDropPrefix = "++ "
+	comPrefix                 = "###:" //FIXME: pick from random alnum at first run
+	comExec                   = comPrefix + "exec:"
+	comExit                   = comPrefix + "exit:"
+	comExitcode               = comPrefix + "exitcode:"
+	comUnexpected             = comPrefix + "unexpected:"
 )
 
 func writeMainScript(name string, paths []string) (err error) {
@@ -336,9 +341,9 @@ trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
 
 while read -r x; do
 	case "$x" in
-	'###:exec:'*) x=${x:9} ;;
-	'###:exit:') exit 0 ;;
-	*) echo "###:unexpected:$x" && exit 42 ;;
+	'`+comExec+`'*) x=${x:9} ;;
+	'`+comExit+`') exit 0 ;;
+	*) echo "`+comUnexpected+`$x" && exit 42 ;;
 	esac
 
 	if ! script=$(cat "$x"); then
@@ -353,7 +358,7 @@ while read -r x; do
 	fi
 
 	source "$x"
-	echo "###:exitcode:$?"
+	echo "`+comExitcode+`$?"
 done
 `)
 	return
@@ -401,7 +406,7 @@ func (s *Resetter) signal(verb, param string) {
 func (s *Resetter) execEach(ctx context.Context, cmd shellCmd) (err error) {
 	start := time.Now()
 
-	s.signal("###:exec:", s.scriptsPaths[cmd])
+	s.signal(comExec, s.scriptsPaths[cmd])
 	log.Println("[DBG] sent processing signal to shell singleton:", s.scriptsPaths[cmd])
 
 	select {
