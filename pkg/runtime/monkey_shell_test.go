@@ -218,27 +218,19 @@ Error in shell: shell: for parameter "stop": got float, want string`[1:])
 
 func TestShellResets(t *testing.T) {
 	type testcase struct {
-		code     string
-		expected error
-	}
-
-	as := func(ss []string) [][]byte {
-		xs := make([][]byte, 0, len(ss))
-		for _, s := range ss {
-			xs = append(xs, []byte(s))
-		}
-		return xs
+		code  string
+		fails bool
 	}
 
 	repeated := strings.Repeat(":\n", 42)
 
 	for _, tst := range []testcase{
-		{":", nil},
-		{"true", nil},
-		{"sleep .1", nil},
-		{"echo Hello; echo hi >&2; false", resetter.NewError(as([]string{"exit status 1"}))},
-		{"false", resetter.NewError(as([]string{"exit status 1"}))},
-		{repeated + "false", resetter.NewError(as([]string{"exit status 1"}))},
+		{":", false},
+		{"true", false},
+		{"sleep .1", false},
+		{"echo Hello; echo hi >&2; false", true},
+		{"false", true},
+		{repeated + "false", true},
 	} {
 		t.Run(tst.code, func(t *testing.T) {
 			rt, err := newFakeMonkey(t, fmt.Sprintf(`
@@ -286,9 +278,9 @@ monkey.shell(
 			scriptErr, err := rt.reset(ctx)
 			require.NoError(t, err)
 			require.Len(t, rt.selectedResetters, 1)
-			if tst.expected != nil {
+			if tst.fails {
 				require.IsType(t, resetter.NewError(nil), scriptErr)
-				require.EqualError(t, scriptErr, tst.expected.Error())
+				require.EqualError(t, scriptErr, "exit status 1")
 			} else {
 				require.NoError(t, scriptErr)
 			}
