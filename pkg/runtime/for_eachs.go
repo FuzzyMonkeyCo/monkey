@@ -12,7 +12,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
 )
 
-func (rt *Runtime) forEachCheck(f func(name string, chk *check) error) error {
+func (rt *Runtime) forEachOfAnyCheck(f func(name string, chk *check) error) error {
 	for _, name := range rt.checksNames {
 		name, chk := name, rt.checks[name]
 		if err := f(name, chk); err != nil {
@@ -20,6 +20,24 @@ func (rt *Runtime) forEachCheck(f func(name string, chk *check) error) error {
 		}
 	}
 	return nil
+}
+
+func (rt *Runtime) forEachBeforeRequestCheck(f func(name string, chk *check) error) error {
+	return rt.forEachOfAnyCheck(func(name string, chk *check) (err error) {
+		if chk.beforeRequest != nil {
+			err = f(name, chk)
+		}
+		return
+	})
+}
+
+func (rt *Runtime) forEachAfterResponseCheck(f func(name string, chk *check) error) error {
+	return rt.forEachOfAnyCheck(func(name string, chk *check) (err error) {
+		if chk.afterResponse != nil {
+			err = f(name, chk)
+		}
+		return
+	})
 }
 
 func (rt *Runtime) forEachModel(f func(name string, mdl modeler.Interface) error) error {
@@ -54,14 +72,15 @@ func (rt *Runtime) forEachResetter(f func(name string, rsttr resetter.Interface)
 func (rt *Runtime) forEachSelectedResetter(ctx context.Context, f func(string, resetter.Interface) error) error {
 	if rt.selectedResetters == nil {
 		rt.selectedResetters = make(map[string]struct{}, len(rt.resetters))
-		for name, rsttr := range rt.resetters {
+		_ = rt.forEachResetter(func(name string, rsttr resetter.Interface) error {
 			for _, modelName := range rsttr.Provides() {
 				if _, ok := rt.selectedEIDs[modelName]; ok {
 					rt.selectedResetters[name] = struct{}{}
 					break
 				}
 			}
-		}
+			return nil
+		})
 	}
 	if len(rt.selectedResetters) == 0 {
 		return errors.New("no resetter selected")
@@ -87,6 +106,21 @@ func (rt *Runtime) forEachGlobal(f func(name string, value starlark.Value) error
 	sort.Strings(names)
 	for _, name := range names {
 		name, value := name, rt.globals[name]
+		if err := f(name, value); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (rt *Runtime) forEachEnvRead(f func(name string, value string) error) error {
+	names := make([]string, 0, len(rt.envRead))
+	for name := range rt.envRead {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		name, value := name, rt.envRead[name]
 		if err := f(name, value); err != nil {
 			return err
 		}

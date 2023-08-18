@@ -12,6 +12,8 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 )
 
+// fixme: move to dedicated package: ctx?
+
 type (
 	ctxctor2 func(*fm.Clt_CallResponseRaw_Output) ctxctor1
 	ctxctor1 func(*starlark.Dict) *ctxModule
@@ -40,7 +42,7 @@ type ctxModule struct {
 	request       *ctxRequest
 	response      *ctxResponse
 	state         *starlark.Dict
-	//TODO: specs             starlark.Value
+	//TODO: specs             starlark.Value => provide models as JSON for now until we find a suitable Python-ish API
 	//TODO: CLI filter `--only="starlark.expr(ctx.specs)"`
 	//TODO: ctx.specs stops being accessible on first ctx.state access
 }
@@ -82,8 +84,15 @@ func (m *ctxModule) Attr(name string) (starlark.Value, error) {
 	}
 }
 
+const (
+	ctxHttpRequest  = "http_request"
+	ctxHttpResponse = "http_response"
+)
+
 // ctxRequest represents request data as a Starlark value for user assertions.
 type ctxRequest struct {
+	ty string
+
 	attrs     starlark.StringDict
 	attrnames []string
 
@@ -99,7 +108,7 @@ var _ starlark.HasAttrs = (*ctxRequest)(nil)
 func (m *ctxRequest) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
 func (m *ctxRequest) String() string        { return "ctx_request" }
 func (m *ctxRequest) Truth() starlark.Bool  { return true }
-func (m *ctxRequest) Type() string          { return "ctx_request" }
+func (m *ctxRequest) Type() string          { return m.ty }
 
 func (m *ctxRequest) Freeze() {
 	m.attrs.Freeze()
@@ -121,7 +130,7 @@ func (m *ctxRequest) AttrNames() []string {
 
 func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 	switch {
-	case m.protoBodyDecoded != nil && name == "body":
+	case name == "body" && m.protoBodyDecoded != nil:
 		if m.body == nil {
 			m.body = starlarkvalue.FromProtoValue(m.protoBodyDecoded)
 			m.body.Freeze()
@@ -146,8 +155,22 @@ func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 	}
 }
 
+// https://pkg.go.dev/net/http#Header
+// type Header
+//         The keys should be in canonical form, as returned by CanonicalHeaderKey.
+//    func (h Header) Add(key, value string)
+//            appends to any existing values associated with key. The key is case insensitive; it is canonicalized by CanonicalHeaderKey
+//    func (h Header) Del(key string)
+//            deletes the values associated with key. The key is case insensitive; it is canonicalized
+//    func (h Header) Get(key string) string
+//            gets the first value associated with the given key. If there are no values associated with the key, Get returns "". It is case insensitive
+//    func (h Header) Set(key, value string)
+//            sets the header entries associated with key to the single element value. It replaces any existing values associated with key. The key is case insensitive
+//    func (h Header) Values(key string) []string
+//            returns all values associated with the given key. It is case insensitive
+
 func headerPairs(protoHeaders []*fm.HeaderPair) (starlark.Value, error) {
-	d := starlark.NewDict(len(protoHeaders))
+	d := starlark.NewDict(len(protoHeaders)) //fixme: dont make a dict out of repeated HeaderPair.s
 
 	for _, kvs := range protoHeaders {
 		values := kvs.GetValues()
@@ -169,6 +192,8 @@ func inputAsValue(i *fm.Clt_CallRequestRaw_Input) (cr *ctxRequest) {
 	switch x := i.GetInput().(type) {
 
 	case *fm.Clt_CallRequestRaw_Input_HttpRequest_:
+		cr.ty = ctxHttpRequest
+
 		reqProto := i.GetHttpRequest()
 		cr.attrs["method"] = starlark.String(reqProto.Method)
 		cr.attrs["url"] = starlark.String(reqProto.Url)
@@ -186,6 +211,8 @@ func inputAsValue(i *fm.Clt_CallRequestRaw_Input) (cr *ctxRequest) {
 
 // ctxResponse represents response data as a Starlark value for user assertions.
 type ctxResponse struct {
+	ty string
+
 	attrs     starlark.StringDict
 	attrnames []string
 
@@ -201,7 +228,7 @@ var _ starlark.HasAttrs = (*ctxResponse)(nil)
 func (m *ctxResponse) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable: %s", m.Type()) }
 func (m *ctxResponse) String() string        { return "ctx_response" }
 func (m *ctxResponse) Truth() starlark.Bool  { return true }
-func (m *ctxResponse) Type() string          { return "ctx_response" }
+func (m *ctxResponse) Type() string          { return m.ty }
 
 func (m *ctxResponse) Freeze() {
 	m.attrs.Freeze()
@@ -223,7 +250,7 @@ func (m *ctxResponse) AttrNames() []string {
 
 func (m *ctxResponse) Attr(name string) (starlark.Value, error) {
 	switch {
-	case m.protoBodyDecoded != nil && name == "body":
+	case name == "body" && m.protoBodyDecoded != nil:
 		if m.body == nil {
 			m.body = starlarkvalue.FromProtoValue(m.protoBodyDecoded)
 			m.body.Freeze()
@@ -255,6 +282,8 @@ func outputAsValue(o *fm.Clt_CallResponseRaw_Output) (cr *ctxResponse) {
 	switch x := o.GetOutput().(type) {
 
 	case *fm.Clt_CallResponseRaw_Output_HttpResponse_:
+		cr.ty = ctxHttpResponse
+
 		repProto := o.GetHttpResponse()
 		cr.attrs["status_code"] = starlark.MakeUint(uint(repProto.StatusCode))
 		cr.attrs["reason"] = starlark.String(repProto.Reason)

@@ -2,12 +2,14 @@ package openapiv3
 
 import (
 	"io"
+	"log"
 
 	"go.starlark.net/starlark"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/tags"
 )
 
 // Name names the Starlark builtin
@@ -15,20 +17,41 @@ const Name = "openapi3"
 
 // New instanciates a new model
 func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
-	var name, file, host, headerAuthorization starlark.String
+	var lot struct {
+		name, file, host, headerAuthorization starlark.String
+	}
 	if err := starlark.UnpackArgs(Name, nil, kwargs,
-		"name", &name,
-		"file", &file,
-		"host??", &host,
-		"header_authorization??", &headerAuthorization,
+		"name", &lot.name,
+		"file", &lot.file,
+		// NOTE: all args following an optional? are implicitly optional.
+		"host??", &lot.host,
+		"header_authorization??", &lot.headerAuthorization, //FIXME: drop
 	); err != nil {
+		log.Println("[ERR]", err)
 		return nil, err
 	}
-	m := &oa3{name: name.GoString()}
-	m.pb = &fm.Clt_Fuzz_Model_OpenAPIv3{
-		File:                file.GoString(),
-		Host:                host.GoString(),
-		HeaderAuthorization: headerAuthorization.GoString(),
+	log.Printf("[DBG] unpacked %+v", lot)
+
+	// verify each
+
+	name := lot.name.GoString()
+	if err := tags.LegalName(name); err != nil { //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+
+	// verify all
+
+	// assemble
+
+	m := &oa3{
+		name: name,
+		pb: &fm.Clt_Fuzz_Model_OpenAPIv3{
+			File:                lot.file.GoString(),
+			Host:                lot.host.GoString(),
+			HeaderAuthorization: lot.headerAuthorization.GoString(),
+			//TODO: tags
+		},
 	}
 	return m, nil
 }

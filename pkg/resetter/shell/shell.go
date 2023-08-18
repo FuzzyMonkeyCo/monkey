@@ -29,25 +29,44 @@ const (
 
 // New instanciates a new resetter
 func New(kwargs []starlark.Tuple) (resetter.Interface, error) {
-	var name, start, reset, stop starlark.String
-	var provides tags.UniqueStringsNonEmpty
+	var lot struct {
+		name, start, reset, stop starlark.String
+		provides                 tags.UniqueStringsNonEmpty
+	}
 	if err := starlark.UnpackArgs(Name, nil, kwargs,
-		"name", &name,
-		"provides", &provides,
+		"name", &lot.name,
+		"provides", &lot.provides,
+		// NOTE: all args following an optional? are implicitly optional.
+		"start??", &lot.start,
+		"reset??", &lot.reset,
+		"stop??", &lot.stop,
 		// TODO: waiton = "tcp/4000", various recipes => 1 rsttr per service
-		"start??", &start,
-		"reset??", &reset,
-		"stop??", &stop,
+		//TODO: tags
 	); err != nil {
+		log.Println("[ERR]", err)
 		return nil, err
 	}
-	s := &Resetter{
-		name:     name.GoString(),
-		provides: provides.GoStrings(),
+	log.Printf("[DBG] unpacked %+v", lot)
+
+	// verify each
+
+	name := lot.name.GoString()
+	if err := tags.LegalName(name); err != nil { //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
 	}
-	s.Start = strings.TrimSpace(start.GoString())
-	s.Rst = strings.TrimSpace(reset.GoString())
-	s.Stop = strings.TrimSpace(stop.GoString())
+
+	// verify all
+
+	// assemble
+
+	s := &Resetter{
+		name:     name,
+		provides: lot.provides.GoStrings(),
+	}
+	s.Start = strings.TrimSpace(lot.start.GoString())
+	s.Rst = strings.TrimSpace(lot.reset.GoString())
+	s.Stop = strings.TrimSpace(lot.stop.GoString())
 	return s, nil
 }
 
