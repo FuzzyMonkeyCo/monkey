@@ -10,7 +10,7 @@ type Shower interface {
 	Printf(string, ...interface{})
 	// Errorf formats error messages
 	Errorf(string, ...interface{})
-} //FIXME: move ShowFunc here?
+}
 
 // Interface displays calls, resets and checks progression
 type Interface interface {
