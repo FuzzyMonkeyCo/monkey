@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"github.com/FuzzyMonkeyCo/monkey/pkg/cwid"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/resetter"
@@ -21,11 +23,14 @@ import (
 const (
 	prefixSkip       = "+ "
 	prefixDropPrefix = "++ "
-	comPrefix        = "###:" //FIXME: pick from random alnum at first run
-	comExec          = comPrefix + "exec:"
-	comExit          = comPrefix + "exit:"
-	comExitcode      = comPrefix + "exitcode:"
-	comUnexpected    = comPrefix + "unexpected:"
+)
+
+var (
+	comPrefix     = uuid.NewString()[:13]
+	comExec       = comPrefix + ":exec:"
+	comExit       = comPrefix + ":exit:"
+	comExitcode   = comPrefix + ":exitcode:"
+	comUnexpected = comPrefix + ":unexpected:"
 )
 
 func (s *Resetter) signal(verb, param string) {
@@ -50,7 +55,7 @@ trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
 
 while read -r x; do
 	case "$x" in
-	'`+comExec+`'*) x=${x:9} ;;
+	'`+comExec+`'*) x=${x:`+strconv.Itoa(len(comExec))+`} ;;
 	'`+comExit+`') exit 0 ;;
 	*) echo "`+comUnexpected+`$x" && exit 42 ;;
 	esac
