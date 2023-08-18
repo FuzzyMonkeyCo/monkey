@@ -13,6 +13,7 @@ import (
 )
 
 type check struct {
+	beforeRequest *starlark.Function
 	afterResponse *starlark.Function
 	tags          tags.Tags
 	state, state0 *starlark.Dict
@@ -45,55 +46,113 @@ func ensureStateDict(chkname string, v starlark.Value) (err error) {
 }
 
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
-	var afterResponse *starlark.Function
-	var name starlark.String
-	var taglist tags.UniqueStrings
-	var state0 *starlark.Dict
+	var lot struct {
+		beforeRequest, afterResponse *starlark.Function
+		name                         starlark.String
+		taglist                      tags.UniqueStrings
+		state0                       *starlark.Dict
+	}
 	if err := starlark.UnpackArgs(b.Name(), args, kwargs,
-		"after_response", &afterResponse,
-		"name", &name,
-		"tags?", &taglist,
-		"state?", &state0,
+		"name", &lot.name,
+		// NOTE: all args following an optional? are implicitly optional.
+		"before_request?", &lot.beforeRequest,
+		"after_response?", &lot.afterResponse,
+		"tags?", &lot.taglist,
+		"state?", &lot.state0,
 	); err != nil {
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+	log.Printf("[DBG] unpacked %+v", lot)
+
+	// verify each
+
+	chkname := lot.name.GoString()
+	if err := tags.LegalName(chkname); err != nil { //TODO: newUserError
+		log.Println("[ERR]", err)
 		return nil, err
 	}
 
-	chkname := name.GoString()
-	if err := tags.LegalName(chkname); err != nil {
-		return nil, err
-	}
-	if afterResponse.HasVarargs() || afterResponse.HasKwargs() || afterResponse.NumParams() != 1 {
-		return nil, fmt.Errorf("after_response for check %s must have only one param: ctx", name.String())
-	}
-	if pname, _ := afterResponse.Param(0); pname != "ctx" {
-		return nil, fmt.Errorf("after_response for check %s must have only one param: ctx", name.String())
+	if lot.beforeRequest != nil {
+		if lot.beforeRequest.HasVarargs() || lot.beforeRequest.HasKwargs() || lot.beforeRequest.NumParams() != 1 {
+			err := fmt.Errorf("before_request for check %s must have only one param: ctx", lot.name.String()) //TODO: newUserError
+			log.Println("[ERR]", err)
+			return nil, err
+		}
+		if pname, _ := lot.beforeRequest.Param(0); pname != "ctx" {
+			err := fmt.Errorf("before_request for check %s must have only one param: ctx", lot.name.String()) //TODO: newUserError
+			log.Println("[ERR]", err)
+			return nil, err
+		}
 	}
 
-	if state0 == nil {
-		state0 = &starlark.Dict{}
+	if lot.afterResponse != nil {
+		if lot.afterResponse.HasVarargs() || lot.afterResponse.HasKwargs() || lot.afterResponse.NumParams() != 1 {
+			err := fmt.Errorf("after_response for check %s must have only one param: ctx", lot.name.String()) //TODO: newUserError
+			log.Println("[ERR]", err)
+			return nil, err
+		}
+		if pname, _ := lot.afterResponse.Param(0); pname != "ctx" {
+			err := fmt.Errorf("after_response for check %s must have only one param: ctx", lot.name.String()) //TODO: newUserError
+			log.Println("[ERR]", err)
+			return nil, err
+		}
 	}
-	if err := ensureStateDict(chkname, state0); err != nil {
+
+	state0Unset := lot.state0 == nil
+	if state0Unset {
+		lot.state0 = &starlark.Dict{}
+	}
+	if err := ensureStateDict(chkname, lot.state0); err != nil {
+		log.Println("[ERR]", err)
 		return nil, err
 	}
-	if err := starlarkvalue.ProtoCompatible(state0); err != nil {
+	if err := starlarkvalue.ProtoCompatible(lot.state0); err != nil {
+		log.Println("[ERR]", err)
 		return nil, err
 	}
-	state0.Freeze()
+	lot.state0.Freeze()
+
+	// verify all
+
+	if lot.beforeRequest != nil && lot.afterResponse != nil {
+		err := fmt.Errorf("check %s must have only one of before_request, after_response", lot.name.String()) //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+	if lot.beforeRequest == nil && lot.afterResponse == nil {
+		err := fmt.Errorf("check %s must have one of before_request, after_response", lot.name.String()) //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+
+	if lot.beforeRequest != nil && !state0Unset {
+		err := fmt.Errorf("unused state for check %s", lot.name.String()) //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
+	}
+
+	// assemble
+
 	chk := &check{
-		afterResponse: afterResponse,
-		tags:          taglist.GoStringsMap(),
-		state0:        state0,
+		beforeRequest: lot.beforeRequest,
+		afterResponse: lot.afterResponse,
+		tags:          lot.taglist.GoStringsMap(),
+		state0:        lot.state0,
 	}
 	if err := chk.reset(chkname); err != nil {
+		log.Println("[ERR]", err)
 		return nil, err
 	}
 
 	if _, ok := rt.checks[chkname]; ok {
-		return nil, fmt.Errorf("a check named %s already exists", name.String())
+		err := fmt.Errorf("a check named %s already exists", lot.name.String()) //TODO: newUserError
+		log.Println("[ERR]", err)
+		return nil, err
 	}
 	rt.checks[chkname] = chk
 	rt.checksNames = append(rt.checksNames, chkname)
-	log.Printf("[NFO] registered %s: %+v", b.Name(), chk)
+	log.Printf("[NFO] registered %s: %q", b.Name(), chkname)
 
 	return starlark.None, nil
 }

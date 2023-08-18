@@ -153,12 +153,13 @@ func (rt *Runtime) loadCfg(starfile string) (err error) {
 	}
 
 	log.Printf("[NFO] frozen envs: %d", len(rt.envRead))
-	for name, value := range rt.envRead {
+	_ = rt.forEachEnvRead(func(name string, value string) error {
 		log.Printf("[NFO] froze env %q: %+v", name, value)
-	}
+		return nil
+	})
 
 	log.Printf("[NFO] checks defined: %d", len(rt.checks))
-	_ = rt.forEachCheck(func(name string, chk *check) error {
+	_ = rt.forEachOfAnyCheck(func(name string, chk *check) error {
 		log.Printf("[NFO] defined check %q: %+v", name, chk)
 		return nil
 	})

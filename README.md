@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.18.3 linux amd64
+monkey M.m.p go1.20.7 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -135,14 +135,58 @@ monkey.shell(
     reset = """
 echo ${BLA:-42}
 BLA=$(( ${BLA:-42} + 1 ))
-echo Resetting state...
+echo Resetting System Under Test...
     """,
 )
+
+## Add headers to some of the requests
+
+def add_special_headers(ctx):
+    """Shows how to modify an HTTP request before it is sent"""
+    #before_request: lambda (req: CallRequestRaw.Input): pass
+
+    # headers = dict([(kv.key,kv.values) for kv in req.headers])
+    # headers['x-special'] = ['values!']
+    # req.headers = headers
+    # return req
+
+    # req = req.http_request()
+    # if req == None:
+    #     print("`req` isn't an HTTP request")
+    #     return
+    # my_header = "X-Special"
+    # assert that(dict([(pair.key, pair.values) for pair in req.headers])).does_not_contain_key(my_header)
+    # req.headers.append(my_header, ["value!"])
+    # print("Added some headers!")
+
+    req = ctx.request
+    if type(req) != "http_request":
+        print("`ctx.request` isn't an HTTP request! It's a {}", type(req))
+        return
+
+    my_header = "X-Special"
+    assert that(dict([(pair.key, pair.values) for pair in req.headers])).does_not_contain_key(my_header)
+    req.headers.append(my_header, "value!")
+    print("Added an extra header: {my_header}", my_header = my_header)
+
+monkey.check(
+    name = "adds_special_headers",
+    before_request = add_special_headers,
+    tags = ["special_headers"],
+)
+# just a check like others
+#   no special treatment
+# except for un-frozen ctx.request
+
+# maybe place potential after_request + before_response in code
+
+# no methods, maybe some lazy doing
 
 ## Ensure some general property
 
 def ensure_lowish_response_time(ms):
     def responds_in_a_timely_manner(ctx):
+        assert that(ctx.response).is_of_type("http_response")
         assert that(ctx.response.elapsed_ms).is_at_most(ms)
 
     return responds_in_a_timely_manner
@@ -157,6 +201,8 @@ monkey.check(
 
 def stateful_model_of_posts(ctx):
     """Properties on posts. State collects posts returned by API."""
+    if type(ctx.request) != "http_request":
+        return
 
     # NOTE: response has already been decoded & validated for us.
 
