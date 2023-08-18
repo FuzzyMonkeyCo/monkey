@@ -36,24 +36,19 @@ type Interface interface { // TODO: initers.Initer
 	// ExecStop executes the cleanup phase of the System Under Test
 	ExecStop(context.Context, progresser.Shower, bool, map[string]string) error
 
-	// TidyOutput filter maps over each line
-	TidyOutput([][]byte) TidiedOutput
-
 	// Terminate cleans up after a resetter.Interface implementation instance
 	Terminate(context.Context, progresser.Shower, map[string]string) error
 }
-
-type TidiedOutput [][]byte
 
 var _ error = (*Error)(nil)
 
 // Error describes a resetter error
 type Error struct {
-	bt TidiedOutput
+	bt [][]byte
 }
 
 // NewError returns a new empty resetter.Error
-func NewError(bt TidiedOutput) *Error {
+func NewError(bt [][]byte) *Error {
 	return &Error{
 		bt: bt,
 	}

@@ -121,12 +121,6 @@ func (s *Resetter) ExecStop(ctx context.Context, shower progresser.Shower, only 
 	return s.exec(ctx, shower, envRead, cmdStop)
 }
 
-// TidyOutput filter maps over each line
-func (s *Resetter) TidyOutput(stdeither [][]byte) resetter.TidiedOutput {
-	// for
-	return stdeither
-}
-
 // Terminate cleans up after a resetter.Interface implementation instance
 func (s *Resetter) Terminate(ctx context.Context, shower progresser.Shower, envRead map[string]string) (err error) {
 	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
