@@ -53,9 +53,9 @@ func New(kwargs []starlark.Tuple) (resetter.Interface, error) {
 		name:     name.GoString(),
 		provides: provides.GoStrings(),
 	}
-	s.Start = start.GoString()
-	s.Rst = reset.GoString()
-	s.Stop = stop.GoString()
+	s.Start = strings.TrimSpace(start.GoString())
+	s.Rst = strings.TrimSpace(reset.GoString())
+	s.Stop = strings.TrimSpace(stop.GoString())
 	return s, nil
 }
 
@@ -123,7 +123,7 @@ func (s *Resetter) ExecStop(ctx context.Context, shower progresser.Shower, only 
 
 // Terminate cleans up after a resetter.Interface implementation instance
 func (s *Resetter) Terminate(ctx context.Context, shower progresser.Shower, envRead map[string]string) (err error) {
-	if hasStop := strings.TrimSpace(s.Stop) != ""; hasStop {
+	if hasStop := s.Stop != ""; hasStop {
 		if err = s.ExecStop(ctx, shower, true, envRead); err != nil {
 			log.Println("[ERR]", err)
 			return
@@ -152,9 +152,9 @@ func (cmd shellCmd) String() string {
 
 func (s *Resetter) commands() (cmds []shellCmd, err error) {
 	var (
-		hasStart = "" != strings.TrimSpace(s.Start)
-		hasReset = "" != strings.TrimSpace(s.Rst)
-		hasStop  = "" != strings.TrimSpace(s.Stop)
+		hasStart = "" != s.Start
+		hasReset = "" != s.Rst
+		hasStop  = "" != s.Stop
 	)
 	switch {
 	case !hasStart && hasReset && !hasStop:
