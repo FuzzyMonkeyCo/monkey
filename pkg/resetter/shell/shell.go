@@ -20,7 +20,6 @@ import (
 const Name = "shell"
 
 // TODO:{start,reset,strop}_file a la Bazel
-// write files to /tmp once + chmodx
 
 const (
 	shell = "/bin/bash" // TODO: use mentioned shell
@@ -93,7 +92,7 @@ func (s *Resetter) ExecStart(ctx context.Context, shower progresser.Shower, only
 // ExecReset resets the System Under Test to a state similar to a post-ExecStart state
 func (s *Resetter) ExecReset(ctx context.Context, shower progresser.Shower, only bool, envRead map[string]string) error {
 	if only {
-		// Makes $ monkey exec reset run as if in between tests
+		// Makes `monkey exec reset` run as if in between tests
 		s.isNotFirstRun = true
 	}
 

@@ -28,6 +28,84 @@ const (
 	comUnexpected             = comPrefix + "unexpected:"
 )
 
+func (s *Resetter) signal(verb, param string) {
+	io.WriteString(s.stdin, verb)
+	io.WriteString(s.stdin, param)
+	io.WriteString(s.stdin, "\n")
+}
+
+func writeMainScript(name string, paths []string) (err error) {
+	var script *os.File
+	if script, err = os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
+		return
+	}
+	defer script.Close()
+
+	fmt.Fprintln(script, `#!`+shell+` -ux
+
+set -o pipefail
+
+trap 'echo Shell instance exiting >&2' EXIT
+trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
+
+while read -r x; do
+	case "$x" in
+	'`+comExec+`'*) x=${x:9} ;;
+	'`+comExit+`') exit 0 ;;
+	*) echo "`+comUnexpected+`$x" && exit 42 ;;
+	esac
+
+	if ! script=$(cat "$x"); then
+		# File was deleted
+		break
+	fi
+
+	if [[ -z "$script" ]]; then
+		# No new input yet
+		sleep 0.1
+		continue
+	fi
+
+	source "$x"
+	echo "`+comExitcode+`$?"
+done
+`)
+	return
+}
+
+func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (err error) {
+	var script *os.File
+	if script, err = os.OpenFile(scriptFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
+		return
+	}
+	defer script.Close()
+
+	fmt.Fprintln(script, "#!"+shell)
+	fmt.Fprintln(script)
+	for k, v := range envRead {
+		// -r     Make  names  readonly.   These names cannot then be assigned values by subsequent
+		//        assignment statements or unset.
+		fmt.Fprintf(script, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
+	}
+	fmt.Fprintln(script)
+	fmt.Fprintln(script, "set -o errexit")
+	fmt.Fprintln(script, "set -o errtrace")
+	fmt.Fprintln(script, "set -o nounset")
+	fmt.Fprintln(script, "set -o pipefail")
+	fmt.Fprintln(script, "set -o xtrace")
+	fmt.Fprintln(script)
+	fmt.Fprintf(script, "# User script for %s\n", cmdName)
+	fmt.Fprintln(script)
+	fmt.Fprintln(script, code)
+	fmt.Fprintln(script)
+	fmt.Fprintln(script, "set +o xtrace")
+	fmt.Fprintln(script, "set +o pipefail")
+	fmt.Fprintln(script, "set +o nounset")
+	fmt.Fprintln(script, "set +o errtrace")
+	fmt.Fprintln(script, "set +o errexit")
+	return
+}
+
 func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead map[string]string, cmds ...shellCmd) (err error) {
 	if len(cmds) == 0 {
 		err = errors.New("no usable script")
@@ -68,7 +146,6 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 		}
 		s.stdin = stdin
 
-		// s.rcoms = &rcoms{errcodes: make(chan uint8)}
 		s.rcoms = make(chan uint8)
 		coms := newlinesWriter(func(data []byte) {
 			if n := len(data); n > 0 {
@@ -146,87 +223,8 @@ func (s *Resetter) exec(ctx context.Context, shower progresser.Shower, envRead m
 	return
 }
 
-func writeMainScript(name string, paths []string) (err error) {
-	var script *os.File
-	if script, err = os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
-		return
-	}
-	defer script.Close()
-
-	fmt.Fprintln(script, `#!`+shell+` -ux
-
-set -o pipefail
-
-trap 'echo Shell instance exiting >&2' EXIT
-trap 'rm -f "`+strings.Join(append(paths, name), `" "`)+`"' EXIT
-
-while read -r x; do
-	case "$x" in
-	'`+comExec+`'*) x=${x:9} ;;
-	'`+comExit+`') exit 0 ;;
-	*) echo "`+comUnexpected+`$x" && exit 42 ;;
-	esac
-
-	if ! script=$(cat "$x"); then
-		# File was deleted
-		break
-	fi
-
-	if [[ -z "$script" ]]; then
-		# No new input yet
-		sleep 0.1
-		continue
-	fi
-
-	source "$x"
-	echo "`+comExitcode+`$?"
-done
-`)
-	return
-}
-
-func writeScript(scriptFile, cmdName, code string, envRead map[string]string) (err error) {
-	var script *os.File
-	if script, err = os.OpenFile(scriptFile, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0740); err != nil {
-		return
-	}
-	defer script.Close()
-
-	fmt.Fprintln(script, "#!"+shell)
-	fmt.Fprintln(script)
-	for k, v := range envRead {
-		// -r     Make  names  readonly.   These names cannot then be assigned values by subsequent
-		//        assignment statements or unset.
-		fmt.Fprintf(script, "declare -p %s >/dev/null 2>&1 || declare -r %s=%s\n", k, k, v)
-	}
-	fmt.Fprintln(script)
-	fmt.Fprintln(script, "set -o errexit")
-	fmt.Fprintln(script, "set -o errtrace")
-	fmt.Fprintln(script, "set -o nounset")
-	fmt.Fprintln(script, "set -o pipefail")
-	fmt.Fprintln(script, "set -o xtrace")
-	fmt.Fprintln(script)
-	fmt.Fprintf(script, "# User script for %s\n", cmdName)
-	fmt.Fprintln(script)
-	fmt.Fprintln(script, code)
-	fmt.Fprintln(script)
-	fmt.Fprintln(script, "set +o xtrace")
-	fmt.Fprintln(script, "set +o pipefail")
-	fmt.Fprintln(script, "set +o nounset")
-	fmt.Fprintln(script, "set +o errtrace")
-	fmt.Fprintln(script, "set +o errexit")
-	return
-}
-
-func (s *Resetter) signal(verb, param string) {
-	io.WriteString(s.stdin, verb)
-	io.WriteString(s.stdin, param)
-	io.WriteString(s.stdin, "\n")
-}
-
 func (s *Resetter) execEach(ctx context.Context, cmd shellCmd) (err error) {
 	start := time.Now()
-
 	s.signal(comExec, s.scriptsPaths[cmd])
 	log.Println("[DBG] sent processing signal to shell singleton:", s.scriptsPaths[cmd])
 
