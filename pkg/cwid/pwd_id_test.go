@@ -12,9 +12,8 @@ import (
 func filesContain(t *testing.T, pattern string) {
 	t.Helper()
 
-	require.Contains(t, EnvFile(), pattern)
 	require.Contains(t, LogFile(), pattern)
-	require.Contains(t, ScriptFile(), pattern)
+	require.Contains(t, Prefixed(), pattern)
 }
 
 func TestPwdID(t *testing.T) {
@@ -35,13 +34,12 @@ func TestPwdID(t *testing.T) {
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
 	filesContain(t, "_12404825836092798244_")
-	filesContain(t, "_00000000000000000001.")
+	filesContain(t, "_00000000000000000001_")
 
 	// PwdID changes with offset
 
 	func(filename string) {
-
-		newfilename := strings.Replace(filename, "_00000000000000000001.", "_00000000000000000002.", -1)
+		newfilename := strings.ReplaceAll(filename, "_00000000000000000001_", "_00000000000000000002_")
 		err := os.WriteFile(newfilename, nil, 0644)
 		require.NoError(t, err)
 		defer os.Remove(newfilename)
@@ -51,8 +49,7 @@ func TestPwdID(t *testing.T) {
 		require.NoError(t, err)
 		filesContain(t, ".monkeh_")
 		filesContain(t, "_12404825836092798244_")
-		filesContain(t, "_00000000000000000002.")
-
+		filesContain(t, "_00000000000000000002")
 	}(LogFile())
 
 	// PwdID changes with starfile
@@ -62,7 +59,7 @@ func TestPwdID(t *testing.T) {
 	require.NoError(t, err)
 	filesContain(t, ".monkeh_")
 	filesContain(t, "_2078280350767222314_")
-	filesContain(t, "_00000000000000000001.")
+	filesContain(t, "_00000000000000000001")
 
 	// No symlinks allowed
 	func() {

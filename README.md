@@ -106,7 +106,7 @@ OpenAPIv3(
 # Invariants of our APIs expressed in a Python-like language
 
 assert that(monkey.env("TESTING_WHAT", "demo")).is_equal_to("demo")
-SPEC = "pkg/modeler/openapiv3/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
+SPEC = "pkg/runtime/testdata/jsonplaceholder.typicode.comv1.0.0_openapiv3.0.1_spec.yml"
 print("Using {}.".format(SPEC))
 
 monkey.openapi3(

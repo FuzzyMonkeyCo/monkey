@@ -15,14 +15,11 @@ const pwdIDDigits = 20
 
 var pwdID string
 
-// EnvFile points to a usable regular file after a call to MakePwdID()
-func EnvFile() string { return pwdID + ".env" }
-
 // LogFile points to a usable regular file after a call to MakePwdID()
-func LogFile() string { return pwdID + ".log" }
+func LogFile() string { return Prefixed() + ".log" }
 
-// ScriptFile points to a usable regular file after a call to MakePwdID()
-func ScriptFile() string { return pwdID + ".script" }
+// Prefixed points to a usable regular file prefix after a call to MakePwdID()
+func Prefixed() string { return pwdID + "_" }
 
 // MakePwdID looks for a usable temporary path for var run logfiles
 func MakePwdID(name, starfile string, offset uint64) (err error) {
@@ -78,7 +75,7 @@ func MakePwdID(name, starfile string, offset uint64) (err error) {
 
 func findIDSlot(prefix string, offset uint64) (slot string, err error) {
 	prefixPattern := prefix + "_"
-	pattern := prefixPattern + strings.Repeat("?", pwdIDDigits) + ".*"
+	pattern := prefixPattern + strings.Repeat("?", pwdIDDigits) + "_*"
 	var paths []string
 	if paths, err = filepath.Glob(pattern); err != nil {
 		return

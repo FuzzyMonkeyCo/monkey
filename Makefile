@@ -52,6 +52,9 @@ test: all
 	./$(EXE) exec repl <<<'assert that("this").is_not_equal_to("that")'
 	./$(EXE) exec repl <<<'x = 1.0; print(str(x)); print(str(int(x)))'
 	! ./$(EXE) exec repl <<<'assert that(42).is_not_equal_to(42)'
+	[[ 1 = "$$(./$(EXE) exec start 2>&1 | wc -l)" ]]
+	[[ 6 = "$$(./$(EXE) exec reset 2>&1 | wc -l)" ]]
+	[[ 1 = "$$(./$(EXE) exec stop 2>&1 | wc -l)" ]]
 	richgo test -race -covermode=atomic ./...
 
 ci:

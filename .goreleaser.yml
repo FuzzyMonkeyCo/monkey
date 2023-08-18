@@ -22,25 +22,17 @@ builds:
     -X github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm.grpcHost={{.Env.GRPCHOST}}
 
 archives:
-- replacements:
-    # https://en.wikipedia.org/wiki/Uname
-    # uname -m compatible.
-    386: i386
-    amd64: x86_64
-    # uname -s compatible.
-    # arm64: aarch64
-    darwin: Darwin
-    dragonfly: DragonFly
-    freebsd: FreeBSD
-    linux: Linux
-    netbsd: NetBSD
-    openbsd: OpenBSD
-    windows: Windows
-  format_overrides:
+- format_overrides:
   - goos: windows
     format: zip
-# name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}{{if .Arm}}v{{.Arm}}{{end}}'
-  name_template: '{{.ProjectName}}-{{.Os}}-{{.Arch}}'
+    # uname -m + uname -s compatible
+    # TODO: arm64: aarch64
+  name_template: >-
+    {{ .ProjectName }}-
+    {{- title .Os }}-
+    {{- if eq .Arch "amd64" }}x86_64
+    {{- else if eq .Arch "386" }}i386
+    {{- else }}{{ .Arch }}{{ end }}
   files:
   - LICENSE
   - README.md

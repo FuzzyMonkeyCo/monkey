@@ -18,13 +18,9 @@ import (
 )
 
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64, maxDuration time.Duration) error {
-	showf := func(format string, s ...interface{}) {
-		rt.progress.Printf(format, s...)
-	}
-
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
 	mdl := rt.models[msg.GetModelName()]
-	cllr := mdl.NewCaller(ctx, msg, showf)
+	cllr := mdl.NewCaller(ctx, msg, rt.progress)
 
 	input := cllr.RequestProto()
 	log.Printf("[NFO] call input: %.999v", input)

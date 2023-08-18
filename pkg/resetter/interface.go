@@ -1,14 +1,15 @@
 package resetter
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"strings"
 
 	"go.starlark.net/starlark"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 )
 
 // Maker types the New func that instanciates new resetters
@@ -28,29 +29,26 @@ type Interface interface { // TODO: initers.Initer
 	// ToProto marshals a resetter.Interface implementation into a *fm.Clt_Fuzz_Resetter
 	ToProto() *fm.Clt_Fuzz_Resetter
 
-	// Env passes envs read during startup
-	Env(read map[string]string)
-
 	// ExecStart executes the setup phase of the System Under Test
-	ExecStart(context.Context, io.Writer, io.Writer, bool) error
+	ExecStart(context.Context, progresser.Shower, bool, map[string]string) error
 	// ExecReset resets the System Under Test to a state similar to a post-ExecStart state
-	ExecReset(context.Context, io.Writer, io.Writer, bool) error
+	ExecReset(context.Context, progresser.Shower, bool, map[string]string) error
 	// ExecStop executes the cleanup phase of the System Under Test
-	ExecStop(context.Context, io.Writer, io.Writer, bool) error
+	ExecStop(context.Context, progresser.Shower, bool, map[string]string) error
 
 	// Terminate cleans up after a resetter.Interface implementation instance
-	Terminate(context.Context, io.Writer, io.Writer) error
+	Terminate(context.Context, progresser.Shower, map[string]string) error
 }
 
 var _ error = (*Error)(nil)
 
 // Error describes a resetter error
 type Error struct {
-	bt []string
+	bt [][]byte
 }
 
 // NewError returns a new empty resetter.Error
-func NewError(bt []string) *Error {
+func NewError(bt [][]byte) *Error {
 	return &Error{
 		bt: bt,
 	}
@@ -58,13 +56,32 @@ func NewError(bt []string) *Error {
 
 // Reason describes the error on multiple lines
 func (re *Error) Reason() []string {
-	return re.bt
+	bt := make([]string, 0, len(re.bt))
+	for _, line := range re.bt {
+		bt = append(bt, string(line))
+	}
+	return bt
+}
+
+func rev(s string) string {
+	n := len(s)
+	runes := make([]rune /*n,*/, n)
+	for _, rune := range s {
+		n--
+		runes[n] = rune
+	}
+	return string(runes[n:])
 }
 
 // Error returns the error string
 func (re *Error) Error() string {
-	return fmt.Sprintf(
-		"\nscript failed during Reset:\n%s",
-		strings.Join(re.bt, "\n"),
-	)
+	e := bytes.Join(re.bt, []byte(";"))
+	ee := rev(fmt.Sprintf("%.280s", rev(string(e))))
+
+	var msg strings.Builder
+	if len(e) != len(ee) {
+		msg.WriteString("...")
+	}
+	msg.WriteString(ee)
+	return msg.String()
 }

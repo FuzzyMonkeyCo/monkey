@@ -48,9 +48,8 @@ func (rt *Runtime) Fuzz(
 	}
 	defer rt.client.Close()
 
-	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(selectedResetters))
+	protoResetters := make([]*fm.Clt_Fuzz_Resetter, 0, len(rt.selectedResetters))
 	_ = rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		rsttr.Env(rt.envRead)
 		protoResetters = append(protoResetters, rsttr.ToProto())
 		return nil
 	})
@@ -102,8 +101,8 @@ func (rt *Runtime) Fuzz(
 					ctx = metadata.AppendToOutgoingContext(ctx, "token", fuzzRep.GetToken())
 				}
 				// Keep in this order (suggested last) for pastseed
-				log.Printf("[ERR] (not an error) %s=%s (seed)", PastSeedMagic, fuzzRep.GetSeed())
-				log.Printf("[ERR] (not an error) %s=%s (suggested)", PastSeedMagic, suggestedSeed)
+				log.Printf("[ERR] (not an error) %s %s (seed)", PastSeedMagic, fuzzRep.GetSeed())
+				log.Printf("[ERR] (not an error) %s %s (suggested)", PastSeedMagic, suggestedSeed)
 				rt.progress.Printf("  --seed=%s", fuzzRep.GetSeed())
 				return
 			}
@@ -125,13 +124,14 @@ func (rt *Runtime) Fuzz(
 					return
 				}
 			case *fm.Srv_Reset_:
-				if err = rt.reset(ctx); err != nil {
+				// Don't end fuzz loop due to SUT error, only on transport errors.
+				if _, err = rt.reset(ctx); err != nil {
 					return
 				}
 			case *fm.Srv_FuzzingResult_:
 				result = msg.FuzzingResult
 				suggestedSeed = result.GetSuggestedSeed()
-				log.Printf("[ERR] (not an error) %s=%s (suggested)", PastSeedMagic, suggestedSeed)
+				log.Printf("[ERR] (not an error) %s %s (suggested)", PastSeedMagic, suggestedSeed)
 				return
 			default: // unreachable
 				err = fmt.Errorf("unhandled srv msg %T: %+v", msg, srv)

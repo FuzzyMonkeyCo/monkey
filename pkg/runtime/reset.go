@@ -3,7 +3,6 @@ package runtime
 import (
 	"context"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -23,7 +22,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 
 	log.Println("[NFO] terminating resetter")
 	if errR := rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		return rsttr.Terminate(ctx, os.Stdout, os.Stderr)
+		return rsttr.Terminate(ctx, &osShower{}, rt.envRead)
 	}); errR != nil {
 		err = errR
 		// Keep going
@@ -33,7 +32,7 @@ func (rt *Runtime) Cleanup(ctx context.Context) (err error) {
 	return
 }
 
-func (rt *Runtime) reset(ctx context.Context) error {
+func (rt *Runtime) reset(ctx context.Context) (errL, errT error) {
 	const showp = "Resetting system under test..."
 	rt.progress.Printf(showp + "\n")
 
@@ -41,18 +40,19 @@ func (rt *Runtime) reset(ctx context.Context) error {
 		return &fm.Clt{Msg: &fm.Clt_ResetProgress_{ResetProgress: msg}}
 	}
 
-	if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+	if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 		Status: fm.Clt_ResetProgress_started,
 	})); errT != nil {
 		log.Println("[ERR]", errT)
-		return errT
+		return
 	}
 
 	start := time.Now()
-	errL := rt.runReset(ctx)
+	errL = rt.runReset(ctx)
 	elapsed := time.Since(start).Nanoseconds()
 	if errL != nil {
-		log.Println("[ERR] ExecReset:", errL)
+		log.Println("[ERR] exec'd:", errL)
+
 		var reason []string
 		if resetErr, ok := errL.(*resetter.Error); ok {
 			reason = resetErr.Reason()
@@ -60,29 +60,33 @@ func (rt *Runtime) reset(ctx context.Context) error {
 			reason = strings.Split(errL.Error(), "\n")
 		}
 
-		if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+		if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 			Status:    fm.Clt_ResetProgress_failed,
 			ElapsedNs: elapsed,
 			Reason:    reason,
 		})); errT != nil {
 			log.Println("[ERR]", errT)
-			return errT
+			return
 		}
 
-		rt.progress.Errorf(showp + " failed!\n")
-		return nil // Don't end fuzz loop due to SUT error
+		if strings.Contains(errL.Error(), context.Canceled.Error()) {
+			rt.progress.Errorf(showp + " failed! (timed out)\n")
+		} else {
+			rt.progress.Errorf(showp + " failed!\n")
+		}
+		return
 	}
 
-	if errT := rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
+	if errT = rt.client.Send(ctx, rp(&fm.Clt_ResetProgress{
 		Status:    fm.Clt_ResetProgress_ended,
 		ElapsedNs: elapsed,
 	})); errT != nil {
 		log.Println("[ERR]", errT)
-		return errT
+		return
 	}
 
 	rt.progress.Printf(showp + " done.\n")
-	return nil
+	return
 }
 
 func (rt *Runtime) runReset(ctx context.Context) (err error) {
@@ -98,8 +102,6 @@ func (rt *Runtime) runReset(ctx context.Context) (err error) {
 	log.Println("[NFO] re-initialized model state")
 
 	return rt.forEachSelectedResetter(ctx, func(name string, rsttr resetter.Interface) error {
-		stdout := newProgressWriter(rt.progress.Printf)
-		stderr := newProgressWriter(rt.progress.Errorf)
-		return rsttr.ExecReset(ctx, stdout, stderr, false)
+		return rsttr.ExecReset(ctx, rt.progress, false, rt.envRead)
 	})
 }

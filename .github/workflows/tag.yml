@@ -20,7 +20,7 @@ jobs:
       with:
         command: version
         github_token: ${{ secrets.github_token }}
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: lint
       uses: FuzzyMonkeyCo/setup-monkey@v1
       with:
@@ -39,7 +39,7 @@ jobs:
       with:
         command: version
         github_token: ${{ secrets.github_token }}
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: lint
       uses: FuzzyMonkeyCo/setup-monkey@v1
       with:
@@ -58,7 +58,7 @@ jobs:
       with:
         command: version
         github_token: ${{ secrets.github_token }}
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v3
     - name: lint
       uses: FuzzyMonkeyCo/setup-monkey@v1
       with:

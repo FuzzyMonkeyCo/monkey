@@ -20,6 +20,7 @@ import (
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/modeler"
+	"github.com/FuzzyMonkeyCo/monkey/pkg/progresser"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/runtime/ctxvalues"
 )
 
@@ -37,7 +38,7 @@ var (
 )
 
 type tCapHTTP struct {
-	showf               modeler.ShowFunc
+	shower              progresser.Shower
 	buildHTTPRequestErr error
 	doErr               error
 
@@ -83,9 +84,9 @@ type tCapHTTP struct {
 }
 
 // NewCaller creates a single-use modeler.Caller from a modeler.Interface instance.
-func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, showf modeler.ShowFunc) modeler.Caller {
+func (m *oa3) NewCaller(ctx context.Context, msg *fm.Srv_Call, shower progresser.Shower) modeler.Caller {
 	m.tcap = &tCapHTTP{
-		showf:    showf,
+		shower:   shower,
 		endpoint: m.vald.Spec.Endpoints[msg.GetEID()].GetJson(),
 	}
 	m.tcap.httpReq, m.tcap.buildHTTPRequestErr = m.buildHTTPRequest(ctx, msg)
@@ -230,7 +231,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		req = []byte(err.Error())
 	}
 	for _, line := range bytes.Split(req, br) {
-		c.showf("> %s", line)
+		c.shower.Printf("> %s\n", line)
 		break
 	}
 
@@ -246,7 +247,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		}
 	}
 	for _, line := range bytes.Split(rep, br) {
-		c.showf("< %s", line)
+		c.shower.Printf("< %s\n", line)
 		break
 	}
 	return
