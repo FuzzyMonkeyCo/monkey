@@ -6,7 +6,7 @@ ARG PREBUILT
 # Fetched 2022/04/04
 FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:82d1e9d7ed48a7523bdebc18cf6290bdb97b82302a8a9c27d4fe885949ea94d1 AS alpine
 FROM --platform=$BUILDPLATFORM docker.io/nilslice/protolock@sha256:baf9bca8b7a28b945c557f36d562a34cf7ca85a63f6ba8cdadbe333e12ccea51 AS protolock
-FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:660f138b4477001d65324a51fa158c1b868651b44e43f0953bf062e9f38b72f3 AS golang
+FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:b490ae1f0ece153648dd3c5d25be59a63f966b5f9e1311245c947de4506981aa AS golang
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:841e919e53acd9190197938b0b705158593dd3be74715b2b1be22716bd9bffe1 AS goreleaser
 # On this image:
 #  go env GOCACHE    => /root/.cache/go-build
