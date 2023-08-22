@@ -4,7 +4,7 @@
 ARG PREBUILT
 
 # Fetched 2022/04/04
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:82d1e9d7ed48a7523bdebc18cf6290bdb97b82302a8a9c27d4fe885949ea94d1 AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:7144f7bab3d4c2648d7e59409f15ec52a18006a128c733fcff20d3a4a54ba44a AS alpine
 FROM --platform=$BUILDPLATFORM docker.io/nilslice/protolock@sha256:baf9bca8b7a28b945c557f36d562a34cf7ca85a63f6ba8cdadbe333e12ccea51 AS protolock
 FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:b490ae1f0ece153648dd3c5d25be59a63f966b5f9e1311245c947de4506981aa AS golang
 FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:841e919e53acd9190197938b0b705158593dd3be74715b2b1be22716bd9bffe1 AS goreleaser
