@@ -84,11 +84,6 @@ func (m *ctxModule) Attr(name string) (starlark.Value, error) {
 	}
 }
 
-const (
-	ctxHttpRequest  = "http_request"
-	ctxHttpResponse = "http_response"
-)
-
 // ctxRequest represents request data as a Starlark value for user assertions.
 type ctxRequest struct {
 	ty string
@@ -154,20 +149,6 @@ func (m *ctxRequest) Attr(name string) (starlark.Value, error) {
 		return nil, nil // no such method
 	}
 }
-
-// https://pkg.go.dev/net/http#Header
-// type Header
-//         The keys should be in canonical form, as returned by CanonicalHeaderKey.
-//    func (h Header) Add(key, value string)
-//            appends to any existing values associated with key. The key is case insensitive; it is canonicalized by CanonicalHeaderKey
-//    func (h Header) Del(key string)
-//            deletes the values associated with key. The key is case insensitive; it is canonicalized
-//    func (h Header) Get(key string) string
-//            gets the first value associated with the given key. If there are no values associated with the key, Get returns "". It is case insensitive
-//    func (h Header) Set(key, value string)
-//            sets the header entries associated with key to the single element value. It replaces any existing values associated with key. The key is case insensitive
-//    func (h Header) Values(key string) []string
-//            returns all values associated with the given key. It is case insensitive
 
 func headerPairs(protoHeaders []*fm.HeaderPair) (starlark.Value, error) {
 	d := starlark.NewDict(len(protoHeaders)) //fixme: dont make a dict out of repeated HeaderPair.s

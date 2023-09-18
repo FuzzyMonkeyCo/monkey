@@ -60,8 +60,9 @@ def add_special_headers(ctx):
         return
 
     my_header = "X-Special"
-    assert that(dict([(pair.key, pair.values) for pair in req.headers])).does_not_contain_key(my_header)
-    req.headers.append(my_header, "value!")
+    assert that(my_header.title()).is_equal_to(my_header)
+    assert that(dict([(pair.key.title(), pair.values) for pair in req.headers])).does_not_contain_key(my_header)
+    req.headers.set(my_header, "value!")
     print("Added an extra header: {my_header}", my_header = my_header)
 
 monkey.check(
@@ -69,13 +70,6 @@ monkey.check(
     before_request = add_special_headers,
     tags = ["special_headers"],
 )
-# just a check like others
-#   no special treatment
-# except for un-frozen ctx.request
-
-# maybe place potential after_request + before_response in code
-
-# no methods, maybe some lazy doing
 
 ## Ensure some general property
 
