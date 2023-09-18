@@ -22,9 +22,9 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
 	mdl := rt.models[msg.GetModelName()]
-	cllr := mdl.NewCaller(ctx, msg, rt.progress)
+	cllr := mdl.NewCaller(ctx, msg, rt.progress) //creates a Go HTTP req
 
-	input := cllr.RequestProto()
+	input := cllr.RequestProto() //req as protodata
 	log.Printf("[NFO] call input: %.999v", input)
 
 	// Runs check(before_request = ..) sequentially
@@ -36,12 +36,15 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		if newInput, err := chk.tryBeforeRequest(ctx, name, input, print, maxSteps, maxDuration); err != nil {
 			rt.progress.Errorf("Warning(%s): %v", name, err)
 			rt.progress.Printf("Warning: check(name = %q, before_request = ..) failed, skipping it.", name)
+			//turn that err into input.Reason and send that
 		} else if newInput != nil {
 			input = newInput
 		}
 		return nil
 	})
+	//Loop+rewrite req protodata
 
+	//then teach srv about it
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
 		CallRequestRaw: input,
 	}}); errT != nil {
@@ -54,6 +57,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	}
 	ctxer2 := ctxCurry(input.GetInput())
 
+	// Turn req protodata into Go req here
 	cllr.Do(ctx)
 
 	output := cllr.ResponseProto()
