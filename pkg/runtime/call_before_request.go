@@ -8,25 +8,22 @@ import (
 	"go.starlark.net/starlark"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarktruth"
 )
 
 func (chk *check) tryBeforeRequest(
 	ctx context.Context,
 	name string,
-	input *fm.Clt_CallRequestRaw,
+	req *ctxRequest_,
 	print func(string),
 	maxSteps uint64,
 	maxDuration time.Duration,
-) (newInput *fm.Clt_CallRequestRaw, err error) {
+) (err error) {
 	ctxG, cancel := context.WithTimeout(ctx, maxDuration)
 	defer cancel()
 
 	g, ctxG := errgroup.WithContext(ctxG)
 	g.Go(func() (err error) {
-		req := valueFromCallRequestRaw(input)
-
 		th := &starlark.Thread{
 			Name:  name,
 			Load:  loadDisabled,
@@ -56,19 +53,8 @@ func (chk *check) tryBeforeRequest(
 		}
 		// Check passed
 
-		if newInput, err = valueToCallRequestRaw(req); err != nil {
-			log.Println("[ERR]", err)
-		}
 		return
 	})
 	err = g.Wait()
 	return
-}
-
-func valueFromCallRequestRaw(input *fm.Clt_CallRequestRaw) starlark.Value {
-	return starlark.None
-}
-
-func valueToCallRequestRaw(req starlark.Value) (*fm.Clt_CallRequestRaw, error) {
-	return nil, nil
 }

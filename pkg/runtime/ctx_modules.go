@@ -84,11 +84,6 @@ func (m *ctxModule) Attr(name string) (starlark.Value, error) {
 	}
 }
 
-const (
-	ctxHttpRequest  = "http_request"
-	ctxHttpResponse = "http_response"
-)
-
 // ctxRequest represents request data as a Starlark value for user assertions.
 type ctxRequest struct {
 	ty string
