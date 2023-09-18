@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.20.7 linux amd64
+monkey M.m.p go1.21.1 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -174,13 +174,6 @@ monkey.check(
     before_request = add_special_headers,
     tags = ["special_headers"],
 )
-# just a check like others
-#   no special treatment
-# except for un-frozen ctx.request
-
-# maybe place potential after_request + before_response in code
-
-# no methods, maybe some lazy doing
 
 ## Ensure some general property
 
