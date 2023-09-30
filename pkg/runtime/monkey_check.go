@@ -38,11 +38,14 @@ func errStateDict(chkname string, err error) error {
 	return err
 }
 
-func ensureStateDict(chkname string, v starlark.Value) (err error) {
+func ensureStateDict(chkname string, v starlark.Value) error {
 	if _, ok := v.(*starlark.Dict); !ok {
-		err = newUserError("state for check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
+		return newUserError("state for check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
 	}
-	return
+	if err := starlarkvalue.ProtoCompatible(v); err != nil {
+		return newUserError(err.Error())
+	}
+	return nil
 }
 
 func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
@@ -104,10 +107,6 @@ func (rt *Runtime) bCheck(th *starlark.Thread, b *starlark.Builtin, args starlar
 		lot.state0 = &starlark.Dict{}
 	}
 	if err := ensureStateDict(chkname, lot.state0); err != nil {
-		log.Println("[ERR]", err)
-		return nil, err
-	}
-	if err := starlarkvalue.ProtoCompatible(lot.state0); err != nil {
 		log.Println("[ERR]", err)
 		return nil, err
 	}
