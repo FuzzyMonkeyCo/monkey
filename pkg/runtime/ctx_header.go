@@ -20,6 +20,20 @@ type ctxHeader struct {
 	itercount uint32 // number of active iterators (ignored if frozen)
 }
 
+// https://pkg.go.dev/net/http#Header
+// type Header
+//         The keys should be in canonical form, as returned by CanonicalHeaderKey.
+//    func (h Header) Add(key, value string)
+//            appends to any existing values associated with key. The key is case insensitive; it is canonicalized by CanonicalHeaderKey
+//    func (h Header) Del(key string)
+//            deletes the values associated with key. The key is case insensitive; it is canonicalized
+//    func (h Header) Get(key string) string
+//            gets the first value associated with the given key. If there are no values associated with the key, Get returns "". It is case insensitive
+//    func (h Header) Set(key, value string)
+//            sets the header entries associated with key to the single element value. It replaces any existing values associated with key. The key is case insensitive
+//    func (h Header) Values(key string) []string
+//            returns all values associated with the given key. It is case insensitive
+
 func newCtxHeader(protoHeader []*fm.HeaderPair) *ctxHeader {
 	ch := &ctxHeader{
 		header: make(textproto.MIMEHeader, len(protoHeader)),
@@ -46,6 +60,18 @@ func newCtxHeader(protoHeader []*fm.HeaderPair) *ctxHeader {
 	// }
 	// return &ctxHeader{header: h}, nil
 	return ch
+}
+
+func (ch *ctxHeader) IntoProto() []*fm.HeaderPair {
+	hs := make([]*fm.HeaderPair, 0, len(ch.keys))
+	for _, key := range ch.keys {
+		h := &fm.HeaderPair{
+			Key:    key,
+			Values: ch.header.Values(key),
+		}
+		hs = append(hs, h)
+	}
+	return hs
 }
 
 var _ starlark.IterableMapping = (*ctxHeader)(nil)
