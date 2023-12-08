@@ -106,6 +106,7 @@ func (rt *Runtime) modelMakerBuiltin(modelerName string, maker modeler.Maker) bu
 			return
 		}
 		rt.models[modelName] = model
+		log.Printf("[NFO] registered %s: %q", b.Name(), modelName)
 		if len(rt.modelsNames) == 1 { // TODO: support >1 models
 			err = fmt.Errorf("cannot define model %s as another (%s) already exists", modelName, rt.modelsNames[0])
 			log.Println("[ERR]", err)
@@ -146,6 +147,7 @@ func (rt *Runtime) resetterMakerBuiltin(resetterName string, maker resetter.Make
 			return
 		}
 		rt.resetters[rsttrName] = rsttr
+		log.Printf("[NFO] registered %s: %q", b.Name(), rsttrName)
 		rt.resettersNames = append(rt.resettersNames, rsttrName)
 		return
 	}
