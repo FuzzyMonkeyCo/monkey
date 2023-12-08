@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.21.1 linux amd64
+monkey M.m.p go1.21.3 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -165,7 +165,7 @@ def add_special_headers(ctx):
         return
 
     my_header = "X-Special"
-    assert that(my_header.title()).is_true()
+    assert that(my_header.title()).is_equal_to(my_header)
     assert that(dict([(pair.key.title(), pair.values) for pair in req.headers])).does_not_contain_key(my_header)
     req.headers.set(my_header, "value!")
     print("Added an extra header: {my_header}", my_header = my_header)
