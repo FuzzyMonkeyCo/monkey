@@ -39,7 +39,7 @@ jobs:
 
   tagfile-dependabot:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: startsWith(${{ github.event.pull_request.head.ref }}, 'refs/heads/dependabot/')
     permissions:
       contents: write
       pull-requests: write
