@@ -18,8 +18,8 @@ require (
 	github.com/superhawk610/bar v0.0.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20230731234521-9b46791399bf
-	golang.org/x/sync v0.3.0
-	google.golang.org/grpc v1.57.0
+	golang.org/x/sync v0.4.0
+	google.golang.org/grpc v1.60.1
 	google.golang.org/protobuf v1.31.0
 )
 
@@ -41,9 +41,9 @@ require (
 	github.com/superhawk610/terminal v0.1.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	golang.org/x/net v0.13.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230803162519-f966b187b2e5 // indirect
+	golang.org/x/net v0.16.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
