@@ -1,7 +1,6 @@
 name: pr
 
-on:
-  pull_request: {}
+on: pull_request
 
 jobs:
   tagfile:
@@ -36,6 +35,48 @@ jobs:
           echo $(cut -d. -f1 <$prev).$(( $(cut -d. -f2 <$prev) + 1 )).0
           echo $(cut -d. -f1 <$prev).$(cut -d. -f2 <$prev).$(( $(cut -d. -f3 <$prev) + 1 ))
         } | awk '{ printf("%s ", $0) }' | grep -F "$curr"
+
+  tagfile-dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      pull-requests: write
+    steps:
+    - uses: dependabot/fetch-metadata@v1
+      id: metadata
+      with:
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+    - name: Checkout master Tagfile
+      uses: actions/checkout@v3
+      with:
+        ref: master
+        path: ./master-Tagfile
+        sparse-checkout: Tagfile
+        sparse-checkout-cone-mode: false
+    - name: Ensure Tagfile has changes
+      run: |
+        if ! diff -q Tagfile ./master-Tagfile/Tagfile; then
+          cat ./master-Tagfile/Tagfile | awk -F. '/[0-9]+\./{$NF++;print}' OFS=. >Tagfile
+        fi
+    - name: Ensure Tagfile is bumping master Tagfile
+      run: |
+        if ! printf '%s pr\n%s master\n' "$(cat Tagfile)" "$(cat ./master-Tagfile/Tagfile)" | sort -u -V -k1 -r | head -n1 | grep master; then
+          cat ./master-Tagfile/Tagfile | awk -F. '/[0-9]+\./{$NF++;print}' OFS=. >Tagfile
+        fi
+    - name: Maybe push new Tagfile
+    - run: |
+        git add Tagfile
+        if git status -bs Tagfile | grep Tagfile; then
+          git config --global user.name 'Pierre Fenoll'
+          git config --global user.email 'pierrefenoll@gmail.com'
+          git commit -m 'Bump Tagfile'
+          git push
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check-goimports:
     runs-on: ubuntu-latest
