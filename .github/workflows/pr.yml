@@ -68,7 +68,7 @@ jobs:
           cat ./master-Tagfile/Tagfile | awk -F. '/[0-9]+\./{$NF++;print}' OFS=. >Tagfile
         fi
     - name: Maybe push new Tagfile
-    - run: |
+      run: |
         git add Tagfile
         if git status -bs Tagfile | grep Tagfile; then
           git config --global user.name 'Pierre Fenoll'
