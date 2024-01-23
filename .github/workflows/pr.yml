@@ -7,6 +7,13 @@ jobs:
   tagfile:
     runs-on: ubuntu-latest
     steps:
+
+    - run: echo '${{ github.ref }}'
+    - run: echo '${{ github.event.pull_request.head.ref }}'
+    - run: echo "$BLA"
+      env:
+        BLA: ${{ startsWith(github.event.pull_request.head.ref, 'dependabot/') }}
+
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # For $ git tag
@@ -39,7 +46,7 @@ jobs:
 
   tagfile-dependabot:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'dependabot/') }}
     permissions:
       contents: write
       pull-requests: write
@@ -72,9 +79,10 @@ jobs:
       run: |
         git add Tagfile
         if git status -bs Tagfile | grep Tagfile; then
-          git config --global user.name 'Pierre Fenoll'
-          git config --global user.email 'pierrefenoll@gmail.com'
-          git commit -m 'Bump Tagfile'
+          git config --global user.name 'dependabot[bot]'
+          git config --global user.email '49699333+dependabot[bot]@users.noreply.github.com'
+          # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates#allowing-dependabot-to-rebase-and-force-push-over-extra-commits
+          git commit -m '[dependabot skip] Bump Tagfile'
           git push
         fi
       env:
