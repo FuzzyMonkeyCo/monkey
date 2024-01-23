@@ -41,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     permissions:
+      contents: write
       pull-requests: write
     steps:
     - uses: dependabot/fetch-metadata@v1
