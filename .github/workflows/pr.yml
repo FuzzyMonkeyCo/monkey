@@ -72,6 +72,7 @@ jobs:
         fi
     - name: Maybe push new Tagfile
       run: |
+        set -x
         git add Tagfile
         COMMITHASH=$(git rev-parse --short HEAD)
         if git status -bs Tagfile | grep Tagfile; then
