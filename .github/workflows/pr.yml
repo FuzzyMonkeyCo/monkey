@@ -51,6 +51,7 @@ jobs:
         github-token: "${{ secrets.GITHUB_TOKEN }}"
     - uses: actions/checkout@v3
       with:
+        fetch-depth: 0 # For $ git tag
         ref: ${{ github.event.pull_request.head.ref }}
     - name: Checkout master Tagfile
       uses: actions/checkout@v3
@@ -78,10 +79,11 @@ jobs:
           git config --global user.email '49699333+dependabot[bot]@users.noreply.github.com'
           # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates#allowing-dependabot-to-rebase-and-force-push-over-extra-commits
           git commit -m '[dependabot skip] Bump Tagfile'
-          GIT_SEQUENCE_EDITOR="sed -i -re 's/^pick $COMMITHASH/f $COMMITHASH/'" git rebase -i HEAD~$COMMITHASH
-          git push --force
+          GIT_SEQUENCE_EDITOR="sed -i -re 's/^pick $COMMITHASH/f $COMMITHASH/'" git rebase -i HEAD~2
+          git push --force origin "$BRANCH"
         fi
       env:
+        BRANCH: ${{ github.event.pull_request.head.ref }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   check-goimports:
