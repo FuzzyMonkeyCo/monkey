@@ -5,5 +5,5 @@ var states = [...]string{"🙈", "🙉", "🙊", "🐵"}
 const (
 	prefixSucceeded = "●" // ✔ ✓ 🆗 👌 ☑ ✅
 	prefixSkipped   = "○" // ● • ‣ ◦ ⁃ ○ ◯ ⭕ 💮
-	prefixFailed    = "✖" // ⨯ × ✗ x X ☓ ✘
+	prefixFailed    = "×" // ⨯ × ✗ x X ☓ ✘ ✖
 )
