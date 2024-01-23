@@ -7,6 +7,10 @@ jobs:
   tagfile:
     runs-on: ubuntu-latest
     steps:
+
+    - run: echo '${{ github.ref }}'
+    - run: echo '${{ github.event.pull_request.head.ref }}'
+
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # For $ git tag
