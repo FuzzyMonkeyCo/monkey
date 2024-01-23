@@ -12,7 +12,7 @@ jobs:
     - run: echo '${{ github.event.pull_request.head.ref }}'
     - run: echo "$BLA"
       env:
-        BLA: startsWith(${{ github.event.pull_request.head.ref }}, 'dependabot/')
+        BLA: ${{ startsWith(github.event.pull_request.head.ref, 'dependabot/') }}
 
     - uses: actions/checkout@v3
       with:
@@ -46,7 +46,7 @@ jobs:
 
   tagfile-dependabot:
     runs-on: ubuntu-latest
-    if: startsWith(${{ github.event.pull_request.head.ref }}, 'dependabot/')
+    if: ${{ startsWith(github.event.pull_request.head.ref, 'dependabot/') }}
     permissions:
       contents: write
       pull-requests: write
