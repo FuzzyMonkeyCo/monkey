@@ -78,7 +78,7 @@ jobs:
           git config --global user.email '49699333+dependabot[bot]@users.noreply.github.com'
           # https://docs.github.com/en/code-security/dependabot/working-with-dependabot/managing-pull-requests-for-dependency-updates#allowing-dependabot-to-rebase-and-force-push-over-extra-commits
           git commit -m '[dependabot skip] Bump Tagfile'
-          GIT_SEQUENCE_EDITOR="sed -i -re 's/^pick $COMMITHASH/f $COMMITHASH/'" git rebase -i HEAD~2
+          GIT_SEQUENCE_EDITOR="sed -i -re 's/^pick $COMMITHASH/f $COMMITHASH/'" git rebase -i HEAD~$COMMITHASH
           git push --force
         fi
       env:
