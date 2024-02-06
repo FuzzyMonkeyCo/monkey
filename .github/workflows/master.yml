@@ -49,7 +49,7 @@ jobs:
         ./monkey version | grep -F $(cat Tagfile)
         ./monkey --version | grep -F $(cat Tagfile)
 
-    - uses: ncipollo/release-action@v1.13.0
+    - uses: ncipollo/release-action@v1.14.0
       if: github.ref == 'refs/heads/master'
       with:
         artifacts: ./dist/*
