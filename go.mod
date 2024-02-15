@@ -8,7 +8,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
 	github.com/fatih/color v1.15.0
-	github.com/getkin/kin-openapi v0.118.0
+	github.com/getkin/kin-openapi v0.123.0
 	github.com/google/gnostic v0.7.0
 	github.com/google/uuid v1.3.1
 	github.com/hashicorp/logutils v1.0.0
@@ -26,8 +26,8 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.10.0 // indirect
-	github.com/go-openapi/jsonpointer v0.20.0 // indirect
-	github.com/go-openapi/swag v0.22.4 // indirect
+	github.com/go-openapi/jsonpointer v0.20.2 // indirect
+	github.com/go-openapi/swag v0.22.8 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/invopop/yaml v0.2.0 // indirect
@@ -38,7 +38,6 @@ require (
 	github.com/mattn/go-tty v0.0.5 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/superhawk610/terminal v0.1.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
