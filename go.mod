@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pmezard/go-difflib v1.0.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/superhawk610/bar v0.0.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20230731234521-9b46791399bf
