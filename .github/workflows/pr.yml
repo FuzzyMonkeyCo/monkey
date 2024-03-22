@@ -44,7 +44,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-    - uses: dependabot/fetch-metadata@v1
+    - uses: dependabot/fetch-metadata@v2
       id: metadata
       with:
         skip-commit-verification: true
