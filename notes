@@ -1,0 +1,14 @@
+MNK periodical concurrent `nc -v …`
+MNK https://github.com/microsoft/restler-fuzzer/blob/main/docs/user-guide/QuickStart.md
+MNK drop custom auth bearer thing. Use func that can modify headers
+
+MNK: add/rewrite headers and rest of request in before_request()
+Disallow state mutation for now tho
+
+https://pkg.go.dev/net/http#Header
+https://cs.opensource.google/go/go/+/refs/tags/go1.21.1:src/net/http/header.go;l=24
+https://pkg.go.dev/net/textproto#MIMEHeader
+https://pkg.go.dev/go.starlark.net/starlark#Mapping
+https://github.com/google/starlark-go/blob/745481cf39ed/starlark/value.go#L950
+
+https://github.com/FuzzyMonkeyCo/monkey/compare/befreq?expand=1

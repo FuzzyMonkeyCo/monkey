@@ -1,0 +1,10 @@
+12:19:27.590515 reset.go:98: [NFO] re-initialized model state
+12:19:27.590530 reset.go:55: [ERR] ExecReset: no resetter selected
+12:19:27.590546 chans_bidi.go:118: [DBG] sending *fm.Clt_ResetProgress_...
+12:19:27.590644 chans_bidi.go:120: [DBG] sent! (err: <nil>)
+12:19:27.590672 fuzz.go:141: [NFO] handled *fm.Srv_Reset_
+12:19:27.590684 fuzz.go:86: [DBG] receiving msg...
+12:19:27.594708 chans_bidi.go:96: [DBG] received *fm.Srv_FuzzingResult_
+12:19:27.594812 chans_bidi.go:92: [DBG] received err: EOF
+12:19:27.594889 progress.go:61: [DBG] srvprogress: failure:true  total_tests_count:1
+12:19:27.594944 fuzz.go:117: [NFO] handling *fm.Srv_FuzzingResult_
