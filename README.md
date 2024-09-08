@@ -274,3 +274,8 @@ Report bugs [on the project page](https://github.com/FuzzyMonkeyCo/monkey/issues
 ## License
 
 See [LICENSE](./LICENSE)
+
+
+https://github.com/google/fuzzing/blob/master/docs/structure-aware-fuzzing.md#fuzzing-stateful-apis
+
+https://github.com/google/fuzztest
