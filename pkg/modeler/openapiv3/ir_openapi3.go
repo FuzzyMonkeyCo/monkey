@@ -21,7 +21,7 @@ func newSpecFromOA3(doc *openapi3.T) (vald *validator, err error) {
 	log.Println("[DBG] normalizing spec from OpenAPIv3")
 
 	docPaths, docSchemas := doc.Paths, doc.Components.Schemas
-	vald = newValidator(len(docPaths), len(docSchemas))
+	vald = newValidator(docPaths.Len(), len(docSchemas))
 	log.Println("[DBG] seeding schemas")
 	//TODO: use docPath as root of base
 	if err = vald.schemasFromOA3(docSchemas); err != nil {
@@ -47,16 +47,16 @@ func (vald *validator) schemasFromOA3(docSchemas map[string]*openapi3.SchemaRef)
 	return vald.seed(oa3ComponentsSchemas, schemas)
 }
 
-func (vald *validator) endpointsFromOA3(basePath string, docPaths openapi3.Paths) {
-	paths := make([]string, 0, len(docPaths))
-	for path := range docPaths {
+func (vald *validator) endpointsFromOA3(basePath string, docPaths *openapi3.Paths) {
+	paths := make([]string, 0, docPaths.Len())
+	for path := range docPaths.Map() {
 		paths = append(paths, path)
 	}
 	sort.Strings(paths)
 
 	i := 0
 	for _, path := range paths {
-		docOps := docPaths[path].Operations()
+		docOps := docPaths.Value(path).Operations()
 		methods := make([]string, 0, len(docOps))
 		for docMethod := range docOps {
 			methods = append(methods, docMethod)
@@ -153,18 +153,18 @@ func (vald *validator) inputsFromOA3(inputs *[]*fm.ParamJSON, docParams openapi3
 	}
 }
 
-func (vald *validator) outputsFromOA3(docResponses openapi3.Responses) (
+func (vald *validator) outputsFromOA3(docResponses *openapi3.Responses) (
 	outputs map[uint32]sid,
 ) {
 	outputs = make(map[uint32]sid)
-	codes := make([]string, 0, len(docResponses))
-	for code := range docResponses {
+	codes := make([]string, 0, docResponses.Len())
+	for code := range docResponses.Map() {
 		codes = append(codes, code)
 	}
 	sort.Strings(codes)
 
 	for _, code := range codes {
-		responseRef := docResponses[code]
+		responseRef := docResponses.Value(code)
 		xxx := makeXXXFromOA3(code)
 		// NOTE: Responses MAY have a schema
 		if len(responseRef.Value.Content) == 0 {
@@ -206,8 +206,8 @@ func (vald *validator) schemaFromOA3(s *openapi3.Schema) (schema schemaJSON) {
 		schema["type"] = []string{"null"}
 	}
 	// "type"
-	if sType := s.Type; sType != "" {
-		schema["type"] = ensureSchemaType(schema["type"], sType)
+	if sTypes := s.Type.Slice(); len(sTypes) != 0 {
+		schema["type"] = sTypes
 	}
 
 	// "format"
@@ -412,15 +412,6 @@ func makeXXXFromOA3(code string) uint32 {
 		panic(err)
 	}
 	return uint32(i)
-}
-
-func makeXXXToOA3(xxx uint32) string {
-	for k, v := range xxx2uint32 {
-		if v == xxx {
-			return k
-		}
-	}
-	return strconv.FormatUint(uint64(xxx), 10)
 }
 
 func isInputBody(input *fm.ParamJSON) bool {
