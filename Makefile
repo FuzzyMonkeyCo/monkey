@@ -36,8 +36,7 @@ debug: SHELL = /bin/bash -o pipefail
 debug: all
 	./$(EXE) lint
 	./$(EXE) fuzz --seed=fm_AdrZpxEHTjUJMuZEfKq5tYqngxgFi5EQPNGeFzYnwbjexR8jdfir7pYX82 ; [[ $$? = 6 ]]
-#	./$(EXE) fuzz --exclude-tags=failing --progress=bar
-	./$(EXE) fuzz --exclude-tags=failing --progress=ci
+	./$(EXE) fuzz --exclude-tags=failing --progress=ci #=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)
