@@ -1,0 +1,17 @@
+12:22:48.579042 fuzz.go:64: [DBG] sending initial msg
+12:22:48.579234 chans_bidi.go:118: [DBG] sending *fm.Clt_Fuzz_...
+12:22:48.580240 chans_bidi.go:120: [DBG] sent! (err: <nil>)
+12:22:48.580267 fuzz.go:86: [DBG] receiving msg...
+12:22:48.586204 chans_bidi.go:92: [DBG] received err: rpc error: code = Unknown desc = unexpected data from Monkey
+12:22:48.586214 chans_bidi.go:94: [NFO] terminated rcv-er of Srv
+12:22:48.586219 fuzz.go:89: [ERR] rpc error: code = Unknown desc = unexpected data from Monkey
+12:22:48.586224 fuzz.go:162: [NFO] ran tests:0 calls:0 checks:0
+12:22:48.586238 chans_bidi.go:131: [NFO] Close()-ing ChBiDi...
+12:22:48.586252 main.go:235: [ERR] rpc error: code = Unknown desc = unexpected data from Monkey
+12:22:48.586276 chans_bidi.go:110: [ERR] context canceled
+12:22:48.586281 reset.go:24: [NFO] terminating resetter
+12:22:48.586325 main.go:86: [ERR] (not an error) ran for 40.175541ms
+
+  monkey fuzz --intensity=0
+
+should end cleanly

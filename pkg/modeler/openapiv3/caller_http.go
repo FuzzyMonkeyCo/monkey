@@ -155,10 +155,9 @@ func (c *tCapHTTP) RequestProto() (i *fm.Clt_CallRequestRaw) {
 		i.Reason = strings.Split(err.Error(), "\n")
 		return
 	}
-	i.Input = &fm.Clt_CallRequestRaw_Input{
-		Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
-			HttpRequest: reqProto,
-		}}
+	i.Input = &fm.Clt_CallRequestRaw_Input{Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+		HttpRequest: reqProto,
+	}}
 	return
 }
 
@@ -231,7 +230,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		req = []byte(err.Error())
 	}
 	for _, line := range bytes.Split(req, br) {
-		c.shower.Printf("> %s\n", line)
+		c.shower.Printf("> %s", line)
 		break
 	}
 
@@ -247,7 +246,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		}
 	}
 	for _, line := range bytes.Split(rep, br) {
-		c.shower.Printf("< %s\n", line)
+		c.shower.Printf("< %s", line)
 		break
 	}
 	return

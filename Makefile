@@ -19,8 +19,8 @@ latest:
 	$(bindir)/$(EXE) --version
 
 devdeps:
-	go install -i github.com/wadey/gocovmerge
-	go install -i github.com/kyoh86/richgo
+	go install github.com/wadey/gocovmerge@latest
+	go install github.com/kyoh86/richgo@latest
 
 pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	docker buildx bake ci-check--protolock ci-check--protoc #ci-check--protolock-force
@@ -32,9 +32,11 @@ lint:
 	! git grep -F log. pkg/cwid/
 	go vet ./...
 
+debug: SHELL = /bin/bash -o pipefail
 debug: all
 	./$(EXE) lint
-	./$(EXE) fuzz --exclude-tags=failing #--progress=bar
+	./$(EXE) fuzz --seed=fm_AdrZpxEHTjUJMuZEfKq5tYqngxgFi5EQPNGeFzYnwbjexR8jdfir7pYX82 ; [[ $$? = 6 ]]
+	./$(EXE) fuzz --exclude-tags=failing --progress=ci #=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)
