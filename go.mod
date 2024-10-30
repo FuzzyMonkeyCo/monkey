@@ -9,7 +9,7 @@ require (
 	github.com/bazelbuild/buildtools v0.0.0-20240918101019-be1c24cc9a44
 	github.com/chzyer/readline v1.5.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/getkin/kin-openapi v0.128.0
 	github.com/google/gnostic v0.7.0
 	github.com/google/uuid v1.6.0
@@ -22,7 +22,7 @@ require (
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.35.1
 )
 
 require (
@@ -46,6 +46,6 @@ require (
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/text v0.19.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240930140551-af27646dc61f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
