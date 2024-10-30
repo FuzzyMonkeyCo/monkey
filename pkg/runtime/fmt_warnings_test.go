@@ -26,7 +26,6 @@ func TestFmtWarnings(t *testing.T) {
 		"git-repository",
 		"http-archive",
 		"load",
-		"load-on-top",
 		"module-docstring",
 		"native-android",
 		"native-build",
@@ -35,14 +34,12 @@ func TestFmtWarnings(t *testing.T) {
 		"native-package",
 		"native-proto",
 		"native-py",
-		"out-of-order-load",
 		"output-group",
 		"package-name",
 		"package-on-top",
 		"provider-params",
 		"repository-name",
 		"rule-impl-return",
-		"same-origin-load",
 	}
 	require.Subset(t, warn.AllWarnings, deny)
 	require.IsIncreasing(t, deny)

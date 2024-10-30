@@ -140,7 +140,7 @@ func (sm schemap) schemasToOA3(doc *openapi3.T) {
 }
 
 func (sm schemap) endpointsToOA3(doc *openapi3.T, es map[eid]*fm.Endpoint) {
-	doc.Paths = make(openapi3.Paths, len(es))
+	paths := make([]openapi3.NewPathsOption, 0, len(es))
 	for _, e := range es {
 		endpoint := e.GetJson()
 		url := pathToOA3(endpoint.GetPathPartials())
@@ -152,11 +152,11 @@ func (sm schemap) endpointsToOA3(doc *openapi3.T, es map[eid]*fm.Endpoint) {
 			Parameters:  params,
 			Responses:   sm.outputsToOA3(endpoint.GetOutputs()),
 		}
-		if doc.Paths[url] == nil {
-			doc.Paths[url] = &openapi3.PathItem{}
-		}
-		methodToOA3(endpoint.GetMethod(), op, doc.Paths[url])
+		pathItem := &openapi3.PathItem{}
+		methodToOA3(endpoint.GetMethod(), op, pathItem)
+		paths = append(paths, openapi3.WithPath(url, pathItem))
 	}
+	doc.Paths = openapi3.NewPaths(paths...)
 }
 
 func (sm schemap) inputBodyToOA3(inputs []*fm.ParamJSON) (reqBodyRef *openapi3.RequestBodyRef) {
@@ -205,17 +205,17 @@ func (sm schemap) inputsToOA3(inputs []*fm.ParamJSON) (params openapi3.Parameter
 	return
 }
 
-func (sm schemap) outputsToOA3(outs map[uint32]sid) openapi3.Responses {
-	responses := make(openapi3.Responses, len(outs))
+func (sm schemap) outputsToOA3(outs map[uint32]sid) *openapi3.Responses {
+	responses := make([]openapi3.NewResponsesOption, 0, len(outs))
 	for xxx, SID := range outs {
-		XXX := makeXXXToOA3(xxx)
-		responses[XXX] = &openapi3.ResponseRef{
+		response := &openapi3.ResponseRef{
 			Value: &openapi3.Response{Description: &someDescription}}
 		if SID != 0 {
-			responses[XXX].Value.Content = sm.contentToOA3(SID)
+			response.Value.Content = sm.contentToOA3(SID)
 		}
+		responses = append(responses, openapi3.WithStatus(int(xxx), response))
 	}
-	return responses
+	return openapi3.NewResponses(responses...)
 }
 
 func (sm schemap) contentToOA3(SID sid) openapi3.Content {

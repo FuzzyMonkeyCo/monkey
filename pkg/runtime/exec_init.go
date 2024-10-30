@@ -158,6 +158,16 @@ var starlarkExtendedUniverse = map[string][]string{
 	},
 
 	"set": {
+		"add",
+		"clear",
+		"difference",
+		"discard",
+		"intersection",
+		"issubset",
+		"issuperset",
+		"pop",
+		"remove",
+		"symmetric_difference",
 		"union",
 	},
 }
