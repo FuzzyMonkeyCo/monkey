@@ -187,7 +187,7 @@ def ensure_lowish_response_time(ms):
 
 monkey.check(
     name = "responds_in_a_timely_manner",
-    after_response = ensure_lowish_response_time(500),
+    after_response = ensure_lowish_response_time(1000),
     tags = ["timings"],
 )
 
