@@ -155,10 +155,9 @@ func (c *tCapHTTP) RequestProto() (i *fm.Clt_CallRequestRaw) {
 		i.Reason = strings.Split(err.Error(), "\n")
 		return
 	}
-	i.Input = &fm.Clt_CallRequestRaw_Input{
-		Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
-			HttpRequest: reqProto,
-		}}
+	i.Input = &fm.Clt_CallRequestRaw_Input{Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+		HttpRequest: reqProto,
+	}}
 	return
 }
 
