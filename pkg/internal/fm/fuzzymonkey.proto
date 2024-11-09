@@ -28,14 +28,12 @@ message Clt {
     message Model {
       string name = 1;
       message OpenAPIv3 {
-        // File path within current directory pointing to a YAML/JSON spec
-        string file = 1;
-        // Host superseeds the spec's base URL
-        string host = 2;
-        // HeaderAuthorization is added as bearer token if non-empty
-        string header_authorization = 3;
         // Spec is the spec pointed at by File
-        SpecIR spec = 4;
+        SpecIR spec = 1;
+        // File path within current directory pointing to a YAML/JSON spec
+        string file = 2;
+        // Host superseeds the spec's base URL
+        string host = 3;
       }
       oneof model {
         OpenAPIv3 openapiv3 = 2;

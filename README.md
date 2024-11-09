@@ -114,7 +114,6 @@ monkey.openapi3(
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = SPEC,
     host = "https://jsonplaceholder.typicode.com",
-    # header_authorization = "Bearer {}".format(monkey.env("DEV_API_TOKEN")),
 )
 
 # Note: exec commands are executed in shells sharing the same environment variables,
@@ -153,8 +152,12 @@ def add_special_headers(ctx):
 
     assert that(MY_HEADER.title()).is_equal_to(MY_HEADER)
     assert that(dict(req.headers)).does_not_contain_key(MY_HEADER)
-    req.headers.set(MY_HEADER, "value!")
+    req.headers.add(MY_HEADER, "value!")
     print("Added an extra header:", MY_HEADER)
+
+    # Let's also set a bearer token:
+    token = monkey.env("DEV_API_TOKEN", "dev token is unset!")
+    req.headers.set("authorization".title(), "Bearer " + token)
 
 monkey.check(
     name = "adds_special_headers",

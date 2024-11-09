@@ -344,23 +344,18 @@
                         "fields": [
                           {
                             "id": 1,
+                            "name": "spec",
+                            "type": "SpecIR"
+                          },
+                          {
+                            "id": 2,
                             "name": "file",
                             "type": "string"
                           },
                           {
-                            "id": 2,
+                            "id": 3,
                             "name": "host",
                             "type": "string"
-                          },
-                          {
-                            "id": 3,
-                            "name": "header_authorization",
-                            "type": "string"
-                          },
-                          {
-                            "id": 4,
-                            "name": "spec",
-                            "type": "SpecIR"
                           }
                         ]
                       }

@@ -67,7 +67,6 @@ func TestEncodeVersusEncodeDecodeEncode(t *testing.T) {
 			m1.fromProto(&m1Prime)
 			require.NotEmpty(t, m1.pb.File)
 			require.Empty(t, m1.pb.Host)
-			require.Empty(t, m1.pb.HeaderAuthorization)
 			require.NotEmpty(t, m1.pb.Spec)
 			require.NotNil(t, m1.vald)
 			validateSomeSchemas(t, m1)

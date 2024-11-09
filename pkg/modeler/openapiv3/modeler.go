@@ -47,9 +47,8 @@ func New(kwargs []starlark.Tuple) (modeler.Interface, error) {
 	m := &oa3{
 		name: name,
 		pb: &fm.Clt_Fuzz_Model_OpenAPIv3{
-			File:                lot.file.GoString(),
-			Host:                lot.host.GoString(),
-			HeaderAuthorization: lot.headerAuthorization.GoString(),
+			File: lot.file.GoString(),
+			Host: lot.host.GoString(),
 			//TODO: tags
 		},
 	}

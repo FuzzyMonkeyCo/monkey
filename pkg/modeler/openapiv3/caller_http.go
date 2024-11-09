@@ -120,10 +120,6 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		}
 	}
 
-	if authz := m.pb.HeaderAuthorization; authz != "" {
-		r.Header.Add(headerAuthorization, authz)
-	}
-
 	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.XUserAgent).(string))
 
 	if host := m.pb.Host; host != "" {
