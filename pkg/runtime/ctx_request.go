@@ -49,19 +49,21 @@ func newCtxRequest(input *fm.Srv_Call_Input) *ctxRequest_ {
 
 func (cr *ctxRequest_) IntoProto(err error) *fm.Clt_CallRequestRaw {
 	var reason []string
-	if len(reason) == 0 && err != nil {
+	if err != nil {
 		reason = strings.Split(err.Error(), "\n")
 	}
 
 	input := func() *fm.Clt_CallRequestRaw_Input_HttpRequest_ {
 		switch cr.ty {
-		case "http_request":
+		case ctxHttpRequest:
 			var body []byte
-			if body, err = protojson.Marshal(cr.body); err != nil {
-				log.Println("[ERR]", err)
-				// return after sending msg
-				if len(reason) == 0 && err != nil {
-					reason = strings.Split(err.Error(), "\n")
+			if cr.body != nil {
+				if body, err = protojson.Marshal(cr.body); err != nil {
+					log.Println("[ERR]", err)
+					// return after sending msg
+					if len(reason) == 0 && err != nil {
+						reason = strings.Split(err.Error(), "\n")
+					}
 				}
 			}
 			return &fm.Clt_CallRequestRaw_Input_HttpRequest_{
