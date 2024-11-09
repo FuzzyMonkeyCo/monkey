@@ -17,25 +17,25 @@ const (
 	cxRequestHttp = "http_request"
 )
 
-// cxBeforeRequest is the `ctx.request` starlark value accessible before executing a call
-type cxBeforeRequest struct {
+// cxRequestBeforeRequest is the `ctx.request` starlark value accessible before executing a call
+type cxRequestBeforeRequest struct {
 	ty string
 
 	method, url starlark.String
-	headers     *ctxHeader
+	headers     *cxHead
 	body        *structpb.Value //FIXME: starlark.Value + test that edits .body (as num and as dict/list, and as set)
 }
 
-func newCxBeforeRequest(input *fm.Srv_Call_Input) *cxBeforeRequest {
+func newCxRequestBeforeRequest(input *fm.Srv_Call_Input) *cxRequestBeforeRequest {
 	switch x := input.GetInput().(type) {
 
 	case *fm.Srv_Call_Input_HttpRequest_:
 		r := input.GetHttpRequest()
-		return &cxBeforeRequest{
+		return &cxRequestBeforeRequest{
 			ty:      cxRequestHttp,
 			method:  starlark.String(r.GetMethod()),
 			url:     starlark.String(r.GetUrl()),
-			headers: newCtxHeader(r.GetHeaders()),
+			headers: newcxHead(r.GetHeaders()),
 			//content: absent as encoding will only happen later
 			body: r.GetBody(),
 		}
@@ -45,7 +45,7 @@ func newCxBeforeRequest(input *fm.Srv_Call_Input) *cxBeforeRequest {
 	}
 }
 
-func (cr *cxBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
+func (cr *cxRequestBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
 	var reason []string
 	if err != nil {
 		reason = strings.Split(err.Error(), "\n")
@@ -87,19 +87,21 @@ func (cr *cxBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
 	}
 }
 
-var _ starlark.HasAttrs = (*cxBeforeRequest)(nil)
+var _ starlark.HasAttrs = (*cxRequestBeforeRequest)(nil)
 
-func (cr *cxBeforeRequest) Hash() (uint32, error) { return 0, fmt.Errorf("unhashable: %s", cr.Type()) }
-func (cr *cxBeforeRequest) String() string        { return "ctx_request" }
-func (cr *cxBeforeRequest) Truth() starlark.Bool  { return true }
-func (cr *cxBeforeRequest) Type() string          { return cr.ty }
+func (cr *cxRequestBeforeRequest) Hash() (uint32, error) {
+	return 0, fmt.Errorf("unhashable: %s", cr.Type())
+}
+func (cr *cxRequestBeforeRequest) String() string       { return "request_before_request" }
+func (cr *cxRequestBeforeRequest) Truth() starlark.Bool { return true }
+func (cr *cxRequestBeforeRequest) Type() string         { return cr.ty }
 
-func (cr *cxBeforeRequest) Freeze() {
+func (cr *cxRequestBeforeRequest) Freeze() {
 	// cr.body.Freeze() FIXME
 	cr.headers.Freeze()
 }
 
-func (cr *cxBeforeRequest) AttrNames() []string {
+func (cr *cxRequestBeforeRequest) AttrNames() []string {
 	return []string{ // Keep 'em sorted
 		"body",
 		"headers",
@@ -108,7 +110,7 @@ func (cr *cxBeforeRequest) AttrNames() []string {
 	}
 }
 
-func (cr *cxBeforeRequest) Attr(name string) (starlark.Value, error) {
+func (cr *cxRequestBeforeRequest) Attr(name string) (starlark.Value, error) {
 	switch name {
 	case "body":
 		var body starlark.Value = starlark.None
