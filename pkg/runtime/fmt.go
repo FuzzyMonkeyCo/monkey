@@ -112,10 +112,6 @@ func runFormat(mode int, files ...string) (err error) {
 			msg := w.Message
 			switch w.Category {
 			case "function-docstring-args":
-				// if strings.HasPrefix(msg, `Argument "req" is not documented.`) && strings.Contains(msg, "(req):\n") {
-				// 	// Skip warning about our special req positional argument in monkey.check(before_request = ..)
-				// 	continue
-				// }
 				if strings.HasPrefix(msg, `Argument "ctx" is not documented.`) && strings.Contains(msg, "(ctx):\n") {
 					// Skip warning about our special ctx positional argument in monkey.check(before_request = ..)
 					// Skip warning about our special ctx positional argument in monkey.check(after_response = ..)

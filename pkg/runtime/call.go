@@ -21,7 +21,6 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	print := func(msg string) { rt.progress.Printf("%s", msg) }
 
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
-	// 1. msg.GetInput() --to-> starlark value
 	cx := newCxModBeforeRequest(newCxRequestBeforeRequest(msg.GetInput()))
 
 	// Runs check(before_request = ..) sequentially
@@ -40,11 +39,9 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 
 	cx.Freeze()
 
-	// 3. back to proto ///////// actually have mdlr/cllr output that (and encode body)
 	input := cx.request.IntoProto(err)
 	log.Printf("[NFO] call input: %.999v", input)
 
-	// 4. send home
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
 		CallRequestRaw: input,
 	}}); errT != nil {
@@ -56,46 +53,11 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		return nil
 	}
 
-	// 5. create cllr / Go rep
-
 	mdl := rt.models[msg.GetModelName()]
-	cllr := mdl.NewCaller(ctx, msg, rt.progress) //creates a Go HTTP req
-
-	// input := cllr.RequestProto() //req as protodata
-	// log.Printf("[NFO] call input: %.999v", input)
-
-	// // Runs check(before_request = ..) sequentially
-	// _ = rt.forEachBeforeRequestCheck(func(name string, chk *check) error {
-	// 	if tagsFilter.Excludes(chk.tags) {
-	// 		log.Println("[DBG] skipping check", name)
-	// 		return nil
-	// 	}
-	// 	if newInput, err := chk.tryBeforeRequest(ctx, name, input, print, maxSteps, maxDuration); err != nil {
-	// 		rt.progress.Errorf("Warning(%s): %v", name, err)
-	// 		rt.progress.Printf("Warning: check(name = %q, before_request = ..) failed, skipping it.", name)
-	// 		//turn that err into input.Reason and send that
-	// 	} else if newInput != nil {
-	// 		input = newInput
-	// 	}
-	// 	return nil
-	// })
-	// //Loop+rewrite req protodata
-
-	// //then teach srv about it
-	// if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
-	// 	CallRequestRaw: input,
-	// }}); errT != nil {
-	// 	log.Println("[ERR]", errT)
-	// 	return errT
-	// }
-	// if len(input.GetReason()) != 0 {
-	// 	// An error happened building the request: cannot continue.
-	// 	return nil
-	// }
-	ctxer2 := ctxCurry(input.GetInput())
-
-	// Turn req protodata into Go req here
+	cllr := mdl.NewCaller(ctx, msg, rt.progress)
 	cllr.Do(ctx)
+
+	ctxer2 := ctxCurry(input.GetInput())
 
 	output := cllr.ResponseProto()
 	log.Printf("[NFO] call output: %.999v", output)
