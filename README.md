@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.21.3 linux amd64
+monkey M.m.p go1.23.2 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -141,38 +141,30 @@ echo Resetting System Under Test...
 
 ## Add headers to some of the requests
 
+MY_HEADER = "X-Special"
+
 def add_special_headers(ctx):
     """Shows how to modify an HTTP request before it is sent"""
-    #before_request: lambda (req: CallRequestRaw.Input): pass
 
-    # headers = dict([(kv.key,kv.values) for kv in req.headers])
-    # headers['x-special'] = ['values!']
-    # req.headers = headers
-    # return req
-
-    # req = req.http_request()
-    # if req == None:
-    #     print("`req` isn't an HTTP request")
-    #     return
-    # my_header = "X-Special"
-    # assert that(dict([(pair.key, pair.values) for pair in req.headers])).does_not_contain_key(my_header)
-    # req.headers.append(my_header, ["value!"])
-    # print("Added some headers!")
-
-    req = ctx.request
+    req = ctx  # req = ctx.request FIXME: change
     if type(req) != "http_request":
         print("`ctx.request` isn't an HTTP request! It's a {}", type(req))
         return
 
-    my_header = "X-Special"
-    assert that(my_header.title()).is_equal_to(my_header)
-    assert that(dict([(pair.key.title(), pair.values) for pair in req.headers])).does_not_contain_key(my_header)
-    req.headers.set(my_header, "value!")
-    print("Added an extra header: {my_header}", my_header = my_header)
+    assert that(MY_HEADER.title()).is_equal_to(MY_HEADER)
+    assert that(dict(req.headers)).does_not_contain_key(MY_HEADER)
+    req.headers.set(MY_HEADER, "value!")
+    print("Added an extra header:", MY_HEADER)
 
 monkey.check(
     name = "adds_special_headers",
     before_request = add_special_headers,
+    tags = ["special_headers"],
+)
+
+monkey.check(
+    name = "checks_special_headers",
+    after_response = lambda ctx: assert that(dict(ctx.request.headers)).contains_key(MY_HEADER),
     tags = ["special_headers"],
 )
 

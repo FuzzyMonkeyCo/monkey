@@ -22,7 +22,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
 	// 1. msg.GetInput() --to-> starlark value
-	req := newCtxRequest(msg.GetInput())
+	req := newCtxRequest(msg.GetInput()) // FIXME: rn ctx==http_request => change to ctx.request
 
 	// Runs check(before_request = ..) sequentially
 	err := rt.forEachBeforeRequestCheck(func(name string, chk *check) error {
