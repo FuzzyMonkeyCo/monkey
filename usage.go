@@ -93,6 +93,7 @@ Options:
 
 Try:
      export FUZZYMONKEY_API_KEY=fm_42
+     export FUZZYMONKEY_SSL_NO_VERIFY=1
   ` + B + ` update
   ` + B + ` -f fm.star exec reset
   ` + B + ` fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
