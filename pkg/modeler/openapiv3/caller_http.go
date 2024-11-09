@@ -230,7 +230,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		req = []byte(err.Error())
 	}
 	for _, line := range bytes.Split(req, br) {
-		c.shower.Printf("> %s\n", line)
+		c.shower.Printf("> %s", line)
 		break
 	}
 
