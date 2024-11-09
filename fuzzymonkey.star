@@ -39,8 +39,9 @@ MY_HEADER = "X-Special"
 
 def add_special_headers(ctx):
     """Shows how to modify an HTTP request before it is sent"""
+    assert that(ctx).is_of_type("ctx_before_request")
 
-    req = ctx  # req = ctx.request FIXME: change
+    req = ctx.request
     if type(req) != "http_request":
         print("`ctx.request` isn't an HTTP request! It's a {}", type(req))
         return

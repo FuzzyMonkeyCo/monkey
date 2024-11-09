@@ -12,7 +12,7 @@ import (
 	"github.com/FuzzyMonkeyCo/monkey/pkg/starlarkvalue"
 )
 
-// fixme: move to dedicated package: ctx?
+// TODO: rename `ctx` to `cx`
 
 type (
 	ctxctor2 func(*fm.Clt_CallResponseRaw_Output) ctxctor1
@@ -36,7 +36,7 @@ func ctxCurry(callInput *fm.Clt_CallRequestRaw_Input) ctxctor2 {
 	}
 }
 
-// Modified https://github.com/google/starlark-go/blob/ebe61bd709bf/starlarkstruct/module.go
+// ctxModule is the `ctx` starlark value accessible during execution of checks
 type ctxModule struct {
 	accessedState bool
 	request       *ctxRequest
@@ -173,13 +173,13 @@ func inputAsValue(i *fm.Clt_CallRequestRaw_Input) (cr *ctxRequest) {
 	switch x := i.GetInput().(type) {
 
 	case *fm.Clt_CallRequestRaw_Input_HttpRequest_:
-		cr.ty = ctxHttpRequest
+		cr.ty = cxRequestHttp
 
 		reqProto := i.GetHttpRequest()
 		cr.attrs["method"] = starlark.String(reqProto.Method)
 		cr.attrs["url"] = starlark.String(reqProto.Url)
 		cr.attrs["content"] = starlark.String(reqProto.Body)
-		cr.protoHeaders = reqProto.Headers
+		cr.protoHeaders = reqProto.Headers //FIXME: cxHeaders + Freeze
 		if reqProto.Body != nil {
 			cr.protoBodyDecoded = reqProto.BodyDecoded
 		}
@@ -255,6 +255,8 @@ func (m *ctxResponse) Attr(name string) (starlark.Value, error) {
 		return nil, nil // no such method
 	}
 }
+
+const ctxHttpResponse = "http_response"
 
 func outputAsValue(o *fm.Clt_CallResponseRaw_Output) (cr *ctxResponse) {
 	cr = &ctxResponse{

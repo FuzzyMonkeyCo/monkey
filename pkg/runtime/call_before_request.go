@@ -14,7 +14,7 @@ import (
 func (chk *check) tryBeforeRequest(
 	ctx context.Context,
 	name string,
-	req *ctxRequest_,
+	cx *cxModBeforeRequest,
 	print func(string),
 	maxSteps uint64,
 	maxDuration time.Duration,
@@ -36,7 +36,7 @@ func (chk *check) tryBeforeRequest(
 		defer func() {
 			log.Printf("[DBG] check %q ran in %s (%d steps)", name, time.Since(start), th.ExecutionSteps())
 		}()
-		if hookRet, err = starlark.Call(th, chk.beforeRequest, starlark.Tuple{req}, nil); err != nil {
+		if hookRet, err = starlark.Call(th, chk.beforeRequest, starlark.Tuple{cx}, nil); err != nil {
 			log.Println("[ERR]", err)
 			// Check failed or an error happened
 			return

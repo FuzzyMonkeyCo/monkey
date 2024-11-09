@@ -22,7 +22,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 
 	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
 	// 1. msg.GetInput() --to-> starlark value
-	req := newCtxRequest(msg.GetInput()) // FIXME: rn ctx==http_request => change to ctx.request
+	cx := newCxModBeforeRequest(newCxBeforeRequest(msg.GetInput()))
 
 	// Runs check(before_request = ..) sequentially
 	err := rt.forEachBeforeRequestCheck(func(name string, chk *check) error {
@@ -30,7 +30,7 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 			log.Println("[DBG] skipping check", name)
 			return nil
 		}
-		if err := chk.tryBeforeRequest(ctx, name, req, print, maxSteps, maxDuration); err != nil {
+		if err := chk.tryBeforeRequest(ctx, name, cx, print, maxSteps, maxDuration); err != nil {
 			rt.progress.Errorf("Warning(%s): %v", name, err)
 			rt.progress.Printf("Warning: check(name = %q, before_request = ..) failed, skipping it.", name)
 			return err
@@ -38,8 +38,10 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		return nil
 	})
 
+	cx.Freeze()
+
 	// 3. back to proto ///////// actually have mdlr/cllr output that (and encode body)
-	input := req.IntoProto(err)
+	input := cx.request.IntoProto(err)
 	log.Printf("[NFO] call input: %.999v", input)
 
 	// 4. send home
