@@ -3,6 +3,7 @@ package openapiv3
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -250,23 +252,23 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 
 func (c *tCapHTTP) RoundTrip(req *http.Request) (rep *http.Response, err error) {
 	// TODO: stricter/smaller timeouts https://pkg.go.dev/github.com/asecurityteam/transport#Option
-	t := &http.Transport{
-		Proxy: func(req *http.Request) (*url.URL, error) {
-			// TODO: snap the envs that ProxyFromEnvironment reads
-			log.Println("[NFO] HTTP proxying is work in progress...")
-			return nil, nil
-		},
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		// ForceAttemptHTTP2:     true,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.Proxy = func(req *http.Request) (*url.URL, error) {
+		// TODO: snap the envs that ProxyFromEnvironment reads
+		log.Println("[NFO] HTTP proxying is work in progress...")
+		return nil, nil
 	}
+	t.DialContext = (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}).DialContext
+	// t.ForceAttemptHTTP2 = true
+	t.MaxIdleConns = 100
+	t.IdleConnTimeout = 90 * time.Second
+	t.TLSHandshakeTimeout = 10 * time.Second
+	t.ExpectContinueTimeout = 1 * time.Second
+	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: os.Getenv("FUZZYMONKEY_SSL_NO_VERIFY") == "1"}
 
 	start := time.Now()
 	rep, err = t.RoundTrip(req)

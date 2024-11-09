@@ -51,6 +51,7 @@ Options:
 
 Try:
      export FUZZYMONKEY_API_KEY=fm_42
+     export FUZZYMONKEY_SSL_NO_VERIFY=1
   monkey update
   monkey -f fm.star exec reset
   monkey fuzz --only /pets --calls-without-input=NewPet --seed=$(monkey pastseed)
