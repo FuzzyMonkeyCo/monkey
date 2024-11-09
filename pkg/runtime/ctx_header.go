@@ -3,36 +3,125 @@ package runtime
 import (
 	"fmt"
 	"net/textproto"
+	"slices"
+	"sort"
 
 	"go.starlark.net/starlark"
 
 	"github.com/FuzzyMonkeyCo/monkey/pkg/internal/fm"
 )
 
-// ctxHeader represents input request data as a Starlark value for user assertions or mutation.
+// ctxHeader represents header data (e.g. HTTP headers) as a Starlark value for user assertions or mutation.
 type ctxHeader struct {
-	//FIXME?
 	header textproto.MIMEHeader
 	keys   []string
 
-	// header starlark.Value
 	frozen    bool
 	itercount uint32 // number of active iterators (ignored if frozen)
 }
 
-// https://pkg.go.dev/net/http#Header
-// type Header
-//         The keys should be in canonical form, as returned by CanonicalHeaderKey.
-//    func (h Header) Add(key, value string)
-//            appends to any existing values associated with key. The key is case insensitive; it is canonicalized by CanonicalHeaderKey
-//    func (h Header) Del(key string)
-//            deletes the values associated with key. The key is case insensitive; it is canonicalized
-//    func (h Header) Get(key string) string
-//            gets the first value associated with the given key. If there are no values associated with the key, Get returns "". It is case insensitive
-//    func (h Header) Set(key, value string)
-//            sets the header entries associated with key to the single element value. It replaces any existing values associated with key. The key is case insensitive
-//    func (h Header) Values(key string) []string
-//            returns all values associated with the given key. It is case insensitive
+var _ starlark.HasAttrs = (*ctxHeader)(nil)
+
+func ctxHeaderAdd(_ *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var k, v starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 2, &k, &v); err != nil {
+		return nil, err
+	}
+	ch := b.Receiver().(*ctxHeader)
+	key := textproto.CanonicalMIMEHeaderKey(k.GoString())
+	ch.header.Add(key, v.GoString())
+	ch.keys = append(ch.keys, key)
+	return starlark.None, nil
+}
+
+func ctxHeaderDel(_ *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var k starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &k); err != nil {
+		return nil, err
+	}
+	ch := b.Receiver().(*ctxHeader)
+	key := textproto.CanonicalMIMEHeaderKey(k.GoString())
+	ch.header.Del(key)
+	ch.keys = slices.DeleteFunc(ch.keys, func(k string) bool { return k == key })
+	return starlark.None, nil
+}
+
+func ctxHeaderGet(_ *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var k starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &k); err != nil {
+		return nil, err
+	}
+	ch := b.Receiver().(*ctxHeader)
+	key := textproto.CanonicalMIMEHeaderKey(k.GoString())
+	return starlark.String(ch.header.Get(key)), nil
+}
+
+func ctxHeaderSet(_ *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var k, v starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 2, &k, &v); err != nil {
+		return nil, err
+	}
+	ch := b.Receiver().(*ctxHeader)
+	key := textproto.CanonicalMIMEHeaderKey(k.GoString())
+	ch.header.Set(key, v.GoString())
+	if !slices.Contains(ch.keys, key) {
+		ch.keys = append(ch.keys, key)
+	}
+	return starlark.None, nil
+}
+
+func ctxHeaderValues(_ *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+	var k starlark.String
+	if err := starlark.UnpackPositionalArgs(b.Name(), args, kwargs, 1, &k); err != nil {
+		return nil, err
+	}
+	ch := b.Receiver().(*ctxHeader)
+	key := textproto.CanonicalMIMEHeaderKey(k.GoString())
+	return starlark.NewList(fromStrings(ch.header.Values(key))), nil
+}
+
+var ctxHeaderMethods = map[string]*starlark.Builtin{
+	"add":    starlark.NewBuiltin("add", ctxHeaderAdd),
+	"del":    starlark.NewBuiltin("del", ctxHeaderDel),
+	"get":    starlark.NewBuiltin("get", ctxHeaderGet),
+	"set":    starlark.NewBuiltin("set", ctxHeaderSet),
+	"values": starlark.NewBuiltin("values", ctxHeaderValues),
+}
+
+func (ch *ctxHeader) Attr(name string) (starlark.Value, error) {
+	switch name {
+	case "add":
+		if err := ch.checkMutable(name); err != nil {
+			return nil, err
+		}
+		return ctxHeaderMethods[name].BindReceiver(ch), nil
+	case "del":
+		if err := ch.checkMutable(name); err != nil {
+			return nil, err
+		}
+		return ctxHeaderMethods[name].BindReceiver(ch), nil
+	case "get":
+		return ctxHeaderMethods[name].BindReceiver(ch), nil
+	case "set":
+		if err := ch.checkMutable(name); err != nil {
+			return nil, err
+		}
+		return ctxHeaderMethods[name].BindReceiver(ch), nil
+	case "values":
+		return ctxHeaderMethods[name].BindReceiver(ch), nil
+	default:
+		return nil, nil // no such method
+	}
+}
+
+func (ch *ctxHeader) AttrNames() []string {
+	names := make([]string, 0, len(ctxHeaderMethods))
+	for name := range ctxHeaderMethods {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	return names
+}
 
 func newCtxHeader(protoHeader []*fm.HeaderPair) *ctxHeader {
 	ch := &ctxHeader{
@@ -125,6 +214,16 @@ func (ch *ctxHeader) Iterate() starlark.Iterator {
 	return &ctxHeaderIterator{ch: ch}
 }
 
+func (ch *ctxHeader) checkMutable(verb string) error {
+	if ch.frozen {
+		return fmt.Errorf("cannot %s frozen hash table", verb)
+	}
+	if ch.itercount > 0 {
+		return fmt.Errorf("cannot %s hash table during iteration", verb)
+	}
+	return nil
+}
+
 type ctxHeaderIterator struct {
 	ch *ctxHeader
 	i  int
@@ -134,7 +233,7 @@ func (it *ctxHeaderIterator) Next(p *starlark.Value) bool {
 	if it.i < len(it.ch.keys) {
 		key := it.ch.keys[it.i]
 		vs := fromStrings(it.ch.header.Values(key))
-		*p = starlark.NewList(vs)
+		*p = starlark.Tuple{starlark.String(key), starlark.NewList(vs)}
 		it.i++
 		return true
 	}
