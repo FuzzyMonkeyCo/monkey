@@ -75,10 +75,7 @@ func (rt *Runtime) runFakeUserCheck(t *testing.T, chkname string) *fm.Clt_CallVe
 	ctxer1 := ctxer1Maker(t, chkname)
 
 	ctx := context.Background()
-	var th *starlark.Thread
-	for _, th = range rt.makeThreads(ctx) {
-		break
-	}
+	th := makeThreads(map[string]*check{chkname: chk}, ctx)[chkname]
 
 	return rt.runUserCheckWrapper(chkname, th, chk, checkPrint(t), tagsFilter, ctxer1, 1337)
 }

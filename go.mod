@@ -2,8 +2,6 @@ module github.com/FuzzyMonkeyCo/monkey
 
 go 1.21
 
-toolchain go1.23.2
-
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0
 	github.com/bazelbuild/buildtools v0.0.0-20240918101019-be1c24cc9a44

@@ -120,10 +120,6 @@ func (m *oa3) buildHTTPRequest(ctx context.Context, msg *fm.Srv_Call) (req *http
 		}
 	}
 
-	if authz := m.pb.HeaderAuthorization; authz != "" {
-		r.Header.Add(headerAuthorization, authz)
-	}
-
 	r.Header.Set(headerUserAgent, ctx.Value(ctxvalues.XUserAgent).(string))
 
 	if host := m.pb.Host; host != "" {
@@ -155,10 +151,9 @@ func (c *tCapHTTP) RequestProto() (i *fm.Clt_CallRequestRaw) {
 		i.Reason = strings.Split(err.Error(), "\n")
 		return
 	}
-	i.Input = &fm.Clt_CallRequestRaw_Input{
-		Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
-			HttpRequest: reqProto,
-		}}
+	i.Input = &fm.Clt_CallRequestRaw_Input{Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
+		HttpRequest: reqProto,
+	}}
 	return
 }
 
@@ -231,7 +226,7 @@ func (c *tCapHTTP) Do(ctx context.Context) {
 		req = []byte(err.Error())
 	}
 	for _, line := range bytes.Split(req, br) {
-		c.shower.Printf("> %s\n", line)
+		c.shower.Printf("> %s", line)
 		break
 	}
 

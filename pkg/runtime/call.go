@@ -18,12 +18,30 @@ import (
 )
 
 func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.Filter, maxSteps uint64, maxDuration time.Duration) error {
-	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
-	mdl := rt.models[msg.GetModelName()]
-	cllr := mdl.NewCaller(ctx, msg, rt.progress)
+	print := func(msg string) { rt.progress.Printf("%s", msg) }
 
-	input := cllr.RequestProto()
+	log.Printf("[NFO] raw input: %.999v", msg.GetInput())
+	cx := newCxModBeforeRequest(newCxRequestBeforeRequest(msg.GetInput()))
+
+	// Runs check(before_request = ..) sequentially
+	err := rt.forEachBeforeRequestCheck(func(name string, chk *check) error {
+		if tagsFilter.Excludes(chk.tags) {
+			log.Println("[DBG] skipping check", name)
+			return nil
+		}
+		if err := chk.tryBeforeRequest(ctx, name, cx, print, maxSteps, maxDuration); err != nil {
+			rt.progress.Errorf("Warning(%s): %v", name, err)
+			rt.progress.Printf("Warning: check(name = %q, before_request = ..) failed, skipping it.", name)
+			return err
+		}
+		return nil
+	})
+
+	cx.Freeze()
+
+	input := cx.request.IntoProto(err)
 	log.Printf("[NFO] call input: %.999v", input)
+
 	if errT := rt.client.Send(ctx, &fm.Clt{Msg: &fm.Clt_CallRequestRaw_{
 		CallRequestRaw: input,
 	}}); errT != nil {
@@ -34,9 +52,12 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 		// An error happened building the request: cannot continue.
 		return nil
 	}
-	ctxer2 := ctxCurry(input.GetInput())
 
+	mdl := rt.models[msg.GetModelName()]
+	cllr := mdl.NewCaller(ctx, msg, rt.progress)
 	cllr.Do(ctx)
+
+	ctxer2 := ctxCurry(input.GetInput())
 
 	output := cllr.ResponseProto()
 	log.Printf("[NFO] call output: %.999v", output)
@@ -61,9 +82,9 @@ func (rt *Runtime) call(ctx context.Context, msg *fm.Srv_Call, tagsFilter *tags.
 	}
 
 	{
-		print := func(msg string) { rt.progress.Printf("%s", msg) }
 		ctxer1 := ctxer2(output.GetOutput())
 		var passed2 bool
+		// Runs check(after_response = ..) concurrently
 		if passed2, errT = rt.userChecks(ctx, print, tagsFilter, ctxer1, maxSteps, maxDuration); errT != nil {
 			return errT
 		}
@@ -177,7 +198,12 @@ func (rt *Runtime) userChecks(
 	maxSteps uint64,
 	maxDuration time.Duration,
 ) (bool, error) {
-	log.Printf("[NFO] checking %d user properties", len(rt.checks))
+	checks := make(map[string]*check, len(rt.checks))
+	_ = rt.forEachAfterResponseCheck(func(name string, chk *check) error {
+		checks[name] = chk
+		return nil
+	})
+	log.Printf("[NFO] checking %d user properties", len(checks))
 
 	// Run all checks concurrently, send their results to vs.
 	// Concurrently, consume and send these one-by-one.
@@ -187,12 +213,12 @@ func (rt *Runtime) userChecks(
 	defer cancel()
 
 	g, ctxG := errgroup.WithContext(ctxG)
-	vs := make(chan *fm.Clt_CallVerifProgress, len(rt.checks))
-	threads := rt.makeThreads(ctxG)
+	vs := make(chan *fm.Clt_CallVerifProgress, len(checks))
+	threads := makeThreads(checks, ctxG)
 
 	passed := true
 	g.Go(func() (errT error) {
-		for name := range rt.checks {
+		for name := range checks {
 			name := name
 			select {
 			case <-ctxG.Done():
@@ -221,7 +247,7 @@ func (rt *Runtime) userChecks(
 		return
 	})
 
-	_ = rt.forEachCheck(func(name string, chk *check) error {
+	_ = rt.forEachAfterResponseCheck(func(name string, chk *check) error {
 		g.Go(func() error {
 			th := threads[name]
 			v := rt.runUserCheckWrapper(name, th, chk, print, tagsFilter, ctxer1, maxSteps)
@@ -269,9 +295,10 @@ func (rt *Runtime) runUserCheckWrapper(
 	return v
 }
 
-func (rt *Runtime) makeThreads(ctx context.Context) map[string]*starlark.Thread {
-	threads := make(map[string]*starlark.Thread, len(rt.checks))
-	for name := range rt.checks {
+func makeThreads(checks map[string]*check, ctx context.Context) map[string]*starlark.Thread {
+	threads := make(map[string]*starlark.Thread, len(checks))
+	for name := range checks {
+		name := name
 		th := &starlark.Thread{
 			Name: name,
 			Load: loadDisabled,
@@ -327,7 +354,7 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 	if hookRet != starlark.None {
-		err = newUserError("hooks should return None, got: %s", hookRet.String())
+		err = newUserError("check(name = %q) should return None, got: %s", v.Name, hookRet.String())
 		log.Println("[ERR]", err)
 		v.Status = fm.Clt_CallVerifProgress_failure
 		return

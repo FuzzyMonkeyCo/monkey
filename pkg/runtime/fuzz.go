@@ -175,10 +175,12 @@ func (rt *Runtime) Fuzz(
 
 	if counterexample := result.GetCounterexample(); len(counterexample) != 0 {
 		as.ColorNFO.Printf("A test produced a bug in %d calls:\n", len(counterexample))
+		as.ColorOK.Println("#!/bin/sh -eux")
 		as.ColorOK.Println("monkey exec start")
 		for _, ceItem := range counterexample {
 			as.ColorOK.Println(ceItem.CLIString())
 		}
+		// TODO: print the check / reason for failure
 		as.ColorOK.Println("monkey exec stop")
 		as.ColorNFO.Println()
 	}

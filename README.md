@@ -7,7 +7,7 @@
 [![asciicast](https://asciinema.org/a/171571.png)](https://asciinema.org/a/171571?autoplay=1)
 
 ```
-monkey M.m.p go1.18.3 linux amd64
+monkey M.m.p go1.23.2 linux amd64
 
 Usage:
   monkey [-vvv]           env [VAR ...]
@@ -114,7 +114,6 @@ monkey.openapi3(
     # Note: references to schemas in `file` are resolved relative to file's location.
     file = SPEC,
     host = "https://jsonplaceholder.typicode.com",
-    # header_authorization = "Bearer {}".format(monkey.env("DEV_API_TOKEN")),
 )
 
 # Note: exec commands are executed in shells sharing the same environment variables,
@@ -135,21 +134,55 @@ monkey.shell(
     reset = """
 echo ${BLA:-42}
 BLA=$(( ${BLA:-42} + 1 ))
-echo Resetting state...
+echo Resetting System Under Test...
     """,
+)
+
+## Add headers to some of the requests
+
+MY_HEADER = "X-Special"
+
+def add_special_headers(ctx):
+    """Shows how to modify an HTTP request before it is sent"""
+
+    req = ctx.request
+    if type(req) != "http_request":
+        print("`ctx.request` isn't an HTTP request! It's a {}", type(req))
+        return
+
+    assert that(MY_HEADER.title()).is_equal_to(MY_HEADER)
+    assert that(dict(req.headers)).does_not_contain_key(MY_HEADER)
+    req.headers.add(MY_HEADER, "value!")
+    print("Added an extra header:", MY_HEADER)
+
+    # Let's also set a bearer token:
+    token = monkey.env("DEV_API_TOKEN", "dev token is unset!")
+    req.headers.set("authorization".title(), "Bearer " + token)
+
+monkey.check(
+    name = "adds_special_headers",
+    before_request = add_special_headers,
+    tags = ["special_headers"],
+)
+
+monkey.check(
+    name = "checks_special_headers",
+    after_response = lambda ctx: assert that(dict(ctx.request.headers)).contains_key(MY_HEADER),
+    tags = ["special_headers"],
 )
 
 ## Ensure some general property
 
 def ensure_lowish_response_time(ms):
     def responds_in_a_timely_manner(ctx):
+        assert that(ctx.response).is_of_type("http_response")
         assert that(ctx.response.elapsed_ms).is_at_most(ms)
 
     return responds_in_a_timely_manner
 
 monkey.check(
     name = "responds_in_a_timely_manner",
-    after_response = ensure_lowish_response_time(500),
+    after_response = ensure_lowish_response_time(1000),
     tags = ["timings"],
 )
 
@@ -157,6 +190,8 @@ monkey.check(
 
 def stateful_model_of_posts(ctx):
     """Properties on posts. State collects posts returned by API."""
+    if type(ctx.request) != "http_request":
+        return
 
     # NOTE: response has already been decoded & validated for us.
 

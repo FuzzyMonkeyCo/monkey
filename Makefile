@@ -1,5 +1,7 @@
 .PHONY: all update debug lint test ape
 
+SHELL = /bin/bash -o pipefail -eu
+
 EXE ?= monkey
 
 all: pkg/internal/fm/fuzzymonkey.pb.go make_README.sh README.md lint
@@ -7,7 +9,6 @@ all: pkg/internal/fm/fuzzymonkey.pb.go make_README.sh README.md lint
 	cat .gitignore >.dockerignore && echo /.git >>.dockerignore
 	./$(EXE) fmt -w && ./make_README.sh
 
-update: SHELL := /bin/bash
 update:
 	go get -u -a -v ./...
 	go mod tidy
@@ -19,8 +20,8 @@ latest:
 	$(bindir)/$(EXE) --version
 
 devdeps:
-	go install -i github.com/wadey/gocovmerge
-	go install -i github.com/kyoh86/richgo
+	go install github.com/wadey/gocovmerge@latest
+	go install github.com/kyoh86/richgo@latest
 
 pkg/internal/fm/fuzzymonkey.pb.go: pkg/internal/fm/fuzzymonkey.proto
 	docker buildx bake ci-check--protolock ci-check--protoc #ci-check--protolock-force
@@ -34,7 +35,7 @@ lint:
 
 debug: all
 	./$(EXE) lint
-	./$(EXE) fuzz --exclude-tags=failing #--progress=bar
+	./$(EXE) fuzz --exclude-tags=failing --progress=ci #dots #=ci #=bar
 
 distclean: clean
 	$(if $(wildcard dist/),rm -r dist/)
@@ -44,7 +45,6 @@ clean:
 	$(if $(wildcard *.cov),rm *.cov)
 	$(if $(wildcard cov.out),rm cov.out)
 
-test: SHELL = /bin/bash -o pipefail
 test: all
 	echo 42 | ./$(EXE) schema --validate-against=#/components/schemas/PostId
 	! ./$(EXE) exec repl <<<'assert that("malformed" != 42)'

@@ -90,7 +90,7 @@ func (rt *Runtime) reset(ctx context.Context) (errL, errT error) {
 }
 
 func (rt *Runtime) runReset(ctx context.Context) (err error) {
-	if err = rt.forEachCheck(func(name string, chk *check) error {
+	if err = rt.forEachAfterResponseCheck(func(name string, chk *check) error {
 		if err := chk.reset(name); err != nil {
 			log.Println("[ERR]", err)
 			return err

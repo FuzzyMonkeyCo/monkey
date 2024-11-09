@@ -19,10 +19,10 @@ def ctxchecks(ctx):
     """
     assert that(type(ctx)).is_equal_to("ctx")
 
-    assert that(type(ctx.request)).is_equal_to("ctx_request")
+    assert that(type(ctx.request)).is_equal_to("http_request")
     assert that(ctx.request).does_not_have_attribute("body")
 
-    assert that(type(ctx.response)).is_equal_to("ctx_response")
+    assert that(type(ctx.response)).is_equal_to("http_response")
     assert that(ctx.response.status_code).is_equal_to(404)
     assert that(ctx.response.elapsed_ms).is_within(50).of(1)
     assert that(ctx.response).has_attribute("body")
@@ -47,16 +47,13 @@ def ctx_request_headers_frozen(ctx):
     """
     A request's headers are immutable.
 
-    If they were mutable, the following line would pass:
-      assert that(ctx.request.headers).does_not_contain_key("set")
-
     Args:
       ctx: the context that Monkey provides.
     """
-    assert that(ctx.request.headers).has_size(1)
+    assert that(dict(ctx.request.headers)).has_size(1)
     JSON_MIME = "application/json"
-    assert that(ctx.request.headers["Accept"]).is_equal_to([JSON_MIME])
-    ctx.request.headers["set"] = ["some", "values"]
+    assert that(ctx.request.headers.get("Accept")).is_equal_to(JSON_MIME)
+    ctx.request.headers.set("set", ["some", "values"])
 
 monkey.check(
     name = "ctx_request_headers_frozen",
@@ -71,8 +68,8 @@ monkey.check(
 	require.Equal(t, []string{
 		"*starlark.EvalError",
 		"Traceback (most recent call last):",
-		"  fuzzymonkey.star:14:24: in ctx_request_headers_frozen",
-		"Error: cannot insert into frozen hash table",
+		"  fuzzymonkey.star:11:24: in ctx_request_headers_frozen",
+		"Error: cannot set frozen hash table",
 	}, v.Reason)
 	require.NotEmpty(t, v.ElapsedNs)
 	require.NotEmpty(t, v.ExecutionSteps)
@@ -170,13 +167,10 @@ def ctx_response_headers_frozen(ctx):
     """
     A response's headers are immutable.
 
-    If they were mutable, the following line would pass:
-      assert that(ctx.response.headers).does_not_contain_key("set")
-
     Args:
       ctx: the context that Monkey provides.
     """
-    assert that(ctx.response.headers).has_size(11)
+    assert that(dict(ctx.response.headers)).has_size(11)
     HEADERS = [
         "Access-Control-Allow-Credentials",
         "Age",
@@ -190,9 +184,9 @@ def ctx_response_headers_frozen(ctx):
         "Expect-Ct",
         "Expires",
     ]
-    assert that(ctx.response.headers).contains_all_in(HEADERS).in_order()
-    assert that(ctx.response.headers["Age"]).is_equal_to(["0"])
-    ctx.response.headers["set"] = ["some", "values"]
+    assert that(dict(ctx.response.headers)).contains_all_in(HEADERS).in_order()
+    assert that(ctx.response.headers.get("Age")).is_equal_to("0")
+    ctx.response.headers.set("set", ["some", "values"])
 
 monkey.check(
     name = "ctx_response_headers_frozen",
@@ -207,8 +201,8 @@ monkey.check(
 	require.Equal(t, []string{
 		"*starlark.EvalError",
 		"Traceback (most recent call last):",
-		"  fuzzymonkey.star:27:25: in ctx_response_headers_frozen",
-		"Error: cannot insert into frozen hash table",
+		"  fuzzymonkey.star:24:25: in ctx_response_headers_frozen",
+		"Error: cannot set frozen hash table",
 	}, v.Reason)
 	require.NotEmpty(t, v.ElapsedNs)
 	require.NotEmpty(t, v.ExecutionSteps)

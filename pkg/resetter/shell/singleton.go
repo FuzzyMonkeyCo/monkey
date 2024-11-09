@@ -34,9 +34,11 @@ var (
 )
 
 func (s *Resetter) signal(verb, param string) {
-	io.WriteString(s.stdin, verb)
-	io.WriteString(s.stdin, param)
-	io.WriteString(s.stdin, "\n")
+	if s.stdin != nil { // Is `nil` if it never started (e.g. remote is unreachable)
+		io.WriteString(s.stdin, verb)
+		io.WriteString(s.stdin, param)
+		io.WriteString(s.stdin, "\n")
+	}
 }
 
 func writeMainScript(name string, paths []string) (err error) {
