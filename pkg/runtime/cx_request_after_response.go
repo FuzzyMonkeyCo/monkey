@@ -20,25 +20,24 @@ type cxRequestAfterResponse struct {
 
 	protoBodyDecoded *structpb.Value
 	body             starlark.Value
-
-	protoHeaders []*fm.HeaderPair
-	headers      starlark.Value //FIXME: cxHeaders + Freeze
 }
 
 func newCxRequestAfterResponse(i *fm.Clt_CallRequestRaw_Input) (cr *cxRequestAfterResponse) {
-	cr = &cxRequestAfterResponse{
-		attrs: make(starlark.StringDict, 3),
-	}
 	switch x := i.GetInput().(type) {
 
 	case *fm.Clt_CallRequestRaw_Input_HttpRequest_:
-		cr.ty = cxRequestHttp
+		cr = &cxRequestAfterResponse{
+			ty:    cxRequestHttp,
+			attrs: make(starlark.StringDict, 4),
+		}
 
 		reqProto := i.GetHttpRequest()
 		cr.attrs["method"] = starlark.String(reqProto.Method)
 		cr.attrs["url"] = starlark.String(reqProto.Url)
 		cr.attrs["content"] = starlark.String(reqProto.Body)
-		cr.protoHeaders = reqProto.Headers
+		headers := newcxHead(reqProto.Headers)
+		headers.Freeze()
+		cr.attrs["headers"] = headers
 		if reqProto.Body != nil {
 			cr.protoBodyDecoded = reqProto.BodyDecoded
 		}
@@ -63,14 +62,11 @@ func (m *cxRequestAfterResponse) Freeze() {
 	if m.body != nil {
 		m.body.Freeze()
 	}
-	if m.headers != nil {
-		m.headers.Freeze()
-	}
 }
 
 func (m *cxRequestAfterResponse) AttrNames() []string {
 	if m.attrnames == nil {
-		names := append(m.attrs.Keys(), "headers")
+		names := m.attrs.Keys()
 		if m.protoBodyDecoded != nil {
 			names = append(names, "body")
 		}
@@ -88,21 +84,7 @@ func (m *cxRequestAfterResponse) Attr(name string) (starlark.Value, error) {
 			m.body.Freeze()
 		}
 		return m.body, nil
-
-	case name == "headers":
-		if m.headers == nil {
-			var err error
-			if m.headers, err = headerPairs(m.protoHeaders); err != nil {
-				return nil, err
-			}
-			m.headers.Freeze()
-		}
-		return m.headers, nil
-
 	default:
-		if v := m.attrs[name]; v != nil {
-			return v, nil
-		}
-		return nil, nil // no such method
+		return m.attrs[name], nil
 	}
 }
