@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v5.0.0
+    - uses: actions/setup-go@v5.1.0
     - run: go install github.com/incu6us/goimports-reviser/v3@v3.6.5
     - run: which goimports-reviser
     - run: find . -type f -iname '*.go' ! -iname '*.pb.go' -exec goimports-reviser {} \;
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - uses: actions/setup-go@v5.0.0
+    - uses: actions/setup-go@v5.1.0
     - run: go run golang.org/x/tools/go/analysis/passes/nilness/cmd/nilness@latest ./...
 
   checks:
