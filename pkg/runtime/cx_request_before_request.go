@@ -23,7 +23,7 @@ type cxRequestBeforeRequest struct {
 
 	method, url starlark.String
 	headers     *cxHead
-	body        *structpb.Value //FIXME: starlark.Value + test that edits .body (as num and as dict/list, and as set)
+	body        starlark.Value
 }
 
 func newCxRequestBeforeRequest(input *fm.Srv_Call_Input) *cxRequestBeforeRequest {
@@ -31,13 +31,18 @@ func newCxRequestBeforeRequest(input *fm.Srv_Call_Input) *cxRequestBeforeRequest
 
 	case *fm.Srv_Call_Input_HttpRequest_:
 		r := input.GetHttpRequest()
+		// var bodyValue starlark.Value = starlark.None
+		var bodyValue starlark.Value = nil
+		if body := r.GetBody(); body != nil {
+			bodyValue = starlarkvalue.FromProtoValue(body)
+		}
 		return &cxRequestBeforeRequest{
 			ty:      cxRequestHttp,
 			method:  starlark.String(r.GetMethod()),
 			url:     starlark.String(r.GetUrl()),
 			headers: newcxHead(r.GetHeaders()),
 			//content: absent as encoding will only happen later
-			body: r.GetBody(),
+			body: bodyValue,
 		}
 
 	default:
@@ -55,8 +60,10 @@ func (cr *cxRequestBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
 		switch cr.ty {
 		case cxRequestHttp:
 			var body []byte
+			var bodyDecoded *structpb.Value
 			if cr.body != nil {
-				if body, err = protojson.Marshal(cr.body); err != nil {
+				bodyDecoded = starlarkvalue.ToProtoValue(cr.body)
+				if body, err = protojson.Marshal(bodyDecoded); err != nil {
 					log.Println("[ERR]", err)
 					// return after sending msg
 					if len(reason) == 0 && err != nil {
@@ -64,7 +71,6 @@ func (cr *cxRequestBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
 					}
 				}
 			}
-			//TODO: impl ToProtoValue
 			return &fm.Clt_CallRequestRaw_Input{
 				Input: &fm.Clt_CallRequestRaw_Input_HttpRequest_{
 					HttpRequest: &fm.Clt_CallRequestRaw_Input_HttpRequest{
@@ -72,7 +78,7 @@ func (cr *cxRequestBeforeRequest) IntoProto(err error) *fm.Clt_CallRequestRaw {
 						Url:         string(cr.url),
 						Headers:     cr.headers.IntoProto(),
 						Body:        body,
-						BodyDecoded: cr.body,
+						BodyDecoded: bodyDecoded,
 					}}}
 
 		default:
@@ -97,8 +103,10 @@ func (cr *cxRequestBeforeRequest) Truth() starlark.Bool { return true }
 func (cr *cxRequestBeforeRequest) Type() string         { return cr.ty }
 
 func (cr *cxRequestBeforeRequest) Freeze() {
-	// cr.body.Freeze() FIXME
+	cr.body.Freeze()
 	cr.headers.Freeze()
+	cr.method.Freeze()
+	cr.url.Freeze()
 }
 
 func (cr *cxRequestBeforeRequest) AttrNames() []string {
@@ -113,13 +121,10 @@ func (cr *cxRequestBeforeRequest) AttrNames() []string {
 func (cr *cxRequestBeforeRequest) Attr(name string) (starlark.Value, error) {
 	switch name {
 	case "body":
-		var body starlark.Value = starlark.None
 		if cr.body != nil {
-			body = starlarkvalue.FromProtoValue(cr.body)
+			return cr.body, nil
 		}
-		body.Freeze()
-		// TODO: call ProtoCompatible here
-		return body, nil
+		return starlark.None, nil
 	case "headers":
 		return cr.headers, nil
 	case "method":
@@ -129,4 +134,13 @@ func (cr *cxRequestBeforeRequest) Attr(name string) (starlark.Value, error) {
 	default:
 		return nil, nil // no such method
 	}
+}
+
+var _ starlark.HasSetField = (*cxRequestBeforeRequest)(nil)
+
+func (cr *cxRequestBeforeRequest) SetField(name string, val starlark.Value) error {
+	if name == "body" && cr.body == nil {
+		cr.body = val
+	}
+	return nil
 }
