@@ -160,6 +160,11 @@ def add_special_headers(ctx):
     token = monkey.env("DEV_API_TOKEN", "dev token is unset!")
     req.headers.set("authorization".title(), "Bearer " + token)
 
+    # Let's edit (a possibly-empty) body
+    if req.body == None:
+        req.body = {}
+    req.body["key"] = 42
+
 monkey.check(
     name = "adds_special_headers",
     before_request = add_special_headers,
