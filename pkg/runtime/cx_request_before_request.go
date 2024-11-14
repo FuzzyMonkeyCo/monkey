@@ -103,7 +103,9 @@ func (cr *cxRequestBeforeRequest) Truth() starlark.Bool { return true }
 func (cr *cxRequestBeforeRequest) Type() string         { return cr.ty }
 
 func (cr *cxRequestBeforeRequest) Freeze() {
-	cr.body.Freeze()
+	if cr.body != nil {
+		cr.body.Freeze()
+	}
 	cr.headers.Freeze()
 	cr.method.Freeze()
 	cr.url.Freeze()
