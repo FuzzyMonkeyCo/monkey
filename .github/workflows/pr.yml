@@ -133,7 +133,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: docker/bake-action@v3.1.0
+    - uses: docker/bake-action@v5.11.0
       with:
         files: ./docker-bake.hcl
         targets: ${{ matrix.check }}
