@@ -1,6 +1,7 @@
 module github.com/FuzzyMonkeyCo/monkey
 
 go 1.21
+toolchain go1.22.5
 
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0
@@ -19,7 +20,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
 	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.67.1
+	google.golang.org/grpc v1.69.2
 	google.golang.org/protobuf v1.35.1
 )
 
