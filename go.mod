@@ -20,7 +20,7 @@ require (
 	go.starlark.net v0.0.0-20240925182052-1207426daebd
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.67.1
-	google.golang.org/protobuf v1.35.1
+	google.golang.org/protobuf v1.36.1
 )
 
 require (
