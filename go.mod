@@ -3,7 +3,7 @@ module github.com/FuzzyMonkeyCo/monkey
 go 1.21
 
 require (
-	github.com/alecthomas/chroma/v2 v2.14.0
+	github.com/alecthomas/chroma/v2 v2.15.0
 	github.com/bazelbuild/buildtools v0.0.0-20240918101019-be1c24cc9a44
 	github.com/chzyer/readline v1.5.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
