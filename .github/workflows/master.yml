@@ -26,7 +26,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: docker/bake-action@v3.1.0
+    - uses: docker/bake-action@v6.1.1
       with:
         files: ./docker-bake.hcl
         targets: goreleaser-dist
