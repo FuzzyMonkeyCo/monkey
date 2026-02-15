@@ -1,13 +1,13 @@
-# syntax=docker.io/docker/dockerfile:1@sha256:865e5dd094beca432e8c0a1d5e1c465db5f998dca4e439981029b3b81fb39ed5
+# syntax=docker.io/docker/dockerfile:1@sha256:b6afd42430b15f2d2a4c5a02b919e98a525b785b1aaff16747d2f623364e39b6
 
 # Use --build-arg PREBUILT=1 with default target to fetch binaries from GitHub releases
 ARG PREBUILT
 
 # Fetched 2022/04/04
-FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:beefdbd8a1da6d2915566fde36db9db0b524eb737fc57cd1367effd16dc0d06d AS alpine
+FROM --platform=$BUILDPLATFORM docker.io/library/alpine@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS alpine
 FROM --platform=$BUILDPLATFORM docker.io/nilslice/protolock@sha256:baf9bca8b7a28b945c557f36d562a34cf7ca85a63f6ba8cdadbe333e12ccea51 AS protolock
-FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:d56c3e08fe5b27729ee3834854ae8f7015af48fd651cd25d1e3bcf3c19830174 AS golang
-FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:1f5ae36e41ede8b994a93c66e5c1fb1b1111de2ce88f25b6378e341771ed963e AS goreleaser
+FROM --platform=$BUILDPLATFORM docker.io/library/golang@sha256:c83e68f3ebb6943a2904fa66348867d108119890a2c6a2e6f07b38d0eb6c25c5 AS golang
+FROM --platform=$BUILDPLATFORM docker.io/goreleaser/goreleaser@sha256:846b7cad015f87712ad4e68d9cd59bfde4e59c9970265f76dd4e3b3b6f41c768 AS goreleaser
 # On this image:
 #  go env GOCACHE    => /root/.cache/go-build
 #  go env GOMODCACHE => /go/pkg/mod

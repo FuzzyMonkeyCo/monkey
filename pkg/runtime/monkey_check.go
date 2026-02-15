@@ -33,17 +33,17 @@ func (chk *check) reset(chkname string) (err error) {
 
 func errStateDict(chkname string, err error) error {
 	if strings.Contains(err.Error(), `can't assign to .state field of `) {
-		return newUserError("state for check %q must be dict", chkname)
+		return userError(fmt.Sprintf("state for check %q must be dict", chkname))
 	}
 	return err
 }
 
 func ensureStateDict(chkname string, v starlark.Value) error {
 	if _, ok := v.(*starlark.Dict); !ok {
-		return newUserError("state for check %q must be dict, got (%s) %s", chkname, v.Type(), v.String())
+		return userError(fmt.Sprintf("state for check %q must be dict, got (%s) %s", chkname, v.Type(), v.String()))
 	}
 	if err := starlarkvalue.ProtoCompatible(v); err != nil {
-		return newUserError(err.Error())
+		return userError(fmt.Sprint(err.Error()))
 	}
 	return nil
 }

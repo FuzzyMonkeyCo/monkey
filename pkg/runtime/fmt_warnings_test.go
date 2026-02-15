@@ -29,8 +29,6 @@ func TestFmtWarnings(t *testing.T) {
 		"module-docstring",
 		"native-android",
 		"native-build",
-		"native-cc",
-		"native-java",
 		"native-package",
 		"native-proto",
 		"native-py",
