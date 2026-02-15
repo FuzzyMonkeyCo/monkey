@@ -123,7 +123,7 @@ func (p *Progresser) CheckPassed(name, msg string) {
 	}
 	p.bar.Interruptf(" %s %s%s",
 		as.ColorOK.Sprintf(prefixSucceeded),
-		as.ColorNFO.Sprintf(name),
+		as.ColorNFO.Sprint(name),
 		msg,
 	)
 }
@@ -147,7 +147,7 @@ func (p *Progresser) CheckSkipped(name, msg string) {
 // CheckFailed may be called many times during testing
 func (p *Progresser) CheckFailed(name string, ss []string) {
 	if len(ss) > 0 {
-		p.show(" " + as.ColorERR.Sprintf(prefixFailed) + " " + as.ColorNFO.Sprintf(ss[0]))
+		p.show(" " + as.ColorERR.Sprint(prefixFailed) + " " + as.ColorNFO.Sprint(ss[0]))
 	}
 	if len(ss) > 1 {
 		for _, s := range ss[1:] {

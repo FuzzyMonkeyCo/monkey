@@ -20,9 +20,9 @@ func (p *Progresser) dot(n uint32, o *uint32, f, c string) {
 	if *o != n {
 		p.dotting = true
 		if *o == 0 {
-			fmt.Printf(f)
+			fmt.Print(f)
 		} else {
-			fmt.Printf(c)
+			fmt.Print(c)
 		}
 		*o = n
 	}

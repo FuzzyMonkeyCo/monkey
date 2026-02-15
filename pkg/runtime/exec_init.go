@@ -169,6 +169,7 @@ var starlarkExtendedUniverse = map[string][]string{
 		"remove",
 		"symmetric_difference",
 		"union",
+		"update",
 	},
 }
 

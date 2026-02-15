@@ -354,7 +354,7 @@ func (rt *Runtime) runUserCheck(
 		return
 	}
 	if hookRet != starlark.None {
-		err = newUserError("check(name = %q) should return None, got: %s", v.Name, hookRet.String())
+		err = userError(fmt.Sprintf("check(name = %q) should return None, got: %s", v.Name, hookRet.String()))
 		log.Println("[ERR]", err)
 		v.Status = fm.Clt_CallVerifProgress_failure
 		return
@@ -368,7 +368,7 @@ func (rt *Runtime) runUserCheck(
 		}
 		// Ensure ctx.state is still proto-representable
 		if err = starlarkvalue.ProtoCompatible(chk.state); err != nil {
-			err = newUserError(err.Error())
+			err = userError(fmt.Sprint(err.Error()))
 			log.Println("[ERR]", err)
 			v.Status = fm.Clt_CallVerifProgress_failure
 			return

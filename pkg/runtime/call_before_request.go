@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -47,7 +48,7 @@ func (chk *check) tryBeforeRequest(
 			return
 		}
 		if hookRet != starlark.None {
-			err = newUserError("check(name = %q) should return None, got: %s", name, hookRet.String())
+			err = userError(fmt.Sprintf("check(name = %q) should return None, got: %s", name, hookRet.String()))
 			log.Println("[ERR]", err)
 			return
 		}
