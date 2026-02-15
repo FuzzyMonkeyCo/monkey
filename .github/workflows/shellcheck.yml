@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 # TODO - godownloader -r FuzzyMonkeyCo/monkey -o .godownloader.sh .goreleaser.yml
     - name: Run shellcheck
       uses: ludeeus/action-shellcheck@2.0.0
