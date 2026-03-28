@@ -1,13 +1,13 @@
 module github.com/FuzzyMonkeyCo/monkey
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/alecthomas/chroma/v2 v2.23.1
 	github.com/bazelbuild/buildtools v0.0.0-20260211083412-859bfffeef82
 	github.com/chzyer/readline v1.5.1
 	github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/google/gnostic v0.7.1
 	github.com/google/uuid v1.6.0
@@ -45,7 +45,7 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
