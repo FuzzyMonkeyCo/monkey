@@ -1,6 +1,6 @@
 module github.com/FuzzyMonkeyCo/monkey
 
-go 1.24.6
+go 1.25.0
 
 require (
 	github.com/alecthomas/chroma/v2 v2.23.1
@@ -18,8 +18,8 @@ require (
 	github.com/superhawk610/bar v0.0.2
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.starlark.net v0.0.0-20260210143700-b62fd896b91b
-	golang.org/x/sync v0.19.0
-	google.golang.org/grpc v1.79.1
+	golang.org/x/sync v0.20.0
+	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 )
 
@@ -44,9 +44,9 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.50.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
